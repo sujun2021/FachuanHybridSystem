@@ -87,10 +87,13 @@ class SendNotificationUsecase:
                         successful_files += 1
                     else:
                         failed_files += 1
-                except Exception:
-                    logger.exception("操作失败")
-
+                        logger.warning("文件发送失败: %s, 原因: %s", file_path, file_result.message)
+                except MessageSendException as e:
                     failed_files += 1
+                    logger.warning("文件发送失败: %s, 原因: %s", file_path, e.message)
+                except Exception as e:
+                    failed_files += 1
+                    logger.error("文件发送异常: %s, 错误: %s", file_path, str(e))
 
             if successful_files == len(document_paths):
                 result.message = str(_("消息和所有文件发送成功 (%(count)s 个文件)") % {"count": successful_files})

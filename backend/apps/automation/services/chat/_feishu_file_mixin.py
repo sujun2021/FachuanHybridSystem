@@ -23,6 +23,9 @@ class FeishuFileMixin:
     ENDPOINTS: dict[str, str]
     config: dict[str, Any]
 
+    # 飞书 im/v1/files 接口文件大小限制：30MB
+    MAX_FILE_SIZE: int = 30 * 1024 * 1024
+
     def is_available(self) -> bool:  # 由 FeishuTokenMixin 提供
         raise NotImplementedError
 
@@ -39,6 +42,19 @@ class FeishuFileMixin:
         if not Path(file_path).exists():
             raise MessageSendException(
                 message=f"文件不存在: {file_path}", platform="feishu", chat_id=chat_id, errors={"file_path": file_path}
+            )
+
+        # 检查文件大小
+        file_size = Path(file_path).stat().st_size
+        if file_size > self.MAX_FILE_SIZE:
+            size_mb = file_size / (1024 * 1024)
+            max_mb = self.MAX_FILE_SIZE / (1024 * 1024)
+            raise MessageSendException(
+                message=f"文件过大 ({size_mb:.1f}MB)，飞书限制 {max_mb:.0f}MB",
+                platform="feishu",
+                chat_id=chat_id,
+                error_code="FILE_TOO_LARGE",
+                errors={"file_path": file_path, "file_size": file_size, "max_size": self.MAX_FILE_SIZE},
             )
 
         try:
@@ -74,7 +90,9 @@ class FeishuFileMixin:
 
                 if response.status_code >= 400:
                     error_body = response.text
-                    logger.error(f"上传飞书文件HTTP错误: status={response.status_code}, 响应体={error_body}, 文件={file_name}")
+                    logger.error(
+                        f"上传飞书文件HTTP错误: status={response.status_code}, 响应体={error_body}, 文件={file_name}"
+                    )
                     response.raise_for_status()
 
             resp_data = response.json()
@@ -82,6 +100,15 @@ class FeishuFileMixin:
             if resp_data.get("code") != 0:
                 error_msg = resp_data.get("msg", "未知错误")
                 error_code = str(resp_data.get("code"))
+                # 文件过大错误（234006）给出友好提示
+                if error_code == "234006":
+                    logger.warning(f"飞书文件过大: {file_name}")
+                    raise MessageSendException(
+                        message=f"文件过大，飞书限制 {self.MAX_FILE_SIZE / (1024 * 1024):.0f}MB",
+                        platform="feishu",
+                        error_code="FILE_TOO_LARGE",
+                        errors={"api_response": resp_data, "file_path": file_path},
+                    )
                 logger.error(f"上传飞书文件失败: {error_msg} (code: {error_code})")
                 raise MessageSendException(
                     message=f"文件上传失败: {error_msg}",
@@ -137,7 +164,9 @@ class FeishuFileMixin:
 
             if response.status_code >= 400:
                 error_body = response.text
-                logger.error(f"发送飞书文件消息HTTP错误: status={response.status_code}, 响应体={error_body}, chat_id={chat_id}")
+                logger.error(
+                    f"发送飞书文件消息HTTP错误: status={response.status_code}, 响应体={error_body}, chat_id={chat_id}"
+                )
                 response.raise_for_status()
 
             data = response.json()
