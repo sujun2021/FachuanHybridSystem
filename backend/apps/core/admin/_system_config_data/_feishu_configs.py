@@ -95,7 +95,7 @@ def get_wechat_work_configs() -> list[dict[str, Any]]:
         {
             "key": "WECHAT_WORK_DEFAULT_OWNER_ID",
             "category": "wechat_work",
-            "description": "企业微信默认群主 userid（创建群聊 appchat/create 必须指定群主，填写企业内任一成员的 userid）",
+            "description": "企业微信默认群主帐号（创建群聊必须指定群主。在管理后台「通讯录」→ 点击成员 → 成员详情中的「帐号」字段即为 userid）",
             "is_secret": False,
         },
     ]
