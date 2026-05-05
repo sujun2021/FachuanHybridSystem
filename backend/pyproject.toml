@@ -11,7 +11,7 @@ dependencies = [
     "django-ninja==1.6.2",
     "django-ninja-jwt==5.4.4",
     "django-ninja-extra==0.31.4",
-    "django-q2==1.9.0",
+    "django-q2==1.10.0",
     "django-lifecycle==1.2.7",
     # --- ASGI / WebSocket ---
     "uvicorn[standard]==0.46.0",
