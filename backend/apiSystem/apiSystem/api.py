@@ -259,6 +259,10 @@ def _register_app_routers() -> None:
 
     api_v1.add_router("/lpr", lpr_router, auth=JWTOrSessionAuth(), tags=["LPR利率"])
 
+    from apps.core.api.search_api import router as search_router
+
+    api_v1.add_router("/search", search_router, auth=JWTOrSessionAuth(), tags=["全局搜索"])
+
     api_v1.add_router("/court-filing", court_filing_router, auth=JWTOrSessionAuth(), tags=["一张网立案"])
     api_v1.add_router("/court-guarantee", court_guarantee_router, auth=JWTOrSessionAuth(), tags=["一张网担保"])
 
