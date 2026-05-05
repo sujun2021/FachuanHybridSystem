@@ -19,7 +19,7 @@ dependencies = [
     "channels-redis==4.3.0",
     "redis==7.4.0",
     # --- 数据库 ---
-    "psycopg[binary]==3.3.3",
+    "psycopg[binary]==3.3.4",
     # --- HTTP 客户端 ---
     "httpx[http2]==0.28.1",
     # --- LLM / AI ---
@@ -27,7 +27,7 @@ dependencies = [
     # --- 文档处理 ---
     "docxtpl==0.20.2",
     "python-docx==1.2.0",
-    "reportlab==4.4.10",
+    "reportlab==4.5.0",
     "pdfplumber==0.11.9",
     "pikepdf==10.5.1",
     "pymupdf==1.27.2.3",
@@ -39,7 +39,7 @@ dependencies = [
     "rapidocr==3.8.1",
     "ddddocr==1.6.1",
     # --- 浏览器自动化 ---
-    "playwright==1.58.0",
+    "playwright==1.59.0",
     "playwright-stealth==2.0.3",
     # --- 数据处理 ---
     "pandas==3.0.2",

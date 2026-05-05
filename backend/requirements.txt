@@ -70,7 +70,7 @@ constantly==23.10.4
     # via twisted
 contextlib2==21.6.0
     # via django-ninja-extra
-cryptography==46.0.7
+cryptography==47.0.0
     # via
     #   fachuan-backend (pyproject.toml)
     #   autobahn
@@ -99,6 +99,7 @@ django==6.0.4
     #   django-ninja-jwt
     #   django-picklefield
     #   django-q2
+    #   django-simple-history
 django-cors-headers==4.9.0
     # via fachuan-backend (pyproject.toml)
 django-lifecycle==1.2.7
@@ -118,6 +119,8 @@ django-ninja-jwt==5.4.4
 django-picklefield==3.4.0
     # via django-q2
 django-q2==1.9.0
+    # via fachuan-backend (pyproject.toml)
+django-simple-history==3.11.0
     # via fachuan-backend (pyproject.toml)
 docxtpl==0.20.2
     # via fachuan-backend (pyproject.toml)
@@ -158,6 +161,8 @@ hyperlink==21.0.0
     # via
     #   autobahn
     #   twisted
+icalendar==7.1.0
+    # via fachuan-backend (pyproject.toml)
 idna==3.12
     # via
     #   anyio
@@ -179,6 +184,7 @@ jsonschema-specifications==2025.9.1
     # via jsonschema
 lxml==6.1.0
     # via
+    #   fachuan-backend (pyproject.toml)
     #   docxtpl
     #   pikepdf
     #   python-docx
@@ -205,6 +211,7 @@ numpy==2.4.4
     #   ddddocr
     #   onnxruntime
     #   opencv-python
+    #   opencv-python-headless
     #   pandas
     #   rapidocr
     #   shapely
@@ -216,9 +223,10 @@ openai==2.32.0
     # via fachuan-backend (pyproject.toml)
 opencv-python==4.13.0.92
     # via
-    #   fachuan-backend (pyproject.toml)
     #   ddddocr
     #   rapidocr
+opencv-python-headless==4.13.0.92
+    # via fachuan-backend (pyproject.toml)
 openpyxl==3.1.5
     # via fachuan-backend (pyproject.toml)
 packaging==26.1
@@ -244,19 +252,19 @@ pillow==12.2.0
     #   rapidocr
     #   reportlab
     #   weasyprint
-playwright==1.58.0
+playwright==1.59.0
     # via
     #   fachuan-backend (pyproject.toml)
     #   playwright-stealth
-playwright-stealth==2.0.2
+playwright-stealth==2.0.3
     # via fachuan-backend (pyproject.toml)
 protobuf==7.34.1
     # via onnxruntime
 psutil==7.2.2
     # via fachuan-backend (pyproject.toml)
-psycopg==3.3.3
+psycopg==3.3.4
     # via fachuan-backend (pyproject.toml)
-psycopg-binary==3.3.3
+psycopg-binary==3.3.4
     # via psycopg
 py-ubjson==0.16.1
     # via autobahn
@@ -272,14 +280,14 @@ pycparser==3.0
     # via cffi
 pycryptodomex==3.23.0
     # via gmssl
-pydantic==2.12.5
+pydantic==2.13.3
     # via
     #   fachuan-backend (pyproject.toml)
     #   django-ninja
     #   mcp
     #   openai
     #   pydantic-settings
-pydantic-core==2.41.5
+pydantic-core==2.46.3
     # via pydantic
 pydantic-settings==2.14.0
     # via
@@ -295,9 +303,17 @@ pyjwt==2.12.1
     # via
     #   django-ninja-jwt
     #   mcp
-pymupdf==1.27.2.2
+pymupdf==1.27.2.3
     # via fachuan-backend (pyproject.toml)
-pyopenssl==26.0.0
+pyobjc-core==12.1
+    # via
+    #   pyobjc-framework-cocoa
+    #   pyobjc-framework-eventkit
+pyobjc-framework-cocoa==12.1
+    # via pyobjc-framework-eventkit
+pyobjc-framework-eventkit==12.1
+    # via fachuan-backend (pyproject.toml)
+pyopenssl==26.2.0
     # via twisted
 pypdfium2==5.7.1
     # via pdfplumber
@@ -306,6 +322,7 @@ pyphen==0.17.2
 python-dateutil==2.9.0.post0
     # via
     #   fachuan-backend (pyproject.toml)
+    #   icalendar
     #   pandas
 python-docx==1.2.0
     # via
@@ -319,7 +336,7 @@ python-dotenv==1.2.2
     #   uvicorn
 python-monkey-business==1.1.0
     # via django-nested-admin
-python-multipart==0.0.26
+python-multipart==0.0.27
     # via
     #   fachuan-backend (pyproject.toml)
     #   mcp
@@ -329,7 +346,7 @@ pyyaml==6.0.3
     #   omegaconf
     #   rapidocr
     #   uvicorn
-rapidocr==3.7.0
+rapidocr==3.8.1
     # via fachuan-backend (pyproject.toml)
 redis==7.4.0
     # via
@@ -339,7 +356,7 @@ referencing==0.37.0
     # via
     #   jsonschema
     #   jsonschema-specifications
-reportlab==4.4.10
+reportlab==4.5.0
     # via fachuan-backend (pyproject.toml)
 requests==2.33.1
     # via rapidocr
@@ -392,6 +409,7 @@ typer==0.24.1
 typing-extensions==4.15.0
     # via
     #   anyio
+    #   icalendar
     #   mcp
     #   openai
     #   psycopg
@@ -409,13 +427,15 @@ typing-inspection==0.4.2
     #   mcp
     #   pydantic
     #   pydantic-settings
+tzdata==2026.2
+    # via icalendar
 ujson==5.12.0
     # via autobahn
 urllib3==2.6.3
     # via
     #   requests
     #   sentry-sdk
-uvicorn==0.42.0
+uvicorn==0.46.0
     # via
     #   fachuan-backend (pyproject.toml)
     #   mcp
