@@ -22,6 +22,13 @@ ci-frontend: ## 仅前端 CI（tsc + eslint + build）
 ci-backend-full: ## 仅后端 CI（完整模式，需要 PostgreSQL）
 	@bash scripts/ci-local.sh --full --backend
 
+install-hooks: ## 安装 git pre-push hook（推送前自动运行本地 CI）
+	@ln -sf ../../scripts/pre-push .git/hooks/pre-push
+	@chmod +x scripts/pre-push
+	@echo "$(GREEN)✓ pre-push hook 已安装$(NC)"
+	@echo "  推送时将自动运行 'make ci'，失败则阻止推送。"
+	@echo "  跳过: git push --no-verify"
+
 help: ## 显示帮助信息
 	@echo "$(GREEN)法穿AI Copilot - 本地 CI$(NC)"
 	@echo ""
@@ -34,5 +41,6 @@ help: ## 显示帮助信息
 	@echo ""
 	@echo "推送前建议:  make ci-full"
 	@echo "日常开发:    make ci"
+	@echo "安装 hook:   make install-hooks"
 
-.PHONY: help ci ci-full ci-backend ci-frontend ci-backend-full
+.PHONY: help ci ci-full ci-backend ci-frontend ci-backend-full install-hooks
