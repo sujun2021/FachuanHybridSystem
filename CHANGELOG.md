@@ -2,6 +2,24 @@
 
 本项目的所有重要更改都将记录在此文件中。
 
+## [26.43.1] - 2026-05-05
+
+### 工程
+
+#### 新增
+
+- **本地 CI 脚本**（`scripts/ci-local.sh`）：逐项镜像 GitHub Actions 的 22 个检查步骤，支持 `--quick`（不需要数据库）和 `--full`（需要 PostgreSQL）两种模式
+- **根目录 Makefile**：提供 `make ci` / `make ci-full` / `make ci-backend` / `make ci-frontend` 快捷入口
+- 本地 CI 与远端 CI 对照：
+  - 后端：security-guard、仓库卫生、compileall、pre-commit、ruff（changed + full）、mypy（4 级门禁）、测试（unit / integration / property / structure）、smoke-check、pip-audit、bandit、coverage
+  - 前端：tsc、eslint、vite build
+
+#### 修复
+
+- `backend/Makefile` mypy 门禁路径与远端 CI 对齐：
+  - `organization_access_policy.py` → `access/organization_access_policy.py`
+  - `auth_service.py` → `auth/auth_service.py`
+
 ## [26.43.0] - 2026-05-05
 
 ### 前端
