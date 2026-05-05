@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# pre-push hook — 推送前运行本地 CI（quick 模式）
+#
+# 安装: make install-hooks
+# 跳过: git push --no-verify
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+echo "▶ pre-push: 运行本地 CI（quick 模式）..."
+echo ""
+
+if bash "$SCRIPT_DIR/ci-local.sh" --quick; then
+  echo ""
+  echo "✓ 本地 CI 通过，正在推送..."
+else
+  echo ""
+  echo "✗ 本地 CI 失败，推送已阻止。"
+  echo "  修复上述问题后重试，或使用 'make ci-full' 跑完整检查。"
+  echo "  紧急情况可用 'git push --no-verify' 跳过。"
+  exit 1
+fi
