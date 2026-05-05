@@ -61,7 +61,7 @@ def list_clients(
     """获取客户列表（前端做客户端分页）"""
     facade = _get_query_facade()
     user = getattr(request, "auth", None) or extract_request_context(request).user
-    return facade.list_clients(
+    return facade.list_clients(  # type: ignore[no-any-return]
         client_type=client_type,
         is_our_client=is_our_client,
         search=search,

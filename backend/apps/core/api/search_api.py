@@ -48,7 +48,7 @@ def _search_cases(q: str, limit: int) -> list[SearchResultItem]:
     results: list[SearchResultItem] = []
     for c in qs:
         case_number = ""
-        first_number = c.case_numbers.first()  # type: ignore[union-attr]
+        first_number = c.case_numbers.first()
         if first_number:
             case_number = first_number.number
         results.append(SearchResultItem(id=c.id, title=c.name or "", subtitle=case_number))

@@ -96,7 +96,7 @@ class CaseOut(ModelSchema):
 
     @staticmethod
     def resolve_chats(obj: Case) -> list[CaseChat]:
-        return list(obj.chats.all())  # type: ignore[arg-type]
+        return list(obj.chats.all())
 
 
 class CaseUpdate(Schema):
