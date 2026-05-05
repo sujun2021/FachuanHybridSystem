@@ -28,7 +28,7 @@ const CHECKLIST: ChecklistItem[] = [
   { code: 'INVOICE', name: '发票', required: false, category: 'invoice' },
   { code: 'ARCHIVE_DOC', name: '归档文书', required: true, category: 'archive_doc' },
   { code: 'SUPERVISION', name: '监督卡', required: false, category: 'supervision_card' },
-  { code: 'AUTH', name: '授权委托材料', required: true, category: 'authorization' },
+  { code: 'AUTH', name: '授权委托材料', required: true, category: 'auth_doc' },
 ]
 
 function isItemDone(item: ChecklistItem, materials: FinalizedMaterial[]): boolean {

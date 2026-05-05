@@ -180,7 +180,7 @@ export type MaterialCategory =
   | 'invoice'
   | 'archive_doc'
   | 'supervision_card'
-  | 'authorization'
+  | 'auth_doc'
   | 'other'
 
 export const MATERIAL_CATEGORY_LABELS: Record<MaterialCategory, string> = {
@@ -189,7 +189,7 @@ export const MATERIAL_CATEGORY_LABELS: Record<MaterialCategory, string> = {
   invoice: '发票',
   archive_doc: '归档文件',
   supervision_card: '监督卡',
-  authorization: '授权材料',
+  auth_doc: '授权材料',
   other: '其他',
 }
 

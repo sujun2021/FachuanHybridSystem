@@ -34,8 +34,8 @@ def _make_client() -> httpx.Client:
     """创建 httpx 客户端，自动检测系统代理并跳过 SSL 验证（代理 MITM）。"""
     proxy = os.environ.get("HTTPS_PROXY") or os.environ.get("https_proxy")
     if proxy:
-        return httpx.Client(timeout=TIMEOUT, proxy=proxy, verify=False)
-    return httpx.Client(timeout=TIMEOUT, trust_env=True, verify=False)
+        return httpx.Client(timeout=TIMEOUT, proxy=proxy, verify=False)  # noqa: S501
+    return httpx.Client(timeout=TIMEOUT, trust_env=True, verify=False)  # noqa: S501
 
 
 class ZnszjClient:
