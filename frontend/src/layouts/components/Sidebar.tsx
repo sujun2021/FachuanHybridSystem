@@ -237,7 +237,9 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           collapsed ? 'justify-center' : 'gap-2.5',
         )}
       >
-        {!collapsed && (
+        {collapsed ? (
+          <span className="text-[15px] font-bold text-white">FC</span>
+        ) : (
           <span className="text-[15px] font-bold text-white tracking-wide">法穿AI Copilot</span>
         )}
       </NavLink>
