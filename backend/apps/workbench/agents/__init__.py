@@ -2,6 +2,7 @@
 
 from .approval import HIGH_RISK_TOOLS, approval_manager
 from .definitions import (
+    build_model,
     case_agent,
     contract_agent,
     general_agent,
@@ -16,6 +17,7 @@ __all__ = [
     "HIGH_RISK_TOOLS",
     "WorkbenchDeps",
     "approval_manager",
+    "build_model",
     "case_agent",
     "contract_agent",
     "general_agent",
