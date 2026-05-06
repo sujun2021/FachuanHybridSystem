@@ -12,7 +12,13 @@ import { AgreementFormDialog } from './AgreementFormDialog'
 import { useAgreementMutations } from '../hooks/use-agreement-mutations'
 import type { SupplementaryAgreement } from '../types'
 
-export function SupplementaryAgreementList({ contractId, agreements }: { contractId: number; agreements: SupplementaryAgreement[] }) {
+interface Props {
+  contractId: number
+  agreements: SupplementaryAgreement[]
+  compact?: boolean
+}
+
+export function SupplementaryAgreementList({ contractId, agreements, compact = false }: Props) {
   const { createAgreement, updateAgreement, deleteAgreement } = useAgreementMutations(contractId)
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<SupplementaryAgreement | undefined>()
@@ -40,6 +46,67 @@ export function SupplementaryAgreementList({ contractId, agreements }: { contrac
     } catch { toast.error('删除失败') }
     setDeleteId(null)
   }, [deleteId, deleteAgreement])
+
+  if (compact) {
+    return (
+      <>
+        <div className="flex items-center justify-between mb-2.5">
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+            <FileText className="size-3.5" />补充协议
+          </h3>
+          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => { setEditing(undefined); setFormOpen(true) }}>
+            <Plus className="mr-1 size-3" />新增
+          </Button>
+        </div>
+        {agreements.length === 0 ? (
+          <p className="text-muted-foreground text-xs">暂无补充协议</p>
+        ) : (
+          <div className="space-y-1.5">
+            {agreements.map(a => (
+              <div key={a.id} className="flex items-center gap-2 rounded-md px-2.5 py-1.5 hover:bg-muted/50 transition-colors group">
+                <FileText className="size-3.5 text-muted-foreground shrink-0" />
+                <span className="text-[13px] font-medium truncate flex-1">{a.name || `补充协议 #${a.id}`}</span>
+                {a.parties.length > 0 && (
+                  <span className="text-[11px] text-muted-foreground hidden sm:inline">
+                    {a.parties.map(p => p.client_name).join('、')}
+                  </span>
+                )}
+                <span className="text-[11px] text-muted-foreground shrink-0">{a.created_at?.slice(0, 10)}</span>
+                <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button variant="ghost" size="icon" className="size-6" onClick={() => { setEditing(a); setFormOpen(true) }}>
+                    <Edit className="size-3" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="size-6 text-destructive" onClick={() => setDeleteId(a.id)}>
+                    <Trash2 className="size-3" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <AgreementFormDialog
+          open={formOpen} onOpenChange={setFormOpen}
+          agreement={editing} contractId={contractId}
+          onSubmit={handleSubmit}
+          submitting={createAgreement.isPending || updateAgreement.isPending}
+        />
+
+        <AlertDialog open={deleteId != null} onOpenChange={() => setDeleteId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>确认删除</AlertDialogTitle>
+              <AlertDialogDescription>删除后无法恢复。</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>取消</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">删除</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </>
+    )
+  }
 
   return (
     <div className="space-y-4">

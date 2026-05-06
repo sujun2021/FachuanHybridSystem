@@ -121,7 +121,7 @@ export function DocumentsTab({ contract: c }: { contract: Contract }) {
 
       {/* Supplementary Agreements */}
       <div className="rounded-lg border border-border/60 p-[18px] mb-4 bg-card">
-        <SupplementaryAgreementList contractId={c.id} agreements={c.supplementary_agreements} />
+        <SupplementaryAgreementList contractId={c.id} agreements={c.supplementary_agreements} compact />
       </div>
 
       {/* Important Date Reminders */}
