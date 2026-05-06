@@ -24,7 +24,8 @@ class FachuanClient:
         self._refresh_token: str = ""
         self._expires_at: float = 0.0
         self._lock = threading.Lock()
-        self._http = httpx.Client(base_url=config.BASE_URL, timeout=60)
+        # trust_env=False: 绕过系统代理，直连后端（避免 macOS 代理工具对 localhost 返回 502）
+        self._http = httpx.Client(base_url=config.BASE_URL, timeout=60, trust_env=False)
 
     def _obtain_token(self) -> None:
         last_exc: Exception | None = None
