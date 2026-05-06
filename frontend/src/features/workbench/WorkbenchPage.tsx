@@ -92,7 +92,7 @@ export function WorkbenchPage() {
       <div
         className={cn(
           'flex flex-col overflow-hidden border-r bg-muted/30 transition-[width] duration-200',
-          sidebarCollapsed ? 'w-[42px]' : 'w-[220px]',
+          sidebarCollapsed ? 'w-[42px]' : 'w-[260px]',
         )}
       >
         <div className="flex h-10 shrink-0 items-center justify-between border-b px-2">
@@ -165,25 +165,27 @@ export function WorkbenchPage() {
               </div>
             </div>
 
-            <ScrollArea className="flex-1 min-w-0">
+            <ScrollArea className="flex-1 min-w-0 [&>[data-slot=scroll-area-viewport]]:overflow-hidden">
               <div className="space-y-0.5 p-2">
                 {filteredSessions.map((session) => (
                   <div
                     key={session.id}
                     onClick={() => setCurrentSession(session)}
                     className={cn(
-                      'group flex min-w-0 items-center gap-2 rounded-md px-2.5 py-2 text-sm cursor-pointer hover:bg-accent',
+                      'group flex items-center rounded-md px-2.5 py-2 text-sm cursor-pointer hover:bg-accent',
                       currentSession?.id === session.id && 'bg-accent',
                     )}
                   >
-                    <Bot className="size-4 shrink-0 text-muted-foreground" />
-                    <span className="flex-1 truncate">{session.title || '新会话'}</span>
+                    <div className="relative flex-1 min-w-0 overflow-hidden">
+                      <span className="block whitespace-nowrap">{session.title || '新会话'}</span>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-card to-transparent group-hover:from-accent" />
+                    </div>
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
                         handleDeleteSession(session.id)
                       }}
-                      className="hidden shrink-0 text-muted-foreground hover:text-destructive group-hover:block"
+                      className="shrink-0 ml-1 opacity-0 text-muted-foreground hover:text-destructive group-hover:opacity-100"
                     >
                       <Trash2 className="size-3.5" />
                     </button>
