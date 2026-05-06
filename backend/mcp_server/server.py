@@ -107,6 +107,7 @@ from mcp_server.tools import (
     update_reminder,
     upload_contract_for_review,
     upload_invoices,
+    web_search,
 )
 
 mcp = FastMCP("法穿AI Copilot")
@@ -264,3 +265,6 @@ mcp.tool()(calculate_interest)
 mcp.tool()(extract_pdf_pages)
 mcp.tool()(detect_orientation)
 mcp.tool()(suggest_rename)
+
+# 网络搜索
+mcp.tool()(web_search)

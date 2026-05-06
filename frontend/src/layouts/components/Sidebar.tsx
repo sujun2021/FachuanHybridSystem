@@ -231,7 +231,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       <NavLink
         to="/admin/dashboard"
         className={cn(
-          'flex items-center h-14 px-4 shrink-0',
+          'flex items-center h-12 px-4 shrink-0',
           'border-b border-[rgba(255,255,255,0.08)]',
           'transition-all duration-200 hover:opacity-90',
           collapsed ? 'justify-center' : 'gap-2.5',

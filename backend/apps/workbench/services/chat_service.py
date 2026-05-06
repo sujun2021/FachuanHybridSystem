@@ -283,6 +283,10 @@ class WorkbenchChatService:
             content=user_message,
         )
 
+        # 选择 Agent
+        agent = AGENT_MAP.get(agent_type, triage_agent)
+        agent_display_name = agent.name or (agent_type or "triage")
+
         yield {"type": "meta", "session_id": str(session.session_id), "model": model_name, "agent": agent_display_name}
         yield {"type": "activity", "status": "thinking", "agent": agent_display_name}
 
@@ -297,10 +301,6 @@ class WorkbenchChatService:
         conversation_summary = ""
         if session.metadata and "conversation_summary" in session.metadata:
             conversation_summary = session.metadata["conversation_summary"]
-
-        # 选择 Agent
-        agent = AGENT_MAP.get(agent_type, triage_agent)
-        agent_display_name = agent.name or (agent_type or "triage")
 
         # 构建依赖
         event_queue: asyncio.Queue[dict[str, Any] | None] = asyncio.Queue()
