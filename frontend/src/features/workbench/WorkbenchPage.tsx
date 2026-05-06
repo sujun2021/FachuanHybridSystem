@@ -4,7 +4,6 @@ import { useEffect, useCallback, useState, useRef } from 'react'
 import { Bot, Plus, Trash2, Loader2, Pencil, Search, X, PanelLeftClose, PanelLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 import { useUIStore } from '@/stores/ui'
 import { useWorkbenchStore } from './stores/workbench-store'
@@ -165,7 +164,7 @@ export function WorkbenchPage() {
               </div>
             </div>
 
-            <ScrollArea className="flex-1 min-w-0 [&>[data-slot=scroll-area-viewport]]:overflow-hidden">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden">
               <div className="space-y-0.5 p-2">
                 {filteredSessions.map((session) => (
                   <div
@@ -176,10 +175,7 @@ export function WorkbenchPage() {
                       currentSession?.id === session.id && 'bg-accent',
                     )}
                   >
-                    <div className="relative flex-1 min-w-0 overflow-hidden">
-                      <span className="block whitespace-nowrap">{session.title || '新会话'}</span>
-                      <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-card to-transparent group-hover:from-accent" />
-                    </div>
+                    <span className="flex-1 min-w-0 truncate">{session.title || '新会话'}</span>
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
@@ -197,7 +193,7 @@ export function WorkbenchPage() {
                   </div>
                 )}
               </div>
-            </ScrollArea>
+            </div>
           </>
         )}
       </div>
