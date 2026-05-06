@@ -24,6 +24,7 @@ from typing import Any
 from asgiref.sync import sync_to_async
 
 from pydantic_ai import Agent, UsageLimits
+from pydantic_ai.result import AgentStream
 from pydantic_ai.messages import (
     FunctionToolCallEvent,
     FunctionToolResultEvent,
@@ -404,7 +405,7 @@ class WorkbenchChatService:
 
     async def _run_agent(
         self,
-        agent: Agent,
+        agent: Agent[WorkbenchDeps, str],
         user_message: str,
         model: Any,
         deps: WorkbenchDeps,
@@ -432,6 +433,7 @@ class WorkbenchChatService:
                     async for node in run:
                         if Agent.is_model_request_node(node):
                             # 流式收集文本和工具事件
+                            stream: AgentStream[WorkbenchDeps, str]
                             async with node.stream(run.ctx) as stream:
                                 async for event in stream:
                                     if isinstance(event, FunctionToolCallEvent):
@@ -478,8 +480,9 @@ class WorkbenchChatService:
 
                         elif Agent.is_call_tools_node(node):
                             # 工具执行节点：等待完成
-                            async with node.stream(run.ctx) as stream:
-                                async for _event in stream:
+                            _tool_stream: AgentStream[WorkbenchDeps, str]
+                            async with node.stream(run.ctx) as _tool_stream:
+                                async for _event in _tool_stream:
                                     pass
 
                         elif Agent.is_end_node(node):
