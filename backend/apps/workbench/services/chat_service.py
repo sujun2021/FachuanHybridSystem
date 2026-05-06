@@ -445,7 +445,8 @@ class WorkbenchChatService:
                         }
                         # 更新工具列表为目标 Agent 的工具
                         target_config = AGENT_CONFIGS[target_agent]
-                        tools = self._filter_tools(all_tools, target_config.get("tools_filter"))
+                        fresh_tools = await self._get_tools()
+                        tools = self._filter_tools(fresh_tools, target_config.get("tools_filter"))
                         # 替换 system prompt
                         for i, msg in enumerate(current_messages):
                             if msg.get("role") == "system":

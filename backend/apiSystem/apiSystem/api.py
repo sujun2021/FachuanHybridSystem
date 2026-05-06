@@ -150,6 +150,7 @@ def _register_app_routers() -> None:
     from apps.automation.api import router as automation_router
     from apps.automation.api.court_filing_api import router as court_filing_router
     from apps.automation.api.court_guarantee_api import router as court_guarantee_router
+    from apps.batch_printing.api import router as batch_printing_router
     from apps.cases.api import router as cases_router
     from apps.chat_records.api import router as chat_records_router
     from apps.client.api import router as client_router
@@ -174,15 +175,14 @@ def _register_app_routers() -> None:
     from apps.evidence.api import evidence_router
     from apps.evidence_sorting.api import router as evidence_sorting_router
     from apps.fee_notice.api import router as fee_notice_router
-    from apps.litigation_ai.api.litigation_api import router as litigation_router
-    from apps.litigation_ai.api.mock_trial_api import router as mock_trial_router
     from apps.image_rotation.api import router as image_rotation_router
     from apps.invoice_recognition.api import router as invoice_recognition_router
     from apps.legal_research.api import router as legal_research_router
+    from apps.litigation_ai.api.litigation_api import router as litigation_router
+    from apps.litigation_ai.api.mock_trial_api import router as mock_trial_router
     from apps.message_hub.api import router as inbox_router
     from apps.organization.api import router as organization_router
     from apps.pdf_splitting.api import router as pdf_splitting_router
-    from apps.batch_printing.api import router as batch_printing_router
     from apps.preservation_date.api import router as preservation_date_router
     from apps.reminders.api import router as reminders_router
     from apps.story_viz.api import router as story_viz_router

@@ -439,11 +439,7 @@ if SENTRY_DSN:
         def _sentry_before_send(event: dict, hint: dict) -> dict:  # type: ignore[type-arg]
             """Sentry before_send 钩子：注入 request_id / trace_id / task_name 到 tags"""
             try:
-                from apps.core.infrastructure.request_context import (
-                    get_request_id,
-                    get_task_name,
-                    get_trace_ids,
-                )
+                from apps.core.infrastructure.request_context import get_request_id, get_task_name, get_trace_ids
 
                 request_id = get_request_id(fallback_generate=False)
                 trace_id, span_id = get_trace_ids()

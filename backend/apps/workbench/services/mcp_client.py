@@ -7,6 +7,7 @@ import logging
 import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
+from collections.abc import AsyncIterator
 from typing import Any
 
 from mcp import ClientSession, types
@@ -26,7 +27,7 @@ class WorkbenchMCPClient:
         self._tools_cache: list[dict[str, Any]] | None = None
 
     @asynccontextmanager
-    async def _open_session(self):  # type: ignore[return]
+    async def _open_session(self) -> AsyncIterator[ClientSession]:
         """打开 MCP 会话（stdio 传输）"""
         server_params = StdioServerParameters(
             command=self._python_path,

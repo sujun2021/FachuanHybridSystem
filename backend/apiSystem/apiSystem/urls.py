@@ -190,7 +190,11 @@ def _sorted_get_app_list(self: admin.AdminSite, request: HttpRequest, app_label:
     # 注入虚拟「办案」顶级菜单（侧边栏仅显示3个核心入口，Hub 页展示全部子入口）
     if app_label is None and not any(a.get("app_label") == "case_handling" for a in app_list):
         case_handling_models: list[dict[str, Any]] = []
-        sidebar_labels = {"当事人": "/admin/client/client/", "合同": "/admin/contracts/contract/", "案件": "/admin/cases/case/"}
+        sidebar_labels = {
+            "当事人": "/admin/client/client/",
+            "合同": "/admin/contracts/contract/",
+            "案件": "/admin/cases/case/",
+        }
         for label, url in sidebar_labels.items():
             case_handling_models.append(
                 {
