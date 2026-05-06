@@ -22,8 +22,8 @@ from typing import Any
 from pydantic_ai import Agent, RunContext, Tool
 from pydantic_ai.mcp import MCPServerStdio
 from pydantic_ai.models.openai import OpenAIChatModel
-from pydantic_ai.providers.openai import OpenAIProvider
 from pydantic_ai.profiles.openai import OpenAIModelProfile
+from pydantic_ai.providers.openai import OpenAIProvider
 
 from apps.core.llm.config import LLMConfig
 
@@ -143,7 +143,7 @@ def build_model(model_name: str) -> OpenAIChatModel:
 
     if backend == "ollama":
         base_url = LLMConfig.get_ollama_base_url()
-        api_key = "ollama"
+        api_key = "ollama"  # pragma: allowlist secret
     elif backend == "openai_compatible":
         api_key = LLMConfig.get_openai_compatible_api_key()
         base_url = LLMConfig.get_openai_compatible_base_url()
@@ -194,7 +194,9 @@ def _contract_filter(ctx: Any, tool_def: Any) -> bool:
 
 def _research_filter(ctx: Any, tool_def: Any) -> bool:
     name = tool_def.name.lower()
-    return any(kw in name for kw in ["search", "research", "enterprise", "company", "bidding", "person", "profile", "web"])
+    return any(
+        kw in name for kw in ["search", "research", "enterprise", "company", "bidding", "person", "profile", "web"]
+    )
 
 
 # ─── 专业 Agent ──────────────────────────────────────────────────────────────
