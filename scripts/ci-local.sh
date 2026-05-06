@@ -86,15 +86,16 @@ skip()  { ((SKIPPED++)); echo -e "  ${YELLOW}⊘${NC} $1（跳过）"; }
 header(){ echo -e "\n${CYAN}━━━ [$1] $2 ━━━${NC}"; }
 
 # ── 计算 merge-base（对齐 CI 的 diff 策略）────────────────────
+# GitHub CI 用 origin/main 作为 PR 基准，本地也用 main 以保持一致
 compute_base() {
   local base=""
-  local upstream
-  upstream=$(git -C "$ROOT_DIR" rev-parse --abbrev-ref @{u} 2>/dev/null | sed 's|origin/||' || true)
-  if [ -n "$upstream" ] && git -C "$ROOT_DIR" rev-parse "$upstream" &>/dev/null; then
-    base="$upstream"
-  elif git -C "$ROOT_DIR" rev-parse HEAD~1 &>/dev/null; then
+  local current_branch
+  current_branch=$(git -C "$ROOT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || true)
+  if [ "$current_branch" = "main" ] || [ "$current_branch" = "master" ]; then
+    # 在主分支上，用 HEAD~1
     base="HEAD~1"
   else
+    # 在 feature 分支上，用 main（与 GitHub CI 的 GITHUB_BASE_REF 一致）
     base="main"
   fi
   git -C "$ROOT_DIR" merge-base HEAD "$base" 2>/dev/null || echo ""
@@ -261,6 +262,7 @@ if [ "$RUN_BACKEND" = true ]; then
     apps/core/infrastructure/throttling.py
     apps/core/exceptions/handlers.py
     apiSystem/apiSystem/api.py
+    apps/workbench/services/chat_service.py
   )
   if PYTHONPATH=apiSystem:. $BACKEND_PYTHON -m mypy --config-file=mypy.ini --follow-imports=silent "${MYPY_CURATED[@]}" 2>&1; then
     pass "mypy-curated"

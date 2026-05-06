@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from django.http import StreamingHttpResponse
+from django.http import Http404, StreamingHttpResponse
 from ninja import Router, Schema
 
 from apps.core.security.auth import JWTOrSessionAuth
@@ -18,6 +18,15 @@ router = Router(auth=JWTOrSessionAuth())
 
 # 全局服务实例（用于审批回调共享状态）
 _chat_service = WorkbenchChatService()
+
+
+def _get_user_session(user: Any, session_id: int) -> WorkbenchSession:
+    """获取用户的会话，不存在或无权限时抛 404"""
+    try:
+        return WorkbenchSession.objects.get(id=session_id, user=user)
+    except WorkbenchSession.DoesNotExist:
+        raise Http404("会话不存在")
+
 
 # ─── 会话 API ────────────────────────────────────────────────────────────────
 
@@ -57,13 +66,13 @@ def list_sessions(request: Any, page: int = 1) -> dict[str, Any]:
 @router.get("/sessions/{session_id}", response=SessionOut)
 def get_session(request: Any, session_id: int) -> WorkbenchSession:
     """获取会话详情"""
-    return WorkbenchSession.objects.get(id=session_id)
+    return _get_user_session(request.user, session_id)
 
 
 @router.patch("/sessions/{session_id}", response=SessionOut)
 def update_session(request: Any, session_id: int, payload: SessionUpdateIn) -> WorkbenchSession:
     """更新会话"""
-    session = WorkbenchSession.objects.get(id=session_id)
+    session = _get_user_session(request.user, session_id)
     if payload.title is not None:
         session.title = payload.title
     if payload.llm_model is not None:
@@ -77,7 +86,8 @@ def update_session(request: Any, session_id: int, payload: SessionUpdateIn) -> W
 @router.delete("/sessions/{session_id}")
 def delete_session(request: Any, session_id: int) -> dict[str, str]:
     """删除会话"""
-    WorkbenchSession.objects.filter(id=session_id).delete()
+    session = _get_user_session(request.user, session_id)
+    session.delete()
     return {"message": "已删除"}
 
 
@@ -87,6 +97,7 @@ def delete_session(request: Any, session_id: int) -> dict[str, str]:
 @router.get("/sessions/{session_id}/messages")
 def list_messages(request: Any, session_id: int, page: int = 1) -> dict[str, Any]:
     """获取会话的消息列表"""
+    _get_user_session(request.user, session_id)
     qs = WorkbenchMessage.objects.filter(session_id=session_id).order_by("created_at")
     page_size = 50
     offset = (page - 1) * page_size
@@ -99,12 +110,31 @@ def list_messages(request: Any, session_id: int, page: int = 1) -> dict[str, Any
     }
 
 
+@router.delete("/sessions/{session_id}/messages/from/{message_id}")
+def truncate_messages(request: Any, session_id: int, message_id: int) -> dict[str, str]:
+    """删除指定消息及其之后的所有消息（用于编辑重发）"""
+    _get_user_session(request.user, session_id)
+    try:
+        msg = WorkbenchMessage.objects.get(id=message_id, session_id=session_id)
+    except WorkbenchMessage.DoesNotExist:
+        raise Http404("消息不存在")
+    WorkbenchMessage.objects.filter(
+        session_id=session_id,
+        created_at__gte=msg.created_at,
+    ).delete()
+    return {"message": "已截断"}
+
+
 # ─── 对话 API（SSE 流式） ────────────────────────────────────────────────────
 
 
 @router.post("/sessions/{session_id}/messages/stream")
 async def stream_chat(request: Any, session_id: int, payload: MessageIn) -> StreamingHttpResponse:
     """SSE 流式对话 - 发送消息并获取 AI 流式响应"""
+    try:
+        await WorkbenchSession.objects.aget(id=session_id, user=request.user)
+    except WorkbenchSession.DoesNotExist:
+        raise Http404("会话不存在")
 
     async def event_generator() -> Any:
         async for event in _chat_service.stream_chat(
@@ -138,7 +168,8 @@ class ApprovalIn(Schema):
 @router.post("/approval")
 def respond_approval(request: Any, payload: ApprovalIn) -> dict[str, Any]:
     """响应审批请求（Phase 2: Human-in-the-Loop）"""
-    success = _chat_service.resolve_approval(payload.approval_id, payload.approved)
+    user_id = request.user.id if request.user.is_authenticated else None
+    success = _chat_service.resolve_approval(payload.approval_id, payload.approved, user_id=user_id)
     return {
         "success": success,
         "message": "审批已处理" if success else "审批 ID 不存在或已过期",

@@ -14,6 +14,10 @@ import type {
 import * as api from '../api'
 
 const FAVORITE_MODEL_KEY = 'workbench_favorite_model'
+const SELECTED_AGENT_KEY = 'workbench_selected_agent'
+
+// 用于中断正在进行的流式请求
+let _abortController: AbortController | null = null
 
 function loadFavoriteModel(): string {
   try {
@@ -21,6 +25,16 @@ function loadFavoriteModel(): string {
   } catch {
     return ''
   }
+}
+
+function loadSelectedAgent(): AgentType {
+  try {
+    const val = localStorage.getItem(SELECTED_AGENT_KEY)
+    if (val && ['triage', 'case', 'contract', 'research', 'general'].includes(val)) {
+      return val as AgentType
+    }
+  } catch { /* ignore */ }
+  return 'triage'
 }
 
 interface WorkbenchState {
@@ -37,6 +51,9 @@ interface WorkbenchState {
 
   // Agent
   selectedAgent: AgentType
+
+  // 消息加载
+  messagesLoading: boolean
 
   // 流式状态
   isStreaming: boolean
@@ -55,6 +72,8 @@ interface WorkbenchState {
   setCurrentSession: (session: WorkbenchSession | null) => void
   fetchMessages: (sessionId: number) => Promise<void>
   sendMessage: (content: string) => Promise<void>
+  editAndResend: (messageId: number, newContent: string) => Promise<void>
+  abortStream: () => void
   handleSSEEvent: (event: SSEEvent) => void
   respondApproval: (approved: boolean) => Promise<void>
   reset: () => void
@@ -68,7 +87,8 @@ export const useWorkbenchStore = create<WorkbenchState>()((set, get) => ({
   selectedModel: '',
   favoriteModel: loadFavoriteModel(),
   modelsLoading: false,
-  selectedAgent: 'triage',
+  selectedAgent: loadSelectedAgent(),
+  messagesLoading: false,
   isStreaming: false,
   streamingMessage: null,
   pendingApproval: null,
@@ -86,7 +106,10 @@ export const useWorkbenchStore = create<WorkbenchState>()((set, get) => ({
     set({ favoriteModel: model })
   },
 
-  setSelectedAgent: (agent) => set({ selectedAgent: agent }),
+  setSelectedAgent: (agent) => {
+    try { localStorage.setItem(SELECTED_AGENT_KEY, agent) } catch { /* ignore */ }
+    set({ selectedAgent: agent })
+  },
 
   fetchModels: async () => {
     set({ modelsLoading: true })
@@ -120,17 +143,20 @@ export const useWorkbenchStore = create<WorkbenchState>()((set, get) => ({
   },
 
   setCurrentSession: (session) => {
-    set({ currentSession: session, messages: [] })
+    set({ currentSession: session, messages: [], messagesLoading: !!session })
     if (session) {
       get().fetchMessages(session.id)
     }
   },
 
   fetchMessages: async (sessionId) => {
+    set({ messagesLoading: true })
     try {
       const res = await api.listMessages(sessionId)
-      set({ messages: res.items })
-    } catch { /* ignore */ }
+      set({ messages: res.items, messagesLoading: false })
+    } catch {
+      set({ messagesLoading: false })
+    }
   },
 
   sendMessage: async (content) => {
@@ -153,6 +179,7 @@ export const useWorkbenchStore = create<WorkbenchState>()((set, get) => ({
     set((state) => ({ messages: [...state.messages, userMsg] }))
 
     // 开始流式请求
+    _abortController = new AbortController()
     set({
       isStreaming: true,
       streamingMessage: { role: 'assistant', content: '', toolCalls: [], handoffs: [] },
@@ -165,6 +192,7 @@ export const useWorkbenchStore = create<WorkbenchState>()((set, get) => ({
 
       const response = await fetch(url, {
         method: 'POST',
+        signal: _abortController.signal,
         headers: {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -208,8 +236,28 @@ export const useWorkbenchStore = create<WorkbenchState>()((set, get) => ({
 
       // 流结束 - 将 streamingMessage 转为正式消息
       const { streamingMessage } = get()
+      const newMessages: WorkbenchMessage[] = []
+
+      // 保存工具调用消息
+      if (streamingMessage) {
+        for (const tc of streamingMessage.toolCalls) {
+          newMessages.push({
+            id: Date.now() + Math.random(),
+            role: 'tool',
+            content: `工具 ${tc.name}: ${tc.status === 'success' ? '成功' : tc.status === 'error' ? '失败' : '执行中'}`,
+            llm_model: '',
+            tool_call_id: tc.toolCallId,
+            tool_name: tc.name,
+            tool_input: tc.arguments,
+            tool_output: tc.result ? { result: tc.result, success: tc.success } : {},
+            metadata: { success: tc.success ?? (tc.status === 'success') },
+            created_at: new Date().toISOString(),
+          })
+        }
+      }
+
       if (streamingMessage && streamingMessage.content) {
-        const assistantMsg: WorkbenchMessage = {
+        newMessages.push({
           id: Date.now() + 1,
           role: 'assistant',
           content: streamingMessage.content,
@@ -220,26 +268,71 @@ export const useWorkbenchStore = create<WorkbenchState>()((set, get) => ({
           tool_output: {},
           metadata: {},
           created_at: new Date().toISOString(),
-        }
-        set((state) => ({ messages: [...state.messages, assistantMsg] }))
+        })
+      }
+
+      if (newMessages.length > 0) {
+        set((state) => ({ messages: [...state.messages, ...newMessages] }))
       }
     } catch (err) {
-      const errorMsg: WorkbenchMessage = {
-        id: Date.now() + 1,
-        role: 'assistant',
-        content: `请求失败: ${err instanceof Error ? err.message : '未知错误'}`,
-        llm_model: '',
-        tool_call_id: '',
-        tool_name: '',
-        tool_input: {},
-        tool_output: {},
-        metadata: {},
-        created_at: new Date().toISOString(),
+      // 用户主动中断不显示错误
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        // 中断时保留已有的流式内容
+        const { streamingMessage: sm } = get()
+        if (sm && sm.content) {
+          const partialMsg: WorkbenchMessage = {
+            id: Date.now() + 1,
+            role: 'assistant',
+            content: sm.content + '\n\n[已中断]',
+            llm_model: sm.model || '',
+            tool_call_id: '',
+            tool_name: '',
+            tool_input: {},
+            tool_output: {},
+            metadata: { aborted: true },
+            created_at: new Date().toISOString(),
+          }
+          set((state) => ({ messages: [...state.messages, partialMsg] }))
+        }
+      } else {
+        const errorMsg: WorkbenchMessage = {
+          id: Date.now() + 1,
+          role: 'assistant',
+          content: `请求失败: ${err instanceof Error ? err.message : '未知错误'}`,
+          llm_model: '',
+          tool_call_id: '',
+          tool_name: '',
+          tool_input: {},
+          tool_output: {},
+          metadata: {},
+          created_at: new Date().toISOString(),
+        }
+        set((state) => ({ messages: [...state.messages, errorMsg] }))
       }
-      set((state) => ({ messages: [...state.messages, errorMsg] }))
     } finally {
+      _abortController = null
       set({ isStreaming: false, streamingMessage: null })
     }
+  },
+
+  editAndResend: async (messageId, newContent) => {
+    const { currentSession, messages } = get()
+    if (!currentSession) return
+
+    // 找到该消息位置，截断后续消息
+    const idx = messages.findIndex((m) => m.id === messageId)
+    if (idx < 0) return
+
+    // 删除该消息及之后的所有消息（后端）
+    try {
+      await api.truncateMessages(currentSession.id, messageId)
+    } catch { /* ignore */ }
+
+    // 更新本地状态：保留该消息之前的消息
+    set({ messages: messages.slice(0, idx) })
+
+    // 用新内容重新发送
+    get().sendMessage(newContent)
   },
 
   handleSSEEvent: (event) => {
@@ -249,13 +342,33 @@ export const useWorkbenchStore = create<WorkbenchState>()((set, get) => ({
 
       switch (event.type) {
         case 'meta':
-          return { streamingMessage: { ...sm, model: event.model } }
+          return {
+            streamingMessage: {
+              ...sm,
+              model: event.model,
+              activeAgent: event.agent || sm.activeAgent,
+              currentActivity: event.agent ? `${event.agent} 正在思考...` : sm.currentActivity,
+            },
+          }
+
+        case 'activity':
+          return {
+            streamingMessage: {
+              ...sm,
+              activeAgent: event.agent || sm.activeAgent,
+              currentActivity: event.status === 'thinking'
+                ? `${event.agent || sm.activeAgent || '助手'} 正在思考...`
+                : sm.currentActivity,
+            },
+          }
 
         case 'delta':
           return {
             streamingMessage: {
               ...sm,
               content: sm.content + (event.content || ''),
+              // 收到 delta 时清除 thinking 状态
+              currentActivity: undefined,
             },
           }
 
@@ -266,10 +379,12 @@ export const useWorkbenchStore = create<WorkbenchState>()((set, get) => ({
             arguments: event.arguments || event.tool_input || {},
             status: 'running',
           }
+          const toolName = event.name || event.tool_name || '工具'
           return {
             streamingMessage: {
               ...sm,
               toolCalls: [...sm.toolCalls, tc],
+              currentActivity: `正在执行 ${toolName}...`,
             },
           }
         }
@@ -289,6 +404,8 @@ export const useWorkbenchStore = create<WorkbenchState>()((set, get) => ({
                     }
                   : tc,
               ),
+              // 工具完成，清除活动状态（下一个 tool_call 或 delta 会重新设置）
+              currentActivity: undefined,
             },
           }
         }
@@ -301,6 +418,7 @@ export const useWorkbenchStore = create<WorkbenchState>()((set, get) => ({
                 ...sm.handoffs,
                 { from: event.from_agent || '', to: event.to_agent || '' },
               ],
+              currentActivity: `切换到 ${event.to_agent || '助手'}...`,
             },
           }
 
@@ -317,7 +435,7 @@ export const useWorkbenchStore = create<WorkbenchState>()((set, get) => ({
           return {
             streamingMessage: {
               ...sm,
-              content: sm.content + `\n\n错误: ${event.message || '未知错误'}`,
+              error: event.message || '未知错误',
             },
           }
 
@@ -325,6 +443,13 @@ export const useWorkbenchStore = create<WorkbenchState>()((set, get) => ({
           return state
       }
     })
+  },
+
+  abortStream: () => {
+    if (_abortController) {
+      _abortController.abort()
+      _abortController = null
+    }
   },
 
   respondApproval: async (approved) => {
@@ -337,12 +462,19 @@ export const useWorkbenchStore = create<WorkbenchState>()((set, get) => ({
     } catch { /* ignore */ }
   },
 
-  reset: () =>
+  reset: () => {
+    // 重置时也中断进行中的请求
+    if (_abortController) {
+      _abortController.abort()
+      _abortController = null
+    }
     set({
       currentSession: null,
       messages: [],
+      messagesLoading: false,
       isStreaming: false,
       streamingMessage: null,
       pendingApproval: null,
-    }),
+    })
+  },
 }))

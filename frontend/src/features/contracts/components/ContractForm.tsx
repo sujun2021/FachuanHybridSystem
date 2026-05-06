@@ -1,12 +1,16 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
+import { Check, ChevronsUpDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { cn } from '@/lib/utils'
 import { PATHS } from '@/routes/paths'
 import { useContractMutations } from '../hooks/use-contract-mutations'
 import { useLawyers } from '../hooks/use-lawyers'
@@ -188,12 +192,34 @@ export function ContractForm({ mode, contract }: Props) {
         <CardContent className="space-y-3">
           {parties.map((p, idx) => (
             <div key={idx} className="flex items-center gap-2">
-              <Select value={String(p.client_id || '')} onValueChange={v => updateParty(idx, 'client_id', v)}>
-                <SelectTrigger className="flex-1"><SelectValue placeholder="选择当事人" /></SelectTrigger>
-                <SelectContent>
-                  {clients.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button type="button" variant="outline" role="combobox" className="flex-1 justify-between font-normal">
+                    {p.client_id ? clients.find(c => c.id === p.client_id)?.name : '选择当事人'}
+                    <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="搜索当事人..." />
+                    <CommandList>
+                      <CommandEmpty>未找到当事人</CommandEmpty>
+                      <CommandGroup>
+                        {clients.map(c => (
+                          <CommandItem
+                            key={c.id}
+                            value={c.name}
+                            onSelect={() => updateParty(idx, 'client_id', c.id)}
+                          >
+                            <Check className={cn('mr-2 size-4', p.client_id === c.id ? 'opacity-100' : 'opacity-0')} />
+                            {c.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               <Select value={p.role} onValueChange={v => updateParty(idx, 'role', v)}>
                 <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -207,7 +233,7 @@ export function ContractForm({ mode, contract }: Props) {
         </CardContent>
       </Card>
 
-      <div className="flex gap-3">
+      <div className="flex gap-3 pb-8">
         <Button type="submit" disabled={submitting}>{submitting ? '提交中...' : mode === 'create' ? '创建合同' : '保存修改'}</Button>
         <Button type="button" variant="outline" onClick={() => navigate(PATHS.ADMIN_CONTRACTS)}>取消</Button>
       </div>

@@ -75,6 +75,7 @@ class ModelInfo(Schema):
     id: str
     name: str
     backend: str
+    context_window: int = 0
 
 
 class ModelListResponse(Schema):

@@ -80,10 +80,10 @@ function formatAmount(amount: number | null | undefined): string {
 const TABS = [
   { value: 'basic', label: '基本信息' },
   { value: 'parties', label: '当事人与律师' },
-  { value: 'fees', label: '收费/财务' },
-  { value: 'filing', label: '立案/OA' },
-  { value: 'documents', label: '文书/提醒' },
-  { value: 'archive', label: '归档清单' },
+  { value: 'fees', label: '收费与财务' },
+  { value: 'filing', label: '立案' },
+  { value: 'documents', label: '文档与提醒' },
+  { value: 'archive', label: '归档' },
 ]
 
 const tabVariants = {
@@ -120,14 +120,21 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
     try {
       switch (action) {
         case 'generate-doc': {
-          const blob = await contractApi.generateContract(contractId)
-          const url = URL.createObjectURL(blob)
-          const a = document.createElement('a')
-          a.href = url
-          a.download = `合同_${contract?.name ?? contractId}.docx`
-          a.click()
-          URL.revokeObjectURL(url)
-          toast.success('合同文档已生成')
+          const res = await contractApi.generateContract(contractId)
+          const ct = res.headers.get('content-type')
+          if (ct && ct.includes('application/json')) {
+            const data = await res.json() as { message?: string }
+            toast.success(data.message || '合同已生成并保存')
+          } else {
+            const blob = await res.blob()
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `合同_${contract?.name ?? contractId}.docx`
+            a.click()
+            URL.revokeObjectURL(url)
+            toast.success('合同生成成功，已开始下载')
+          }
           break
         }
         case 'create-case': {

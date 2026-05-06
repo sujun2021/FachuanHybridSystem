@@ -81,7 +81,7 @@ export function ClientTable({ clients, isLoading = false }: ClientTableProps) {
         <TableHeader>
           <TableRow>
             <TableHead className="w-[60px] text-xs sm:text-sm">ID</TableHead>
-            <TableHead className="w-[180px] text-xs sm:w-[220px] sm:text-sm">名称</TableHead>
+            <TableHead className="w-[200px] text-xs sm:w-[260px] sm:text-sm">名称</TableHead>
             <TableHead className="w-[140px] text-xs sm:w-[180px] sm:text-sm">证件号码</TableHead>
             <TableHead className="w-[110px] text-xs sm:w-[140px] sm:text-sm">联系方式</TableHead>
             <TableHead className="w-[60px] text-xs sm:text-sm"><span className="sr-only">操作</span></TableHead>
@@ -107,6 +107,13 @@ export function ClientTable({ clients, isLoading = false }: ClientTableProps) {
                     <div className="flex items-center gap-2">
                       <Icon className={`size-4 shrink-0 ${cfg.color}`} />
                       <span className="text-xs font-medium sm:text-sm">{client.name}</span>
+                      <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium leading-none ${
+                        client.is_our_client
+                          ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400'
+                          : 'bg-slate-100 text-slate-500 dark:bg-slate-500/10 dark:text-slate-400'
+                      }`}>
+                        {client.is_our_client ? '我方' : '对方'}
+                      </span>
                     </div>
                   </TableCell>
                   <TableCell className="text-muted-foreground font-mono text-xs sm:text-sm">

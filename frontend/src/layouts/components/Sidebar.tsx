@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { NavLink, useLocation } from 'react-router'
 import { ChevronLeft, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -65,13 +65,50 @@ function GroupMenu({ group, collapsed, isExpanded, onToggle, activePath }: {
 }) {
   const Icon = group.icon
   const hasActive = group.items.some((item) => activePath.startsWith(item.path))
+  const [popoverOpen, setPopoverOpen] = useState(false)
+  const [buttonRect, setButtonRect] = useState<DOMRect | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const popoverRef = useRef<HTMLDivElement>(null)
+
+  // Click outside to close (check both button area and popover)
+  useEffect(() => {
+    if (!popoverOpen) return
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node
+      if (containerRef.current?.contains(target)) return
+      if (popoverRef.current?.contains(target)) return
+      setPopoverOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [popoverOpen])
+
+  // Close popover on route change
+  const prevPath = useRef(activePath)
+  useEffect(() => {
+    if (activePath !== prevPath.current) {
+      prevPath.current = activePath
+      setPopoverOpen(false)
+    }
+  }, [activePath])
+
+  const handleButtonClick = (e: React.MouseEvent) => {
+    if (collapsed) {
+      // Measure button position for fixed popover placement
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+      setButtonRect(rect)
+      setPopoverOpen((prev) => !prev)
+    } else {
+      onToggle()
+    }
+  }
 
   return (
-    <div>
+    <div ref={containerRef} className="relative">
       <button
-        onClick={onToggle}
+        onClick={handleButtonClick}
         className={cn(
-          'w-full flex items-center gap-3 h-10 px-3 rounded-md mx-2 transition-all duration-150 group relative',
+          'w-full flex items-center gap-3 h-10 px-3 rounded-md mx-2 transition-all duration-150 group',
           'text-[#a1a1aa] hover:text-white hover:bg-[#27272a]',
           hasActive && 'text-white',
           collapsed && 'justify-center mx-1 px-0',
@@ -85,26 +122,61 @@ function GroupMenu({ group, collapsed, isExpanded, onToggle, activePath }: {
             <ChevronDown className={cn('w-4 h-4 text-[#71717a] transition-transform duration-200', isExpanded && 'rotate-180')} />
           </>
         )}
-        {collapsed && (
-          <div className="absolute left-full ml-3 py-2 rounded-lg min-w-[160px] bg-[#27272a] text-white shadow-lg border border-[#3f3f46] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50">
-            <div className="px-3 pb-1.5 mb-1 text-xs font-semibold text-[#71717a] border-b border-[#3f3f46]">{group.label}</div>
-            {group.items.map((item) => (
-              <NavLink
-                key={item.id}
-                to={item.path}
-                className={cn(
-                  'flex items-center gap-2.5 px-3 py-2 text-[13px] hover:bg-[#27272a] transition-colors duration-150',
-                  activePath.startsWith(item.path) && 'text-white bg-[#27272a] font-medium',
-                )}
-              >
-                <item.icon className="w-4 h-4" />
-                {item.label}
-              </NavLink>
-            ))}
-          </div>
-        )}
       </button>
 
+      {/* Collapsed: click-triggered popover (fixed positioning to escape overflow:hidden) */}
+      {collapsed && popoverOpen && buttonRect && (
+        <div
+          ref={popoverRef}
+          className="fixed rounded-xl overflow-hidden"
+          style={{
+            left: buttonRect.right + 10,
+            top: buttonRect.top - 4,
+            zIndex: 9999,
+            minWidth: 180,
+            animation: 'popover-in 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
+        >
+          {/* Arrow */}
+          <div
+            className="absolute -left-1.5 top-5 w-3 h-3 rotate-45 bg-[#1e1e21] border-l border-b border-[#333338]"
+          />
+          {/* Content */}
+          <div className="relative bg-[#1e1e21]/95 backdrop-blur-md border border-[#333338] rounded-xl shadow-2xl shadow-black/40 py-1.5">
+            <div className="px-3.5 pt-1 pb-2 mb-1 flex items-center gap-2">
+              {Icon && <Icon className="w-3.5 h-3.5 text-[#6366f1]" />}
+              <span className="text-[11px] font-semibold text-[#71717a] tracking-wide uppercase">{group.label}</span>
+            </div>
+            {group.items.map((item) => {
+              const isActive = activePath.startsWith(item.path)
+              return (
+                <NavLink
+                  key={item.id}
+                  to={item.path}
+                  className={cn(
+                    'flex items-center gap-3 mx-1.5 px-2.5 py-2 rounded-lg text-[13px] transition-all duration-150',
+                    'hover:bg-white/[0.06]',
+                    isActive
+                      ? 'text-white bg-white/[0.08] font-medium'
+                      : 'text-[#a1a1aa]',
+                  )}
+                >
+                  <span className={cn(
+                    'flex items-center justify-center w-7 h-7 rounded-lg transition-colors duration-150',
+                    isActive ? 'bg-[#6366f1]/20 text-[#818cf8]' : 'bg-white/[0.04] text-[#71717a]',
+                  )}>
+                    <item.icon className="w-4 h-4" />
+                  </span>
+                  <span className="flex-1">{item.label}</span>
+                  {isActive && <span className="w-1.5 h-1.5 rounded-full bg-[#6366f1]" />}
+                </NavLink>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Expanded: inline sub-items */}
       {!collapsed && (
         <div
           className="grid transition-[grid-template-rows] duration-200 ease-in-out"
@@ -159,13 +231,15 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       <NavLink
         to="/admin/dashboard"
         className={cn(
-          'flex items-center h-14 px-4 shrink-0',
+          'flex items-center h-12 px-4 shrink-0',
           'border-b border-[rgba(255,255,255,0.08)]',
           'transition-all duration-200 hover:opacity-90',
           collapsed ? 'justify-center' : 'gap-2.5',
         )}
       >
-        {!collapsed && (
+        {collapsed ? (
+          <span className="text-[15px] font-bold text-white">FC</span>
+        ) : (
           <span className="text-[15px] font-bold text-white tracking-wide">法穿AI Copilot</span>
         )}
       </NavLink>

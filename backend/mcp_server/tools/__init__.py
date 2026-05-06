@@ -117,6 +117,7 @@ from mcp_server.tools.reminders import (
     list_reminder_types,
     update_reminder,
 )
+from mcp_server.tools.web_search import web_search
 
 __all__ = [
     # 案件
@@ -175,4 +176,6 @@ __all__ = [
     "list_lpr_rates", "get_latest_lpr_rate", "calculate_interest",
     # 图片旋转
     "extract_pdf_pages", "detect_orientation", "suggest_rename",
+    # 网络搜索
+    "web_search",
 ]

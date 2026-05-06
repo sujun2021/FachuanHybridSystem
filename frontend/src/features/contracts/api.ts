@@ -35,13 +35,13 @@ export const contractApi = {
     contractApi_.get(`contracts/${id}`).json<Contract>(),
 
   create: async (data: ContractInput): Promise<Contract> =>
-    contractApi_.post('contracts', { json: data }).json<Contract>(),
+    contractApi_.post('contracts', { json: { payload: data } }).json<Contract>(),
 
   createFull: async (data: ContractInput & { cases?: Record<string, unknown>[] }): Promise<Contract> =>
-    contractApi_.post('contracts/full', { json: data }).json<Contract>(),
+    contractApi_.post('contracts/full', { json: { payload: data } }).json<Contract>(),
 
   update: async (id: number | string, data: ContractUpdate): Promise<Contract> =>
-    contractApi_.put(`contracts/${id}`, { json: data }).json<Contract>(),
+    contractApi_.put(`contracts/${id}`, { json: { payload: data } }).json<Contract>(),
 
   delete: async (id: number | string): Promise<void> => {
     await api.delete(`contracts/${id}`)
@@ -170,11 +170,14 @@ export const contractApi = {
 
   // ==================== Document Generation ====================
 
-  generateContract: async (contractId: number | string): Promise<Blob> =>
-    contractApi_.get(`${contractId}/generate-doc`).blob(),
+  generateContract: async (contractId: number | string, splitFee = false): Promise<Response> =>
+    api.get(`documents/contracts/${contractId}/download`, { searchParams: splitFee ? { split_fee: 'true' } : {} }),
 
-  generateSupplementaryAgreement: async (agreementId: number): Promise<Blob> =>
-    contractApi_.get(`supplementary-agreements/${agreementId}/generate-doc`).blob(),
+  generateFolder: async (contractId: number | string): Promise<Blob> =>
+    api.get(`documents/contracts/${contractId}/folder/download`).blob(),
+
+  generateSupplementaryAgreement: async (contractId: number | string, agreementId: number): Promise<Response> =>
+    api.get(`documents/contracts/${contractId}/supplementary-agreements/${agreementId}/download`),
 
   // ==================== Contract Actions ====================
 
