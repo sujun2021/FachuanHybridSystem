@@ -116,7 +116,10 @@ def list_messages(request: Any, session_id: int, page: int = 1) -> dict[str, Any
 @router.post("/sessions/{session_id}/messages/stream")
 async def stream_chat(request: Any, session_id: int, payload: MessageIn) -> StreamingHttpResponse:
     """SSE 流式对话 - 发送消息并获取 AI 流式响应"""
-    _get_user_session(request.user, session_id)
+    try:
+        await WorkbenchSession.objects.aget(id=session_id, user=request.user)
+    except WorkbenchSession.DoesNotExist:
+        raise Http404("会话不存在")
 
     async def event_generator() -> Any:
         async for event in _chat_service.stream_chat(
