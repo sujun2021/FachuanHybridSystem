@@ -144,7 +144,7 @@ function AdminLayoutContent() {
         >
           <X className="size-5" />
         </button>
-        <Sidebar collapsed={false} onToggle={closeMobileMenu} />
+        <Sidebar collapsed={false} onToggle={closeMobileMenu} hideToggle />
       </div>
 
       {/* 主内容区域 */}

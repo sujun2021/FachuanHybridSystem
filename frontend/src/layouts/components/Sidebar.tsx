@@ -16,6 +16,7 @@ import {
 interface SidebarProps {
   collapsed: boolean
   onToggle: () => void
+  hideToggle?: boolean
 }
 
 function TopLevelItem({ item, collapsed, isActive }: {
@@ -198,7 +199,7 @@ function GroupMenu({ group, collapsed, isExpanded, onToggle, activePath }: {
   )
 }
 
-export function Sidebar({ collapsed, onToggle }: SidebarProps) {
+export function Sidebar({ collapsed, onToggle, hideToggle }: SidebarProps) {
   const location = useLocation()
   const expandedGroups = useUIStore((s) => s.expandedGroups)
   const toggleGroup = useUIStore((s) => s.toggleGroup)
@@ -244,13 +245,15 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         )}
       </NavLink>
 
-      {/* 折叠按钮 - 侧边栏右侧中间 */}
-      <button
-        onClick={onToggle}
-        className="absolute top-1/2 -translate-y-1/2 -right-3 z-50 w-6 h-6 rounded-full bg-[#27272a] border border-[#3f3f46] flex items-center justify-center text-[#a1a1aa] hover:text-white hover:bg-[#3f3f46] transition-colors"
-      >
-        <ChevronLeft className={cn('w-3 h-3 transition-transform', collapsed && 'rotate-180')} />
-      </button>
+      {/* 折叠按钮 - 侧边栏右侧中间（移动端抽屉中隐藏，由外层 X 按钮控制） */}
+      {!hideToggle && (
+        <button
+          onClick={onToggle}
+          className="absolute top-1/2 -translate-y-1/2 -right-3 z-50 w-6 h-6 rounded-full bg-[#27272a] border border-[#3f3f46] flex items-center justify-center text-[#a1a1aa] hover:text-white hover:bg-[#3f3f46] transition-colors"
+        >
+          <ChevronLeft className={cn('w-3 h-3 transition-transform', collapsed && 'rotate-180')} />
+        </button>
+      )}
 
       {/* 菜单 */}
       <nav className={cn('flex-1 py-3', collapsed ? 'overflow-hidden' : 'overflow-y-auto')}>
