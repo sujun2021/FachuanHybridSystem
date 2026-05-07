@@ -36,6 +36,7 @@ class PrivateWeikeApiAdapter(Protocol):
 
 
 _PRIVATE_MODULE_PATHS: tuple[str, ...] = (
+    "plugins.weike_api_private.adapter",
     "apps.legal_research.services.sources.weike_api_private.adapter",
     "apps.legal_research.services.sources.weike.api_private.adapter",
 )

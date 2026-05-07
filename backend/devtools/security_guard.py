@@ -17,6 +17,7 @@ SOURCE_DIR_PREFIXES = (
 )
 FORBIDDEN_BINARY_EXTENSIONS = (".onnx", ".mp4", ".zip")
 FORBIDDEN_PRIVATE_PATH_PREFIXES = (
+    "backend/plugins/weike_api_private/",
     "backend/apps/legal_research/services/sources/weike_api_private/",
     "backend/apps/legal_research/services/sources/weike/api_private/",
 )
