@@ -67,7 +67,7 @@ export function ContextUsageBar() {
         : 'text-red-600 dark:text-red-400'
 
   return (
-    <div className="flex items-center gap-2 min-w-[140px]">
+    <div className="hidden md:flex items-center gap-2 min-w-[140px]">
       <Progress
         value={percent}
         className={cn(

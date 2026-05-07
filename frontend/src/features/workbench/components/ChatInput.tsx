@@ -81,7 +81,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
   const displayContent = speech.isListening ? content + speech.interimTranscript : content
 
   return (
-    <div className="border-t p-4 space-y-2">
+    <div className="border-t p-3 md:p-4 space-y-2">
       {/* Agent 选择器 */}
       <div className="flex items-center gap-1.5 flex-wrap">
         <span className="text-xs text-muted-foreground mr-1">助手:</span>

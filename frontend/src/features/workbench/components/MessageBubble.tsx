@@ -35,11 +35,11 @@ export function MessageBubble({ message, toolCalls }: MessageBubbleProps) {
   const isSystem = message.role === 'system'
 
   return (
-    <div className={cn('flex gap-3', isUser ? 'justify-end' : 'justify-start')}>
+    <div className={cn('flex gap-2 md:gap-3', isUser ? 'justify-end' : 'justify-start')}>
       {!isUser && (
         <div
           className={cn(
-            'flex size-8 shrink-0 items-center justify-center rounded-full',
+            'flex size-6 md:size-8 shrink-0 items-center justify-center rounded-full',
             isSystem ? 'bg-destructive/10' : 'bg-primary/10',
           )}
         >
@@ -89,7 +89,7 @@ export function MessageBubble({ message, toolCalls }: MessageBubbleProps) {
       </div>
 
       {isUser && (
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary">
+        <div className="flex size-6 md:size-8 shrink-0 items-center justify-center rounded-full bg-primary">
           <User className="size-4 text-primary-foreground" />
         </div>
       )}
@@ -335,8 +335,8 @@ function MessageActions({ message }: { message: WorkbenchMessage }) {
 /** 流式消息气泡 */
 export function StreamingBubble({ message }: { message: StreamingMessage }) {
   return (
-    <div className="flex gap-3 justify-start">
-      <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+    <div className="flex gap-2 md:gap-3 justify-start">
+      <div className="flex size-6 md:size-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
         <Bot className="size-4 text-primary animate-pulse" />
       </div>
       <div className="max-w-[80%] rounded-lg bg-muted px-4 py-2.5 text-sm space-y-2">

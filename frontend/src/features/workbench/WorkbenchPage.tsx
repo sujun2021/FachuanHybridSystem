@@ -1,12 +1,13 @@
 /** 工作台页面 */
 
 import { useEffect, useCallback, useState, useRef } from 'react'
-import { Bot, Plus, Trash2, Loader2, Pencil, Search, X, PanelLeftClose, PanelLeft } from 'lucide-react'
+import { Bot, Plus, Trash2, Loader2, Pencil, Search, X, PanelLeftClose, PanelLeft, Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { useUIStore } from '@/stores/ui'
 import { useWorkbenchStore } from './stores/workbench-store'
+import type { WorkbenchSession } from './types'
 import { MessageList } from './components/MessageList'
 import { ChatInput } from './components/ChatInput'
 import { ModelSelector } from './components/ModelSelector'
@@ -40,11 +41,20 @@ export function WorkbenchPage() {
 
   const [isCreating, setIsCreating] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     try { return localStorage.getItem('workbench_sidebar_collapsed') === 'true' } catch { return false }
   })
   // 记录收起前的 admin 侧边栏状态，用于展开时恢复
   const prevAdminCollapsedRef = useRef(adminSidebarCollapsed)
+
+  // 监听视口宽度
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   useEffect(() => {
     fetchSessions()
@@ -92,15 +102,16 @@ export function WorkbenchPage() {
     ? sessions.filter((s) => (s.title || '新会话').toLowerCase().includes(searchQuery.toLowerCase()))
     : sessions
 
-  return (
-    <div className="flex h-[calc(100vh-7rem)] overflow-hidden rounded-lg border bg-card">
-      {/* 侧边栏：会话列表 */}
-      <div
-        className={cn(
-          'flex flex-col overflow-hidden border-r bg-muted/30 transition-[width] duration-200',
-          sidebarCollapsed ? 'w-[42px]' : 'w-[260px]',
-        )}
-      >
+  const handleMobileSessionClick = useCallback(
+    (session: WorkbenchSession) => {
+      setCurrentSession(session)
+      setMobileSidebarOpen(false)
+    },
+    [setCurrentSession],
+  )
+
+  const sidebarContent = (
+    <>
         <div className="flex h-10 shrink-0 items-center justify-between border-b px-2">
           {!sidebarCollapsed && <span className="text-sm font-medium pl-1">会话</span>}
           <div className="flex items-center gap-0.5">
@@ -119,32 +130,42 @@ export function WorkbenchPage() {
                 )}
               </Button>
             )}
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={() => {
-                setSidebarCollapsed((prev) => {
-                  const next = !prev
-                  try { localStorage.setItem('workbench_sidebar_collapsed', String(next)) } catch { /* ignore */ }
-                  if (next) {
-                    // 收起：记住当前 admin 侧边栏状态，然后一起收起
-                    prevAdminCollapsedRef.current = adminSidebarCollapsed
-                    if (!adminSidebarCollapsed) setAdminSidebarCollapsed(true)
-                  } else {
-                    // 展开：恢复之前的 admin 侧边栏状态
-                    if (!prevAdminCollapsedRef.current) setAdminSidebarCollapsed(false)
-                  }
-                  return next
-                })
-              }}
-              className="size-7"
-            >
-              {sidebarCollapsed ? (
-                <PanelLeft className="size-3.5" />
-              ) : (
-                <PanelLeftClose className="size-3.5" />
-              )}
-            </Button>
+            {!isMobile && (
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => {
+                  setSidebarCollapsed((prev) => {
+                    const next = !prev
+                    try { localStorage.setItem('workbench_sidebar_collapsed', String(next)) } catch { /* ignore */ }
+                    if (next) {
+                      prevAdminCollapsedRef.current = adminSidebarCollapsed
+                      if (!adminSidebarCollapsed) setAdminSidebarCollapsed(true)
+                    } else {
+                      if (!prevAdminCollapsedRef.current) setAdminSidebarCollapsed(false)
+                    }
+                    return next
+                  })
+                }}
+                className="size-7"
+              >
+                {sidebarCollapsed ? (
+                  <PanelLeft className="size-3.5" />
+                ) : (
+                  <PanelLeftClose className="size-3.5" />
+                )}
+              </Button>
+            )}
+            {isMobile && (
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setMobileSidebarOpen(false)}
+                className="size-7"
+              >
+                <X className="size-3.5" />
+              </Button>
+            )}
           </div>
         </div>
 
@@ -176,7 +197,7 @@ export function WorkbenchPage() {
                 {filteredSessions.map((session) => (
                   <div
                     key={session.id}
-                    onClick={() => setCurrentSession(session)}
+                    onClick={() => isMobile ? handleMobileSessionClick(session) : setCurrentSession(session)}
                     className={cn(
                       'group flex items-center rounded-md px-2.5 py-2 text-sm cursor-pointer hover:bg-accent',
                       currentSession?.id === session.id && 'bg-accent',
@@ -203,13 +224,53 @@ export function WorkbenchPage() {
             </div>
           </>
         )}
-      </div>
+    </>
+  )
 
+  return (
+    <div className="flex h-[calc(100vh-7rem)] overflow-hidden rounded-lg border bg-card">
+      {/* 移动端抽屉遮罩 */}
+      {isMobile && mobileSidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50"
+          onClick={() => setMobileSidebarOpen(false)}
+        />
+      )}
+
+      {/* 侧边栏：会话列表 */}
+      {isMobile ? (
+        /* 移动端抽屉 */
+        mobileSidebarOpen && (
+          <div className="fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col border-r bg-card shadow-lg">
+            {sidebarContent}
+          </div>
+        )
+      ) : (
+        /* 桌端侧边栏 */
+        <div
+          className={cn(
+            'flex flex-col overflow-hidden border-r bg-muted/30 transition-[width] duration-200',
+            sidebarCollapsed ? 'w-[42px]' : 'w-[260px]',
+          )}
+        >
+          {sidebarContent}
+        </div>
+      )}
       {/* 主区域 */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* 顶部栏 */}
-        <div className="flex h-10 shrink-0 items-center gap-4 border-b px-4">
-          <div className="flex-1">
+        <div className="flex h-10 shrink-0 items-center gap-2 md:gap-4 border-b px-3 md:px-4">
+          {isMobile && (
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => setMobileSidebarOpen(true)}
+              className="size-7 shrink-0"
+            >
+              <Menu className="size-4" />
+            </Button>
+          )}
+          <div className="flex-1 min-w-0">
             <EditableTitle
               title={currentSession?.title || '工作台'}
               editable={!!currentSession}
