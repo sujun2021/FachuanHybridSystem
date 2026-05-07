@@ -4,7 +4,7 @@
 提供基于 HTTP API 的威科案例检索功能，替代默认的 Playwright 浏览器自动化方式。
 
 安装方式：
-    将此目录放置到 backend/plugins/weike_api_private/
+    git clone git@github.com:Lawyer-ray/fachuan-weike-private-api-plugin.git backend/plugins/weike_api_private/
 
 功能：
     - 通过 HTTP API 直接登录威科信息系统
@@ -12,7 +12,7 @@
     - 支持高级检索、案由筛选、法院筛选等
 
 注意：
-    - 此插件不在 Git 仓库中，需要单独获取
+    - 此插件不在主项目 Git 仓库中，需要单独获取
     - 如果插件不存在，系统会自动回退到 Playwright 方式
 """
 
