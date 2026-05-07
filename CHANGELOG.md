@@ -41,7 +41,7 @@
 - **文档文本提取器**：doc_extractor 模块，支持 .doc/.docx 文本提取，.doc 通过 LibreOffice 自动转换
 - **DOC 转 DOCX 引擎**：独立 doc_converter 应用，抽取为可复用的文档转换服务
 - **WKInfo URL 案例检索范围**：支持通过 WKInfo URL 定义案例检索的数据库范围
-- **威科插件迁移**：将威科私有 API 适配器迁移到 plugins/ 目录统一管理
+- **WK插件迁移**：WK私有 API 适配器迁移到 plugins/ 目录统一管理
 - **工作台 Agent 重构**：移除通用助手（general agent），保留分诊 + 3 个专业助手（案件管理、合同管理、法律检索）
 - **微信公众号应用**：新增 wechat_mp 应用模块
 
@@ -57,6 +57,7 @@
 - **doc_extractor 重构**：委托 doc_converter 引擎，移除内联的 LibreOffice 转换逻辑
 - **FieldFile 序列化**：修复 BatchJobOut schema summary_file 字段序列化报错
 - **批量分析对话持久化**：分析完成后将汇总报告插入对话而非独立面板
+- **DocConverterTool admin 报错**：修复虚拟模型（managed=False）查询报错 relation does not exist
 
 ## [26.44.1] - 2026-05-06
 
@@ -1827,9 +1828,9 @@
 
 ### 修复
 
-- **威科私有API适配器语法修复（legal_research）**：修复 `weike_api_private/adapter.py` 中异常块缩进错误导致的 `SyntaxError: expected 'except' or 'finally' block`，恢复私有模块可导入性。
-- **威科检索链路稳定性补充（legal_research）**：私有API层继续保持"失败自动回退 DOM 检索"策略，避免单链路异常导致检索中断。
-- **MCP能力边界说明补充（legal_research）**：MCP层对外保持统一能力接口，不直接暴露威科私有API实现细节。
+- **WK私有API适配器语法修复（legal_research）**：修复 `weike_api_private/adapter.py` 中异常块缩进错误导致的 `SyntaxError: expected 'except' or 'finally' block`，恢复私有模块可导入性。
+- **WK检索链路稳定性补充（legal_research）**：私有API层继续保持"失败自动回退 DOM 检索"策略，避免单链路异常导致检索中断。
+- **MCP能力边界说明补充（legal_research）**：MCP层对外保持统一能力接口，不直接暴露WK私有API实现细节。
 
 ## [26.31.3] - 2026-04-05
 
