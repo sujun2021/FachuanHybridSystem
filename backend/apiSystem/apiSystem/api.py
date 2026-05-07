@@ -267,6 +267,10 @@ def _register_app_routers() -> None:
 
     api_v1.add_router("/workbench", workbench_router, auth=JWTOrSessionAuth(), tags=["工作台"])
 
+    from apps.doc_converter.api import router as doc_converter_router
+
+    api_v1.add_router("/doc-converter", doc_converter_router, auth=JWTOrSessionAuth(), tags=["DOC 转 DOCX"])
+
     api_v1.add_router("/court-filing", court_filing_router, auth=JWTOrSessionAuth(), tags=["一张网立案"])
     api_v1.add_router("/court-guarantee", court_guarantee_router, auth=JWTOrSessionAuth(), tags=["一张网担保"])
 

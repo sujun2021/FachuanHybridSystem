@@ -105,7 +105,9 @@ INSTALLED_APPS = [
     "apps.legal_solution",  # 6.6 法律服务方案
     "apps.enterprise_data",  # 6.6 企业数据查询（天眼查/企查查等）
     "apps.doc_convert",  # 6.7 要素式转换（传统文书转要素式文书）
+    "apps.doc_converter",  # 6.71 DOC 批量转 DOCX
     "apps.workbench",  # 6.8 工作台（AI 对话式操作中心）
+    "apps.wechat_mp",  # 6.9 公众号发布
     "apps.core",  # 7. 核心系统
     "django_q",  # 8. DJANGO Q
 ]
