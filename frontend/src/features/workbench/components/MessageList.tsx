@@ -110,6 +110,22 @@ export function MessageList() {
     )
   }, [isStreaming, streamingMessage])
 
+  // Virtuoso 需要自身作为滚动容器，不能嵌套在 ScrollArea 内
+  if (useVirtualization) {
+    return (
+      <div ref={scrollRef} className="flex-1 overflow-hidden">
+        <Virtuoso
+          ref={virtuosoRef}
+          data={groupedMessages}
+          followOutput="smooth"
+          itemContent={renderGroup}
+          components={{ Footer: VirtuosoFooter }}
+          style={{ height: '100%' }}
+        />
+      </div>
+    )
+  }
+
   return (
     <ScrollArea ref={scrollRef} className="flex-1 overflow-y-auto">
       {messagesLoading ? (
@@ -132,15 +148,6 @@ export function MessageList() {
             <p>开始对话吧</p>
           </div>
         </div>
-      ) : useVirtualization ? (
-        <Virtuoso
-          ref={virtuosoRef}
-          data={groupedMessages}
-          followOutput="smooth"
-          itemContent={renderGroup}
-          components={{ Footer: VirtuosoFooter }}
-          style={{ height: '100%' }}
-        />
       ) : (
         <div className="space-y-4 p-4">
           {groupedMessages.map((group) => (
