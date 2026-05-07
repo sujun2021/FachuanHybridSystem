@@ -250,7 +250,7 @@ def submit_batch_analysis(
 
     allowed_extensions = {".doc", ".docx"}
     for f in files:
-        ext = f.name.rsplit(".", 1)[-1].lower() if "." in f.name else ""
+        ext = f.name.rsplit(".", 1)[-1].lower() if f.name and "." in f.name else ""
         if f".{ext}" not in allowed_extensions:
             raise Http404(f"不支持的文件格式: {f.name}，仅支持 .doc 和 .docx")
 
@@ -306,7 +306,7 @@ def download_batch_summary(request: Any, job_id: UUID) -> FileResponse:
     return FileResponse(
         job.summary_file.open("rb"),
         as_attachment=True,
-        filename=job.summary_file.name.split("/")[-1],
+        filename=job.summary_file.name.split("/")[-1] if job.summary_file.name else "summary.csv",
         content_type="text/csv; charset=utf-8",
     )
 

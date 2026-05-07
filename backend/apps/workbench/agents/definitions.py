@@ -189,7 +189,7 @@ def build_model(model_name: str) -> OpenAIChatModel:
         ),
     )
 
-    return limit_model_concurrency(model, _model_limiter)
+    return limit_model_concurrency(model, _model_limiter)  # type: ignore[return-value]
 
 
 # ─── MCP Server（共享实例，带审批回调） ───────────────────────────────────────

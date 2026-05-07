@@ -102,7 +102,7 @@ class LegalResearchExecutor(
                 task.message = "正在导航到 WKInfo 搜索 URL 并拦截搜索条件..."
                 self._save_task_safely(task, update_fields=["message", "updated_at"])
                 try:
-                    _items, intercepted_payload = source_client.search_cases_from_url(
+                    _items, intercepted_payload = source_client.search_cases_from_url(  # type: ignore[attr-defined]
                         session=session,
                         url=search_url,
                         max_candidates=task.max_candidates,

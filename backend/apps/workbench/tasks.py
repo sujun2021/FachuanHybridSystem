@@ -168,7 +168,7 @@ def run_batch_retry(job_id: str, item_ids: list[str]) -> None:
 def _sync_llm_chat(llm: Any, messages: list[dict[str, str]], model: str, temperature: float) -> str:
     """同步调用 LLM（在线程池中运行，使用同步 chat() 方法避免 async 上下文问题）"""
     response = llm.chat(messages=messages, model=model, temperature=temperature)
-    return response.content
+    return response.content  # type: ignore[no-any-return]
 
 
 # ─── 文档分段 ────────────────────────────────────────────────────────────────
@@ -353,7 +353,7 @@ async def _run_batch_async(job_id: UUID) -> None:
                     chunk_label = f"(第{chunk_idx + 1}/{len(chunks)}段)" if len(chunks) > 1 else ""
                     result_text = await loop.run_in_executor(
                         thread_pool,
-                        lambda c=chunk, cl=chunk_label: _sync_llm_chat(
+                        lambda c=chunk, cl=chunk_label: _sync_llm_chat(  # type: ignore[misc]
                             llm,
                             messages=[
                                 {"role": "system", "content": ANALYSIS_SYSTEM_PROMPT},
@@ -574,7 +574,7 @@ async def _run_batch_retry_async(job_id: UUID, item_ids: list[UUID]) -> None:
                     chunk_label = f"(第{chunk_idx + 1}/{len(chunks)}段)" if len(chunks) > 1 else ""
                     result_text = await loop.run_in_executor(
                         thread_pool,
-                        lambda c=chunk, cl=chunk_label: _sync_llm_chat(
+                        lambda c=chunk, cl=chunk_label: _sync_llm_chat(  # type: ignore[misc]
                             llm,
                             messages=[
                                 {"role": "system", "content": ANALYSIS_SYSTEM_PROMPT},

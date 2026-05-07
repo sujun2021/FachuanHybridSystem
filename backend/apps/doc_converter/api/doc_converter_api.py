@@ -21,10 +21,10 @@ _service = DocConverterService()
 @router.post("/jobs", response=JobSubmitOut, summary="创建转换任务")
 def create_conversion_job(
     request: Any,
-    files: list[UploadedFile] = ...,
+    files: list[UploadedFile] = ...,  # type: ignore[assignment]
 ) -> dict[str, Any]:
     """上传多个 .doc 文件，创建异步转换任务。"""
-    job = _service.create_job(files=files, created_by=request.user)
+    job = _service.create_job(files=files, created_by=request.user)  # type: ignore[arg-type]
     return {
         "job_id": str(job.id),
         "status": job.status,

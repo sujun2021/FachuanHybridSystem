@@ -22,7 +22,7 @@ class DocConverterJobStatus(models.TextChoices):
 class DocConverterTool(models.Model):
     """虚拟模型，仅用于 Admin 侧边栏入口"""
 
-    name: str = models.CharField(max_length=64, default="Doc Converter")
+    name = models.CharField(max_length=64, default="Doc Converter")
 
     class Meta:
         managed = False
@@ -31,24 +31,22 @@ class DocConverterTool(models.Model):
 
 
 class DocConverterJob(models.Model):
-    id: uuid.UUID = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    status: str = models.CharField(
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    status = models.CharField(
         max_length=20,
         choices=DocConverterJobStatus.choices,
         default=DocConverterJobStatus.PENDING,
         verbose_name=_("状态"),
     )
-    total_files: int = models.PositiveIntegerField(_("总文件数"), default=0)
-    converted_files: int = models.PositiveIntegerField(_("已转换数"), default=0)
-    failed_files: int = models.PositiveIntegerField(_("失败数"), default=0)
-    progress: int = models.PositiveIntegerField(_("进度(0-100)"), default=0)
-    cancel_requested: bool = models.BooleanField(_("请求取消"), default=False)
-    task_id: str = models.CharField(_("Django Q2 任务ID"), max_length=255, blank=True, default="")
-    output_zip: Any = models.FileField(
-        _("结果ZIP"), upload_to=DatedUUIDPath("doc_converter_zip"), blank=True, default=""
-    )
-    error_message: str = models.TextField(blank=True, default="", verbose_name=_("错误信息"))
-    created_by: Any = models.ForeignKey(
+    total_files = models.PositiveIntegerField(_("总文件数"), default=0)
+    converted_files = models.PositiveIntegerField(_("已转换数"), default=0)
+    failed_files = models.PositiveIntegerField(_("失败数"), default=0)
+    progress = models.PositiveIntegerField(_("进度(0-100)"), default=0)
+    cancel_requested = models.BooleanField(_("请求取消"), default=False)
+    task_id = models.CharField(_("Django Q2 任务ID"), max_length=255, blank=True, default="")
+    output_zip = models.FileField(_("结果ZIP"), upload_to=DatedUUIDPath("doc_converter_zip"), blank=True, default="")
+    error_message = models.TextField(blank=True, default="", verbose_name=_("错误信息"))
+    created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
@@ -75,23 +73,21 @@ class DocConverterJob(models.Model):
 
 
 class DocConverterItem(models.Model):
-    id: uuid.UUID = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    job: Any = models.ForeignKey(
-        DocConverterJob, on_delete=models.CASCADE, related_name="items", verbose_name=_("任务")
-    )
-    original_name: str = models.CharField(_("原始文件名"), max_length=500)
-    source_file: Any = models.FileField(_("源文件"), upload_to=DatedUUIDPath("doc_converter_source"))
-    converted_file: Any = models.FileField(
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    job = models.ForeignKey(DocConverterJob, on_delete=models.CASCADE, related_name="items", verbose_name=_("任务"))
+    original_name = models.CharField(_("原始文件名"), max_length=500)
+    source_file = models.FileField(_("源文件"), upload_to=DatedUUIDPath("doc_converter_source"))
+    converted_file = models.FileField(
         _("转换后文件"), upload_to=DatedUUIDPath("doc_converter_output"), blank=True, default=""
     )
-    status: str = models.CharField(
+    status = models.CharField(
         max_length=20,
         choices=DocConverterJobStatus.choices,
         default=DocConverterJobStatus.PENDING,
         verbose_name=_("状态"),
     )
-    error: str = models.TextField(blank=True, default="", verbose_name=_("错误信息"))
-    duration_ms: float | None = models.FloatField(null=True, blank=True, verbose_name=_("耗时(ms)"))
+    error = models.TextField(blank=True, default="", verbose_name=_("错误信息"))
+    duration_ms = models.FloatField(null=True, blank=True, verbose_name=_("耗时(ms)"))
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("创建时间"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("更新时间"))
 

@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 # Cookie 存储目录
-COOKIE_DIR = Path(settings.BASE_DIR) / "data" / "wechat_mp_cookies"
+COOKIE_DIR = Path(getattr(settings, "BASE_DIR", ".")) / "data" / "wechat_mp_cookies"
 
 
 def _get_cookie_path(account_id: int) -> Path:

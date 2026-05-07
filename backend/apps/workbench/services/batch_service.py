@@ -91,10 +91,10 @@ class BatchAnalysisService:
             now = timezone.now()
             elapsed = (now - job.started_processing_at).total_seconds()
             if elapsed > 0:
-                job.speed_per_minute = processed / elapsed * 60  # type: ignore[assignment]
+                job.speed_per_minute = processed / elapsed * 60  # type: ignore[attr-defined]
                 remaining = job.total_items - processed
-                if job.speed_per_minute > 0:
-                    job.eta_seconds = remaining / (job.speed_per_minute / 60)  # type: ignore[assignment]
+                if job.speed_per_minute > 0:  # type: ignore[attr-defined]
+                    job.eta_seconds = remaining / (job.speed_per_minute / 60)  # type: ignore[attr-defined]
 
         return job, items
 

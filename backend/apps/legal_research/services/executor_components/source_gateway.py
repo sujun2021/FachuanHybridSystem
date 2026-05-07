@@ -12,6 +12,14 @@ logger = logging.getLogger(__name__)
 
 
 class ExecutorSourceGatewayMixin:
+    SEARCH_RETRY_ATTEMPTS: int
+    DETAIL_RETRY_ATTEMPTS: int
+    DOWNLOAD_RETRY_ATTEMPTS: int
+    RETRY_BACKOFF_SECONDS: float
+    RETRY_BACKOFF_MAX_SECONDS: float
+    PAGE_SIZE_HINT: int
+    MAX_PAGE_WINDOW: int
+
     @classmethod
     def _fetch_candidate_batch_with_retry(
         cls,
@@ -73,7 +81,7 @@ class ExecutorSourceGatewayMixin:
         doc_id = str(getattr(item, "doc_id_unquoted", "") or getattr(item, "doc_id_raw", ""))
         for attempt in range(1, cls.DETAIL_RETRY_ATTEMPTS + 1):
             try:
-                return source_client.fetch_case_detail(session=session, item=item)
+                return source_client.fetch_case_detail(session=session, item=item)  # type: ignore[no-any-return]
             except Exception as exc:
                 if attempt >= cls.DETAIL_RETRY_ATTEMPTS:
                     logger.warning(
@@ -114,7 +122,7 @@ class ExecutorSourceGatewayMixin:
             try:
                 pdf = source_client.download_pdf(session=session, detail=detail)
                 if pdf is not None:
-                    return pdf
+                    return pdf  # type: ignore[no-any-return]
 
                 if attempt >= cls.DOWNLOAD_RETRY_ATTEMPTS:
                     return None
@@ -202,7 +210,7 @@ class ExecutorSourceGatewayMixin:
             extra_kwargs["raw_payload"] = raw_payload
 
         if "offset" in signature.parameters:
-            return search_cases(
+            return search_cases(  # type: ignore[no-any-return]
                 session=session,
                 keyword=keyword,
                 max_candidates=batch_size,
@@ -218,7 +226,7 @@ class ExecutorSourceGatewayMixin:
             max_pages=max_pages,
             **extra_kwargs,
         )
-        return window[offset : offset + batch_size]
+        return window[offset : offset + batch_size]  # type: ignore[no-any-return]
 
     @classmethod
     def _estimate_max_pages(cls, *, offset: int, batch_size: int) -> int:
