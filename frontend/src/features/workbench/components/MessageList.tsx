@@ -103,7 +103,7 @@ export function MessageList() {
           ))}
         </div>
       ) : isEmpty ? (
-        <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
+        <div className="flex min-h-[60vh] items-center justify-center text-muted-foreground text-sm">
           <div className="text-center space-y-2">
             <div className="text-4xl">💬</div>
             <p>开始对话吧</p>
