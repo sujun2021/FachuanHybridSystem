@@ -31,7 +31,7 @@ def has_court_filing_api_plugin() -> bool:
 
 def has_weike_private_api_plugin() -> bool:
     """
-    检测威科私有 API 适配器插件是否已安装。
+    检测WK私有 API 适配器插件是否已安装。
 
     Returns:
         bool: 插件存在返回 True，否则返回 False

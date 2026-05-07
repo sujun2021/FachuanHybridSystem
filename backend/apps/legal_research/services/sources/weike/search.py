@@ -25,7 +25,7 @@ class WeikeSearchMixin:
     LAW_LOGIN_MODAL_USERNAME_SELECTOR = "#login-username"
     LAW_LOGIN_BUTTON_SELECTOR = "button.wk-banner-action-bar-item.wkb-btn-green:has-text('登录')"
 
-    # 威科先行检索字段名（用于 DOM 高级检索 URL 参数，仅单字段时使用）
+    # WKXX检索字段名（用于 DOM 高级检索 URL 参数，仅单字段时使用）
     SEARCH_FIELD_MAP: dict[str, str] = {
         "fullText": "fullText",
         "title": "title",
