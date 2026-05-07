@@ -1,15 +1,19 @@
 """批量分析异步任务
 
-Django Q2 入口，内部使用 asyncio.Semaphore + asyncio.gather 实现并发 LLM 调用。
+Django Q2 入口，内部使用 ThreadPoolExecutor 实现并发 LLM 调用。
 遵循 PdfSplitJob 的协作式取消和节流式进度更新模式。
+
+注意：LLMService.achat() 内部的 is_available() 会同步读取 SystemConfig，
+不能在 async 上下文中直接调用。因此 LLM 调用通过 run_in_executor 在线程池中执行。
 """
 
 from __future__ import annotations
 
 import asyncio
+import concurrent.futures
 import logging
 import time
-from pathlib import Path
+from datetime import datetime
 from typing import Any
 from uuid import UUID
 
@@ -39,7 +43,8 @@ SUMMARY_SYSTEM_PROMPT = (
     "1. 概括所有案例的共同规律和趋势\n"
     "2. 指出各案例之间的异同点\n"
     "3. 提炼出有价值的法律见解\n"
-    "4. 使用清晰的结构化格式"
+    "4. 使用清晰的结构化格式\n"
+    f"5. 报告日期使用今天的实际日期（{datetime.now(timezone.utc).strftime('%Y 年 %m 月 %d 日')}），不要编造日期"
 )
 
 
@@ -47,15 +52,30 @@ def run_batch_analysis(job_id: str) -> None:
     """Django Q2 入口点
 
     接收 job_id 字符串，调用异步逻辑。
+    Django Q2 worker 已有事件循环，需要用线程隔离执行 asyncio.run()。
     """
-    asyncio.run(_run_batch_async(UUID(job_id)))
+    try:
+        asyncio.get_running_loop()
+        # 已有运行中的循环 → 用线程隔离执行
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+            future = pool.submit(asyncio.run, _run_batch_async(UUID(job_id)))
+            future.result(timeout=3600)
+    except RuntimeError:
+        # 没有运行中的循环 → 直接用 asyncio.run()
+        asyncio.run(_run_batch_async(UUID(job_id)))
+
+
+def _sync_llm_chat(llm: Any, messages: list[dict[str, str]], model: str, temperature: float) -> str:
+    """同步调用 LLM（在线程池中运行，使用同步 chat() 方法避免 async 上下文问题）"""
+    response = llm.chat(messages=messages, model=model, temperature=temperature)
+    return response.content
 
 
 async def _run_batch_async(job_id: UUID) -> None:
     """批量分析主逻辑
 
     Phase 1: 批量文本提取（.doc 转 .docx）
-    Phase 2: 并发 LLM 分析
+    Phase 2: 并发 LLM 分析（ThreadPoolExecutor）
     Phase 3: 汇总报告
     """
     job = await sync_to_async(BatchJob.objects.get)(id=job_id)
@@ -69,77 +89,89 @@ async def _run_batch_async(job_id: UUID) -> None:
 
         # ── Phase 1: 批量文本提取 ──
         extractor = DocTextExtractor()
-        doc_items = [i for i in items if i.file_name.lower().endswith(".doc") and not i.file_name.lower().endswith(".docx")]
+        doc_items = [
+            i for i in items if i.file_name.lower().endswith(".doc") and not i.file_name.lower().endswith(".docx")
+        ]
         if doc_items:
             logger.info("Phase 1: 批量转换 %d 个 .doc 文件", len(doc_items))
             doc_paths = [item.file.path for item in doc_items]
             await sync_to_async(extractor.batch_convert_doc_to_docx)(doc_paths)
 
         # ── Phase 2: 并发 LLM 分析 ──
-        logger.info("Phase 2: 开始并发分析 %d 个文件 (concurrency=%d)", len(items), job.metadata.get("concurrency", 50))
         from apps.core.llm.service import get_llm_service
 
-        llm = get_llm_service()
+        # 在 sync 上下文中初始化 LLM 服务（内部会读取 SystemConfig）
+        llm = await sync_to_async(get_llm_service)()
         concurrency = job.metadata.get("concurrency", 50)
-        semaphore = asyncio.Semaphore(concurrency)
+        logger.info("Phase 2: 开始并发分析 %d 个文件 (concurrency=%d)", len(items), concurrency)
+
+        # 使用 ThreadPoolExecutor 实现并发（避免 LLMService 内部 sync ORM 调用问题）
+        loop = asyncio.get_event_loop()
+        thread_pool = concurrent.futures.ThreadPoolExecutor(max_workers=concurrency)
 
         async def analyze_item(item: BatchJobItem, index: int) -> None:
-            async with semaphore:
-                # 检查取消
-                if await _is_cancelled(job_id):
-                    return
+            # 检查取消
+            if await _is_cancelled(job_id):
+                return
 
-                await sync_to_async(BatchJobItem.objects.filter(id=item.id).update)(
-                    status=BatchJobStatus.RUNNING,
-                )
-                start = time.perf_counter()
+            await sync_to_async(BatchJobItem.objects.filter(id=item.id).update)(
+                status=BatchJobStatus.RUNNING,
+            )
+            start = time.perf_counter()
 
-                try:
-                    # 提取文本
-                    text = await sync_to_async(extractor.extract_text)(item.file.path)
+            try:
+                # 提取文本（在 sync 线程中）
+                text = await sync_to_async(extractor.extract_text)(item.file.path)
 
-                    # LLM 分析
-                    response = await llm.achat(
+                # LLM 分析（在线程池中执行，避免 async 上下文 ORM 问题）
+                result_text = await loop.run_in_executor(
+                    thread_pool,
+                    lambda: _sync_llm_chat(
+                        llm,
                         messages=[
                             {"role": "system", "content": ANALYSIS_SYSTEM_PROMPT},
-                            {"role": "user", "content": f"分析要求：{job.prompt}\n\n以下是从文件「{item.file_name}」中提取的内容：\n\n{text}\n\n请根据以上分析要求，对本文档内容进行分析并给出结论。"},
+                            {
+                                "role": "user",
+                                "content": f"分析要求：{job.prompt}\n\n以下是从文件「{item.file_name}」中提取的内容：\n\n{text}\n\n请根据以上分析要求，对本文档内容进行分析并给出结论。",
+                            },
                         ],
                         model=job.llm_model,
                         temperature=0.3,
-                    )
+                    ),
+                )
 
-                    duration = (time.perf_counter() - start) * 1000
-                    await sync_to_async(BatchJobItem.objects.filter(id=item.id).update)(
-                        status=BatchJobStatus.COMPLETED,
-                        result=response.content,
-                        duration_ms=round(duration, 2),
-                    )
-                    await _increment_counter(job_id, "completed_items")
+                duration = (time.perf_counter() - start) * 1000
+                await sync_to_async(BatchJobItem.objects.filter(id=item.id).update)(
+                    status=BatchJobStatus.COMPLETED,
+                    result=result_text,
+                    duration_ms=round(duration, 2),
+                )
+                await _increment_counter(job_id, "completed_items")
 
-                except Exception as e:
-                    logger.error("文件分析失败: %s - %s", item.file_name, e, exc_info=True)
-                    await sync_to_async(BatchJobItem.objects.filter(id=item.id).update)(
-                        status=BatchJobStatus.FAILED,
-                        error=str(e)[:2000],
-                    )
-                    await _increment_counter(job_id, "failed_items")
+            except Exception as e:
+                logger.error("文件分析失败: %s - %s", item.file_name, e, exc_info=True)
+                await sync_to_async(BatchJobItem.objects.filter(id=item.id).update)(
+                    status=BatchJobStatus.FAILED,
+                    error=str(e)[:2000],
+                )
+                await _increment_counter(job_id, "failed_items")
 
-                # 节流式进度更新
-                if index % PROGRESS_UPDATE_EVERY == 0 or index == len(items) - 1:
-                    await _update_progress(job_id)
+            # 节流式进度更新
+            if index % PROGRESS_UPDATE_EVERY == 0 or index == len(items) - 1:
+                await _update_progress(job_id)
 
         # 并发执行
         tasks = [analyze_item(item, i) for i, item in enumerate(items)]
         await asyncio.gather(*tasks, return_exceptions=True)
+
+        thread_pool.shutdown(wait=False)
 
         # ── Phase 3: 汇总 ──
         if await _is_cancelled(job_id):
             return
 
         completed_items = [
-            item async for item in BatchJobItem.objects.filter(
-                job_id=job_id, status=BatchJobStatus.COMPLETED
-            )
+            item async for item in BatchJobItem.objects.filter(job_id=job_id, status=BatchJobStatus.COMPLETED)
         ]
 
         if completed_items:
@@ -177,9 +209,7 @@ async def _is_cancelled(job_id: UUID) -> bool:
 
 async def _increment_counter(job_id: UUID, field: str) -> None:
     """原子递增计数器"""
-    await sync_to_async(
-        lambda: BatchJob.objects.filter(id=job_id).update(**{field: F(field) + 1})
-    )()
+    await sync_to_async(lambda: BatchJob.objects.filter(id=job_id).update(**{field: F(field) + 1}))()
 
 
 async def _update_progress(job_id: UUID) -> None:
@@ -197,23 +227,25 @@ async def _generate_summary(
     completed_items: list[BatchJobItem],
 ) -> str:
     """汇总所有分析结论，生成综合报告"""
-    # 收集所有结论
     conclusions = []
     for item in completed_items:
         conclusions.append(f"## {item.file_name}\n{item.result}")
 
     all_conclusions = "\n\n---\n\n".join(conclusions)
 
-    # 如果结论太长，截断
     if len(all_conclusions) > 50000:
         all_conclusions = all_conclusions[:50000] + "\n\n...(已截断)"
 
-    response = await llm.achat(
+    result = await sync_to_async(_sync_llm_chat)(
+        llm,
         messages=[
             {"role": "system", "content": SUMMARY_SYSTEM_PROMPT},
-            {"role": "user", "content": f"原始分析要求：{prompt}\n\n以下是 {len(completed_items)} 个案例的分析结论：\n\n{all_conclusions}\n\n请撰写一份综合研究报告。"},
+            {
+                "role": "user",
+                "content": f"原始分析要求：{prompt}\n\n以下是 {len(completed_items)} 个案例的分析结论：\n\n{all_conclusions}\n\n请撰写一份综合研究报告。",
+            },
         ],
         model=model,
         temperature=0.3,
     )
-    return response.content
+    return result
