@@ -37,7 +37,7 @@ ANALYSIS_SYSTEM_PROMPT = (
     "3. 给出清晰的分析结论\n"
     "4. 使用专业但易懂的语言\n"
     "5. 使用清晰的结构化格式\n"
-    "6. 如果用户提供了案号，请在分析中使用该案号，不要编造其他案号\n"
+    "6. 如果用户提供了案号、审理法院等元数据，请在分析中使用这些信息，不要编造\n"
     "7. 最后详细列出案例的案号、案由、法官和书记员姓名、关于用户查询的问题在本案中的结论"
 )
 SUMMARY_SYSTEM_PROMPT = (
@@ -127,10 +127,16 @@ async def _run_batch_async(job_id: UUID) -> None:
                 # 提取文本（在 sync 线程中）
                 text = await sync_to_async(extractor.extract_text)(item.file.path)
 
-                # 从文件头部提取案号
-                header_text = await sync_to_async(extractor.extract_first_lines)(item.file.path, 20)
-                case_number = await sync_to_async(extractor.extract_case_number)(header_text)
-                case_info = f"本案案号：{case_number}\n" if case_number else ""
+                # 从文档表格中提取元数据（案号、法院、日期、案由）
+                metadata = await sync_to_async(extractor.extract_doc_metadata)(item.file.path)
+                meta_parts = []
+                if metadata.get("case_number"):
+                    meta_parts.append(f"案号：{metadata['case_number']}")
+                if metadata.get("court"):
+                    meta_parts.append(f"审理法院：{metadata['court']}")
+                if metadata.get("cause"):
+                    meta_parts.append(f"案由：{metadata['cause']}")
+                case_info = "\n".join(meta_parts) + "\n" if meta_parts else ""
 
                 # LLM 分析（在线程池中执行，避免 async 上下文 ORM 问题）
                 result_text = await loop.run_in_executor(

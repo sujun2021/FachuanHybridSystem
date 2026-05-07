@@ -14,7 +14,16 @@ from ninja.files import UploadedFile
 from apps.core.security.auth import JWTOrSessionAuth
 
 from ..models import BatchJob, BatchJobItem, WorkbenchMessage, WorkbenchSession
-from ..schemas import BatchItemOut, BatchJobOut, BatchProgressOut, MessageIn, MessageOut, SessionCreateIn, SessionOut, SessionUpdateIn
+from ..schemas import (
+    BatchItemOut,
+    BatchJobOut,
+    BatchProgressOut,
+    MessageIn,
+    MessageOut,
+    SessionCreateIn,
+    SessionOut,
+    SessionUpdateIn,
+)
 from ..services import BatchAnalysisService, WorkbenchChatService
 
 logger = logging.getLogger(__name__)

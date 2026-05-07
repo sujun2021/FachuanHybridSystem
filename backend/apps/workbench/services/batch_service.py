@@ -52,11 +52,13 @@ class BatchAnalysisService:
         # 创建子项
         items = []
         for f in files:
-            items.append(BatchJobItem(
-                job=job,
-                file_name=f.name,
-                file=f,
-            ))
+            items.append(
+                BatchJobItem(
+                    job=job,
+                    file_name=f.name,
+                    file=f,
+                )
+            )
         BatchJobItem.objects.bulk_create(items)
 
         # 提交 Django Q2 任务
@@ -106,9 +108,7 @@ class BatchAnalysisService:
 
         updates: dict[str, Any] = {"cancel_requested": True}
         can_mark_cancelled = job.status == BatchJobStatus.PENDING and (
-            not job.task_id
-            or bool(cancel_result.get("queue_deleted"))
-            or not bool(cancel_result.get("running"))
+            not job.task_id or bool(cancel_result.get("queue_deleted")) or not bool(cancel_result.get("running"))
         )
         if can_mark_cancelled:
             updates.update(status=BatchJobStatus.CANCELLED, finished_at=timezone.now())

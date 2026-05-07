@@ -16,10 +16,7 @@ from apps.legal_research.services.executor_components import (
     ExecutorSourceGatewayMixin,
     ExecutorTaskLifecycleMixin,
 )
-from apps.legal_research.services.executor_components.policy_mixin import (
-    AdaptiveThresholdPolicy,
-    DualReviewPolicy,
-)
+from apps.legal_research.services.executor_components.policy_mixin import AdaptiveThresholdPolicy, DualReviewPolicy
 from apps.legal_research.services.similarity.service import CaseSimilarityService
 from apps.legal_research.services.similarity.tuning_config import LegalResearchTuningConfig
 from apps.legal_research.services.sources import get_case_source_client

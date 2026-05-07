@@ -159,7 +159,8 @@ class LegalResearchTaskAdmin(admin.ModelAdmin[LegalResearchTask]):
                     if is_fallback:
                         messages.warning(
                             request,
-                            _("SiliconFlow 模型列表获取失败：%(error)s，当前显示默认模型列表") % {"error": error_message},
+                            _("SiliconFlow 模型列表获取失败：%(error)s，当前显示默认模型列表")
+                            % {"error": error_message},
                         )
             return form
 
@@ -312,13 +313,9 @@ class LegalResearchTaskAdmin(admin.ModelAdmin[LegalResearchTask]):
         search_url_field = form.base_fields.get("search_url")
         if search_url_field is None:
             return
-        search_url_field.help_text = (
-            "可选。粘贴 WKInfo 搜索页面 URL（如 https://law.wkinfo.com.cn/judgment-documents/list?...）。"
-            "系统将自动通过 Playwright 拦截搜索条件，无需手动填写检索关键词和筛选条件。"
-        )
+        search_url_field.help_text = ""
         search_url_field.required = False
         if hasattr(search_url_field.widget, "attrs"):
-            search_url_field.widget.attrs["placeholder"] = "https://law.wkinfo.com.cn/judgment-documents/list?..."
             search_url_field.widget.attrs["style"] = "font-family:monospace;font-size:12px;"
 
     @staticmethod

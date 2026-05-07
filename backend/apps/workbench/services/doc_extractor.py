@@ -58,47 +58,71 @@ class DocTextExtractor:
         else:
             raise ValueError(f"不支持的文件格式: {ext}")
 
-    def extract_first_lines(self, file_path: str, n: int = 20) -> str:
-        """提取文档前 N 行文本（用于案号提取等）"""
-        path = Path(file_path)
-        if not path.exists():
-            return ""
+    def extract_doc_metadata(self, file_path: str) -> dict[str, str | None]:
+        """从文档首部表格中提取元数据（案号、审理法院、裁判日期、案由）
 
-        ext = path.suffix.lower()
-        docx_path = file_path
-        need_cleanup = False
+        判决书标准格式：第一个表格包含
+        | 审理法院 | ： | xxx |
+        | 案号     | ： | xxx |
+        | 裁判日期 | ： | xxx |
+        | 案由     | ： | xxx |
 
-        if ext == ".doc":
-            docx_path = self._batch_converted.get(file_path) or self._convert_single_doc(file_path)
-            if docx_path != self._batch_converted.get(file_path):
-                need_cleanup = True
+        Returns:
+            {"case_number": "...", "court": "...", "judgment_date": "...", "cause": "..."}
+        """
+        docx_path, need_cleanup = self._resolve_docx_path(file_path)
+        if not docx_path:
+            return {"case_number": None, "court": None, "judgment_date": None, "cause": None}
 
         try:
             from docx import Document
 
             doc = Document(docx_path)
-            lines: list[str] = []
-            for para in doc.paragraphs:
-                text = para.text.strip()
-                if text:
-                    lines.append(text)
-                if len(lines) >= n:
+            metadata: dict[str, str | None] = {
+                "case_number": None,
+                "court": None,
+                "judgment_date": None,
+                "cause": None,
+            }
+            key_map = {"案号": "case_number", "审理法院": "court", "裁判日期": "judgment_date", "案由": "cause"}
+
+            for table in doc.tables[:3]:
+                for row in table.rows:
+                    cells = [cell.text.strip() for cell in row.cells]
+                    if len(cells) >= 3:
+                        key = key_map.get(cells[0])
+                        if key and cells[2]:
+                            metadata[key] = cells[2]
+                if metadata["case_number"]:
                     break
-            return "\n".join(lines)
+
+            return metadata
         except Exception:
-            logger.warning("提取文档前 %d 行失败: %s", n, file_path, exc_info=True)
-            return ""
+            logger.warning("提取文档元数据失败: %s", file_path, exc_info=True)
+            return {"case_number": None, "court": None, "judgment_date": None, "cause": None}
         finally:
             if need_cleanup and docx_path != file_path:
                 Path(docx_path).unlink(missing_ok=True)
 
-    @staticmethod
-    def extract_case_number(text: str) -> str | None:
-        """从文本中提取第一个案号（如 (2019)粤0106民初24736号）"""
-        from apps.automation.utils.text_utils import TextUtils
+    def _resolve_docx_path(self, file_path: str) -> tuple[str | None, bool]:
+        """解析文件路径，返回 (docx_path, need_cleanup)"""
+        path = Path(file_path)
+        if not path.exists():
+            return None, False
 
-        numbers = TextUtils.extract_case_numbers(text)
-        return numbers[0] if numbers else None
+        ext = path.suffix.lower()
+        if ext == ".docx":
+            return file_path, False
+        elif ext == ".doc":
+            cached = self._batch_converted.get(file_path)
+            if cached and Path(cached).exists():
+                return cached, False
+            try:
+                return self._convert_single_doc(file_path), True
+            except Exception:
+                logger.warning("转换 .doc 文件失败: %s", file_path, exc_info=True)
+                return None, False
+        return None, False
 
     def _extract_docx(self, path: str) -> str:
         """用 python-docx 提取 .docx 文本"""
