@@ -96,6 +96,7 @@ class LegalResearchTaskAdmin(admin.ModelAdmin[LegalResearchTask]):
     ordering: ClassVar[list[str]] = ["-created_at"]
     add_fields: ClassVar[list[str]] = [
         "credential",
+        "search_url",
         "keyword",
         "advanced_query",
         "court_filter",
@@ -163,6 +164,7 @@ class LegalResearchTaskAdmin(admin.ModelAdmin[LegalResearchTask]):
             return form
 
         self._configure_credential_field(request=request, form=form)
+        self._configure_search_url_field(form=form)
         self._configure_keyword_field(form=form)
         self._configure_advanced_query_field(form=form)
         self._configure_filter_fields(form=form)
@@ -304,6 +306,20 @@ class LegalResearchTaskAdmin(admin.ModelAdmin[LegalResearchTask]):
     @staticmethod
     def _configure_search_field_field(*, form: type[forms.ModelForm]) -> None:
         pass  # 已废弃，保留避免调用报错
+
+    @staticmethod
+    def _configure_search_url_field(*, form: type[forms.ModelForm]) -> None:
+        search_url_field = form.base_fields.get("search_url")
+        if search_url_field is None:
+            return
+        search_url_field.help_text = (
+            "可选。粘贴 WKInfo 搜索页面 URL（如 https://law.wkinfo.com.cn/judgment-documents/list?...）。"
+            "系统将自动通过 Playwright 拦截搜索条件，无需手动填写检索关键词和筛选条件。"
+        )
+        search_url_field.required = False
+        if hasattr(search_url_field.widget, "attrs"):
+            search_url_field.widget.attrs["placeholder"] = "https://law.wkinfo.com.cn/judgment-documents/list?..."
+            search_url_field.widget.attrs["style"] = "font-family:monospace;font-size:12px;"
 
     @staticmethod
     def _configure_keyword_field(*, form: type[forms.ModelForm]) -> None:

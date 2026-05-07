@@ -27,6 +27,7 @@ class ExecutorSourceGatewayMixin:
         cause_of_action_filter: str = "",
         date_from: str = "",
         date_to: str = "",
+        raw_payload: dict[str, Any] | None = None,
     ) -> list[Any]:
         for attempt in range(1, cls.SEARCH_RETRY_ATTEMPTS + 1):
             try:
@@ -41,6 +42,7 @@ class ExecutorSourceGatewayMixin:
                     cause_of_action_filter=cause_of_action_filter,
                     date_from=date_from,
                     date_to=date_to,
+                    raw_payload=raw_payload,
                 )
             except Exception as exc:
                 if attempt >= cls.SEARCH_RETRY_ATTEMPTS:
@@ -180,6 +182,7 @@ class ExecutorSourceGatewayMixin:
         cause_of_action_filter: str = "",
         date_from: str = "",
         date_to: str = "",
+        raw_payload: dict[str, Any] | None = None,
     ) -> list[Any]:
         search_cases = source_client.search_cases
         max_pages = cls._estimate_max_pages(offset=offset, batch_size=batch_size)
@@ -195,6 +198,8 @@ class ExecutorSourceGatewayMixin:
             extra_kwargs["date_from"] = date_from
         if "date_to" in signature.parameters:
             extra_kwargs["date_to"] = date_to
+        if "raw_payload" in signature.parameters:
+            extra_kwargs["raw_payload"] = raw_payload
 
         if "offset" in signature.parameters:
             return search_cases(
