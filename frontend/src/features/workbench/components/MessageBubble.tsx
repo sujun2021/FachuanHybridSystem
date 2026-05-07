@@ -16,6 +16,7 @@ import {
   ThumbsUp,
   ThumbsDown,
   Pencil,
+  Download,
 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -53,7 +54,7 @@ export function MessageBubble({ message, toolCalls }: MessageBubbleProps) {
 
       <div
         className={cn(
-          'group relative max-w-[80%] rounded-lg px-4 py-2.5 text-sm',
+          'group relative max-w-[85%] md:max-w-[75%] min-w-0 rounded-lg px-4 py-2.5 text-sm',
           isUser
             ? 'bg-primary text-primary-foreground'
             : isSystem
@@ -66,6 +67,11 @@ export function MessageBubble({ message, toolCalls }: MessageBubbleProps) {
         ) : (
           <MarkdownContent content={message.content} isSystem={isSystem} />
         )}
+
+        {/* 批量分析汇总：下载 CSV 按钮 */}
+        {!isUser && !isSystem && message.metadata?.source === 'batch_analysis' && typeof message.metadata?.job_id === 'string' ? (
+          <BatchDownloadButton jobId={message.metadata.job_id} />
+        ) : null}
 
         {/* 内联工具调用 */}
         {toolCalls && toolCalls.length > 0 && (
@@ -339,7 +345,7 @@ export function StreamingBubble({ message }: { message: StreamingMessage }) {
       <div className="flex size-6 md:size-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
         <Bot className="size-4 text-primary animate-pulse" />
       </div>
-      <div className="max-w-[80%] rounded-lg bg-muted px-4 py-2.5 text-sm space-y-2">
+      <div className="max-w-[85%] md:max-w-[75%] min-w-0 rounded-lg bg-muted px-4 py-2.5 text-sm space-y-2">
         {/* 活动指示器 */}
         {message.currentActivity && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -421,19 +427,64 @@ function MarkdownContent({ content, isSystem }: { content: string; isSystem?: bo
   return (
     <div
       className={cn(
-        'prose prose-sm dark:prose-invert max-w-none',
+        'prose prose-sm dark:prose-invert max-w-none break-words overflow-hidden',
         'prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0',
-        'prose-pre:my-2 prose-pre:rounded-md prose-pre:bg-background/80 prose-pre:p-3 prose-pre:text-xs',
+        'prose-pre:my-2 prose-pre:rounded-md prose-pre:bg-background/80 prose-pre:p-3 prose-pre:text-xs prose-pre:overflow-x-auto',
         'prose-code:before:content-none prose-code:after:content-none',
         'prose-code:bg-background/80 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-xs',
         'prose-table:text-xs prose-th:px-2 prose-th:py-1 prose-td:px-2 prose-td:py-1',
         'prose-hr:my-2 prose-blockquote:my-1 prose-blockquote:border-l-2',
+        // 【案例元数据汇总】块使用统一的文字颜色
+        'prose-strong:text-foreground prose-h3:text-foreground prose-h4:text-foreground',
         isSystem && 'prose-red',
       )}
     >
       <ReactMarkdown remarkPlugins={[remarkGfm]}>
         {content}
       </ReactMarkdown>
+    </div>
+  )
+}
+
+/** 批量分析汇总：CSV 下载按钮 */
+function BatchDownloadButton({ jobId }: { jobId: string }) {
+  const [downloading, setDownloading] = useState(false)
+
+  const handleDownload = async () => {
+    setDownloading(true)
+    try {
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8002/api/v1'
+      const token = localStorage.getItem('access_token')
+      const response = await fetch(`${baseUrl}/workbench/batch/${jobId}/download`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `案例分析汇总_${jobId.slice(0, 8)}.csv`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch {
+      toast.error('下载失败')
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  return (
+    <div className="mt-2">
+      <button
+        onClick={handleDownload}
+        disabled={downloading}
+        className="inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors disabled:opacity-50"
+      >
+        <Download className={cn('size-3.5', downloading && 'animate-spin')} />
+        {downloading ? '下载中...' : '下载汇总 CSV'}
+      </button>
     </div>
   )
 }

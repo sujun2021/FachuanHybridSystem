@@ -131,6 +131,7 @@ export interface BatchJob {
   failed_items: number
   progress: number
   summary: string
+  summary_file: string
   error_message: string
   created_at: string
   updated_at: string

@@ -7,7 +7,7 @@ import logging
 from typing import Any
 from uuid import UUID
 
-from django.http import Http404, StreamingHttpResponse
+from django.http import FileResponse, Http404, StreamingHttpResponse
 from ninja import File, Form, Router, Schema
 from ninja.files import UploadedFile
 
@@ -285,6 +285,55 @@ def cancel_batch_analysis(request: Any, job_id: UUID) -> dict[str, Any]:
         "status": job.status,
         "message": "取消请求已提交" if job.cancel_requested else "任务已完成或已取消",
     }
+
+
+@router.get("/batch/{job_id}/download")
+def download_batch_summary(request: Any, job_id: UUID) -> FileResponse:
+    """下载批量分析汇总 CSV 文件"""
+    try:
+        job = BatchJob.objects.get(id=job_id)
+    except BatchJob.DoesNotExist:
+        raise Http404("任务不存在")
+    _get_user_session(request.user, job.session_id)
+
+    if not job.summary_file:
+        raise Http404("汇总文件不存在")
+
+    return FileResponse(
+        job.summary_file.open("rb"),
+        as_attachment=True,
+        filename=job.summary_file.name.split("/")[-1],
+        content_type="text/csv; charset=utf-8",
+    )
+
+
+class BatchMessageItemIn(Schema):
+    """批量消息持久化请求体"""
+    file_name: str
+    content: str
+    metadata: dict[str, Any] = {}
+
+
+@router.post("/batch/{job_id}/messages")
+def save_batch_messages(request: Any, job_id: UUID, payload: list[BatchMessageItemIn]) -> dict[str, Any]:
+    """将批量分析结果持久化为工作台消息"""
+    try:
+        job = BatchJob.objects.get(id=job_id)
+    except BatchJob.DoesNotExist:
+        raise Http404("任务不存在")
+    _get_user_session(request.user, job.session_id)
+
+    created = []
+    for item in payload:
+        msg = WorkbenchMessage.objects.create(
+            session_id=job.session_id,
+            role="assistant",
+            content=item.content,
+            metadata={**item.metadata, "source": "batch_item", "job_id": str(job_id)},
+        )
+        created.append(msg.id)
+
+    return {"success": True, "created_count": len(created)}
 
 
 # ─── 模型列表 API ────────────────────────────────────────────────────────────

@@ -56,6 +56,9 @@ class BatchJob(models.Model):
     cancel_requested = models.BooleanField(_("请求取消"), default=False)
     task_id = models.CharField(_("Django Q2 任务ID"), max_length=255, blank=True, default="")
     summary = models.TextField(_("汇总结论"), blank=True, default="")
+    summary_file = models.FileField(
+        _("汇总文件"), upload_to=DatedUUIDPath("workbench_summary"), blank=True, default=""
+    )
     metadata = models.JSONField(_("元数据"), default=dict, blank=True)
     error_message = models.TextField(_("错误信息"), blank=True, default="")
     started_at = models.DateTimeField(_("开始时间"), null=True, blank=True)
@@ -116,3 +119,10 @@ def delete_item_file(sender: type, instance: BatchJobItem, **kwargs: object) -> 
     """删除子项时清理上传的文件"""
     if instance.file:
         instance.file.delete(save=False)
+
+
+@receiver(post_delete, sender=BatchJob)
+def delete_job_summary_file(sender: type, instance: BatchJob, **kwargs: object) -> None:
+    """删除任务时清理汇总文件"""
+    if instance.summary_file:
+        instance.summary_file.delete(save=False)

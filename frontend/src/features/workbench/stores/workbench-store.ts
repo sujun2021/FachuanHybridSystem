@@ -534,6 +534,25 @@ export const useWorkbenchStore = create<WorkbenchState>()((set, get) => ({
         if (['completed', 'failed', 'cancelled'].includes(progress.job.status)) {
           set({ batchPolling: false })
 
+          // 持久化批量分析结果到后端
+          const completedItems = progress.items.filter(
+            (item) => item.status === 'completed' && item.result,
+          )
+          if (completedItems.length > 0) {
+            try {
+              await api.saveBatchMessages(
+                progress.job.id,
+                completedItems.map((item) => ({
+                  file_name: item.file_name,
+                  content: `### ${item.file_name}\n\n${item.result}`,
+                  metadata: { source: 'batch_item', job_id: progress.job.id },
+                })),
+              )
+            } catch {
+              // 持久化失败不影响用户体验
+            }
+          }
+
           // 完成时将汇总报告插入对话，方便后续讨论
           if (progress.job.status === 'completed' && progress.job.summary) {
             const summaryMsg: WorkbenchMessage = {
@@ -548,6 +567,18 @@ export const useWorkbenchStore = create<WorkbenchState>()((set, get) => ({
               metadata: { source: 'batch_analysis', job_id: progress.job.id },
               created_at: new Date().toISOString(),
             }
+
+            // 持久化汇总消息
+            try {
+              await api.saveBatchMessages(progress.job.id, [{
+                file_name: '汇总报告',
+                content: progress.job.summary,
+                metadata: { source: 'batch_analysis', job_id: progress.job.id },
+              }])
+            } catch {
+              // 持久化失败不影响用户体验
+            }
+
             set((state) => ({
               messages: [...state.messages, summaryMsg],
               batchProgress: null,

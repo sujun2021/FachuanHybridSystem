@@ -210,7 +210,7 @@ async def _run_batch_async(job_id: UUID) -> None:
 
         if completed_items:
             logger.info("Phase 3: 生成汇总报告 (%d 个已完成)", len(completed_items))
-            summary = await _generate_summary(job.prompt, completed_items)
+            summary = await _generate_summary(job_id, job.prompt, completed_items)
             await sync_to_async(BatchJob.objects.filter(id=job_id).update)(
                 status=BatchJobStatus.COMPLETED,
                 summary=summary,
@@ -257,12 +257,15 @@ async def _update_progress(job_id: UUID) -> None:
 
 
 async def _generate_summary(
+    job_id: UUID,
     prompt: str,
     completed_items: list[BatchJobItem],
 ) -> str:
-    """从每个案例的分析结果中提取元数据汇总块，生成 CSV 表格。"""
+    """从每个案例的分析结果中提取元数据汇总块，生成 CSV 文件并返回统计摘要。"""
     import csv
     import io
+
+    from django.core.files.base import ContentFile
 
     csv_rows: list[dict[str, str]] = []
     missing_count = 0
@@ -275,7 +278,6 @@ async def _generate_summary(
         block_match = METADATA_BLOCK_RE.search(item.result)
         if not block_match:
             missing_count += 1
-            # 尝试从文件名提取案号作为 fallback
             csv_rows.append({
                 "文件名": item.file_name,
                 "案号": "",
@@ -313,15 +315,19 @@ async def _generate_summary(
     writer = csv.DictWriter(output, fieldnames=fieldnames, extrasaction="ignore")
     writer.writeheader()
     writer.writerows(csv_rows)
-
     csv_content = output.getvalue()
+
+    # 写入文件
+    csv_filename = f"案例分析汇总_{job_id.hex[:8]}.csv"
+    csv_file = ContentFile(csv_content.encode("utf-8-sig"), name=csv_filename)
+    await sync_to_async(lambda: BatchJob.objects.filter(id=job_id).update(summary_file=csv_file))()
 
     # 统计
     total = len(csv_rows)
     relevant = sum(1 for r in csv_rows if r.get("与研究问题相关") == "是")
     irrelevant = sum(1 for r in csv_rows if r.get("与研究问题相关") == "否")
 
-    summary_header = (
+    summary_text = (
         f"## 案例分析汇总\n\n"
         f"- 分析要求：{prompt}\n"
         f"- 案例总数：{total}\n"
@@ -329,11 +335,11 @@ async def _generate_summary(
         f"- 无关案例：{irrelevant}\n"
     )
     if missing_count:
-        summary_header += f"- 未提取到元数据：{missing_count}\n"
+        summary_text += f"- 未提取到元数据：{missing_count}\n"
 
-    summary_header += f"\n### 汇总表（CSV）\n\n```csv\n{csv_content}```\n"
+    summary_text += f"\n汇总表已生成为 CSV 文件，可点击下载。\n"
 
     if missing_count:
-        summary_header += f"\n> 注意：有 {missing_count} 个案例未提取到元数据汇总块，可能是分析结果格式不符合预期。\n"
+        summary_text += f"\n> 注意：有 {missing_count} 个案例未提取到元数据汇总块，可能是分析结果格式不符合预期。\n"
 
-    return summary_header
+    return summary_text

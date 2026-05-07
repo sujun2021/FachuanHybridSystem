@@ -31,11 +31,18 @@ class BatchJobOut(BaseModel):
     failed_items: int
     progress: int
     summary: str
+    summary_file: str = ""
     error_message: str
     created_at: datetime | None = None
     updated_at: datetime | None = None
 
     model_config = {"from_attributes": True}
+
+    @staticmethod
+    def resolve_summary_file(obj: object) -> str:
+        if hasattr(obj, "summary_file") and obj.summary_file:
+            return obj.summary_file.url  # type: ignore[union-attr]
+        return ""
 
 
 class BatchProgressOut(BaseModel):

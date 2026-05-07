@@ -92,3 +92,10 @@ export async function getBatchProgress(jobId: string): Promise<BatchProgress> {
 export async function cancelBatchAnalysis(jobId: string): Promise<{ success: boolean; status: string; message: string }> {
   return api.post(`batch/${jobId}/cancel`).json()
 }
+
+export async function saveBatchMessages(
+  jobId: string,
+  items: { file_name: string; content: string; metadata?: Record<string, unknown> }[],
+): Promise<{ success: boolean; created_count: number }> {
+  return api.post(`batch/${jobId}/messages`, { json: items }).json()
+}
