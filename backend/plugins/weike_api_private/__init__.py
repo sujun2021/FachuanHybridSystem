@@ -4,7 +4,7 @@ WK信息 (WKInfo) 私有 API 适配器插件
 提供基于 HTTP API 的WK案例检索功能，替代默认的 Playwright 浏览器自动化方式。
 
 安装方式：
-    git clone git@github.com:Lawyer-ray/fachuan-weike-private-api-plugin.git backend/plugins/weike_api_private/
+    git clone git@<host>:<org>/fachuan-weike-private-api-plugin.git backend/plugins/weike_api_private/
 
 功能：
     - 通过 HTTP API 直接登录WK信息系统
