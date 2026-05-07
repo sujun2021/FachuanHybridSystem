@@ -17,6 +17,14 @@ import * as api from '../api'
 const FAVORITE_MODEL_KEY = 'workbench_favorite_model'
 const SELECTED_AGENT_KEY = 'workbench_selected_agent'
 
+// 匹配【案例元数据汇总】块（含可选的 ``` 包裹），用于前端展示时去除
+const METADATA_BLOCK_RE = /(```\s*\n)?【案例元数据汇总】[\s\S]*?(?:\n```|```\s*$|$)/g
+
+/** 去除分析结果中的元数据汇总块，只保留分析正文 */
+function stripMetadataBlock(text: string): string {
+  return text.replace(METADATA_BLOCK_RE, '').trim()
+}
+
 // 用于中断正在进行的流式请求
 let _abortController: AbortController | null = null
 // 跟踪已展示的批量分析 item ID，避免重复注入消息
@@ -517,7 +525,7 @@ export const useWorkbenchStore = create<WorkbenchState>()((set, get) => ({
             return {
               id: Date.now() + Math.random(),
               role: 'assistant',
-              content: `### ${item.file_name}\n\n${item.result}`,
+              content: `### ${item.file_name}\n\n${stripMetadataBlock(item.result)}`,
               llm_model: '',
               tool_call_id: '',
               tool_name: '',
@@ -544,7 +552,7 @@ export const useWorkbenchStore = create<WorkbenchState>()((set, get) => ({
                 progress.job.id,
                 completedItems.map((item) => ({
                   file_name: item.file_name,
-                  content: `### ${item.file_name}\n\n${item.result}`,
+                  content: `### ${item.file_name}\n\n${stripMetadataBlock(item.result)}`,
                   metadata: { source: 'batch_item', job_id: progress.job.id },
                 })),
               )
