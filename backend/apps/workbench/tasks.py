@@ -13,7 +13,6 @@ import asyncio
 import concurrent.futures
 import logging
 import time
-from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
@@ -30,34 +29,37 @@ logger = logging.getLogger(__name__)
 PROGRESS_UPDATE_EVERY = 5  # 每 N 个 item 更新一次进度
 CANCEL_CHECK_EVERY = 5  # 每 N 个 item 检查一次取消标志
 ANALYSIS_SYSTEM_PROMPT = (
-    "你是一位专业的法律文档分析专家。请根据用户提供的分析要求，对文档内容进行深入分析，"
-    "并给出明确的结论。你的分析应当：\n"
-    "1. 基于文档中的具体事实和法律依据\n"
-    "2. 指出关键的法律问题和争议焦点\n"
-    "3. 给出清晰的分析结论\n"
-    "4. 使用专业但易懂的语言\n"
-    "5. 使用清晰的结构化格式\n"
-    "6. 如果用户提供了案号、审理法院等元数据，请在分析中使用这些信息，不要编造\n"
-    "7. 最后详细列出案例的案号、案由、法官和书记员姓名、关于用户查询的问题在本案中的结论"
+    "你是一位专业的法律文档分析专家。请根据用户提供的分析要求，对文档内容进行分析。\n\n"
+    "## 分析步骤\n"
+    "第一步：判断本案是否与用户的研究问题相关。\n"
+    "- 如果无关，直接输出：「本案与用户研究的{问题}无关，跳过。」然后在末尾输出元数据汇总块即可，不需要其他分析内容。\n"
+    "- 如果有关，继续下一步。\n\n"
+    "第二步（仅相关案例）：\n"
+    "1. 分析本案的全部争议焦点和裁判要旨\n"
+    "2. 但只详细输出与用户查询问题直接相关的争议焦点和裁判要旨，其他内容简要提及即可\n"
+    "3. 给出针对用户查询问题的明确结论\n\n"
+    "## 输出格式要求\n"
+    "- 如果用户提供了案号、审理法院等元数据，请使用这些信息，不要编造\n"
+    "- 使用专业但易懂的语言\n"
+    "- 使用清晰的结构化格式\n\n"
+    "## 元数据汇总（必须输出，不可省略）\n"
+    "在分析内容之后，必须输出以下结构化数据块（用于后续汇总）：\n"
+    "```\n"
+    "【案例元数据汇总】\n"
+    "案号：{案号}\n"
+    "案由：{案由}\n"
+    "审理法院：{审理法院}\n"
+    "法官：{法官}\n"
+    "书记员：{书记员}\n"
+    "与研究问题相关：是/否\n"
+    "结论：{针对用户查询问题的一句话结论}\n"
+    "```\n"
+    "注意：元数据汇总块中的字段必须从文档中提取，不要编造。如果某字段在文档中找不到，填写「未注明」。"
 )
-SUMMARY_SYSTEM_PROMPT = (
-    "你是一位法律研究助理。请根据用户提供的多个案例分析结论，撰写一份综合研究报告。"
-    "报告应当：\n"
-    "1. 仅基于用户提供的案例分析结论进行总结，禁止引入任何外部案例、虚构案例或你的知识库中的案例\n"
-    "2. 概括所有案例的共同规律和趋势\n"
-    "3. 指出各案例之间的异同点\n"
-    "4. 提炼出有价值的法律见解\n"
-    "5. 使用清晰的结构化格式\n"
-    f"6. 报告日期使用今天的实际日期（{datetime.now(UTC).strftime('%Y年%m月%d日')}），不要编造日期\n"
-    "7. 最后要添加附件部分，把每个案例的分析结论和案号、案由、法官和书记员姓名、关于用户查询的问题在本案中的结论列出来"
+METADATA_BLOCK_RE = __import__("re").compile(
+    r"【案例元数据汇总】\s*\n([\s\S]*?)(?:\n```|```\s*\Z|\Z)",
 )
-BATCH_SUMMARY_PROMPT = (
-    "你是一位法律研究助理。请根据以下案例分析结论，撰写一份简要的批次摘要。"
-    "摘要应当提炼出这批案例的关键规律、争议焦点和裁判倾向。"
-    "仅使用提供的内容，禁止引入外部案例。"
-)
-BATCH_SIZE = 20  # 分批汇总每批的案例数
-DIRECT_THRESHOLD = 40000  # 低于此字符数直接汇总，否则分批
+METADATA_FIELD_RE = __import__("re").compile(r"^(案号|案由|审理法院|法官|书记员|与研究问题相关|结论)\s*[：:]\s*(.+)$", __import__("re").MULTILINE)
 
 
 def run_batch_analysis(job_id: str) -> None:
@@ -159,7 +161,12 @@ async def _run_batch_async(job_id: UUID) -> None:
                             {"role": "system", "content": ANALYSIS_SYSTEM_PROMPT},
                             {
                                 "role": "user",
-                                "content": f"{case_info}分析要求：{job.prompt}\n\n以下是从文件「{item.file_name}」中提取的内容：\n\n{text}\n\n请根据以上分析要求，对本文档内容进行分析并给出结论。",
+                                "content": (
+                                    f"{case_info}用户研究问题：{job.prompt}\n\n"
+                                    f"以下是从文件「{item.file_name}」中提取的内容：\n\n{text}\n\n"
+                                    "请先判断本案是否与用户研究问题相关。如无关，直接说明无关并跳过；如有关，请进行分析。"
+                                    "分析完成后，必须在末尾输出【案例元数据汇总】块。"
+                                ),
                             },
                         ],
                         model=job.llm_model,
@@ -203,7 +210,7 @@ async def _run_batch_async(job_id: UUID) -> None:
 
         if completed_items:
             logger.info("Phase 3: 生成汇总报告 (%d 个已完成)", len(completed_items))
-            summary = await _generate_summary(llm, job.llm_model, job.prompt, completed_items)
+            summary = await _generate_summary(job.prompt, completed_items)
             await sync_to_async(BatchJob.objects.filter(id=job_id).update)(
                 status=BatchJobStatus.COMPLETED,
                 summary=summary,
@@ -250,64 +257,83 @@ async def _update_progress(job_id: UUID) -> None:
 
 
 async def _generate_summary(
-    llm: Any,
-    model: str,
     prompt: str,
     completed_items: list[BatchJobItem],
 ) -> str:
-    """汇总所有分析结论，生成综合报告
+    """从每个案例的分析结果中提取元数据汇总块，生成 CSV 表格。"""
+    import csv
+    import io
 
-    案例少时直接汇总；案例多时分批摘要再合并，避免截断丢失信息。
-    """
-    conclusions = [f"## {item.file_name}\n{item.result}" for item in completed_items]
-    all_text = "\n\n---\n\n".join(conclusions)
+    csv_rows: list[dict[str, str]] = []
+    missing_count = 0
 
-    if len(all_text) <= DIRECT_THRESHOLD:
-        # 案例较少，直接汇总
-        content = (
-            f"原始分析要求：{prompt}\n\n"
-            f"以下是 {len(completed_items)} 个案例的分析结论（仅使用以下内容，不要添加任何外部案例）：\n\n"
-            f"{all_text}\n\n请基于以上内容撰写综合研究报告。"
-        )
-    else:
-        # 案例较多，分批摘要再合并
-        logger.info("案例文本过长 (%d 字符)，启用分批汇总", len(all_text))
-        batch_summaries: list[str] = []
-        for i in range(0, len(conclusions), BATCH_SIZE):
-            batch = conclusions[i : i + BATCH_SIZE]
-            batch_text = "\n\n---\n\n".join(batch)
-            batch_num = i // BATCH_SIZE + 1
-            total_batches = (len(conclusions) + BATCH_SIZE - 1) // BATCH_SIZE
-            logger.info("汇总批次 %d/%d (%d 个案例)", batch_num, total_batches, len(batch))
+    for item in completed_items:
+        if not item.result:
+            continue
 
-            summary = await sync_to_async(_sync_llm_chat)(
-                llm,
-                messages=[
-                    {"role": "system", "content": BATCH_SUMMARY_PROMPT},
-                    {
-                        "role": "user",
-                        "content": f"以下是第 {batch_num} 批（共 {total_batches} 批）的 {len(batch)} 个案例分析结论：\n\n{batch_text}\n\n请提炼这批案例的关键规律和裁判倾向。",
-                    },
-                ],
-                model=model,
-                temperature=0.3,
-            )
-            batch_summaries.append(f"### 批次 {batch_num} 摘要\n{summary}")
+        # 提取【案例元数据汇总】块
+        block_match = METADATA_BLOCK_RE.search(item.result)
+        if not block_match:
+            missing_count += 1
+            # 尝试从文件名提取案号作为 fallback
+            csv_rows.append({
+                "文件名": item.file_name,
+                "案号": "",
+                "案由": "",
+                "审理法院": "",
+                "法官": "",
+                "书记员": "",
+                "与研究问题相关": "",
+                "结论": "未提取到元数据汇总块",
+            })
+            continue
 
-        combined = "\n\n".join(batch_summaries)
-        content = (
-            f"原始分析要求：{prompt}\n\n"
-            f"以下是 {len(completed_items)} 个案例的分批摘要（共 {len(batch_summaries)} 批）：\n\n"
-            f"{combined}\n\n请基于以上摘要撰写一份综合研究报告。"
-        )
+        block_text = block_match.group(1).strip()
+        fields: dict[str, str] = {}
+        for field_match in METADATA_FIELD_RE.finditer(block_text):
+            fields[field_match.group(1).strip()] = field_match.group(2).strip()
 
-    result = await sync_to_async(_sync_llm_chat)(
-        llm,
-        messages=[
-            {"role": "system", "content": SUMMARY_SYSTEM_PROMPT},
-            {"role": "user", "content": content},
-        ],
-        model=model,
-        temperature=0.3,
+        csv_rows.append({
+            "文件名": item.file_name,
+            "案号": fields.get("案号", "未注明"),
+            "案由": fields.get("案由", "未注明"),
+            "审理法院": fields.get("审理法院", "未注明"),
+            "法官": fields.get("法官", "未注明"),
+            "书记员": fields.get("书记员", "未注明"),
+            "与研究问题相关": fields.get("与研究问题相关", "未注明"),
+            "结论": fields.get("结论", "未注明"),
+        })
+
+    if not csv_rows:
+        return "所有案例分析结果为空，无法生成汇总。"
+
+    # 生成 CSV
+    output = io.StringIO()
+    fieldnames = ["文件名", "案号", "案由", "审理法院", "法官", "书记员", "与研究问题相关", "结论"]
+    writer = csv.DictWriter(output, fieldnames=fieldnames, extrasaction="ignore")
+    writer.writeheader()
+    writer.writerows(csv_rows)
+
+    csv_content = output.getvalue()
+
+    # 统计
+    total = len(csv_rows)
+    relevant = sum(1 for r in csv_rows if r.get("与研究问题相关") == "是")
+    irrelevant = sum(1 for r in csv_rows if r.get("与研究问题相关") == "否")
+
+    summary_header = (
+        f"## 案例分析汇总\n\n"
+        f"- 分析要求：{prompt}\n"
+        f"- 案例总数：{total}\n"
+        f"- 相关案例：{relevant}\n"
+        f"- 无关案例：{irrelevant}\n"
     )
-    return result
+    if missing_count:
+        summary_header += f"- 未提取到元数据：{missing_count}\n"
+
+    summary_header += f"\n### 汇总表（CSV）\n\n```csv\n{csv_content}```\n"
+
+    if missing_count:
+        summary_header += f"\n> 注意：有 {missing_count} 个案例未提取到元数据汇总块，可能是分析结果格式不符合预期。\n"
+
+    return summary_header
