@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { useState, useRef, useCallback } from 'react'
-import { FolderOpen, X, FileText } from 'lucide-react'
+import { FolderOpen, X, FileText, Upload } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -16,23 +16,112 @@ interface BatchAnalysisDialogProps {
   disabled?: boolean
 }
 
+const DOC_EXTS = new Set(['.doc', '.docx'])
+
+/** 递归读取目录中的 .doc/.docx 文件 */
+async function readDirectoryEntries(dirEntry: FileSystemDirectoryEntry): Promise<File[]> {
+  const reader = dirEntry.createReader()
+  const allFiles: File[] = []
+
+  // createReader.readEntries 可能分批返回，需循环读取
+  const readBatch = (): Promise<FileSystemEntry[]> =>
+    new Promise((resolve, reject) => reader.readEntries(resolve, reject))
+
+  let entries: FileSystemEntry[]
+  do {
+    entries = await readBatch()
+    for (const entry of entries) {
+      if (entry.isFile) {
+        const ext = entry.name.toLowerCase().slice(entry.name.lastIndexOf('.'))
+        if (DOC_EXTS.has(ext)) {
+          const file = await new Promise<File>((resolve, reject) =>
+            (entry as FileSystemFileEntry).file(resolve, reject),
+          )
+          allFiles.push(file)
+        }
+      } else if (entry.isDirectory) {
+        const sub = await readDirectoryEntries(entry as FileSystemDirectoryEntry)
+        allFiles.push(...sub)
+      }
+    }
+  } while (entries.length > 0)
+
+  return allFiles
+}
+
 export function BatchAnalysisDialog({ modelName, onSubmit, disabled }: BatchAnalysisDialogProps) {
   const [open, setOpen] = useState(false)
   const [files, setFiles] = useState<File[]>([])
   const [prompt, setPrompt] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [dragging, setDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const addFiles = useCallback((newFiles: File[]) => {
+    setFiles((prev) => {
+      const existing = new Set(prev.map((f) => f.name))
+      const unique = newFiles.filter((f) => !existing.has(f.name))
+      return [...prev, ...unique]
+    })
+  }, [])
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files
     if (!selected) return
-    setFiles((prev) => {
-      const existing = new Set(prev.map((f) => f.name))
-      const newFiles = Array.from(selected).filter((f) => !existing.has(f.name))
-      return [...prev, ...newFiles]
-    })
-    // 重置 input 以便重复选择同一批文件
+    addFiles(Array.from(selected))
     if (fileInputRef.current) fileInputRef.current.value = ''
+  }, [addFiles])
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragging(false)
+
+    const items = e.dataTransfer.items
+    if (!items?.length) return
+
+    const collected: File[] = []
+    const promises: Promise<void>[] = []
+
+    for (const item of Array.from(items)) {
+      const entry = item.webkitGetAsEntry?.()
+      if (!entry) continue
+
+      if (entry.isFile) {
+        const ext = entry.name.toLowerCase().slice(entry.name.lastIndexOf('.'))
+        if (DOC_EXTS.has(ext)) {
+          promises.push(
+            new Promise<void>((resolve, reject) => {
+              (entry as FileSystemFileEntry).file(
+                (file) => { collected.push(file); resolve() },
+                reject,
+              )
+            }),
+          )
+        }
+      } else if (entry.isDirectory) {
+        promises.push(
+          readDirectoryEntries(entry as FileSystemDirectoryEntry).then((files) => {
+            collected.push(...files)
+          }),
+        )
+      }
+    }
+
+    await Promise.all(promises)
+    if (collected.length > 0) addFiles(collected)
+  }, [addFiles])
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragging(true)
+  }, [])
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragging(false)
   }, [])
 
   const removeFile = useCallback((index: number) => {
@@ -72,15 +161,24 @@ export function BatchAnalysisDialog({ modelName, onSubmit, disabled }: BatchAnal
           <div className="space-y-2">
             <Label>选择文件</Label>
             <div
-              className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
+              className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${
+                dragging ? 'border-primary bg-primary/5' : 'hover:border-primary/50'
+              }`}
               onClick={() => fileInputRef.current?.click()}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
             >
-              <FolderOpen className="size-8 mx-auto text-muted-foreground mb-2" />
+              {dragging ? (
+                <Upload className="size-8 mx-auto text-primary mb-2" />
+              ) : (
+                <FolderOpen className="size-8 mx-auto text-muted-foreground mb-2" />
+              )}
               <p className="text-sm text-muted-foreground">
-                点击选择文件，或拖拽到此处
+                点击选择文件，或拖拽文件/文件夹到此处
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                支持 .doc 和 .docx 格式
+                支持 .doc 和 .docx 格式，拖入文件夹会自动提取其中的文档
               </p>
             </div>
             <input
