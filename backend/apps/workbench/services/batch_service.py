@@ -61,7 +61,7 @@ def _split_excel_rows(uploaded_file: Any) -> list[tuple[str, str]]:
     df = pd.read_excel(io.BytesIO(file_bytes), engine=engine, header=header_row_idx, dtype=str)
 
     # 清理列名
-    df.columns = [str(c).strip() if str(c).strip() != "nan" else f"列{i+1}" for i, c in enumerate(df.columns)]
+    df.columns = [str(c).strip() if str(c).strip() != "nan" else f"列{i + 1}" for i, c in enumerate(df.columns)]
 
     # 去掉全空行
     df = df.dropna(how="all").reset_index(drop=True)
