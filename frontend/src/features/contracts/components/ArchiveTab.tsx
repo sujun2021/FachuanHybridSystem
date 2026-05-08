@@ -1,10 +1,19 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import {
   Upload, Trash2, Archive, FolderSync,
   GripVertical, FileCheck, Loader2, Scaling, ArrowRightLeft,
-  ChevronDown, ChevronRight, Download, Eye,
+  ChevronDown, ChevronRight, Download, Eye, FolderOpen, Sparkles,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import {
+  DndContext, closestCorners, KeyboardSensor, PointerSensor,
+  useSensor, useSensors, type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext, useSortable, verticalListSortingStrategy,
+  arrayMove, sortableKeyboardCoordinates,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { Button } from '@/components/ui/button'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -13,39 +22,41 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import {
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog'
+import { FolderScanPanel } from './FolderScanPanel'
 import { contractApi } from '../api'
-import type { Contract, FinalizedMaterial, MaterialCategory } from '../types'
-
-/* ── Checklist definition ── */
-
-interface ChecklistItem {
-  code: string
-  name: string
-  required: boolean
-  category: MaterialCategory
-}
-
-const CHECKLIST: ChecklistItem[] = [
-  { code: 'CONTRACT', name: '合同正本', required: true, category: 'contract_original' },
-  { code: 'SUPPLEMENT', name: '补充协议', required: false, category: 'supplementary_agreement' },
-  { code: 'INVOICE', name: '发票', required: false, category: 'invoice' },
-  { code: 'ARCHIVE_DOC', name: '归档文书', required: true, category: 'archive_doc' },
-  { code: 'SUPERVISION', name: '监督卡', required: false, category: 'supervision_card' },
-  { code: 'AUTH', name: '授权委托材料', required: true, category: 'auth_doc' },
-]
-
-function isItemDone(item: ChecklistItem, materials: FinalizedMaterial[]): boolean {
-  return materials.some(m => m.category === item.category)
-}
+import type { Contract, ChecklistItem, ArchiveChecklist, FinalizedMaterial } from '../types'
 
 /* ── Status badge per item ── */
 
-function ItemBadge({ item, materials }: { item: ChecklistItem; materials: FinalizedMaterial[] }) {
-  const done = isItemDone(item, materials)
-  if (done) {
+function ItemBadge({ item }: { item: ChecklistItem }) {
+  if (item.template) {
+    return (
+      <span className="inline-flex items-center justify-center size-5 rounded-full bg-blue-100 text-blue-700 text-[11px] font-bold" title="可自动生成">
+        ⚡
+      </span>
+    )
+  }
+  if (item.completed) {
     return (
       <span className="inline-flex items-center justify-center size-5 rounded-full bg-green-100 text-green-700 text-[11px] font-bold" title="已完成">
         ✓
+      </span>
+    )
+  }
+  if (item.auto_detect === 'supervision_card') {
+    return (
+      <span className="inline-flex items-center justify-center size-5 rounded-full bg-violet-100 text-violet-700 text-[11px] font-bold cursor-help" title="可自动检测监督卡">
+        🔍
+      </span>
+    )
+  }
+  if (item.has_case_material) {
+    return (
+      <span className="inline-flex items-center justify-center size-5 rounded-full bg-cyan-100 text-cyan-700 text-[11px] font-bold cursor-help" title="可从案件材料同步">
+        📋
       </span>
     )
   }
@@ -63,51 +74,168 @@ function ItemBadge({ item, materials }: { item: ChecklistItem; materials: Finali
   )
 }
 
+/* ── Sortable material sub-item ── */
+
+function SortableMaterialItem({
+  m, contractId, itemCode, items, onDelete, onMove,
+}: {
+  m: FinalizedMaterial
+  contractId: number
+  itemCode: string
+  items: ChecklistItem[]
+  onDelete: (id: number) => void
+  onMove: (id: number, targetCode: string) => void
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: m.id,
+    animateLayoutChanges: ({ isSorting, wasDragging }) => !isSorting && !wasDragging,
+  })
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : undefined,
+    zIndex: isDragging ? 10 : undefined,
+    position: 'relative' as const,
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center gap-1.5 px-1.5 py-0.5 rounded text-xs group hover:bg-muted/40 transition-colors">
+      <span className="text-muted-foreground/40 cursor-grab shrink-0" {...attributes} {...listeners}>
+        <GripVertical className="size-3" />
+      </span>
+      <FileCheck className="size-3 text-green-600 shrink-0" />
+      <span className="flex-1 truncate">{m.original_filename}</span>
+      {m.source_label && (
+        <span className={`inline-flex items-center px-1 py-px rounded text-[10px] font-medium shrink-0 ${
+          m.source === 'case' ? 'bg-blue-50 text-blue-700'
+          : m.source === 'scan' ? 'bg-purple-50 text-purple-700'
+          : 'bg-muted text-muted-foreground'
+        }`}>
+          {m.source_label}
+        </span>
+      )}
+      <button
+        className="p-0.5 rounded text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-foreground transition-all"
+        title="预览"
+        onClick={() => contractApi.previewSingleMaterial(contractId, m.id)}
+      >
+        <Eye className="size-3" />
+      </button>
+      <div className="opacity-0 group-hover:opacity-100 shrink-0">
+        <Select onValueChange={(targetCode) => onMove(m.id, targetCode)}>
+          <SelectTrigger className="h-5 w-auto text-[10px] px-1 border-border/60">
+            <ArrowRightLeft className="size-2.5 mr-0.5" />
+            <SelectValue placeholder="移动" />
+          </SelectTrigger>
+          <SelectContent>
+            {items.filter(i => i.code !== itemCode).map(target => (
+              <SelectItem key={target.code} value={target.code} className="text-xs">{target.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <button
+        className="p-0.5 rounded text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-destructive transition-all"
+        title="删除"
+        onClick={() => onDelete(m.id)}
+      >
+        <Trash2 className="size-3" />
+      </button>
+    </div>
+  )
+}
+
 /* ── Main component ── */
 
 export function ArchiveTab({ contract: c }: { contract: Contract }) {
-  const [materials, setMaterials] = useState<FinalizedMaterial[]>(c.finalized_materials ?? [])
+  const [checklist, setChecklist] = useState<ArchiveChecklist | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [deleteMaterialId, setDeleteMaterialId] = useState<number | null>(null)
   const [confirmArchiveOpen, setConfirmArchiveOpen] = useState(false)
   const [confirmClearAllOpen, setConfirmClearAllOpen] = useState(false)
-  const [expandedCodes, setExpandedCodes] = useState<Set<string>>(new Set())
-  const [compactMode, setCompactMode] = useState(false)
+  const [folderScanOpen, setFolderScanOpen] = useState(false)
   const uploadInputRef = useRef<HTMLInputElement>(null)
   const [uploadTargetCode, setUploadTargetCode] = useState<string | null>(null)
+  const expandedRef = useRef(new Set<string>())
+  const itemRefs = useRef(new Map<string, HTMLDivElement>())
+  const [hasExpanded, setHasExpanded] = useState(false)
 
-  const items = CHECKLIST.map(item => ({ ...item, done: isItemDone(item, materials) }))
-  const doneCount = items.filter(i => i.done).length
-  const requiredItems = items.filter(i => i.required)
-  const requiredDone = requiredItems.filter(i => i.done).length
-  const pct = items.length > 0 ? Math.round((doneCount / items.length) * 100) : 0
-  const canArchive = requiredDone === requiredItems.length
+  /* ── Placeholder preview state ── */
+  const [placeholderPreview, setPlaceholderPreview] = useState<{
+    open: boolean
+    title: string
+    loading: boolean
+    rows: { key: string; label: string; value: string }[]
+  }>({ open: false, title: '', loading: false, rows: [] })
 
-  const refreshMaterials = useCallback(async () => {
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  )
+
+  const fetchChecklist = useCallback(async () => {
     try {
-      const updated = await contractApi.get(c.id)
-      setMaterials(updated.finalized_materials ?? [])
+      const data = await contractApi.getArchiveChecklist(c.id)
+      setChecklist(data)
+    } catch {
+      toast.error('获取检查清单失败')
+    }
+  }, [c.id])
+
+  useEffect(() => {
+    fetchChecklist()
+  }, [fetchChecklist])
+
+  const items = checklist?.items ?? []
+  const doneCount = checklist?.completed_count ?? 0
+  const requiredDone = checklist?.required_completed_count ?? 0
+  const requiredTotal = checklist?.required_total_count ?? 0
+  const pct = checklist?.completion_percentage ?? 0
+  const compactMode = checklist?.compact_archive ?? false
+  const canArchive = requiredDone === requiredTotal && requiredTotal > 0 && c.status !== 'archived'
+
+  const refreshChecklist = useCallback(async () => {
+    try {
+      const data = await contractApi.getArchiveChecklist(c.id)
+      setChecklist(data)
     } catch { /* 保持当前数据 */ }
   }, [c.id])
 
   const toggleExpand = (code: string) => {
-    setExpandedCodes(prev => {
-      const next = new Set(prev)
-      if (next.has(code)) next.delete(code)
-      else next.add(code)
-      return next
-    })
-  }
-
-  const toggleAllExpand = () => {
-    if (expandedCodes.size > 0) {
-      setExpandedCodes(new Set())
+    const el = itemRefs.current.get(code)
+    if (!el) return
+    const expanding = !expandedRef.current.has(code)
+    if (expanding) {
+      expandedRef.current.add(code)
+      el.style.gridTemplateRows = '1fr'
+      el.dataset.expanded = ''
     } else {
-      setExpandedCodes(new Set(CHECKLIST.map(c => c.code)))
+      expandedRef.current.delete(code)
+      el.style.gridTemplateRows = '0fr'
+      delete el.dataset.expanded
     }
   }
 
-  const getMaterialsForCode = (code: string) => materials.filter(m => m.archive_item_code === code)
+  const toggleAllExpand = () => {
+    const expanding = expandedRef.current.size === 0
+    for (const [code, el] of itemRefs.current) {
+      if (expanding) {
+        expandedRef.current.add(code)
+        el.style.gridTemplateRows = '1fr'
+        el.dataset.expanded = ''
+      } else {
+        expandedRef.current.delete(code)
+        el.style.gridTemplateRows = '0fr'
+        delete el.dataset.expanded
+      }
+    }
+    setHasExpanded(expanding)
+  }
+
+  const getMaterialsForCode = (code: string) => {
+    const item = items.find(i => i.code === code)
+    return item?.materials ?? []
+  }
 
   /* ── Actions ── */
 
@@ -116,10 +244,10 @@ export function ArchiveTab({ contract: c }: { contract: Contract }) {
     try {
       await contractApi.uploadArchiveItem(c.id, file, code)
       toast.success('上传成功')
-      await refreshMaterials()
+      await refreshChecklist()
     } catch { toast.error('上传失败') }
     setActionLoading(null)
-  }, [c.id, refreshMaterials])
+  }, [c.id, refreshChecklist])
 
   const handleDeleteMaterial = useCallback(async () => {
     if (deleteMaterialId == null) return
@@ -127,21 +255,21 @@ export function ArchiveTab({ contract: c }: { contract: Contract }) {
     try {
       await contractApi.deleteArchiveMaterial(c.id, deleteMaterialId)
       toast.success('已删除')
-      setMaterials(prev => prev.filter(m => m.id !== deleteMaterialId))
+      await refreshChecklist()
     } catch { toast.error('删除失败') }
     setDeleteMaterialId(null)
     setActionLoading(null)
-  }, [c.id, deleteMaterialId])
+  }, [c.id, deleteMaterialId, refreshChecklist])
 
   const handleSyncCaseMaterials = useCallback(async () => {
     setActionLoading('sync')
     try {
       const result = await contractApi.syncCaseMaterials(c.id)
       toast.success(`同步完成，${result.synced_count} 个文件`)
-      await refreshMaterials()
+      await refreshChecklist()
     } catch { toast.error('同步失败') }
     setActionLoading(null)
-  }, [c.id, refreshMaterials])
+  }, [c.id, refreshChecklist])
 
   const handleConfirmArchive = useCallback(async () => {
     setActionLoading('confirm')
@@ -157,11 +285,11 @@ export function ArchiveTab({ contract: c }: { contract: Contract }) {
     setActionLoading('compact')
     try {
       await contractApi.toggleCompactArchive(c.id)
-      setCompactMode(prev => !prev)
+      await refreshChecklist()
       toast.success(compactMode ? '已切换完整视图' : '已切换精简视图')
     } catch { toast.error('操作失败') }
     setActionLoading(null)
-  }, [c.id, compactMode])
+  }, [c.id, compactMode, refreshChecklist])
 
   const handleScaleToA4 = useCallback(async () => {
     setActionLoading('scale')
@@ -176,20 +304,85 @@ export function ArchiveTab({ contract: c }: { contract: Contract }) {
     try {
       await contractApi.moveArchiveMaterial(c.id, materialId, targetCode)
       toast.success('已移动')
-      await refreshMaterials()
+      await refreshChecklist()
     } catch { toast.error('移动失败') }
-  }, [c.id, refreshMaterials])
+  }, [c.id, refreshChecklist])
+
+  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id || !checklist) return
+
+    const activeId = Number(active.id)
+    const overId = Number(over.id)
+
+    // Find which checklist item these materials belong to
+    for (const item of checklist.items) {
+      const matIds = item.materials.map(m => m.id)
+      const activeIdx = matIds.indexOf(activeId)
+      const overIdx = matIds.indexOf(overId)
+      if (activeIdx < 0 || overIdx < 0) continue
+
+      // Optimistic update: immediately reorder local state
+      const reordered = arrayMove(matIds, activeIdx, overIdx)
+      const reorderedMaterials = arrayMove(item.materials, activeIdx, overIdx)
+      setChecklist(prev => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          items: prev.items.map(i =>
+            i.code === item.code ? { ...i, materials: reorderedMaterials } : i,
+          ),
+        }
+      })
+
+      // Persist to backend
+      try {
+        await contractApi.reorderArchiveMaterials(c.id, { [item.code]: reordered })
+      } catch {
+        toast.error('排序失败')
+        refreshChecklist()
+      }
+      return
+    }
+  }, [c.id, checklist, refreshChecklist])
 
   const handleClearAll = useCallback(async () => {
     setActionLoading('clear-all')
     try {
       const result = await contractApi.clearAllArchiveMaterials(c.id)
       toast.success(`已清空 ${result.deleted_count} 份材料`)
-      setMaterials([])
+      await refreshChecklist()
     } catch { toast.error('清空失败') }
     setConfirmClearAllOpen(false)
     setActionLoading(null)
-  }, [c.id])
+  }, [c.id, refreshChecklist])
+
+  const handleGenerateFolder = useCallback(async () => {
+    setActionLoading('generate')
+    try {
+      const result = await contractApi.generateArchiveFolder(c.id)
+      if (result.success) {
+        toast.success(`归档文件夹已生成${result.generated_docs.length > 0 ? `，${result.generated_docs.length} 份文书` : ''}`)
+        await refreshChecklist()
+      } else {
+        toast.error(result.errors[0] || '生成失败')
+      }
+    } catch { toast.error('生成归档文件夹失败') }
+    setActionLoading(null)
+  }, [c.id, refreshChecklist])
+
+  const handleLearnRules = useCallback(async () => {
+    setActionLoading('learn')
+    try {
+      const result = await contractApi.learnArchiveRules()
+      if (result.success) {
+        toast.success(result.message)
+      } else {
+        toast.error(result.message || '学习失败')
+      }
+    } catch { toast.error('学习分类规则失败') }
+    setActionLoading(null)
+  }, [])
 
   const triggerUpload = (code: string) => {
     setUploadTargetCode(code)
@@ -202,14 +395,36 @@ export function ArchiveTab({ contract: c }: { contract: Contract }) {
     e.target.value = ''
   }
 
-  /* ── Visible items (compact mode hides empty optional) ── */
+  const handlePreviewPlaceholders = async (templateSubtype: string, templateName: string) => {
+    setPlaceholderPreview({ open: true, title: `${templateName} - 替换词预览`, loading: true, rows: [] })
+    try {
+      const result = await contractApi.previewArchivePlaceholders(c.id, templateSubtype)
+      if (result.success && result.data) {
+        setPlaceholderPreview(prev => ({ ...prev, loading: false, rows: result.data! }))
+      } else {
+        toast.error(result.error || '预览失败')
+        setPlaceholderPreview(prev => ({ ...prev, open: false }))
+      }
+    } catch {
+      toast.error('预览请求失败')
+      setPlaceholderPreview(prev => ({ ...prev, open: false }))
+    }
+  }
 
-  const visibleItems = compactMode
-    ? items.filter(i => i.done || i.required)
-    : items
+  /* ── Non-template items for count calculation ── */
+
+  const nonTemplateItems = items.filter(i => !i.template)
+
+  /* ── Visible items: preserve API order, compact mode only hides empty optional non-template ── */
+
+  const visibleItems = items.filter(i => i.template || !compactMode || i.completed || i.required)
 
   return (
     <div>
+      <style>{`
+        .expand-indicator svg { transition: transform 200ms ease-in-out; }
+        [data-expanded] .expand-indicator svg { transform: rotate(90deg); }
+      `}</style>
       {/* Hidden file input */}
       <input ref={uploadInputRef} type="file" className="hidden" onChange={onFileSelected} />
 
@@ -222,16 +437,16 @@ export function ArchiveTab({ contract: c }: { contract: Contract }) {
             <div className="flex items-center gap-2.5">
               <h3 className="text-sm font-semibold text-foreground">归档检查清单</h3>
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted text-muted-foreground">
-                {doneCount}/{items.length}
+                {doneCount}/{nonTemplateItems.length}
               </span>
             </div>
             <div className="flex items-center gap-1">
               <button
                 className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
-                title={expandedCodes.size > 0 ? '收起全部子项' : '展开全部子项'}
+                title={hasExpanded ? '收起全部子项' : '展开全部子项'}
                 onClick={toggleAllExpand}
               >
-                {expandedCodes.size > 0
+                {hasExpanded
                   ? <ChevronDown className="size-4" />
                   : <ChevronRight className="size-4" />}
               </button>
@@ -251,7 +466,7 @@ export function ArchiveTab({ contract: c }: { contract: Contract }) {
                 className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                 title="清空全部材料"
                 onClick={() => setConfirmClearAllOpen(true)}
-                disabled={!!actionLoading || materials.length === 0}
+                disabled={!!actionLoading || items.every(i => i.materials.length === 0)}
               >
                 <Trash2 className="size-4" />
               </button>
@@ -267,9 +482,9 @@ export function ArchiveTab({ contract: c }: { contract: Contract }) {
               />
             </div>
             <span className="text-xs text-muted-foreground shrink-0">
-              {doneCount}/{items.length}
-              {requiredDone < requiredItems.length && (
-                <span className="text-amber-600 ml-1">(必需项: {requiredDone}/{requiredItems.length})</span>
+              {doneCount}/{nonTemplateItems.length}
+              {requiredDone < requiredTotal && (
+                <span className="text-amber-600 ml-1">(必需项: {requiredDone}/{requiredTotal})</span>
               )}
             </span>
           </div>
@@ -277,6 +492,30 @@ export function ArchiveTab({ contract: c }: { contract: Contract }) {
 
         {/* Toolbar */}
         <div className="px-[18px] pb-3 flex flex-wrap items-center gap-2 border-b border-border/40">
+          <Button
+            variant="outline" size="sm" className="h-7 text-xs"
+            onClick={() => setFolderScanOpen(true)}
+            disabled={!!actionLoading}
+          >
+            <FolderOpen className="mr-1 size-3" />
+            从合同文件夹同步
+          </Button>
+          <Button
+            variant="outline" size="sm" className="h-7 text-xs"
+            onClick={handleGenerateFolder}
+            disabled={!!actionLoading}
+          >
+            {actionLoading === 'generate' ? <Loader2 className="mr-1 size-3 animate-spin" /> : <FolderSync className="mr-1 size-3" />}
+            生成归档文件夹
+          </Button>
+          <Button
+            variant="outline" size="sm" className="h-7 text-xs"
+            onClick={handleLearnRules}
+            disabled={!!actionLoading}
+          >
+            {actionLoading === 'learn' ? <Loader2 className="mr-1 size-3 animate-spin" /> : <Sparkles className="mr-1 size-3" />}
+            学习分类规则
+          </Button>
           <Button
             variant="outline" size="sm" className="h-7 text-xs"
             onClick={handleSyncCaseMaterials}
@@ -308,23 +547,22 @@ export function ArchiveTab({ contract: c }: { contract: Contract }) {
 
         {/* Checklist items */}
         <div className="divide-y divide-border/40" style={{ counterReset: 'ac-counter' }}>
-          {visibleItems.map(item => {
+          {visibleItems.map((item, index) => {
             const itemMaterials = getMaterialsForCode(item.code)
-            const isExpanded = expandedCodes.has(item.code)
 
             return (
               <div
                 key={item.code}
-                className={`transition-colors ${item.done ? 'bg-green-50/30' : ''}`}
+                className={`transition-colors ${item.template ? 'bg-blue-50/40' : item.completed ? 'bg-green-50/30' : ''}`}
                 style={{ counterIncrement: 'ac-counter' }}
               >
                 {/* Item header */}
                 <div
-                  className="flex items-center gap-3 px-[18px] py-2.5 cursor-pointer hover:bg-muted/30 transition-colors select-none"
+                  className="flex items-center gap-2.5 px-[18px] py-1.5 cursor-pointer hover:bg-muted/30 transition-colors select-none"
                   onClick={() => toggleExpand(item.code)}
                 >
                   <span className="text-xs text-muted-foreground font-mono w-5 text-right shrink-0" style={{ content: 'counter(ac-counter)' }}>
-                    {CHECKLIST.indexOf(item) + 1}.
+                    {index + 1}.
                   </span>
                   <span className={`text-[13px] flex-1 ${item.required ? 'font-medium' : ''}`}>
                     {item.name}
@@ -332,95 +570,90 @@ export function ArchiveTab({ contract: c }: { contract: Contract }) {
                   {itemMaterials.length > 0 && (
                     <span className="text-xs text-muted-foreground">({itemMaterials.length})</span>
                   )}
-                  <ItemBadge item={item} materials={materials} />
+                  <ItemBadge item={item} />
 
                   {/* Actions */}
                   <div className="flex items-center gap-0.5" onClick={e => e.stopPropagation()}>
-                    <button
-                      className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
-                      title="上传文件"
-                      onClick={() => triggerUpload(item.code)}
-                      disabled={!!actionLoading}
-                    >
-                      <Upload className="size-3.5" />
-                    </button>
-                    {item.done && (
+                    {item.template ? (
                       <>
                         <button
-                          className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
-                          title="预览"
+                          className="p-1 rounded text-muted-foreground hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                          title="预览替换词"
+                          onClick={() => handlePreviewPlaceholders(item.template!, item.name)}
                         >
                           <Eye className="size-3.5" />
                         </button>
                         <button
-                          className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                          className="p-1 rounded text-muted-foreground hover:text-blue-600 hover:bg-blue-50 transition-colors"
                           title="下载材料"
+                          onClick={() => contractApi.downloadArchiveItem(c.id, item.code)}
                         >
                           <Download className="size-3.5" />
                         </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                          title="上传文件"
+                          onClick={() => triggerUpload(item.code)}
+                          disabled={!!actionLoading}
+                        >
+                          <Upload className="size-3.5" />
+                        </button>
+                        {item.completed && (
+                          <>
+                            <button
+                              className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                              title="预览"
+                              onClick={() => contractApi.previewArchiveItem(c.id, item.code)}
+                            >
+                              <Eye className="size-3.5" />
+                            </button>
+                            <button
+                              className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                              title="下载材料"
+                              onClick={() => contractApi.downloadArchiveItem(c.id, item.code)}
+                            >
+                              <Download className="size-3.5" />
+                            </button>
+                          </>
+                        )}
                       </>
                     )}
                   </div>
 
                   {/* Expand indicator */}
-                  <span className="text-muted-foreground shrink-0">
-                    {isExpanded
-                      ? <ChevronDown className="size-3.5" />
-                      : <ChevronRight className="size-3.5" />}
+                  <span className="text-muted-foreground shrink-0 expand-indicator">
+                    <ChevronRight className="size-3.5" />
                   </span>
                 </div>
 
-                {/* Materials sub-items */}
+                {/* Materials sub-items — always in DOM, CSS controls visibility */}
                 {itemMaterials.length > 0 && (
                   <div
-                    className="overflow-hidden transition-all duration-200"
-                    style={{ maxHeight: isExpanded ? `${itemMaterials.length * 40 + 16}px` : '0px' }}
+                    ref={el => { if (el) itemRefs.current.set(item.code, el); else itemRefs.current.delete(item.code) }}
+                    className="grid transition-[grid-template-rows] duration-200 ease-in-out"
+                    style={{ gridTemplateRows: '0fr' }}
                   >
-                    <div className="px-[18px] pb-2 space-y-0.5">
-                      {itemMaterials.map(m => (
-                        <div
-                          key={m.id}
-                          className="flex items-center gap-2 px-2 py-1.5 rounded-md text-xs group hover:bg-muted/40 transition-colors"
-                        >
-                          <span className="text-muted-foreground/40 cursor-grab shrink-0" title="拖拽排序">
-                            <GripVertical className="size-3" />
-                          </span>
-                          <FileCheck className="size-3 text-green-600 shrink-0" />
-                          <span className="flex-1 truncate">{m.original_filename}</span>
-                          {m.source_label && (
-                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium shrink-0 ${
-                              m.source === 'case' ? 'bg-blue-50 text-blue-700'
-                              : m.source === 'scan' ? 'bg-purple-50 text-purple-700'
-                              : 'bg-muted text-muted-foreground'
-                            }`}>
-                              {m.source_label}
-                            </span>
-                          )}
-                          {/* Move dropdown */}
-                          <div className="opacity-0 group-hover:opacity-100 shrink-0">
-                            <Select onValueChange={(targetCode) => handleMoveMaterial(m.id, targetCode)}>
-                              <SelectTrigger className="h-6 w-auto text-[10px] px-1.5 border-border/60">
-                                <ArrowRightLeft className="size-2.5 mr-0.5" />
-                                <SelectValue placeholder="移动" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {CHECKLIST.filter(c => c.code !== item.code).map(target => (
-                                  <SelectItem key={target.code} value={target.code} className="text-xs">
-                                    {target.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <button
-                            className="p-0.5 rounded text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-destructive transition-all"
-                            title="删除"
-                            onClick={() => setDeleteMaterialId(m.id)}
-                          >
-                            <Trash2 className="size-3" />
-                          </button>
-                        </div>
-                      ))}
+                    <div className="overflow-hidden min-h-0">
+                      <div className="border-t border-border/40 px-[18px] py-1">
+                        <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
+                          <SortableContext items={itemMaterials.map(m => m.id)} strategy={verticalListSortingStrategy}>
+                            {itemMaterials.map(m => (
+                              <SortableMaterialItem
+                                key={m.id}
+                                m={m}
+                                contractId={c.id}
+                                itemCode={item.code}
+                                items={items}
+                                onDelete={setDeleteMaterialId}
+                                onMove={handleMoveMaterial}
+                              />
+                            ))}
+                          </SortableContext>
+                        </DndContext>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -468,7 +701,7 @@ export function ArchiveTab({ contract: c }: { contract: Contract }) {
           <AlertDialogHeader>
             <AlertDialogTitle>确认清空全部材料</AlertDialogTitle>
             <AlertDialogDescription>
-              将删除所有 {materials.length} 份归档材料，此操作不可逆。
+              将删除所有 {items.reduce((sum, item) => sum + item.materials.length, 0)} 份归档材料，此操作不可逆。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -477,6 +710,53 @@ export function ArchiveTab({ contract: c }: { contract: Contract }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Folder scan dialog */}
+      <Dialog open={folderScanOpen} onOpenChange={setFolderScanOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>从合同文件夹同步</DialogTitle>
+            <DialogDescription>扫描合同绑定文件夹，自动匹配归档检查清单项</DialogDescription>
+          </DialogHeader>
+          <FolderScanPanel contractId={c.id} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Placeholder preview dialog */}
+      <Dialog open={placeholderPreview.open} onOpenChange={(open) => setPlaceholderPreview(prev => ({ ...prev, open }))}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{placeholderPreview.title}</DialogTitle>
+            <DialogDescription>模板文书中的占位符及其当前替换值</DialogDescription>
+          </DialogHeader>
+          {placeholderPreview.loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="size-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : placeholderPreview.rows.length > 0 ? (
+            <div className="max-h-[60vh] overflow-y-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border/60">
+                    <th className="text-left py-2 pr-3 font-medium text-muted-foreground">占位符</th>
+                    <th className="text-left py-2 font-medium text-muted-foreground">当前值</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {placeholderPreview.rows.map((row, i) => (
+                    <tr key={i} className="border-b border-border/30">
+                      <td className="py-1.5 pr-3 text-xs font-mono text-muted-foreground whitespace-nowrap">{row.label || row.key}</td>
+                      <td className="py-1.5 text-[13px]">{row.value || <span className="text-muted-foreground italic">未填写</span>}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground py-4 text-center">无替换词数据</p>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -12,7 +12,7 @@ import type {
   FolderScanConfirmItem, FolderScanConfirmResult,
   FinanceStats, ContractPartySource,
   Invoice, ClientPaymentRecord,
-  OAConfig, FilingSession,
+  OAConfig, FilingSession, ArchiveChecklist,
 } from './types'
 
 const contractApi_ = api.extend({
@@ -135,6 +135,15 @@ export const contractApi = {
 
   // ==================== Archive Operations ====================
 
+  getArchiveChecklist: async (contractId: number | string): Promise<ArchiveChecklist> =>
+    contractApi_.get(`${contractId}/archive/checklist`).json<ArchiveChecklist>(),
+
+  generateArchiveFolder: async (contractId: number | string): Promise<{ success: boolean; generated_docs: string[]; archive_dir: string; errors: string[] }> =>
+    contractApi_.post(`${contractId}/archive/generate-folder`).json(),
+
+  learnArchiveRules: async (): Promise<{ success: boolean; learned: number; updated: number; skipped: number; message: string }> =>
+    contractApi_.post('archive/learn-rules').json(),
+
   syncCaseMaterials: async (contractId: number | string): Promise<{ synced_count: number; message: string }> =>
     contractApi_.post(`${contractId}/archive/sync-case-materials`).json(),
 
@@ -175,7 +184,45 @@ export const contractApi = {
   previewArchiveMaterial: async (contractId: number | string, materialId: number): Promise<Response> =>
     contractApi_.get(`${contractId}/archive/materials/${materialId}/preview`),
 
+  downloadArchiveItem: async (contractId: number | string, archiveItemCode: string): Promise<void> => {
+    const resp = await contractApi_.get(`${contractId}/archive/download-item/${archiveItemCode}`)
+    const blob = await resp.blob()
+    const disposition = resp.headers.get('Content-Disposition')
+    let filename = ''
+    if (disposition) {
+      const utf8Match = disposition.match(/filename\*=UTF-8''(.+)/i)
+      if (utf8Match) filename = decodeURIComponent(utf8Match[1])
+      else {
+        const plainMatch = disposition.match(/filename="?([^";\n]+)"?/)
+        if (plainMatch) filename = plainMatch[1]
+      }
+    }
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename || 'download'
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+  },
+
+  previewArchiveItem: async (contractId: number | string, archiveItemCode: string): Promise<void> => {
+    const blob = await contractApi_.get(`${contractId}/archive/download-item/${archiveItemCode}?preview=1`).blob()
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank')
+  },
+
+  previewSingleMaterial: async (contractId: number | string, materialId: number): Promise<void> => {
+    const blob = await contractApi_.get(`${contractId}/archive/materials/${materialId}/preview`).blob()
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank')
+  },
+
   // ==================== Document Generation ====================
+
+  previewArchivePlaceholders: async (contractId: number | string, templateSubtype: string): Promise<{ success: boolean; data?: { key: string; label: string; value: string }[]; error?: string }> =>
+    api.get(`documents/contracts/${contractId}/archive-preview`, { searchParams: { template_subtype: templateSubtype } }).json(),
 
   generateContract: async (contractId: number | string, splitFee = false): Promise<Response> =>
     api.get(`documents/contracts/${contractId}/download`, { searchParams: splitFee ? { split_fee: 'true' } : {} }),
