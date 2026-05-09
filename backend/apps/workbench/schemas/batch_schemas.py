@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from apps.core.api.schemas import SchemaMixin
 
@@ -49,13 +49,13 @@ class BatchJobOut(SchemaMixin, BaseModel):
 
     model_config = {"from_attributes": True}
 
-    @staticmethod
-    def resolve_summary_file(obj: object) -> str | None:
-        return SchemaMixin._get_file_url(getattr(obj, "summary_file", None))
-
-    @staticmethod
-    def resolve_detail_zip_file(obj: object) -> str | None:
-        return SchemaMixin._get_file_url(getattr(obj, "detail_zip_file", None))
+    @field_validator("summary_file", "detail_zip_file", mode="before")
+    @classmethod
+    def _resolve_file_field(cls, v: Any) -> str:
+        if v is None:
+            return ""
+        result = SchemaMixin._get_file_url(v)
+        return result or ""
 
     @staticmethod
     def resolve_created_at(obj: object) -> datetime | None:
