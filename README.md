@@ -7,8 +7,7 @@
 <p align="center">
   <a href="https://github.com/Lawyer-ray/FachuanHybridSystem/actions"><img src="https://img.shields.io/github/actions/workflow/status/Lawyer-ray/FachuanHybridSystem/backend-ci.yml?label=Backend%20CI" alt="Backend CI"></a>
   <a href="https://github.com/Lawyer-ray/FachuanHybridSystem/actions"><img src="https://img.shields.io/github/actions/workflow/status/Lawyer-ray/FachuanHybridSystem/frontend-ci.yml?label=Frontend%20CI" alt="Frontend CI"></a>
-  <a href="https://github.com/Lawyer-ray/FachuanHybridSystem/releases"><img src="https://img.shields.io/github/v/release/Lawyer-ray/FachuanHybridSystem" alt="Version"></a>
-  <a href="https://github.com/Lawyer-ray/FachuanHybridSystem/blob/main/LICENSE"><img src="https://img.shields.io/github/license/Lawyer-ray/FachuanHybridSystem" alt="License"></a>
+
   <a href="https://github.com/Lawyer-ray/FachuanHybridSystem/stargazers"><img src="https://img.shields.io/github/stars/Lawyer-ray/FachuanHybridSystem?style=social" alt="Stars"></a>
 </p>
 
