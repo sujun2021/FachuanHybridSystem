@@ -27,27 +27,11 @@ from ..schemas import (
     SessionOut,
     SessionUpdateIn,
 )
-from ..services import BatchAnalysisService, WorkbenchChatService, WorkbenchMessageService, WorkbenchSessionService
+from apps.core.infrastructure.service_locator import ServiceLocator
 
 logger = logging.getLogger(__name__)
 
 router = Router(auth=JWTOrSessionAuth())
-
-
-def _get_session_service() -> WorkbenchSessionService:
-    return WorkbenchSessionService()
-
-
-def _get_message_service() -> WorkbenchMessageService:
-    return WorkbenchMessageService()
-
-
-def _get_batch_service() -> BatchAnalysisService:
-    return BatchAnalysisService()
-
-
-def _get_chat_service() -> WorkbenchChatService:
-    return WorkbenchChatService()
 
 
 # ─── 会话 API ────────────────────────────────────────────────────────────────
@@ -57,7 +41,7 @@ def _get_chat_service() -> WorkbenchChatService:
 def create_session(request: Any, payload: SessionCreateIn) -> Any:
     """创建工作台会话"""
     ctx = extract_request_context(request)
-    service = _get_session_service()
+    service = ServiceLocator.get_workbench_session_service()
     return service.create_session(
         title=payload.title,
         llm_model=payload.llm_model,
@@ -71,7 +55,7 @@ def create_session(request: Any, payload: SessionCreateIn) -> Any:
 def list_sessions(request: Any, page: int = 1) -> dict[str, Any]:
     """获取当前用户的工作台会话列表"""
     ctx = extract_request_context(request)
-    service = _get_session_service()
+    service = ServiceLocator.get_workbench_session_service()
     return service.list_sessions(
         page=page,
         user=ctx.user,
@@ -84,7 +68,7 @@ def list_sessions(request: Any, page: int = 1) -> dict[str, Any]:
 def get_session(request: Any, session_id: int) -> Any:
     """获取会话详情"""
     ctx = extract_request_context(request)
-    service = _get_session_service()
+    service = ServiceLocator.get_workbench_session_service()
     return service.get_session(
         session_id,
         user=ctx.user,
@@ -97,7 +81,7 @@ def get_session(request: Any, session_id: int) -> Any:
 def update_session(request: Any, session_id: int, payload: SessionUpdateIn) -> Any:
     """更新会话"""
     ctx = extract_request_context(request)
-    service = _get_session_service()
+    service = ServiceLocator.get_workbench_session_service()
     return service.update_session(
         session_id,
         title=payload.title,
@@ -113,7 +97,7 @@ def update_session(request: Any, session_id: int, payload: SessionUpdateIn) -> A
 def delete_session(request: Any, session_id: int) -> dict[str, str]:
     """删除会话"""
     ctx = extract_request_context(request)
-    service = _get_session_service()
+    service = ServiceLocator.get_workbench_session_service()
     service.delete_session(
         session_id,
         user=ctx.user,
@@ -130,7 +114,7 @@ def delete_session(request: Any, session_id: int) -> dict[str, str]:
 def list_messages(request: Any, session_id: int, page: int = 1) -> dict[str, Any]:
     """获取会话的消息列表"""
     ctx = extract_request_context(request)
-    service = _get_message_service()
+    service = ServiceLocator.get_workbench_message_service()
     return service.list_messages(
         session_id,
         page=page,
@@ -144,7 +128,7 @@ def list_messages(request: Any, session_id: int, page: int = 1) -> dict[str, Any
 def truncate_messages(request: Any, session_id: int, message_id: int) -> dict[str, str]:
     """删除指定消息及其之后的所有消息（用于编辑重发）"""
     ctx = extract_request_context(request)
-    service = _get_message_service()
+    service = ServiceLocator.get_workbench_message_service()
     service.truncate_messages(
         session_id,
         message_id,
@@ -166,7 +150,7 @@ class FeedbackIn(Schema):
 def submit_feedback(request: Any, message_id: int, payload: FeedbackIn) -> dict[str, Any]:
     """提交消息反馈（好评/差评）"""
     ctx = extract_request_context(request)
-    service = _get_message_service()
+    service = ServiceLocator.get_workbench_message_service()
     service.submit_feedback(
         message_id,
         rating=payload.rating,
@@ -185,10 +169,10 @@ def submit_feedback(request: Any, message_id: int, payload: FeedbackIn) -> dict[
 async def stream_chat(request: Any, session_id: int, payload: MessageIn) -> StreamingHttpResponse:
     """SSE 流式对话 - 发送消息并获取 AI 流式响应"""
     ctx = extract_request_context(request)
-    session_service = _get_session_service()
+    session_service = ServiceLocator.get_workbench_session_service()
     session_service.get_user_session(ctx.user, session_id)
 
-    chat_service = _get_chat_service()
+    chat_service = ServiceLocator.get_workbench_chat_service()
 
     async def event_generator() -> Any:
         async for event in chat_service.stream_chat(
@@ -223,7 +207,7 @@ class ApprovalIn(Schema):
 def respond_approval(request: Any, payload: ApprovalIn) -> dict[str, Any]:
     """响应审批请求（Human-in-the-Loop）"""
     ctx = extract_request_context(request)
-    chat_service = _get_chat_service()
+    chat_service = ServiceLocator.get_workbench_chat_service()
     user_id = ctx.user.id if ctx.user and getattr(ctx.user, "is_authenticated", False) else None
     success = chat_service.resolve_approval(payload.approval_id, payload.approved, user_id=user_id)
     return {
@@ -246,10 +230,10 @@ def submit_batch_analysis(
 ) -> Any:
     """提交批量文档分析任务"""
     ctx = extract_request_context(request)
-    session_service = _get_session_service()
+    session_service = ServiceLocator.get_workbench_session_service()
     session_service.get_user_session(ctx.user, session_id)
 
-    batch_service = _get_batch_service()
+    batch_service = ServiceLocator.get_workbench_batch_service()
     batch_service.validate_files(files)
 
     job = batch_service.create_job(
@@ -266,8 +250,8 @@ def submit_batch_analysis(
 def get_batch_progress(request: Any, job_id: UUID) -> dict[str, Any]:
     """查询批量分析任务进度"""
     ctx = extract_request_context(request)
-    batch_service = _get_batch_service()
-    session_service = _get_session_service()
+    batch_service = ServiceLocator.get_workbench_batch_service()
+    session_service = ServiceLocator.get_workbench_session_service()
 
     job, items = batch_service.get_job_progress(job_id)
     session_service.get_user_session(ctx.user, job.session_id)
@@ -284,8 +268,8 @@ def get_batch_progress(request: Any, job_id: UUID) -> dict[str, Any]:
 def cancel_batch_analysis(request: Any, job_id: UUID) -> dict[str, Any]:
     """取消批量分析任务"""
     ctx = extract_request_context(request)
-    batch_service = _get_batch_service()
-    session_service = _get_session_service()
+    batch_service = ServiceLocator.get_workbench_batch_service()
+    session_service = ServiceLocator.get_workbench_session_service()
 
     job, _ = batch_service.get_job_progress(job_id)
     session_service.get_user_session(ctx.user, job.session_id)
@@ -302,8 +286,8 @@ def cancel_batch_analysis(request: Any, job_id: UUID) -> dict[str, Any]:
 def download_batch_summary(request: Any, job_id: UUID) -> FileResponse:
     """下载批量分析汇总 CSV 文件"""
     ctx = extract_request_context(request)
-    batch_service = _get_batch_service()
-    session_service = _get_session_service()
+    batch_service = ServiceLocator.get_workbench_batch_service()
+    session_service = ServiceLocator.get_workbench_session_service()
 
     job = batch_service.get_job_by_id(job_id)
     session_service.get_user_session(ctx.user, job.session_id)
@@ -327,8 +311,8 @@ def download_batch_detail_zip(request: Any, job_id: UUID) -> FileResponse:
     from ..tasks import build_detail_zip_sync
 
     ctx = extract_request_context(request)
-    batch_service = _get_batch_service()
-    session_service = _get_session_service()
+    batch_service = ServiceLocator.get_workbench_batch_service()
+    session_service = ServiceLocator.get_workbench_session_service()
 
     job = batch_service.get_job_by_id(job_id)
     session_service.get_user_session(ctx.user, job.session_id)
@@ -360,8 +344,8 @@ class BatchMessageItemIn(Schema):
 def save_batch_messages(request: Any, job_id: UUID, payload: list[BatchMessageItemIn]) -> dict[str, Any]:
     """将批量分析结果持久化为工作台消息"""
     ctx = extract_request_context(request)
-    batch_service = _get_batch_service()
-    session_service = _get_session_service()
+    batch_service = ServiceLocator.get_workbench_batch_service()
+    session_service = ServiceLocator.get_workbench_session_service()
 
     job = batch_service.get_job_by_id(job_id)
     session_service.get_user_session(ctx.user, job.session_id)
@@ -383,8 +367,8 @@ def save_batch_messages(request: Any, job_id: UUID, payload: list[BatchMessageIt
 async def stream_batch_progress(request: Any, job_id: UUID) -> StreamingHttpResponse:
     """SSE 流式推送批量分析进度"""
     ctx = extract_request_context(request)
-    batch_service = _get_batch_service()
-    session_service = _get_session_service()
+    batch_service = ServiceLocator.get_workbench_batch_service()
+    session_service = ServiceLocator.get_workbench_session_service()
 
     job = batch_service.get_job_by_id(job_id)
     await sync_to_async(session_service.get_user_session)(ctx.user, job.session_id)
@@ -466,8 +450,8 @@ async def stream_batch_progress(request: Any, job_id: UUID) -> StreamingHttpResp
 def retry_failed_items(request: Any, job_id: UUID) -> dict[str, Any]:
     """重试批量分析中失败的文件"""
     ctx = extract_request_context(request)
-    batch_service = _get_batch_service()
-    session_service = _get_session_service()
+    batch_service = ServiceLocator.get_workbench_batch_service()
+    session_service = ServiceLocator.get_workbench_session_service()
 
     job, _ = batch_service.get_job_progress(job_id)
     session_service.get_user_session(ctx.user, job.session_id)
@@ -479,10 +463,10 @@ def retry_failed_items(request: Any, job_id: UUID) -> dict[str, Any]:
 def list_batch_jobs(request: Any, session_id: int, page: int = 1) -> dict[str, Any]:
     """获取会话的批量分析任务历史"""
     ctx = extract_request_context(request)
-    session_service = _get_session_service()
+    session_service = ServiceLocator.get_workbench_session_service()
     session_service.get_user_session(ctx.user, session_id)
 
-    batch_service = _get_batch_service()
+    batch_service = ServiceLocator.get_workbench_batch_service()
     return batch_service.list_batch_jobs(
         session_id,
         page=page,
