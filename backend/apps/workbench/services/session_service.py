@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from django.core.cache import cache
 from django.db.models import Count, F, OuterRef, Subquery
 from django.utils.translation import gettext_lazy as _
 
@@ -43,11 +44,13 @@ class WorkbenchSessionService(PermissionMixin):
         perm_open_access: bool = False,
     ) -> WorkbenchSession:
         """创建工作台会话"""
-        return WorkbenchSession.objects.create(
+        session = WorkbenchSession.objects.create(
             user=user if user and getattr(user, "is_authenticated", False) else None,
             title=title,
             llm_model=llm_model,
         )
+        self._invalidate_session_cache(user)
+        return session
 
     def list_sessions(
         self,
@@ -61,6 +64,11 @@ class WorkbenchSessionService(PermissionMixin):
         """获取当前用户的工作台会话列表"""
         if not user or not getattr(user, "is_authenticated", False):
             return {"items": [], "count": 0}
+
+        cache_key = f"workbench:sessions:user={user.id}:page={page}"
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return cached  # type: ignore[return-value]
 
         qs = WorkbenchSession.objects.filter(user=user).order_by("-updated_at")
 
@@ -106,7 +114,9 @@ class WorkbenchSessionService(PermissionMixin):
             data["storage_bytes"] = item.storage_bytes
             result.append(data)
 
-        return {"items": result, "count": total}
+        result_data: dict[str, Any] = {"items": result, "count": total}
+        cache.set(cache_key, result_data, 30)  # 缓存 30 秒
+        return result_data
 
     def get_session(
         self,
@@ -139,6 +149,7 @@ class WorkbenchSessionService(PermissionMixin):
         if status is not None:
             session.status = status
         session.save()
+        self._invalidate_session_cache(user)
         return session
 
     def delete_session(
@@ -152,6 +163,7 @@ class WorkbenchSessionService(PermissionMixin):
         """删除会话"""
         session = self.get_user_session(user, session_id)
         session.delete()
+        self._invalidate_session_cache(user)
 
     def get_user_session(self, user: Any, session_id: int) -> WorkbenchSession:
         """获取用户的会话，不存在或无权限时抛 NotFoundError"""
@@ -159,6 +171,14 @@ class WorkbenchSessionService(PermissionMixin):
             return WorkbenchSession.objects.get(id=session_id, user=user)
         except WorkbenchSession.DoesNotExist:
             raise NotFoundError(_("会话不存在")) from None
+
+    @staticmethod
+    def _invalidate_session_cache(user: Any) -> None:
+        """Invalidate all cached session list pages for a user."""
+        if not user or not getattr(user, "is_authenticated", False):
+            return
+        keys = [f"workbench:sessions:user={user.id}:page={p}" for p in range(1, 6)]
+        cache.delete_many(keys)
 
     @staticmethod
     def increment_storage(session_id: int, delta: int) -> None:

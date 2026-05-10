@@ -78,7 +78,7 @@ export function StreamingBubble({ message }: { message: StreamingMessage }) {
         )}
 
         {message.content && (
-          <MarkdownContent content={message.content} />
+          <MarkdownContent content={message.content} isStreaming />
         )}
 
         <span className="inline-block w-2 h-4 bg-primary/50 animate-pulse ml-0.5" />
