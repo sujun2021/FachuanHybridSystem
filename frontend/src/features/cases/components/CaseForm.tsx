@@ -4,7 +4,7 @@
  * Requirements: 4.2-4.11, 5.3, 5.4, 10.3, 10.5, 10.6
  */
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -31,6 +31,7 @@ import { CasePartySection } from './CasePartySection'
 import { CaseAssignmentSection } from './CaseAssignmentSection'
 import { CaseLogSection } from './CaseLogSection'
 import { CaseNumberSection } from './CaseNumberSection'
+import type { CaseNumberSectionRef } from './CaseNumberSection'
 import { AuthoritySection } from './AuthoritySection'
 import { generatePath, PATHS } from '@/routes/paths'
 import {
@@ -190,6 +191,8 @@ export function CaseForm({ caseId, mode }: CaseFormProps) {
       })
     }
   }
+
+  const caseNumberRef = useRef<CaseNumberSectionRef>(null)
 
   if (isEditMode && isLoadingCase) {
     return (
@@ -548,8 +551,13 @@ export function CaseForm({ caseId, mode }: CaseFormProps) {
           <div className="grid gap-3 lg:grid-cols-2">
             <Card className="py-3">
               <CardContent className="px-4">
-                <div className="text-xs font-medium text-muted-foreground mb-1.5">案号</div>
-                <CaseNumberSection caseNumbers={caseData.case_numbers ?? []} editable caseId={caseData.id} />
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs font-medium text-muted-foreground">案号</span>
+                  <Button type="button" variant="outline" size="xs" className="h-5 px-1.5 text-[11px]" onClick={() => caseNumberRef.current?.openAdd()}>
+                    <Plus className="size-3 mr-0.5" /> 添加
+                  </Button>
+                </div>
+                <CaseNumberSection ref={caseNumberRef} caseNumbers={caseData.case_numbers ?? []} editable caseId={caseData.id} />
               </CardContent>
             </Card>
 

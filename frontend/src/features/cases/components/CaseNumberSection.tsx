@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Hash, Plus, Trash2, Loader2, ChevronDown, ChevronUp, Pencil, Scale } from 'lucide-react'
+import { useState, forwardRef, useImperativeHandle } from 'react'
+import { Hash, Trash2, Loader2, ChevronDown, ChevronUp, Pencil, Scale } from 'lucide-react'
 import { formatDateOnly } from '@/lib/date'
 import { formatAmountInt } from '@/lib/format'
 import { toast } from 'sonner'
@@ -28,6 +28,10 @@ export interface CaseNumberSectionProps {
   caseNumbers: CaseNumber[]
   editable?: boolean
   caseId?: number
+}
+
+export interface CaseNumberSectionRef {
+  openAdd: () => void
 }
 
 interface FormData {
@@ -334,33 +338,50 @@ function CaseNumberItem({
   )
 }
 
-export function CaseNumberSection({ caseNumbers, editable, caseId }: CaseNumberSectionProps) {
-  const [addOpen, setAddOpen] = useState(false)
-  const [addForm, setAddForm] = useState<FormData>(EMPTY_FORM)
-  const mutations = useCaseNumberMutations(caseId ?? 0)
+export const CaseNumberSection = forwardRef<CaseNumberSectionRef, CaseNumberSectionProps>(
+  function CaseNumberSection({ caseNumbers, editable, caseId }, ref) {
+    const [addOpen, setAddOpen] = useState(false)
+    const [addForm, setAddForm] = useState<FormData>(EMPTY_FORM)
+    const mutations = useCaseNumberMutations(caseId ?? 0)
 
-  const handleAdd = () => {
-    if (!caseId) return
-    mutations.createCaseNumber.mutate(
-      { case_id: caseId, ...toPayload(addForm) },
-      {
-        onSuccess: () => { toast.success('添加案号成功'); setAddOpen(false); setAddForm(EMPTY_FORM) },
-        onError: (e) => toast.error(e.message || '添加失败'),
-      },
-    )
-  }
+    useImperativeHandle(ref, () => ({
+      openAdd: () => { setAddForm(EMPTY_FORM); setAddOpen(true) },
+    }), [])
 
-  if (caseNumbers.length === 0 && !editable) {
-    return <p className="text-muted-foreground text-xs">暂无案号</p>
-  }
+    const handleAdd = () => {
+      if (!caseId) return
+      mutations.createCaseNumber.mutate(
+        { case_id: caseId, ...toPayload(addForm) },
+        {
+          onSuccess: () => { toast.success('添加案号成功'); setAddOpen(false); setAddForm(EMPTY_FORM) },
+          onError: (e) => toast.error(e.message || '添加失败'),
+        },
+      )
+    }
 
-  return (
-    <div>
-      {editable && caseId && (
-        <div className="flex justify-end mb-1">
-          <Button size="xs" variant="ghost" className="h-5 px-1.5 text-[11px]" onClick={() => { setAddForm(EMPTY_FORM); setAddOpen(true) }}>
-            <Plus className="size-3 mr-0.5" /> 添加
-          </Button>
+    if (caseNumbers.length === 0 && !editable) {
+      return <p className="text-muted-foreground text-xs">暂无案号</p>
+    }
+
+    return (
+      <div>
+        {caseNumbers.length === 0 ? (
+          <p className="text-muted-foreground text-xs">暂无案号</p>
+        ) : (
+          <div className="divide-y divide-border/40">
+            {caseNumbers.map((cn) => (
+              <CaseNumberItem
+                key={cn.id}
+                cn={cn}
+                editable={editable}
+                caseId={caseId}
+                mutations={mutations}
+              />
+            ))}
+          </div>
+        )}
+
+        {editable && caseId && (
           <CaseNumberDialog
             open={addOpen}
             onOpenChange={setAddOpen}
@@ -370,26 +391,10 @@ export function CaseNumberSection({ caseNumbers, editable, caseId }: CaseNumberS
             submitLabel="确认"
             loading={mutations?.createCaseNumber.isPending ?? false}
           />
-        </div>
-      )}
-
-      {caseNumbers.length === 0 ? (
-        <p className="text-muted-foreground text-xs">暂无案号</p>
-      ) : (
-        <div className="divide-y divide-border/40">
-          {caseNumbers.map((cn) => (
-            <CaseNumberItem
-              key={cn.id}
-              cn={cn}
-              editable={editable}
-              caseId={caseId}
-              mutations={mutations}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
+        )}
+      </div>
+    )
+  },
+)
 
 export default CaseNumberSection
