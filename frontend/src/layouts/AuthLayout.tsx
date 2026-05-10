@@ -1,8 +1,26 @@
+'use client'
+
 import { Outlet } from 'react-router'
 import { motion } from 'framer-motion'
-import { Scale } from 'lucide-react'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { ThemeToggle } from '@/features/auth/components/ThemeToggle'
+
+/**
+ * AuthLayout - 认证页面共享布局组件
+ *
+ * 作为登录和注册页面的共享布局，提供：
+ * - 居中卡片布局
+ * - 主题切换按钮（右上角）
+ * - Framer Motion 入场动画
+ * - 响应式设计（适配移动端和桌面端）
+ * - 简约高级的设计风格
+ *
+ * @validates Requirements 9.1 - 使用 Shadcn/ui 组件库
+ * @validates Requirements 9.2 - 使用 Framer Motion 实现流畅的动画效果
+ * @validates Requirements 9.3 - 采用简约高级的设计风格
+ * @validates Requirements 9.4 - 支持响应式布局，适配移动端和桌面端
+ * @validates Requirements 9.5 - 作为登录和注册页面的共享布局组件
+ */
 
 interface AuthLayoutProps {
   children?: React.ReactNode
@@ -10,30 +28,37 @@ interface AuthLayoutProps {
   description?: string
 }
 
+/**
+ * AuthLayoutCard - 带动画的认证卡片组件
+ * 用于包装登录/注册表单，提供统一的卡片样式和入场动画
+ */
 export function AuthLayoutCard({ children, title, description }: AuthLayoutProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: 'easeOut' }}
-      className="w-full max-w-sm"
+      transition={{
+        duration: 0.4,
+        ease: [0.25, 0.46, 0.45, 0.94] // easeOutQuad for smooth deceleration
+      }}
+      className="w-full max-w-md"
     >
-      {(title || description) && (
-        <div className="flex flex-col space-y-1.5 mb-6">
-          {title && (
-            <h2 className="text-lg font-semibold tracking-tight">
-              {title}
-            </h2>
-          )}
-          {description && (
-            <p className="text-sm text-muted-foreground">
-              {description}
-            </p>
-          )}
-        </div>
-      )}
-      <Card className="border-0 shadow-none bg-transparent sm:border sm:shadow-sm sm:bg-card">
-        <CardContent className={title || description ? 'pt-0' : 'pt-6'}>
+      <Card className="shadow-lg border-border/50 backdrop-blur-sm">
+        {(title || description) && (
+          <CardHeader className="space-y-1 pb-4">
+            {title && (
+              <CardTitle className="text-2xl font-semibold tracking-tight text-center">
+                {title}
+              </CardTitle>
+            )}
+            {description && (
+              <CardDescription className="text-center text-muted-foreground">
+                {description}
+              </CardDescription>
+            )}
+          </CardHeader>
+        )}
+        <CardContent className={title || description ? '' : 'pt-6'}>
           {children}
         </CardContent>
       </Card>
@@ -41,51 +66,33 @@ export function AuthLayoutCard({ children, title, description }: AuthLayoutProps
   )
 }
 
-function AuthDecorativePanel() {
-  return (
-    <div className="relative hidden h-full flex-col bg-muted p-10 text-muted-foreground lg:flex dark:border-l">
-      <div className="absolute inset-0 bg-zinc-900 dark:bg-zinc-950" />
-      <div className="relative z-20 flex items-center text-lg font-medium text-white">
-        <Scale className="mr-2 h-6 w-6" />
-        法穿AI Copilot
-      </div>
-      <div className="relative z-20 mt-auto">
-        <blockquote className="space-y-2">
-          <p className="text-lg text-white/80">
-            &ldquo;智能化法律事务管理，让每一位律师都能专注于案件本身。&rdquo;
-          </p>
-        </blockquote>
-      </div>
-    </div>
-  )
-}
-
+/**
+ * AuthLayout - 主布局组件
+ * 使用 Outlet 渲染子路由，支持作为 React Router 布局使用
+ */
 export function AuthLayout() {
   return (
-    <div className="relative container grid h-svh flex-col items-center justify-center lg:max-w-none lg:grid-cols-2 lg:px-0">
-      {/* Theme toggle */}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 p-4 sm:p-6 lg:p-8">
+      {/* 背景装饰 - 简约的渐变效果 */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-1/2 -right-1/2 w-full h-full bg-gradient-to-bl from-primary/5 via-transparent to-transparent rounded-full blur-3xl" />
+        <div className="absolute -bottom-1/2 -left-1/2 w-full h-full bg-gradient-to-tr from-primary/5 via-transparent to-transparent rounded-full blur-3xl" />
+      </div>
+
+      {/* 主题切换按钮 - 固定在右上角 */}
       <motion.div
         className="fixed top-4 right-4 z-50"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3, duration: 0.3 }}
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.2, duration: 0.3 }}
       >
         <ThemeToggle />
       </motion.div>
 
-      {/* Left: form area */}
-      <div className="lg:p-8">
-        <div className="mx-auto flex w-full flex-col justify-center space-y-2 py-8 sm:w-[360px] sm:p-8">
-          <div className="mb-4 flex items-center justify-center lg:justify-start">
-            <Scale className="mr-2 h-6 w-6" />
-            <h1 className="text-xl font-medium">法穿AI Copilot</h1>
-          </div>
-          <Outlet />
-        </div>
+      {/* 内容区域 - 使用 Outlet 渲染子路由 */}
+      <div className="relative z-10 w-full flex items-center justify-center">
+        <Outlet />
       </div>
-
-      {/* Right: decorative panel */}
-      <AuthDecorativePanel />
     </div>
   )
 }

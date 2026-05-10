@@ -70,7 +70,7 @@ export function ForgotPasswordPage() {
       description="输入您的注册邮箱，我们将发送密码重置链接"
     >
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-3">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}
             name="email"
@@ -82,6 +82,7 @@ export function ForgotPasswordPage() {
                     type="email"
                     placeholder="请输入注册时使用的邮箱"
                     disabled={submitting}
+                    className="h-11"
                     {...field}
                   />
                 </FormControl>
@@ -90,13 +91,12 @@ export function ForgotPasswordPage() {
             )}
           />
 
-          <Button type="submit" className="mt-2" disabled={submitting}>
+          <Button type="submit" className="w-full h-11" disabled={submitting}>
             {submitting ? (
-              <Loader2 className="animate-spin" />
+              <><Loader2 className="mr-2 size-4 animate-spin" />发送中...</>
             ) : (
-              <Mail />
+              <><Mail className="mr-2 size-4" />发送重置链接</>
             )}
-            发送重置链接
           </Button>
         </form>
       </Form>

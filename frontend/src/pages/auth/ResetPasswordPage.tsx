@@ -39,6 +39,7 @@ export function ResetPasswordPage() {
     defaultValues: { new_password: '', confirm_password: '' },
   })
 
+  // Verify token on mount
   useEffect(() => {
     if (!uid || !token) {
       setTokenStatus('invalid')
@@ -79,6 +80,7 @@ export function ResetPasswordPage() {
     }
   }
 
+  // Loading state
   if (tokenStatus === 'loading') {
     return (
       <AuthLayoutCard title="验证中">
@@ -90,6 +92,7 @@ export function ResetPasswordPage() {
     )
   }
 
+  // Invalid token
   if (tokenStatus === 'invalid') {
     return (
       <AuthLayoutCard title="链接无效">
@@ -111,6 +114,7 @@ export function ResetPasswordPage() {
     )
   }
 
+  // Success
   if (success) {
     return (
       <AuthLayoutCard title="密码已重置">
@@ -120,20 +124,23 @@ export function ResetPasswordPage() {
             您的密码已成功重置，请使用新密码登录。
           </p>
           <Link to="/login">
-            <Button size="sm">去登录</Button>
+            <Button size="sm">
+              去登录
+            </Button>
           </Link>
         </div>
       </AuthLayoutCard>
     )
   }
 
+  // Reset form
   return (
     <AuthLayoutCard
       title="重置密码"
       description={username ? `为账号「${username}」设置新密码` : '请设置新密码'}
     >
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-3">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}
             name="new_password"
@@ -145,6 +152,7 @@ export function ResetPasswordPage() {
                     type="password"
                     placeholder="至少8个字符"
                     disabled={submitting}
+                    className="h-11"
                     {...field}
                   />
                 </FormControl>
@@ -164,6 +172,7 @@ export function ResetPasswordPage() {
                     type="password"
                     placeholder="再次输入新密码"
                     disabled={submitting}
+                    className="h-11"
                     {...field}
                   />
                 </FormControl>
@@ -172,11 +181,12 @@ export function ResetPasswordPage() {
             )}
           />
 
-          <Button type="submit" className="mt-2" disabled={submitting}>
+          <Button type="submit" className="w-full h-11" disabled={submitting}>
             {submitting ? (
-              <Loader2 className="animate-spin" />
-            ) : null}
-            重置密码
+              <><Loader2 className="mr-2 size-4 animate-spin" />重置中...</>
+            ) : (
+              '重置密码'
+            )}
           </Button>
         </form>
       </Form>
