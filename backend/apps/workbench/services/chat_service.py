@@ -109,10 +109,12 @@ async def _load_message_history(
     """
     from ..models import WorkbenchMessage
 
-    # 从最新消息向前加载（含工具调用结果）
+    # 从最新消息向前加载（含工具调用结果），排除批量分析消息
     messages_qs = WorkbenchMessage.objects.filter(
         session_id=session_id,
         role__in=[WorkbenchMessage.Role.USER, WorkbenchMessage.Role.ASSISTANT, WorkbenchMessage.Role.TOOL],
+    ).exclude(
+        metadata__source__in=["batch_item", "batch_analysis"],
     ).order_by("-created_at")[:max_messages]
 
     raw_messages = list(reversed(await _async_list(messages_qs)))
@@ -185,12 +187,14 @@ async def _maybe_create_summary(
 
     from ..models import WorkbenchMessage, WorkbenchSession
 
-    # 获取最近 20 条消息用于摘要
+    # 获取最近 20 条消息用于摘要（排除批量分析消息）
     recent = list(
         await _async_list(
             WorkbenchMessage.objects.filter(
                 session_id=session_id,
                 role__in=[WorkbenchMessage.Role.USER, WorkbenchMessage.Role.ASSISTANT],
+            ).exclude(
+                metadata__source__in=["batch_item", "batch_analysis"],
             ).order_by("-created_at")[:20]
         )
     )
