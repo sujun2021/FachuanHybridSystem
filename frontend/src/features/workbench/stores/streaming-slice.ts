@@ -14,6 +14,8 @@ import {
 import type { WorkbenchStore } from './workbench-store'
 
 let _abortController: AbortController | null = null
+let _streamingRafId = 0
+let _pendingStreamingMessage: StreamingMessage | null = null
 
 export interface StreamingSlice {
   isStreaming: boolean
@@ -98,6 +100,16 @@ export const createStreamingSlice: StateCreator<WorkbenchStore, [], [], Streamin
     try {
       await connectAndRead('')
 
+      // Flush any pending rAF streaming message before finalization
+      if (_streamingRafId) {
+        cancelAnimationFrame(_streamingRafId)
+        _streamingRafId = 0
+      }
+      if (_pendingStreamingMessage) {
+        set({ streamingMessage: _pendingStreamingMessage })
+        _pendingStreamingMessage = null
+      }
+
       const { streamingMessage } = get()
       const newMessages = finalizeStreamingMessages(streamingMessage)
 
@@ -174,22 +186,33 @@ export const createStreamingSlice: StateCreator<WorkbenchStore, [], [], Streamin
   },
 
   handleSSEEvent: (event) => {
-    set((state) => {
-      const sm = state.streamingMessage
-      if (!sm) return state
+    if (event.type === 'approval_request') {
+      set({
+        pendingApproval: {
+          approvalId: event.approval_id || '',
+          toolName: event.tool_name || '',
+          toolArgs: event.tool_input || {},
+        },
+      })
+      return
+    }
 
-      if (event.type === 'approval_request') {
-        return {
-          pendingApproval: {
-            approvalId: event.approval_id || '',
-            toolName: event.tool_name || '',
-            toolArgs: event.tool_input || {},
-          },
+    // 用 ref 累积 streamingMessage，rAF 节流 flush 到 store，
+    // 减少高频 delta 事件触发的 React re-render 次数。
+    const current = _pendingStreamingMessage ?? get().streamingMessage
+    if (!current) return
+
+    _pendingStreamingMessage = reduceStreamingMessage(current, event)
+
+    if (!_streamingRafId) {
+      _streamingRafId = requestAnimationFrame(() => {
+        _streamingRafId = 0
+        if (_pendingStreamingMessage) {
+          set({ streamingMessage: _pendingStreamingMessage })
+          _pendingStreamingMessage = null
         }
-      }
-
-      return { streamingMessage: reduceStreamingMessage(sm, event) }
-    })
+      })
+    }
   },
 
   abortStream: () => {
@@ -210,6 +233,11 @@ export const createStreamingSlice: StateCreator<WorkbenchStore, [], [], Streamin
 
   resetStreaming: () => {
     abortStreaming()
+    if (_streamingRafId) {
+      cancelAnimationFrame(_streamingRafId)
+      _streamingRafId = 0
+    }
+    _pendingStreamingMessage = null
     set({
       isStreaming: false,
       streamingMessage: null,

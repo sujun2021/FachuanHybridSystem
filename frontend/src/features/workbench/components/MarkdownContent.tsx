@@ -1,6 +1,11 @@
-/** Markdown 内容渲染组件 */
+/** Markdown 内容渲染组件
 
-import React, { useState, useRef, useMemo } from 'react'
+  流式渲染时用 requestAnimationFrame 节流 markdown 解析，
+  每帧只解析一次，并缓存上次解析结果跳过未变化内容。
+  参考 Open WebUI 的 Markdown.svelte 实现。
+*/
+
+import React, { useState, useRef, useMemo, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
@@ -87,15 +92,84 @@ function CodeBlockWithCopy({ children, ...props }: React.HTMLAttributes<HTMLPreE
   )
 }
 
+/** 带 rAF 节流的 Markdown 渲染内容 */
+function ThrottledMarkdown({ processed, isSystem }: { processed: string; isSystem?: boolean }) {
+  const [displayed, setDisplayed] = useState(processed)
+  const rafRef = useRef<number>(0)
+  const latestRef = useRef(processed)
+
+  useEffect(() => {
+    latestRef.current = processed
+
+    // 内容没变则跳过
+    if (processed === displayed) return
+
+    // 流式模式：rAF 节流，每帧只更新一次
+    cancelAnimationFrame(rafRef.current)
+    rafRef.current = requestAnimationFrame(() => {
+      if (latestRef.current !== displayed) {
+        setDisplayed(latestRef.current)
+      }
+    })
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [processed, displayed])
+
+  // 非流式（内容稳定后）立即同步
+  useEffect(() => {
+    if (processed !== displayed) {
+      setDisplayed(processed)
+    }
+  }, [processed])
+
+  return (
+    <div
+      className={cn(
+        'prose prose-sm dark:prose-invert max-w-none break-words overflow-hidden',
+        'prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0',
+        'prose-code:before:content-none prose-code:after:content-none',
+        'prose-code:bg-card prose-code:border prose-code:border-border/50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-xs',
+        'prose-table:text-xs prose-th:px-2 prose-th:py-1 prose-td:px-2 prose-td:py-1',
+        'prose-hr:my-2 prose-blockquote:my-1 prose-blockquote:border-l-2',
+        'text-foreground',
+        isSystem && 'prose-red',
+      )}
+    >
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeHighlight]}
+        components={{
+          pre: CodeBlockWithCopy,
+          p: ({ children, ...props }) => {
+            const textContent = extractTextContent(children)
+            if (textContent) {
+              return <p {...props}><LegalText text={textContent} /></p>
+            }
+            return <p {...props}>{children}</p>
+          },
+        }}
+      >
+        {displayed}
+      </ReactMarkdown>
+    </div>
+  )
+}
+
 /** Markdown 内容渲染（memo 优化，避免 streaming 时历史消息重渲染） */
 export const MarkdownContent = React.memo(function MarkdownContent({
   content,
   isSystem,
+  isStreaming,
 }: {
   content: string
   isSystem?: boolean
+  isStreaming?: boolean
 }) {
   const processed = useMemo(() => preprocessContent(content), [content])
+
+  // 流式模式使用 rAF 节流渲染
+  if (isStreaming) {
+    return <ThrottledMarkdown processed={processed} isSystem={isSystem} />
+  }
 
   return (
     <div

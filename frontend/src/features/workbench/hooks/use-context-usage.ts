@@ -51,7 +51,12 @@ export function useContextUsage() {
     return model?.context_window ?? 0
   }, [models, selectedModel])
 
-  const usedTokens = useMemo(() => estimateMessagesTokens(messages), [messages])
+  // 排除批量分析消息，它们不参与主 AI 对话推理
+  const chatMessages = useMemo(
+    () => messages.filter((m) => !m.metadata?.source),
+    [messages],
+  )
+  const usedTokens = useMemo(() => estimateMessagesTokens(chatMessages), [chatMessages])
 
   const percent = contextWindow > 0
     ? Math.min(100, Math.round((usedTokens / contextWindow) * 100))
