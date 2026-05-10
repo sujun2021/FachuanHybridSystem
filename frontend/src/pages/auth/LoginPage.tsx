@@ -1,6 +1,5 @@
 import { useNavigate, useSearchParams, Link } from 'react-router'
 import { toast } from 'sonner'
-import { Sparkles } from 'lucide-react'
 
 import { LoginForm } from '@/features/auth/components/LoginForm'
 import { AuthLayoutCard } from '@/layouts/AuthLayout'
@@ -23,7 +22,6 @@ export function LoginPage() {
     <AuthLayoutCard
       title="登录"
       description="欢迎回来，请登录您的账号"
-      icon={<Sparkles className="h-10 w-10 text-violet-400" />}
     >
       <LoginForm
         onSuccess={handleSuccess}
@@ -33,7 +31,7 @@ export function LoginPage() {
       <div className="mt-4 text-center text-sm">
         <Link
           to="/forgot-password"
-          className="text-muted-foreground hover:text-primary dark:text-violet-300 dark:hover:text-violet-200 transition-colors"
+          className="text-muted-foreground hover:text-primary transition-colors"
         >
           忘记密码？
         </Link>
@@ -43,7 +41,7 @@ export function LoginPage() {
         还没有账号？{' '}
         <Link
           to="/register"
-          className="font-medium text-primary dark:text-violet-300 dark:hover:text-violet-200 hover:underline underline-offset-4 transition-colors"
+          className="font-medium text-primary hover:underline underline-offset-4 transition-colors"
         >
           立即注册
         </Link>

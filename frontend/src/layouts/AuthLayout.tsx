@@ -1,50 +1,39 @@
 import { Outlet } from 'react-router'
 import { motion } from 'framer-motion'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Scale } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
 import { ThemeToggle } from '@/features/auth/components/ThemeToggle'
-import { CosmicBackground } from '@/features/auth/components/CosmicBackground'
 
 interface AuthLayoutProps {
   children?: React.ReactNode
   title?: string
   description?: string
-  icon?: React.ReactNode
 }
 
-export function AuthLayoutCard({ children, title, description, icon }: AuthLayoutProps) {
+export function AuthLayoutCard({ children, title, description }: AuthLayoutProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95, y: 30 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      className="w-full max-w-md"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+      className="w-full max-w-sm"
     >
-      <Card className="cosmic-card-glow border backdrop-blur-xl shadow-xl bg-white/70 border-white/40 dark:bg-[rgba(15,10,40,0.6)] dark:border-[rgba(123,97,255,0.15)] dark:shadow-[0_0_40px_-10px_rgba(123,97,255,0.2)]">
-        {(title || description || icon) && (
-          <CardHeader className="space-y-2 pb-4">
-            {icon && (
-              <motion.div
-                className="flex justify-center"
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2, duration: 0.5, type: 'spring' }}
-              >
-                {icon}
-              </motion.div>
-            )}
-            {title && (
-              <CardTitle className="text-2xl font-semibold tracking-tight text-center dark:bg-gradient-to-r dark:from-violet-300 dark:via-white dark:to-cyan-300 dark:bg-clip-text dark:text-transparent">
-                {title}
-              </CardTitle>
-            )}
-            {description && (
-              <CardDescription className="text-center text-muted-foreground">
-                {description}
-              </CardDescription>
-            )}
-          </CardHeader>
-        )}
-        <CardContent className={title || description || icon ? '' : 'pt-6'}>
+      {(title || description) && (
+        <div className="flex flex-col space-y-1.5 mb-6">
+          {title && (
+            <h2 className="text-lg font-semibold tracking-tight">
+              {title}
+            </h2>
+          )}
+          {description && (
+            <p className="text-sm text-muted-foreground">
+              {description}
+            </p>
+          )}
+        </div>
+      )}
+      <Card className="border-0 shadow-none bg-transparent sm:border sm:shadow-sm sm:bg-card">
+        <CardContent className={title || description ? 'pt-0' : 'pt-6'}>
           {children}
         </CardContent>
       </Card>
@@ -52,25 +41,51 @@ export function AuthLayoutCard({ children, title, description, icon }: AuthLayou
   )
 }
 
+function AuthDecorativePanel() {
+  return (
+    <div className="relative hidden h-full flex-col bg-muted p-10 text-muted-foreground lg:flex dark:border-l">
+      <div className="absolute inset-0 bg-zinc-900 dark:bg-zinc-950" />
+      <div className="relative z-20 flex items-center text-lg font-medium text-white">
+        <Scale className="mr-2 h-6 w-6" />
+        法穿AI Copilot
+      </div>
+      <div className="relative z-20 mt-auto">
+        <blockquote className="space-y-2">
+          <p className="text-lg text-white/80">
+            &ldquo;智能化法律事务管理，让每一位律师都能专注于案件本身。&rdquo;
+          </p>
+        </blockquote>
+      </div>
+    </div>
+  )
+}
+
 export function AuthLayout() {
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
-      <CosmicBackground />
-
+    <div className="relative container grid h-svh flex-col items-center justify-center lg:max-w-none lg:grid-cols-2 lg:px-0">
       {/* Theme toggle */}
       <motion.div
         className="fixed top-4 right-4 z-50"
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.2, duration: 0.3 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3, duration: 0.3 }}
       >
         <ThemeToggle />
       </motion.div>
 
-      {/* Content */}
-      <div className="relative z-10 w-full flex items-center justify-center">
-        <Outlet />
+      {/* Left: form area */}
+      <div className="lg:p-8">
+        <div className="mx-auto flex w-full flex-col justify-center space-y-2 py-8 sm:w-[360px] sm:p-8">
+          <div className="mb-4 flex items-center justify-center lg:justify-start">
+            <Scale className="mr-2 h-6 w-6" />
+            <h1 className="text-xl font-medium">法穿AI Copilot</h1>
+          </div>
+          <Outlet />
+        </div>
       </div>
+
+      {/* Right: decorative panel */}
+      <AuthDecorativePanel />
     </div>
   )
 }
