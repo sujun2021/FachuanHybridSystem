@@ -27,6 +27,14 @@
 #### 优化
 
 - **落地页技术栈更新**：SQLite 更正为 PostgreSQL，移除向量数据库（规划中已取消），新增 Redis（缓存 & Channel Layer）
+- **Django Admin 性能优化**：
+  - 7 个 Admin 类添加 `list_select_related` 消除 N+1 查询（CaseContact、CaseParty、CaseAssignment、CaseLog、CaseChat、PublishTask、HearingNote）
+  - `HearingNoteAdmin.evidence_count` 改用 queryset annotate 替代逐行 `count()`
+  - 7 个高数据量 Admin 添加 `list_per_page = 50`（Case、Contract、Client、CaseLog、CaseParty、CaseAssignment、CaseChat）
+  - `admin_customization.py` 缓存 app_map 避免构建「其他工具」菜单时递归调用 `get_app_list`
+  - Hub 页使用 `_original_get_app_list` 跳过排序和虚拟菜单开销
+  - 移除 `PublishTaskAdmin`/`InboxMessageAdmin` 大文本字段的 `search_fields`
+  - Client 模型添加 `client_type` 索引加速 `list_filter` 查询
 
 ## [26.46.10] - 2026-05-10
 
