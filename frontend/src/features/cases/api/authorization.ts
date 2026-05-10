@@ -30,13 +30,8 @@ export const authorizationApi = {
     await downloadBlob(blob, `法定代表人证明_${clientName ?? clientId}.docx`)
   },
 
-  downloadPowerOfAttorney: async (caseId: number | string, clientId: number, clientName?: string) => {
-    const blob = client.post(`cases/${caseId}/authorization/power-of-attorney/${clientId}/download`, { json: {} }).blob()
-    await downloadBlob(blob, `授权委托书_${clientName ?? clientId}.docx`)
-  },
-
-  downloadCombinedPOA: async (caseId: number | string, caseName?: string) => {
-    const blob = client.post(`cases/${caseId}/authorization/power-of-attorney/combined/download`, { json: {} }).blob()
-    await downloadBlob(blob, `合并授权委托书_${caseName ?? caseId}.docx`)
+  downloadCombinedPOA: async (caseId: number | string, caseName: string | undefined, clientIds: number[]) => {
+    const blob = client.post(`cases/${caseId}/authorization/power-of-attorney/combined/download`, { json: { client_ids: clientIds } }).blob()
+    await downloadBlob(blob, `授权委托书_${caseName ?? caseId}.docx`)
   },
 }

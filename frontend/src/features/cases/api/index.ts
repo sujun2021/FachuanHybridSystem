@@ -75,7 +75,6 @@ export const caseApi = {
   downloadAuthorizationPackage: authorizationApi.downloadPackage,
   downloadAuthorizationLetter: authorizationApi.downloadLetter,
   downloadLegalRepCertificate: authorizationApi.downloadLegalRepCertificate,
-  downloadPowerOfAttorney: authorizationApi.downloadPowerOfAttorney,
   downloadCombinedPOA: authorizationApi.downloadCombinedPOA,
   // Preservation Materials
   downloadPreservationApplication: preservationApi.downloadApplication,

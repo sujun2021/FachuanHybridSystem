@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Download, Loader2, FileText, Scale, FileCheck } from 'lucide-react'
+import { Download, Loader2, FileText, FileCheck } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -17,11 +17,11 @@ interface Props {
   parties: CaseParty[]
 }
 
-type DownloadKey = 'package' | 'letter' | 'combined-poa' | 'legal-rep' | 'poa'
+type DownloadKey = 'package' | 'letter' | 'legal-rep' | 'poa'
 
 export function AuthorizationMaterialsSection({ caseId, caseName, parties }: Props) {
   const [loading, setLoading] = useState<DownloadKey | null>(null)
-  const [partyDialog, setPartyDialog] = useState<{ mode: 'legal-rep' | 'poa' } | null>(null)
+  const [legalRepDialog, setLegalRepDialog] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
 
   const ourParties = parties.filter(p => p.client_detail?.is_our_client)
@@ -38,33 +38,16 @@ export function AuthorizationMaterialsSection({ caseId, caseName, parties }: Pro
     }
   }
 
-  const openPartyDialog = (mode: 'legal-rep' | 'poa') => {
-    setSelectedIds(new Set())
-    setPartyDialog({ mode })
-  }
-
-  const handleDialogConfirm = () => {
-    if (!partyDialog || selectedIds.size === 0) return
+  const handleLegalRepConfirm = () => {
+    if (selectedIds.size === 0) return
     const ids = Array.from(selectedIds)
-
-    if (partyDialog.mode === 'legal-rep') {
-      // 逐个下载法定代表人证明
-      run('legal-rep', async () => {
-        for (const id of ids) {
-          const party = ourParties.find(p => p.client === id)
-          await caseApi.downloadLegalRepCertificate(caseId, id, party?.client_detail?.name)
-        }
-      })
-    } else {
-      // 授权委托书：单人逐个下载
-      run('poa', async () => {
-        for (const id of ids) {
-          const party = ourParties.find(p => p.client === id)
-          await caseApi.downloadPowerOfAttorney(caseId, id, party?.client_detail?.name)
-        }
-      })
-    }
-    setPartyDialog(null)
+    run('legal-rep', async () => {
+      for (const id of ids) {
+        const party = ourParties.find(p => p.client === id)
+        await caseApi.downloadLegalRepCertificate(caseId, id, party?.client_detail?.name)
+      }
+    })
+    setLegalRepDialog(false)
   }
 
   const toggleId = (id: number) => {
@@ -81,8 +64,6 @@ export function AuthorizationMaterialsSection({ caseId, caseName, parties }: Pro
       prev.size === ourParties.length ? new Set() : new Set(ourParties.map(p => p.client))
     )
   }
-
-  const dialogTitle = partyDialog?.mode === 'legal-rep' ? '法定代表人证明' : '授权委托书'
 
   return (
     <>
@@ -104,7 +85,7 @@ export function AuthorizationMaterialsSection({ caseId, caseName, parties }: Pro
           className="h-7 text-xs"
           disabled={loading !== null || ourParties.length === 0}
           title={ourParties.length === 0 ? '没有我方当事人' : undefined}
-          onClick={() => openPartyDialog('legal-rep')}
+          onClick={() => { setSelectedIds(new Set()); setLegalRepDialog(true) }}
         >
           <FileCheck className="size-3 mr-1" />
           法定代表人证明
@@ -123,30 +104,20 @@ export function AuthorizationMaterialsSection({ caseId, caseName, parties }: Pro
           size="sm"
           variant="outline"
           className="h-7 text-xs"
-          disabled={loading !== null}
-          onClick={() => run('combined-poa', () => caseApi.downloadCombinedPOA(caseId, caseName))}
-        >
-          {loading === 'combined-poa' ? <Loader2 className="size-3 mr-1 animate-spin" /> : <Scale className="size-3 mr-1" />}
-          合并授权委托书
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          className="h-7 text-xs"
           disabled={loading !== null || ourParties.length === 0}
           title={ourParties.length === 0 ? '没有我方当事人' : undefined}
-          onClick={() => openPartyDialog('poa')}
+          onClick={() => run('poa', () => caseApi.downloadCombinedPOA(caseId, caseName, ourParties.map(p => p.client)))}
         >
-          <FileText className="size-3 mr-1" />
+          {loading === 'poa' ? <Loader2 className="size-3 mr-1 animate-spin" /> : <FileText className="size-3 mr-1" />}
           授权委托书
         </Button>
       </div>
 
-      {/* 选择当事人 dialog */}
-      <Dialog open={!!partyDialog} onOpenChange={(open) => { if (!open) setPartyDialog(null) }}>
+      {/* 法定代表人证明 — 选择当事人 */}
+      <Dialog open={legalRepDialog} onOpenChange={(open) => { if (!open) setLegalRepDialog(false) }}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>{dialogTitle} — 选择当事人</DialogTitle>
+            <DialogTitle>法定代表人证明 — 选择当事人</DialogTitle>
           </DialogHeader>
           <div className="space-y-2 py-2">
             {ourParties.length > 1 && (
@@ -174,9 +145,9 @@ export function AuthorizationMaterialsSection({ caseId, caseName, parties }: Pro
             ))}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPartyDialog(null)}>取消</Button>
+            <Button variant="outline" onClick={() => setLegalRepDialog(false)}>取消</Button>
             <Button
-              onClick={handleDialogConfirm}
+              onClick={handleLegalRepConfirm}
               disabled={selectedIds.size === 0 || loading !== null}
             >
               {loading !== null && <Loader2 className="mr-1 size-3 animate-spin" />}
