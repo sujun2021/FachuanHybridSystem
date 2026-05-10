@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { useNavigate } from 'react-router'
+import { copyToClipboard } from '@/lib/clipboard'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowLeft, Edit, Trash2, Copy, FileWarning,
@@ -14,6 +15,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { PATHS, generatePath } from '@/routes/paths'
+import { formatDateOnly } from '@/lib/date'
 
 import { useClient } from '../hooks/use-client'
 import { useClientMutations } from '../hooks/use-client-mutations'
@@ -23,35 +25,9 @@ import { IdentityDocManager } from './IdentityDocManager'
 import { CLIENT_TYPE_LABELS } from '../types'
 import { formatClientText } from '../utils/format-client-text'
 import type { ClientType } from '../types'
+import { DetailField, DetailCard } from '@/components/shared'
 
 export interface ClientDetailProps { clientId: string }
-
-/* ── Shared helpers (matching ContractDetail style) ── */
-
-function DetailField({ label, value, mono }: { label: string; value: React.ReactNode; mono?: boolean }) {
-  return (
-    <div>
-      <div className="text-muted-foreground mb-0.5 text-xs">{label}</div>
-      <div className={`text-[13px] ${mono ? 'font-mono' : ''}`}>{value || '—'}</div>
-    </div>
-  )
-}
-
-function DetailCard({ title, children, extra }: { title: string; children: React.ReactNode; extra?: React.ReactNode }) {
-  return (
-    <div className="rounded-lg border border-border/60 p-[18px] mb-4 bg-card">
-      {extra ? (
-        <div className="flex items-center justify-between mb-3.5">
-          <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-          {extra}
-        </div>
-      ) : (
-        <h3 className="text-sm font-semibold text-foreground mb-3.5">{title}</h3>
-      )}
-      {children}
-    </div>
-  )
-}
 
 /* ── Helpers ── */
 
@@ -95,8 +71,7 @@ export function ClientDetail({ clientId }: ClientDetailProps) {
   const handleBack = useCallback(() => navigate(PATHS.ADMIN_CLIENTS), [navigate])
   const handleCopy = useCallback(() => {
     if (!client) return
-    navigator.clipboard.writeText(formatClientText(client))
-    toast.success('已复制当事人信息')
+    copyToClipboard(formatClientText(client), '已复制当事人信息')
   }, [client])
   const handleDelete = useCallback(async () => {
     try {
@@ -217,7 +192,7 @@ export function ClientDetail({ clientId }: ClientDetailProps) {
                     </>
                   ) : (
                     <>
-                      <DetailField label="创建时间" value={client.created_at ? new Date(client.created_at).toLocaleDateString('zh-CN') : '—'} mono />
+                      <DetailField label="创建时间" value={formatDateOnly(client.created_at)} mono />
                       <DetailField label="证件数量" value={client.identity_docs?.length ?? 0} />
                     </>
                   )}

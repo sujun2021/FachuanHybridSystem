@@ -6,6 +6,7 @@ import {
   FileText, FolderOpen, Landmark, Paperclip, Users,
 } from 'lucide-react'
 import { formatDateOnly } from '@/lib/date'
+import { formatAmount } from '@/lib/format'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -15,6 +16,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { PATHS, generatePath } from '@/routes/paths'
+import { DetailField, DetailCard, StatusBadge } from '@/components/shared'
 
 import { useCase } from '../hooks/use-case'
 import { useCaseMutations } from '../hooks/use-case-mutations'
@@ -41,44 +43,14 @@ export interface CaseDetailProps { caseId: string }
 
 /* ── Shared helpers ── */
 
-function DetailField({ label, value, mono }: { label: string; value: React.ReactNode; mono?: boolean }) {
-  return (
-    <div>
-      <div className="text-muted-foreground mb-0.5 text-xs">{label}</div>
-      <div className={`text-[13px] ${mono ? 'font-mono' : ''}`}>{value || '—'}</div>
-    </div>
-  )
-}
-
-function DetailCard({ title, children, extra }: { title: string; children: React.ReactNode; extra?: React.ReactNode }) {
-  return (
-    <div className="rounded-lg border border-border/60 p-[18px] mb-4 bg-card">
-      {extra ? (
-        <div className="flex items-center justify-between mb-3.5">
-          <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-          {extra}
-        </div>
-      ) : (
-        <h3 className="text-sm font-semibold text-foreground mb-3.5">{title}</h3>
-      )}
-      {children}
-    </div>
-  )
-}
-
-function StatusBadge({ status, label }: { status: string | null; label?: string | null }) {
-  if (!status) return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-muted text-muted-foreground">未设置</span>
-  const cls = status === 'active'
-    ? 'bg-green-50 text-green-700'
+function CaseStatusBadge({ status, label }: { status: string | null; label?: string | null }) {
+  if (!status) return <StatusBadge variant="closed">未设置</StatusBadge>
+  const variant = status === 'active'
+    ? 'active'
     : status === 'closed'
-      ? 'bg-muted text-muted-foreground'
-      : 'bg-amber-50 text-amber-700'
-  return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${cls}`}>{label || status}</span>
-}
-
-function formatAmount(amount: number | null | undefined): string {
-  if (amount == null) return '—'
-  return `¥ ${amount.toLocaleString('zh-CN', { minimumFractionDigits: 2 })}`
+      ? 'closed'
+      : 'pending'
+  return <StatusBadge variant={variant}>{label || status}</StatusBadge>
 }
 
 const PLATFORM_LABELS: Record<string, string> = {
@@ -158,7 +130,7 @@ export function CaseDetail({ caseId }: CaseDetailProps) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2.5 flex-wrap">
             <h1 className="text-lg font-semibold truncate">{caseData.name}</h1>
-            <StatusBadge status={statusKey} label={statusLabel} />
+            <CaseStatusBadge status={statusKey} label={statusLabel} />
             {typeLabel && <Badge variant="outline" className="text-[11px] px-2 py-0.5">{typeLabel}</Badge>}
             {stageLabel && <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700">{stageLabel}</span>}
           </div>
@@ -222,7 +194,7 @@ export function CaseDetail({ caseId }: CaseDetailProps) {
                 <div className="grid gap-[14px] sm:grid-cols-2">
                   <DetailField label="案件名称" value={caseData.name} />
                   <DetailField label="案件类型" value={typeLabel} />
-                  <DetailField label="案件状态" value={<StatusBadge status={statusKey} label={statusLabel} />} />
+                  <DetailField label="案件状态" value={<CaseStatusBadge status={statusKey} label={statusLabel} />} />
                   <DetailField label="案由" value={caseData.cause_of_action} />
                   <DetailField label="当前阶段" value={stageLabel} />
                   <DetailField label="标的金额" value={formatAmount(caseData.target_amount)} />

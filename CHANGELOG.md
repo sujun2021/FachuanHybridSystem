@@ -2,6 +2,164 @@
 
 本项目的所有重要更改都将记录在此文件中。
 
+## [26.46.8] - 2026-05-09
+
+### 后端
+
+#### 新功能
+
+- **workbench 单元测试**：新增 52 个测试覆盖 parsing、session_service、batch_service、doc_extractor、TaskRegistry
+
+#### 优化
+
+- **tasks.py 模块化**：806 行单文件拆分为 5 个模块（constants/parsing/summary/batch_runner/registry），每个 ≤200 行
+- **TaskRegistry**：创建 `TaskRegistry` 类替代 `_active_tasks` 私有字典，消除 service 层对 task 模块私有变量的跨模块 import
+- **ServiceLocator 集成**：新增 `WorkbenchServiceLocatorMixin`，API 层改用 `ServiceLocator.get_workbench_*_service()` 替代工厂函数
+
+#### 修复
+
+- **BatchJobOut 序列化**：修复 `summary_file`/`detail_zip_file` 字段在无文件时 FieldFile 序列化失败的问题
+
+## [26.46.7] - 2026-05-09
+
+### 前端
+
+#### 新功能
+
+- **路由级 ErrorBoundary**：在 `AuthGuard` 层级添加 `errorElement`，chunk 加载失败或页面组件报错不再导致整站崩溃，新增 `RouteError` 组件提供返回/刷新操作
+- **模板 CRUD API 对接**：`TemplateNewPage` 对接 `useTemplateMutations`，新增模板创建 mutation hook，模板 API 补充 TypeScript 返回类型
+
+#### 优化
+
+- **React 设计规范审查整改（P0/P1/P2）**：全面审查前端 50+ 页面、120+ 组件，修复 15 类 React 设计规范问题
+  - `window.location.reload()` → `queryClient.invalidateQueries`（IdentityDocManager）
+  - 6 处 `window.confirm()` → shadcn AlertDialog（TaskQueuePage、LprCalculatorTool、MessageSourceList）
+  - 自定义 div modal → shadcn Dialog（DocumentsTab，含焦点捕获、Escape 关闭）
+  - 可点击 div → `<button>`（FolderBrowser，键盘可访问）
+  - 移动端遮罩添加 `role="presentation"` + Escape 关闭（AdminLayout）
+  - `document.getElementById` → `useRef`（TemplateForm）
+  - 操作按钮容器添加 `role="group"`（ArchiveTab）
+- **共享组件去重**：5 个文件的本地 DetailField/DetailCard 统一为 `@/components/shared` 共享组件；5 个文件的本地 StatusBadge 统一为共享组件的领域适配器
+- **TypeScript 类型安全**：`cases/api/logs.ts` 的 `any` 替换为 `CreateCaseNumberInput`/`UpdateCaseNumberInput`
+- **Inline style 清理**：InboxMessageView、TemplateList 的 inline style 替换为 Tailwind class
+- **Workbench 架构重构**：MessageBubble 740 行拆分为 MessageBubble、MarkdownContent、LegalText、InlineToolCalls、UserMessageContent、MessageActions、StreamingBubble、AssistantMeta 等独立组件；新增 session-slice 管理会话状态；WorkbenchPage 精简 156 行
+- **Workbench API 层重构**：提取 message-service、session-service 业务逻辑层，API 层遵循四层架构（route → schema → service → model）
+- **Workbench 性能优化**：修复 `list_sessions` N+1 查询；去重 tasks.py 批量分析逻辑；移除废弃的 SSE 事件发布调用
+
+#### 修复
+
+- **TemplateNewPage 残留 debug 代码**：删除 `console.log('Create template:', data)`，对接实际 API
+- **BatchHistoryPanel**：移除未使用的 Badge import
+
+### 后端
+
+#### 新功能
+
+- **BatchJob/BatchJobItem Admin 注册**：在 Django Admin 中注册批量任务模型，支持后台查看和管理
+
+#### 优化
+
+- **API 层重构**：`workbench_api.py` 拆分为路由层 + schema 层 + service 层（message_service、session_service、batch_service）
+- **Schema 优化**：workbench_schemas.py 和 batch_schemas.py 清理冗余字段
+- **tasks.py 清理**：移除所有废弃的 `_publish_sse_event` 调用，去重批量分析逻辑
+
+## [26.46.6] - 2026-05-09
+
+### 前端
+
+#### 新功能
+
+- **系统配置连通性测试**：系统配置页新增「测试连通性」按钮，点击后向 `/api/v1/health` 发送请求验证后端是否可达，5 秒超时，显示连接状态和结果信息
+
+#### 优化
+
+- **React 性能优化**：为 DataTable、ClientTable 组件添加 `useCallback` 优化事件处理函数；使用 `useMemo` 稳定 filters 对象引用，避免不必要的重新查询；提取 ClientRow 为 memo 组件减少列表项重渲染
+- **ErrorBoundary**：新增全局 ErrorBoundary 组件，在 `main.tsx` 中包裹路由懒加载，提供友好的错误提示
+
+### 后端
+
+#### 修复
+
+- **文件存储路径修复**：修复 `KeepOriginalNameStorage.generate_filename()` 中 `posixpath.basename()` 去掉 `upload_to` 目录前缀的 bug，该 bug 导致 CaseLogAttachment 等文件直接存到 media 根目录而非 `case_logs/` 子目录
+- **历史文件迁移**：将 media 根目录中 177 个 CaseLogAttachment 文件和 2 个 Lawyer 执业证文件迁移到正确的子目录
+
+## [26.46.5] - 2026-05-09
+
+### 前端
+
+#### 新功能
+
+- **批量分析预设提示**：批量文档分析对话框新增预设分析要求标签（竞业限制、劳动争议、合同纠纷、侵权责任），点击自动填充
+- **批量分析实时计时**：每个文件从开始处理即显示在详情列表中，从 0s 开始实时计时，完成后显示最终耗时
+- **批量分析卡片持久化**：分析完成后卡片保留，用户可手动关闭；支持展开查看每个文件的处理状态和耗时
+- **批量分析文件列表提前加载**：任务创建后立即轮询获取文件列表，无需等待 SSE 事件
+
+#### 修复
+
+- **批量分析进度条卡在 0%**：修复 SSE 事件处理中的 Zustand 状态竞态和 React 18+ 自动批量更新导致进度条不刷新的问题
+- **SSE 跨进程不可见**：SSE 端点从 LocMemCache 读取改为数据库轮询，解决 Django-Q worker 与 web 进程缓存隔离问题
+- **SSE 遗漏已完成项**：移除时间过滤条件，避免连接建立前完成的文件被遗漏
+- **会话切换数据覆盖**：`fetchMessages` 添加会话 ID 校验，防止过期请求覆盖当前会话数据
+- **新建会话丢失内容**：新建会话后保留旧会话的显示内容
+- **批量分析提交超时**：优化提交流程，页面刷新后自动恢复进行中的任务
+- **要素式转换超时**：请求超时从 10s 延长到 120s，下载文件名与后台一致，修复 `mbidName` 未定义报错
+
+#### 优化
+
+- **Workbench Store 拆分**：从 668 行单文件拆分为 Zustand slices（batch-slice、attachment-slice、streaming-slice），降低复杂度
+- **API 模块拆分**：`contracts/api.ts`（283 行）和 `cases/api.ts`（309 行）拆分为子模块目录
+- **高频组件 React.memo**：为 MessageBubble、MessageList、ChatInput、DataTable 添加 memo 优化，减少流式输出时的冗余渲染
+- **通用分页 Hook**：提取 `usePaginatedList`，迁移 ClientList、ContractList、InboxList
+- **Barrel exports 精简**：清理 cases 和 contracts 模块未使用的 re-export
+
+### 后端
+
+#### 修复
+
+- **SSE 端点重构**：从 LocMemCache 事件总线改为数据库轮询模式，新增 `item_started` 事件推送运行中的文件
+- **清理废弃代码**：`_publish_sse_event` 改为空操作，保留函数签名兼容调用方
+- **要素式转换模板变量**：修复 workbench.html 中 `mbidName` 引用错误
+
+## [26.46.4] - 2026-05-09
+
+### 前端
+
+#### 优化
+
+- **共享 UI 组件提取**：新增 DropZone、DetailField、DetailCard 共享组件，消除文档识别、客户、合同等模块的重复实现
+- **CRUD mutations 工厂函数**：新增 `createCrudMutations` 泛型工具，精简 client/lawfirm/team/reminder 等模块的 mutations 模板代码
+- **剪贴板操作统一**：提取 `copyToClipboard` 到 `lib/clipboard.ts`，替代分散的 `navigator.clipboard` + `alert` 调用
+- **金额格式化统一**：使用 `formatAmountInt` 替代内联 `toLocaleString`，保持全站一致
+- **API 调用去硬编码**：消除 raw fetch 中的硬编码 URL 和 localStorage 直接访问，统一通过 `lib/api.ts` 封装
+- **工具函数提取**：新增 `lib/date.ts`、`lib/format.ts`、`lib/download.ts`、`lib/file-utils.ts`，集中管理格式化、日期、下载等通用逻辑
+- **工作台 store 拆分**：从 `workbench-store.ts` 提取 `message-factory.ts` 和 `streaming-helpers.ts`，降低单文件复杂度
+- **LPR 计算器拆分**：提取工具函数到 `tools/utils/lpr.ts`，配置提示常量到 `settings/constants/config-hints.ts`
+
+#### 修复
+
+- **MCP 工具调用错误处理**：优化错误消息展示
+- **工作台错误消息**：改进错误消息显示
+
+#### 移除
+
+- **工作台建议提示卡片**：删除 SuggestedPrompts 组件
+
+### 后端
+
+#### 优化
+
+- **权限方法重命名**：`PermissionMixin.is_admin()` 和 `AuthzUserMixin.is_admin()` 重命名为 `is_authenticated_user()`，消除语义误导（原方法对任何已登录用户返回 True，与 `admin_access.is_admin_user()` 的实际管理员检查混淆）
+- **urls.py 瘦身**：从 560 行精简至 80 行，Admin 侧边栏自定义逻辑（排序、虚拟菜单、Hub 页、工具收藏）提取到独立的 `admin_customization.py` 模块
+- **集中式分页工具**：新增 `apps/core/api/pagination.py`，提供 `PageParams`、`PaginatedOut` schema 和 `paginate_queryset` 辅助函数
+
+#### 修复
+
+- **路由认证补全**：为 `evidence_sorting` 和 `sales_dispute` 路由添加 `JWTOrSessionAuth` 认证，修复未认证即可访问的漏洞
+
+#### 移除
+
+- **死代码清理**：删除已定义但从未加入 middleware stack 的 `RequestMetricsMiddleware`
+
 ## [26.46.3] - 2026-05-08
 
 ### 前端

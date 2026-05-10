@@ -3,7 +3,9 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { History, Download, ChevronDown, ChevronUp, Loader2, CheckCircle2, XCircle, Clock } from 'lucide-react'
 
-import { Badge } from '@/components/ui/badge'
+import { StatusBadge } from '@/components/shared'
+import { API_BASE_URL } from '@/lib/api'
+import { getAccessToken } from '@/lib/token'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { listBatchJobs } from '../api'
 import type { BatchJob } from '../types'
@@ -18,10 +20,16 @@ function formatDate(dateStr: string | null): string {
   return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const variant = status === 'completed' ? 'secondary' : status === 'running' ? 'default' : 'destructive'
+function BatchStatusBadge({ status }: { status: string }) {
+  const variant = status === 'completed'
+    ? 'closed'
+    : status === 'running'
+      ? 'info'
+      : status === 'failed'
+        ? 'error'
+        : 'closed'
   const label = status === 'completed' ? '已完成' : status === 'running' ? '运行中' : status === 'failed' ? '失败' : status === 'cancelled' ? '已取消' : status
-  return <Badge variant={variant} className="text-[10px] px-1.5 py-0">{label}</Badge>
+  return <StatusBadge variant={variant}>{label}</StatusBadge>
 }
 
 function BatchJobRow({ job }: { job: BatchJob }) {
@@ -29,15 +37,15 @@ function BatchJobRow({ job }: { job: BatchJob }) {
 
   const handleDownload = () => {
     if (!job.summary_file) return
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8002/api/v1'
-    const token = localStorage.getItem('access_token')
+    const baseUrl = API_BASE_URL
+    const token = getAccessToken()
     window.open(`${baseUrl}/workbench/batch/${job.id}/download${token ? `?token=${token}` : ''}`, '_blank')
   }
 
   const handleDownloadDetail = () => {
     if (!job.detail_zip_file) return
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8002/api/v1'
-    const token = localStorage.getItem('access_token')
+    const baseUrl = API_BASE_URL
+    const token = getAccessToken()
     window.open(`${baseUrl}/workbench/batch/${job.id}/download-detail${token ? `?token=${token}` : ''}`, '_blank')
   }
 
@@ -48,7 +56,7 @@ function BatchJobRow({ job }: { job: BatchJob }) {
           {job.status === 'running' && <Loader2 className="size-3 animate-spin text-blue-600 shrink-0" />}
           {job.status === 'completed' && <CheckCircle2 className="size-3 text-green-600 shrink-0" />}
           {(job.status === 'failed' || job.status === 'cancelled') && <XCircle className="size-3 text-red-600 shrink-0" />}
-          <StatusBadge status={job.status} />
+          <BatchStatusBadge status={job.status} />
           <span className="text-muted-foreground truncate">{job.total_items} 个文件</span>
         </div>
         <span className="text-muted-foreground shrink-0">{formatDate(job.created_at)}</span>

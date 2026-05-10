@@ -2,6 +2,8 @@
 
 import { Briefcase, Users, Hash, Calendar, DollarSign } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { formatShortDate } from '@/lib/date'
+import { formatAmountInt } from '@/lib/format'
 import type { ToolResultRendererProps } from './index'
 
 interface StatusInfo {
@@ -71,10 +73,10 @@ function SingleCase({ data }: { data: Record<string, unknown> }) {
           </div>
         )}
         {data.target_amount != null && (
-          <Row icon={DollarSign} label="标的额" value={`¥${Number(data.target_amount).toLocaleString()}`} />
+          <Row icon={DollarSign} label="标的额" value={formatAmountInt(Number(data.target_amount))} />
         )}
         {data.created_at != null && (
-          <Row icon={Calendar} label="创建" value={formatDate(String(data.created_at))} />
+          <Row icon={Calendar} label="创建" value={formatShortDate(String(data.created_at))} />
         )}
       </div>
       {Array.isArray(data.parties) && data.parties.length > 0 && (
@@ -113,12 +115,4 @@ function Row({ icon: Icon, label, value }: { icon: typeof Briefcase; label: stri
       <span className="text-foreground">{value}</span>
     </div>
   )
-}
-
-function formatDate(s: string): string {
-  try {
-    return new Date(s).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' })
-  } catch {
-    return s
-  }
 }

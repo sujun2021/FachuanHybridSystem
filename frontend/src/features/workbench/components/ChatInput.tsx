@@ -1,6 +1,6 @@
 /** 对话输入框组件（含 Agent 选择器） */
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { Send, Square, Bot, Briefcase, FileText, Search, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -26,11 +26,16 @@ interface ChatInputProps {
   disabled?: boolean
 }
 
-export function ChatInput({ onSend, disabled }: ChatInputProps) {
+export const ChatInput = React.memo(function ChatInput({ onSend, disabled }: ChatInputProps) {
   const [content, setContent] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const sendAfterSpeechRef = useRef(false)
-  const { isStreaming, selectedAgent, setSelectedAgent, abortStream, quotedContent, setQuotedContent } = useWorkbenchStore()
+  const isStreaming = useWorkbenchStore((s) => s.isStreaming)
+  const selectedAgent = useWorkbenchStore((s) => s.selectedAgent)
+  const setSelectedAgent = useWorkbenchStore((s) => s.setSelectedAgent)
+  const abortStream = useWorkbenchStore((s) => s.abortStream)
+  const quotedContent = useWorkbenchStore((s) => s.quotedContent)
+  const setQuotedContent = useWorkbenchStore((s) => s.setQuotedContent)
 
   const speech = useSpeechRecognition({ lang: 'zh-CN', continuous: true, interimResults: true })
 
@@ -171,4 +176,4 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
       </div>
     </div>
   )
-}
+})

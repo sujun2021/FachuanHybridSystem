@@ -1,6 +1,6 @@
 /** 消息列表组件 */
 
-import { useEffect, useRef, useMemo, useCallback } from 'react'
+import React, { useEffect, useRef, useMemo, useCallback } from 'react'
 import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useWorkbenchStore } from '../stores/workbench-store'
@@ -8,10 +8,14 @@ import { MessageBubble, StreamingBubble } from './MessageBubble'
 
 const VIRTUALIZE_THRESHOLD = 50
 
-export function MessageList() {
+export const MessageList = React.memo(function MessageList() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const virtuosoRef = useRef<VirtuosoHandle>(null)
-  const { messages, streamingMessage, isStreaming, messagesLoading, currentSession } = useWorkbenchStore()
+  const messages = useWorkbenchStore((s) => s.messages)
+  const streamingMessage = useWorkbenchStore((s) => s.streamingMessage)
+  const isStreaming = useWorkbenchStore((s) => s.isStreaming)
+  const messagesLoading = useWorkbenchStore((s) => s.messagesLoading)
+  const currentSession = useWorkbenchStore((s) => s.currentSession)
   const prevCountRef = useRef(0)
   const prevSessionIdRef = useRef<number | null>(null)
 
@@ -163,4 +167,4 @@ export function MessageList() {
       )}
     </ScrollArea>
   )
-}
+})

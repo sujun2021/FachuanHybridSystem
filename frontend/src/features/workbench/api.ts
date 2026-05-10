@@ -1,11 +1,10 @@
 /** 工作台 API 客户端 */
 
-import { createApiClient } from '@/lib/api'
+import { createFeatureApiClient, API_BASE_URL } from '@/lib/api'
+import { getAccessToken } from '@/lib/token'
 import type { BatchJob, BatchProgress, ModelsResponse, WorkbenchMessage, WorkbenchSession } from './types'
 
-const api = createApiClient({
-  prefixUrl: `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8002/api/v1'}/workbench`,
-})
+const api = createFeatureApiClient('workbench')
 
 // ─── 会话 API ────────────────────────────────────────────────────────────────
 
@@ -82,7 +81,7 @@ export async function submitBatchAnalysis(
   for (const file of files) {
     formData.append('files', file)
   }
-  return api.post('batch/analyze', { body: formData }).json()
+  return api.post('batch/analyze', { body: formData, timeout: 300_000 }).json()
 }
 
 export async function getBatchProgress(jobId: string): Promise<BatchProgress> {
@@ -123,8 +122,8 @@ export function connectBatchSSE(
   onDone: () => void,
   onError: (err: Error) => void,
 ): () => void {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8002/api/v1'
-  const token = localStorage.getItem('access_token')
+  const baseUrl = API_BASE_URL
+  const token = getAccessToken()
   const controller = new AbortController()
 
   ;(async () => {
@@ -181,4 +180,30 @@ export function connectBatchSSE(
   })()
 
   return () => controller.abort()
+}
+
+/** 工作台 API 统一导出 */
+export const workbenchApi = {
+  // 会话
+  createSession,
+  listSessions,
+  getSession,
+  updateSession,
+  deleteSession,
+  // 消息
+  listMessages,
+  truncateMessages,
+  submitFeedback,
+  // 审批
+  respondApproval,
+  // 模型
+  fetchModels,
+  // 批量分析
+  submitBatchAnalysis,
+  getBatchProgress,
+  cancelBatchAnalysis,
+  saveBatchMessages,
+  retryBatchAnalysis,
+  listBatchJobs,
+  connectBatchSSE,
 }

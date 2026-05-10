@@ -1,3 +1,4 @@
+import React, { useCallback } from 'react'
 import {
   Table,
   TableBody,
@@ -27,7 +28,7 @@ interface DataTableProps<T> {
   className?: string
 }
 
-export function DataTable<T>({
+function DataTableInner<T>({
   columns,
   data,
   rowKey,
@@ -39,22 +40,22 @@ export function DataTable<T>({
 }: DataTableProps<T>) {
   const hasSelection = !!onSelectChange
 
-  const handleSelectAll = (checked: boolean) => {
+  const handleSelectAll = useCallback((checked: boolean) => {
     if (!onSelectChange) return
     if (checked) {
       onSelectChange(new Set(data.map(rowKey)))
     } else {
       onSelectChange(new Set())
     }
-  }
+  }, [onSelectChange, data, rowKey])
 
-  const handleSelectRow = (key: string | number, checked: boolean) => {
+  const handleSelectRow = useCallback((key: string | number, checked: boolean) => {
     if (!onSelectChange || !selectedKeys) return
     const next = new Set(selectedKeys)
     if (checked) next.add(key)
     else next.delete(key)
     onSelectChange(next)
-  }
+  }, [onSelectChange, selectedKeys])
 
   const allSelected = data.length > 0 && selectedKeys?.size === data.length
 
@@ -132,3 +133,5 @@ export function DataTable<T>({
     </div>
   )
 }
+
+export const DataTable = React.memo(DataTableInner) as typeof DataTableInner

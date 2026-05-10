@@ -30,6 +30,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { formatDate } from '@/lib/date'
 
 import { useRecognitionTask, shouldPoll } from '../hooks/use-recognition-task'
 import { useUpdateRecognitionInfo } from '../hooks/use-recognition-mutations'
@@ -49,26 +50,6 @@ export interface RecognitionDetailProps {
 // ============================================================================
 // Utility Functions
 // ============================================================================
-
-/**
- * 格式化日期时间
- */
-function formatDateTime(dateString: string | null | undefined): string {
-  if (!dateString) return '-'
-  try {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    })
-  } catch {
-    return '-'
-  }
-}
 
 /**
  * 获取状态显示配置
@@ -207,13 +188,9 @@ function PollingIndicator({ isPolling }: PollingIndicatorProps) {
 }
 
 /**
- * 状态徽章组件
+ * 识别状态徽章组件（带图标，领域特定）
  */
-interface StatusBadgeProps {
-  status: RecognitionStatus
-}
-
-function StatusBadge({ status }: StatusBadgeProps) {
+function RecognitionStatusBadge({ status }: { status: RecognitionStatus }) {
   const config = getStatusConfig(status)
 
   return (
@@ -521,7 +498,7 @@ export function RecognitionDetail({ taskId }: RecognitionDetailProps) {
           </h1>
 
           {/* 状态徽章 */}
-          <StatusBadge status={task.status} />
+          <RecognitionStatusBadge status={task.status} />
 
           {/* 轮询指示器 */}
           {/* Requirements: 7.2 */}
@@ -553,14 +530,14 @@ export function RecognitionDetail({ taskId }: RecognitionDetailProps) {
             <InfoItem
               icon={<Calendar className="size-3.5" />}
               label="创建时间"
-              value={formatDateTime(task.created_at)}
+              value={formatDate(task.created_at)}
             />
 
             {/* 更新时间 */}
             <InfoItem
               icon={<Calendar className="size-3.5" />}
               label="更新时间"
-              value={formatDateTime(task.updated_at)}
+              value={formatDate(task.updated_at)}
             />
           </div>
         </CardContent>
