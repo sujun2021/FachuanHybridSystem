@@ -1,21 +1,26 @@
-/** 消息列表组件 */
+/** 消息列表组件
 
-import React, { useEffect, useRef, useMemo, useCallback } from 'react'
-import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso'
+  使用 CSS content-visibility: auto 实现浏览器原生虚拟化，
+  替代 JS 虚拟化（react-virtuoso），避免 mount/destroy 抖动。
+  参考 Open WebUI 的实现方式。
+*/
+
+import React, { useEffect, useRef, useMemo } from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useWorkbenchStore } from '../stores/workbench-store'
 import { MessageBubble, StreamingBubble } from './MessageBubble'
 
-const VIRTUALIZE_THRESHOLD = 50
-
 export const MessageList = React.memo(function MessageList() {
   const scrollRef = useRef<HTMLDivElement>(null)
-  const virtuosoRef = useRef<VirtuosoHandle>(null)
+  const sentinelRef = useRef<HTMLDivElement>(null)
   const messages = useWorkbenchStore((s) => s.messages)
   const streamingMessage = useWorkbenchStore((s) => s.streamingMessage)
   const isStreaming = useWorkbenchStore((s) => s.isStreaming)
   const messagesLoading = useWorkbenchStore((s) => s.messagesLoading)
   const currentSession = useWorkbenchStore((s) => s.currentSession)
+  const hasMoreMessages = useWorkbenchStore((s) => s.hasMoreMessages)
+  const loadingOlder = useWorkbenchStore((s) => s.loadingOlder)
+  const loadOlderMessages = useWorkbenchStore((s) => s.loadOlderMessages)
   const prevCountRef = useRef(0)
   const prevSessionIdRef = useRef<number | null>(null)
 
@@ -28,7 +33,6 @@ export const MessageList = React.memo(function MessageList() {
     while (i < messages.length) {
       const msg = messages[i]
       if (msg.role === 'assistant') {
-        // 收集后续连续的 tool 消息
         const toolCalls: typeof messages = []
         let j = i + 1
         while (j < messages.length && messages[j].role === 'tool') {
@@ -45,9 +49,7 @@ export const MessageList = React.memo(function MessageList() {
     return groups
   }, [messages])
 
-  const useVirtualization = groupedMessages.length > VIRTUALIZE_THRESHOLD
-
-  // Reset counter when switching sessions (first-load effect will scroll to bottom)
+  // Reset counter when switching sessions
   useEffect(() => {
     if (currentSession?.id !== prevSessionIdRef.current) {
       prevSessionIdRef.current = currentSession?.id ?? null
@@ -64,17 +66,11 @@ export const MessageList = React.memo(function MessageList() {
 
     const isFirstLoad = prevCount === 0 && messages.length > 0
     if (isFirstLoad) {
-      if (useVirtualization) {
-        setTimeout(() => {
-          virtuosoRef.current?.scrollToIndex({ index: messages.length - 1, behavior: 'auto' })
-        }, 50)
-      } else {
-        setTimeout(() => {
-          const el = scrollRef.current
-          if (el) el.scrollTop = el.scrollHeight
-        }, 50)
-      }
-    } else if (!useVirtualization) {
+      setTimeout(() => {
+        const el = scrollRef.current
+        if (el) el.scrollTop = el.scrollHeight
+      }, 50)
+    } else {
       const el = scrollRef.current
       if (!el) return
       const threshold = 120
@@ -85,51 +81,34 @@ export const MessageList = React.memo(function MessageList() {
         })
       }
     }
-  }, [messages, isEmpty, useVirtualization])
+  }, [messages, isEmpty])
 
-  // Auto-scroll during streaming (non-virtualized)
+  // Auto-scroll during streaming
   useEffect(() => {
-    if (useVirtualization) return
     if (!streamingMessage) return
     const el = scrollRef.current
     if (!el) return
     requestAnimationFrame(() => {
       el.scrollTop = el.scrollHeight
     })
-  }, [streamingMessage, useVirtualization])
+  }, [streamingMessage])
 
-  // Virtuoso item renderer
-  const renderGroup = useCallback((_index: number, group: typeof groupedMessages[0]) => (
-    <div className="py-2 px-4">
-      <MessageBubble message={group.message} toolCalls={group.toolCalls} />
-    </div>
-  ), [])
-
-  // Virtuoso footer (streaming bubble)
-  const VirtuosoFooter = useCallback(() => {
-    if (!isStreaming || !streamingMessage) return null
-    return (
-      <div className="px-4 pb-2">
-        <StreamingBubble message={streamingMessage} />
-      </div>
+  // IntersectionObserver for loading older messages on scroll-up
+  useEffect(() => {
+    if (!hasMoreMessages || loadingOlder) return
+    const sentinel = sentinelRef.current
+    if (!sentinel) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && hasMoreMessages && !loadingOlder) {
+          loadOlderMessages()
+        }
+      },
+      { root: scrollRef.current, threshold: 0.1 },
     )
-  }, [isStreaming, streamingMessage])
-
-  // Virtuoso 需要自身作为滚动容器，不能嵌套在 ScrollArea 内
-  if (useVirtualization) {
-    return (
-      <div ref={scrollRef} className="flex-1 overflow-hidden">
-        <Virtuoso
-          ref={virtuosoRef}
-          data={groupedMessages}
-          followOutput="smooth"
-          itemContent={renderGroup}
-          components={{ Footer: VirtuosoFooter }}
-          style={{ height: '100%' }}
-        />
-      </div>
-    )
-  }
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [hasMoreMessages, loadingOlder, loadOlderMessages])
 
   return (
     <ScrollArea ref={scrollRef} className="flex-1 overflow-y-auto">
@@ -155,12 +134,23 @@ export const MessageList = React.memo(function MessageList() {
         </div>
       ) : (
         <div className="space-y-4 p-4">
+          {hasMoreMessages && (
+            <div ref={sentinelRef} className="flex justify-center py-2">
+              {loadingOlder && (
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+              )}
+            </div>
+          )}
           {groupedMessages.map((group) => (
-            <MessageBubble
+            <div
               key={group.message.id}
-              message={group.message}
-              toolCalls={group.toolCalls}
-            />
+              style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 80px' }}
+            >
+              <MessageBubble
+                message={group.message}
+                toolCalls={group.toolCalls}
+              />
+            </div>
           ))}
           {isStreaming && streamingMessage && <StreamingBubble message={streamingMessage} />}
         </div>

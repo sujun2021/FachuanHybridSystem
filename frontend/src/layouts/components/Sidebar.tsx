@@ -3,6 +3,7 @@ import { NavLink, useLocation } from 'react-router'
 import { ChevronLeft, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUIStore } from '@/stores/ui'
+import { prefetchRoute } from '@/lib/prefetch'
 import {
   menuConfig,
   bottomMenuItems,
@@ -12,6 +13,32 @@ import {
   type MenuGroup,
   type TopLevelMenuItem,
 } from './menu-config'
+
+/** 路径 → 页面 dynamic import 映射，用于 hover 预加载 */
+const routePrefetchMap: Record<string, () => Promise<unknown>> = {
+  '/admin/dashboard': () => import('@/pages/dashboard/DashboardPage'),
+  '/admin/workbench': () => import('@/features/workbench/WorkbenchPage'),
+  '/admin/inbox': () => import('@/pages/dashboard/inbox/InboxListPage'),
+  '/admin/clients': () => import('@/pages/dashboard/clients/ClientListPage'),
+  '/admin/cases': () => import('@/pages/dashboard/cases/CaseListPage'),
+  '/admin/contracts': () => import('@/pages/dashboard/contracts/ContractListPage'),
+  '/admin/settings': () => import('@/pages/dashboard/settings/SettingsOverviewPage'),
+  '/admin/organization': () => import('@/pages/dashboard/organization/OrganizationPage'),
+  '/admin/automation': () => import('@/pages/dashboard/automation/AutomationIndexPage'),
+  '/admin/templates': () => import('@/pages/dashboard/templates/TemplateListPage'),
+  '/admin/tools/court-sms': () => import('@/pages/dashboard/tools/CourtSmsPage'),
+  '/admin/tools/courier-tracking': () => import('@/pages/dashboard/tools/CourierTrackingPage'),
+  '/admin/tools/element-convert': () => import('@/pages/dashboard/tools/ElementConvertPage'),
+  '/admin/tools/lpr-calculator': () => import('@/pages/dashboard/tools/LprCalculatorPage'),
+  '/admin/reminders': () => import('@/pages/dashboard/reminders'),
+  '/admin/task-queue': () => import('@/pages/dashboard/task-queue/TaskQueuePage'),
+  '/admin/logs': () => import('@/pages/dashboard/logs/LogsPage'),
+}
+
+function handlePrefetch(path: string) {
+  const fn = routePrefetchMap[path]
+  if (fn) prefetchRoute(path, fn)
+}
 
 interface SidebarProps {
   collapsed: boolean
@@ -25,6 +52,8 @@ function TopLevelItem({ item, collapsed, isActive }: {
   return (
     <NavLink
       to={item.path}
+      onMouseEnter={() => handlePrefetch(item.path)}
+      onFocus={() => handlePrefetch(item.path)}
       className={cn(
         'flex items-center gap-3 h-10 px-3 rounded-md mx-2 transition-all duration-150 group relative',
         'text-[#a1a1aa] hover:text-white hover:bg-[#27272a]',
@@ -48,6 +77,8 @@ function SubMenuItem({ item, isActive }: { item: MenuItem; isActive: boolean }) 
   return (
     <NavLink
       to={item.path}
+      onMouseEnter={() => handlePrefetch(item.path)}
+      onFocus={() => handlePrefetch(item.path)}
       className={cn(
         'flex items-center gap-2.5 h-9 px-3 rounded-md transition-all duration-150',
         'text-[#a1a1aa] hover:text-white hover:bg-[#27272a]',
@@ -153,6 +184,8 @@ function GroupMenu({ group, collapsed, isExpanded, onToggle, activePath }: {
                 <NavLink
                   key={item.id}
                   to={item.path}
+                  onMouseEnter={() => handlePrefetch(item.path)}
+                  onFocus={() => handlePrefetch(item.path)}
                   className={cn(
                     'flex items-center gap-3 mx-1.5 px-2.5 py-2 rounded-lg text-[13px] transition-all duration-150',
                     'hover:bg-white/[0.06]',
@@ -230,6 +263,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       {/* Brand */}
       <NavLink
         to="/admin/dashboard"
+        onMouseEnter={() => handlePrefetch('/admin/dashboard')}
         className={cn(
           'flex items-center h-12 px-4 shrink-0',
           'border-b border-[rgba(255,255,255,0.08)]',

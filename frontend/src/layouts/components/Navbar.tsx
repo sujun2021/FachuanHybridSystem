@@ -72,7 +72,8 @@ export function Navbar({ onMenuClick }: NavbarProps) {
       <div
         className="hidden md:flex items-center gap-2 h-8 px-3 rounded-md bg-muted border border-border cursor-pointer hover:border-foreground/20 transition-colors w-64"
         onClick={() => {
-          const event = new KeyboardEvent('keydown', { key: 'k', ctrlKey: true })
+          const isMac = navigator.userAgent.includes('Mac')
+          const event = new KeyboardEvent('keydown', { key: 'k', ctrlKey: !isMac, metaKey: isMac })
           document.dispatchEvent(event)
         }}
       >
@@ -81,7 +82,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
         <span className="text-[13px] text-muted-foreground flex-1">搜索功能或输入命令...</span>
-        <kbd className="text-[11px] text-muted-foreground bg-background px-1.5 py-0.5 rounded border border-border">Ctrl+K</kbd>
+        <kbd className="text-[11px] text-muted-foreground bg-background px-1.5 py-0.5 rounded border border-border">{navigator.userAgent.includes('Mac') ? '⌘K' : 'Ctrl+K'}</kbd>
       </div>
 
       {/* 右侧区域 */}

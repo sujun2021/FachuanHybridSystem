@@ -2,6 +2,83 @@
 
 本项目的所有重要更改都将记录在此文件中。
 
+## [26.47.0] - 2026-05-10
+
+### 前端
+
+#### 新功能
+
+- **侧边栏路由预加载**：鼠标悬停侧边栏链接时自动预加载对应页面 chunk，点击即打开无 loading 等待
+- **落地页工作台介绍**：新增 AI 工作台板块，展示批量并发分析判决的演示界面和 8×4 AI 并发矩阵
+
+#### 优化
+
+- **页面加载性能全面优化**：
+  - 拆分重型依赖到独立 vendor chunk（recharts 381K、markdown 链 335K、dnd-kit 45K），DashboardPage 从 390K 降至 18K，WorkbenchPage 从 444K 降至 120K
+  - AuthGuard 乐观渲染：认证检查期间直接渲染布局，刷新页面时侧边栏/导航栏立即出现，不再有全屏 loading spinner
+  - CommandPalette 改为 lazy import，cmdk 库按需加载
+  - index.html 添加 preconnect 提示，首次 API 请求省 50-150ms TCP 握手时间
+  - 构建目标升级为 es2022，减少不必要的语法降级转换
+- **清理死代码**：卸载未使用的 react-virtuoso 依赖，删除 Vite 脚手架残留文件（App.tsx、App.css）
+- **精简 barrel 导出**：automation、organization、workbench 模块的 index.ts 简化为文档注释，避免误用导致全量导入
+
+### 后端
+
+#### 优化
+
+- **落地页技术栈更新**：SQLite 更正为 PostgreSQL，移除向量数据库（规划中已取消），新增 Redis（缓存 & Channel Layer）
+
+## [26.46.10] - 2026-05-10
+
+### 前端
+
+#### 新功能
+
+- **批量分析后处理提示词**：批量文档分析对话框新增「后处理提示词」输入框；填写后所有分析结果发送给主 AI 进行二次分析（对比、总结等），留空则保持原有 CSV 下载行为
+
+#### 优化
+
+- **工作台虚拟列表优化**：移除 react-virtuoso 改用 CSS `content-visibility: auto` 浏览器原生虚拟化，避免 JS 虚拟化的 mount/destroy 抖动
+- **流式渲染 rAF 节流**：MarkdownContent 流式渲染每帧只解析一次 markdown，缓存上次解析结果跳过未变化内容；streaming-slice 用 rAF 节流 delta 事件，减少高频 re-render
+- **消息历史懒加载**：消息列表仅加载最后 2 页（100 条），滚动到顶部时通过 IntersectionObserver 按需加载更早消息（游标分页）
+- **批量分析上下文隔离（前端）**：ContextUsageBar 计算 token 时排除批量分析消息，上下文使用率只反映主对话真实占用
+
+### 后端
+
+#### 优化
+
+- **工作台性能优化**：消除 N+1 查询（list_sessions 统计消息数改单次聚合）；list_sessions 增加 Django cache 缓存（30s TTL），增删改自动失效；消除全量消息查询，改用 storage_bytes 字段原子递增
+- **消息游标分页**：消息列表支持 before_id 游标分页，替代传统 offset 分页
+- **批量分析优化**：batch_runner 进度更新从 3 次查询优化为 2 次；save_batch_messages 改用 bulk_create；stream_batch_progress 查询合并 + 轮询间隔 0.5s→1.0s
+- **批量分析上下文隔离（后端）**：_load_message_history 和 _maybe_create_summary 排除 batch_item/batch_analysis 消息，不作为对话历史发给主 AI
+
+#### 数据库
+
+- **Session storage_bytes 字段**：WorkbenchSession 新增 storage_bytes 字段，原子递增追踪存储用量，替代每次查询时全量计算
+
+## [26.46.9] - 2026-05-10
+
+### 前端
+
+#### 新功能
+
+- **快递查询 PDF 查看**：快递查询列表新增「结果」列，已完成的查询任务可直接点击查看/下载 PDF 结果文件，使用 `resolveMediaUrl` 构建完整 URL
+
+#### 优化
+
+- **案件列表搜索框合并**：案件名称和案号两个独立搜索框合并为统一搜索输入框，减少筛选栏占用空间
+- **筛选菜单统一为 Popover 面板**：案件、当事人、合同三个列表的筛选菜单从多个 Select 组件统一改为 Popover 面板，支持筛选计数角标、一键清除所有筛选条件
+- **日历提醒交互改进**：日历单元格改为整格可点击创建提醒，移除原先的「+」按钮，提升移动端操作体验；移除 `case_log` 关联类型，提醒仅支持关联合同
+- **提醒表单关联合同下拉菜单优化**：合同下拉从 Select 改为 Command + Popover 组件，支持搜索过滤合同名称，下拉宽度与触发按钮对齐
+
+### 后端
+
+#### 优化
+
+- **统一文件上传规范**：全量替换硬编码 `upload_to` 路径为工厂类（`DatedUUIDPath`、`EntityIdPath`、`DatedOriginalPath`），覆盖 10 个业务模块（cases、chat_records、documents、evidence、express_query、legal_research、legal_solution、organization、automation、wechat_mp），同时启用 `KeepOriginalNameStorage` 保持原始文件名
+- **文件清理信号补全**：为 express_query、wechat_mp 等模块补充 `post_delete` 信号处理，模型删除时自动清理关联的物理文件；修复 express_query 使用 `pre_delete` 改为 `post_delete` 以确保文件在数据库记录删除后才清理
+- **上传文件验证增强**：图片旋转 API 新增文件类型（JPEG/PNG/WebP/TIFF）和大小（20MB）验证；批量打印新增 50MB 文件大小限制；合同归档上传接入 `FileUploadService` 统一校验
+
 ## [26.46.8] - 2026-05-09
 
 ### 后端

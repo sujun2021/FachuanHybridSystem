@@ -46,6 +46,7 @@ from ..agents import (
     set_event_queue,
     triage_agent,
 )
+from .session_service import WorkbenchSessionService, _calc_message_bytes
 
 logger = logging.getLogger(__name__)
 
@@ -108,11 +109,17 @@ async def _load_message_history(
     """
     from ..models import WorkbenchMessage
 
-    # 从最新消息向前加载（含工具调用结果）
-    messages_qs = WorkbenchMessage.objects.filter(
-        session_id=session_id,
-        role__in=[WorkbenchMessage.Role.USER, WorkbenchMessage.Role.ASSISTANT, WorkbenchMessage.Role.TOOL],
-    ).order_by("-created_at")[:max_messages]
+    # 从最新消息向前加载（含工具调用结果），排除批量分析消息
+    messages_qs = (
+        WorkbenchMessage.objects.filter(
+            session_id=session_id,
+            role__in=[WorkbenchMessage.Role.USER, WorkbenchMessage.Role.ASSISTANT, WorkbenchMessage.Role.TOOL],
+        )
+        .exclude(
+            metadata__source__in=["batch_item", "batch_analysis"],
+        )
+        .order_by("-created_at")[:max_messages]
+    )
 
     raw_messages = list(reversed(await _async_list(messages_qs)))
 
@@ -184,13 +191,17 @@ async def _maybe_create_summary(
 
     from ..models import WorkbenchMessage, WorkbenchSession
 
-    # 获取最近 20 条消息用于摘要
+    # 获取最近 20 条消息用于摘要（排除批量分析消息）
     recent = list(
         await _async_list(
             WorkbenchMessage.objects.filter(
                 session_id=session_id,
                 role__in=[WorkbenchMessage.Role.USER, WorkbenchMessage.Role.ASSISTANT],
-            ).order_by("-created_at")[:20]
+            )
+            .exclude(
+                metadata__source__in=["batch_item", "batch_analysis"],
+            )
+            .order_by("-created_at")[:20]
         )
     )
     recent.reverse()
@@ -282,6 +293,10 @@ class WorkbenchChatService:
             role=WorkbenchMessage.Role.USER,
             content=user_message,
         )
+        await WorkbenchSessionService.aincrement_storage(
+            session_id,
+            _calc_message_bytes(content=user_message),
+        )
 
         # 选择 Agent
         agent = AGENT_MAP.get(agent_type, triage_agent)
@@ -337,17 +352,23 @@ class WorkbenchChatService:
                 elif event["type"] == "tool_call":
                     # 持久化工具调用消息
                     tc_id = event.get("tool_call_id", "")
+                    tc_content = f"调用工具: {event.get('name', '')}"
+                    tc_args = event.get("arguments", {})
                     tool_msg = await WorkbenchMessage.objects.acreate(
                         session_id=session_id,
                         role=WorkbenchMessage.Role.TOOL,
-                        content=f"调用工具: {event.get('name', '')}",
+                        content=tc_content,
                         tool_call_id=tc_id,
                         tool_name=event.get("name", ""),
-                        tool_input=event.get("arguments", {}),
+                        tool_input=tc_args,
                         tool_output={},
                     )
                     if tc_id:
                         tool_msg_map[tc_id] = tool_msg.id
+                    await WorkbenchSessionService.aincrement_storage(
+                        session_id,
+                        _calc_message_bytes(content=tc_content, tool_input=tc_args),
+                    )
                 elif event["type"] == "tool_result":
                     # 更新工具结果
                     tc_id = event.get("tool_call_id", "")
@@ -355,11 +376,22 @@ class WorkbenchChatService:
                     if msg_id:
                         result = event.get("result", "")
                         success = event.get("success", True)
+                        new_content = f"工具 {event.get('name', '')}: {'成功' if success else '失败'}"
+                        new_tool_output = {"result": result, "success": success}
+                        new_metadata = {"success": success}
+                        # 计算 storage_bytes delta（旧值: content=f"调用工具: {name}", tool_output={}, metadata={}）
+                        old_content = f"调用工具: {event.get('name', '')}"
+                        delta = _calc_message_bytes(
+                            content=new_content,
+                            tool_output=new_tool_output,
+                            metadata=new_metadata,
+                        ) - _calc_message_bytes(content=old_content)
                         await WorkbenchMessage.objects.filter(id=msg_id).aupdate(
-                            content=f"工具 {event.get('name', '')}: {'成功' if success else '失败'}",
-                            tool_output={"result": result, "success": success},
-                            metadata={"success": success},
+                            content=new_content,
+                            tool_output=new_tool_output,
+                            metadata=new_metadata,
                         )
+                        await WorkbenchSessionService.aincrement_storage(session_id, delta)
                 yield event
         except Exception:
             logger.exception("Agent 运行失败")
@@ -371,20 +403,25 @@ class WorkbenchChatService:
         content = "".join(full_response)
         if content:
             duration_ms = (time.perf_counter() - start_time) * 1000
+            assistant_meta = {
+                "duration_ms": round(duration_ms, 2),
+                "agent_type": agent_type or "triage",
+                "tokens": {
+                    "prompt": deps.prompt_tokens,
+                    "completion": deps.completion_tokens,
+                    "total": deps.total_tokens,
+                },
+            }
             await WorkbenchMessage.objects.acreate(
                 session_id=session_id,
                 role=WorkbenchMessage.Role.ASSISTANT,
                 content=content,
                 llm_model=model_name,
-                metadata={
-                    "duration_ms": round(duration_ms, 2),
-                    "agent_type": agent_type or "triage",
-                    "tokens": {
-                        "prompt": deps.prompt_tokens,
-                        "completion": deps.completion_tokens,
-                        "total": deps.total_tokens,
-                    },
-                },
+                metadata=assistant_meta,
+            )
+            await WorkbenchSessionService.aincrement_storage(
+                session_id,
+                _calc_message_bytes(content=content, metadata=assistant_meta),
             )
 
         # 更新会话标题（如果是第一条消息）

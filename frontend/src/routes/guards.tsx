@@ -33,7 +33,7 @@ function LoadingSpinner() {
  *
  * 功能：
  * - 页面加载时调用 checkAuth 恢复认证状态
- * - 加载期间显示 loading 状态
+ * - 认证检查期间直接渲染布局（乐观渲染），避免全屏 spinner
  * - 未认证时重定向到登录页
  *
  * Validates: Requirement 8.5
@@ -47,13 +47,8 @@ export function AuthGuard() {
     checkAuth()
   }, [checkAuth])
 
-  // 加载中显示 loading 状态
-  if (isLoading) {
-    return <LoadingSpinner />
-  }
-
-  // 未认证则重定向到登录页，保留当前 URL 以便登录后跳回
-  if (!isAuthenticated) {
+  // 仅在确认未认证时跳转，检查期间直接渲染布局（页面内 TanStack Query 自行处理加载态）
+  if (!isLoading && !isAuthenticated) {
     const redirectTo = location.pathname + location.search
     return <Navigate to={`${PATHS.LOGIN}?redirect=${encodeURIComponent(redirectTo)}`} replace />
   }

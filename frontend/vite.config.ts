@@ -29,6 +29,8 @@ export default defineConfig({
     },
   },
   build: {
+    target: 'es2022',
+    reportCompressedSize: false,
     rollupOptions: {
       output: {
         manualChunks: {
@@ -58,6 +60,14 @@ export default defineConfig({
           'vendor-utils': ['ky', 'date-fns', 'clsx', 'tailwind-merge', 'class-variance-authority', 'sonner'],
           // 状态管理
           'vendor-state': ['zustand'],
+          // 图表库（仅 Dashboard 使用）
+          'vendor-recharts': ['recharts'],
+          // Markdown 渲染链（仅工作台使用）
+          'vendor-markdown': ['react-markdown', 'rehype-highlight', 'remark-gfm', 'highlight.js'],
+          // 拖拽排序（仅合同归档使用）
+          'vendor-dnd': ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
+          // 粒子动画（仅登录页使用）
+          'vendor-particles': ['@tsparticles/react', '@tsparticles/slim'],
         },
       },
     },

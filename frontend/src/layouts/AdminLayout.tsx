@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useCallback, useRef, lazy, Suspense } from 'react'
 import { Outlet, useLocation } from 'react-router'
 import { cn } from '@/lib/utils'
 import { useUIStore } from '@/stores/ui'
@@ -6,11 +6,14 @@ import { Sidebar } from './components/Sidebar'
 import { Navbar } from './components/Navbar'
 import { Breadcrumb, type BreadcrumbItem } from './components/Breadcrumb'
 import { PATHS } from '@/routes/paths'
-import { CommandPalette } from '@/components/shared/CommandPalette'
 import {
   BreadcrumbProvider,
   useBreadcrumbContext,
 } from '@/contexts/BreadcrumbContext'
+
+const CommandPalette = lazy(() =>
+  import('@/components/shared/CommandPalette').then((m) => ({ default: m.CommandPalette }))
+)
 
 const MOBILE_BREAKPOINT = 768
 
@@ -112,7 +115,9 @@ function AdminLayoutContent() {
 
   return (
     <div className="bg-background relative min-h-screen">
-      <CommandPalette />
+      <Suspense fallback={null}>
+        <CommandPalette />
+      </Suspense>
 
       {/* 桌面端 Sidebar */}
       {!isMobile && (
