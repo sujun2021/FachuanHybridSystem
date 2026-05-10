@@ -661,12 +661,12 @@
             if (!heroTitle) return;
 
             // 保存原始内容 — 单行: 法穿AI Copilot
-            const prefixText = '法穿AI ';
+            const prefixText = '法穿AI';
             const gradientText = 'Copilot';
 
             // 清空并重建结构：一行显示
             heroTitle.innerHTML = `
-                <span class="kinetic-text typewriter-prefix"></span><span class="gradient-text typewriter-gradient"></span><span class="typewriter-cursor"></span>
+                <span class="kinetic-text typewriter-prefix"></span>&nbsp;<span class="gradient-text typewriter-gradient"></span><span class="typewriter-cursor"></span>
             `;
 
             const prefixEl = heroTitle.querySelector('.typewriter-prefix');
