@@ -315,16 +315,18 @@ export function CaseDetail({ caseId }: CaseDetailProps) {
               </DetailCard>
             </div>
 
-            <DetailCard title="案号" extra={<Hash className="text-muted-foreground size-4" />}>
-              <CaseNumberSection
-                caseNumbers={caseData.case_numbers ?? []}
-                editable={false}
-              />
-            </DetailCard>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <DetailCard title="案号" extra={<Hash className="text-muted-foreground size-4" />}>
+                <CaseNumberSection
+                  caseNumbers={caseData.case_numbers ?? []}
+                  editable={false}
+                />
+              </DetailCard>
 
-            <DetailCard title="主管机关" extra={<Building2 className="text-muted-foreground size-4" />}>
-              <AuthoritySection authorities={caseData.supervising_authorities ?? []} editable={false} />
-            </DetailCard>
+              <DetailCard title="主管机关" extra={<Building2 className="text-muted-foreground size-4" />}>
+                <AuthoritySection authorities={caseData.supervising_authorities ?? []} editable={false} />
+              </DetailCard>
+            </div>
           </motion.div>
         )}
 

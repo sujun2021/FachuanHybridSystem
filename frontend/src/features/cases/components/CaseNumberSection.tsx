@@ -1,11 +1,9 @@
 import { useState } from 'react'
-import { Hash, Clock, Plus, Trash2, Loader2, ChevronDown, ChevronUp, Pencil, FileText, Scale } from 'lucide-react'
+import { Hash, Plus, Trash2, Loader2, ChevronDown, ChevronUp, Pencil, Scale } from 'lucide-react'
 import { formatDateOnly } from '@/lib/date'
 import { formatAmountInt } from '@/lib/format'
 import { toast } from 'sonner'
 
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -30,17 +28,6 @@ export interface CaseNumberSectionProps {
   caseNumbers: CaseNumber[]
   editable?: boolean
   caseId?: number
-}
-
-function EmptyState() {
-  return (
-    <div className="flex flex-col items-center justify-center py-8">
-      <div className="bg-muted flex size-10 items-center justify-center rounded-full">
-        <Hash className="text-muted-foreground size-5" />
-      </div>
-      <p className="text-muted-foreground mt-3 text-sm">暂无案号</p>
-    </div>
-  )
 }
 
 interface FormData {
@@ -151,7 +138,6 @@ function CaseNumberDialog({
             />
           </div>
 
-          {/* 执行参数折叠区 */}
           <Collapsible open={showExecution} onOpenChange={setShowExecution}>
             <CollapsibleTrigger asChild>
               <Button variant="ghost" size="sm" className="w-full justify-between px-0 text-muted-foreground hover:text-foreground">
@@ -166,29 +152,17 @@ function CaseNumberDialog({
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label className="text-xs">利息计算截止日</Label>
-                  <Input
-                    type="date"
-                    value={form.execution_cutoff_date}
-                    onChange={(e) => setForm(f => ({ ...f, execution_cutoff_date: e.target.value }))}
-                  />
+                  <Input type="date" value={form.execution_cutoff_date} onChange={(e) => setForm(f => ({ ...f, execution_cutoff_date: e.target.value }))} />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs">已付金额</Label>
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    value={form.execution_paid_amount}
-                    onChange={(e) => setForm(f => ({ ...f, execution_paid_amount: e.target.value }))}
-                  />
+                  <Input type="number" placeholder="0" value={form.execution_paid_amount} onChange={(e) => setForm(f => ({ ...f, execution_paid_amount: e.target.value }))} />
                 </div>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label className="text-xs">年天数</Label>
-                  <Select
-                    value={form.execution_year_days}
-                    onValueChange={(v) => setForm(f => ({ ...f, execution_year_days: v }))}
-                  >
+                  <Select value={form.execution_year_days} onValueChange={(v) => setForm(f => ({ ...f, execution_year_days: v }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {YEAR_DAYS_CHOICES.map(opt => (
@@ -199,10 +173,7 @@ function CaseNumberDialog({
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs">日期包含方式</Label>
-                  <Select
-                    value={form.execution_date_inclusion}
-                    onValueChange={(v) => setForm(f => ({ ...f, execution_date_inclusion: v }))}
-                  >
+                  <Select value={form.execution_date_inclusion} onValueChange={(v) => setForm(f => ({ ...f, execution_date_inclusion: v }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {DATE_INCLUSION_CHOICES.map(opt => (
@@ -213,10 +184,7 @@ function CaseNumberDialog({
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <Switch
-                  checked={form.execution_use_deduction_order}
-                  onCheckedChange={(checked) => setForm(f => ({ ...f, execution_use_deduction_order: checked }))}
-                />
+                <Switch checked={form.execution_use_deduction_order} onCheckedChange={(checked) => setForm(f => ({ ...f, execution_use_deduction_order: checked }))} />
                 <Label className="text-xs font-normal">使用扣减令</Label>
               </div>
               <div className="space-y-2">
@@ -243,7 +211,7 @@ function CaseNumberDialog({
   )
 }
 
-function CaseNumberCard({
+function CaseNumberItem({
   cn, editable, caseId, mutations,
 }: {
   cn: CaseNumber
@@ -260,10 +228,7 @@ function CaseNumberCard({
     mutations.updateCaseNumber.mutate(
       { id: cn.id, data: toPayload(editForm) },
       {
-        onSuccess: () => {
-          toast.success('更新案号成功')
-          setEditOpen(false)
-        },
+        onSuccess: () => { toast.success('更新案号成功'); setEditOpen(false) },
         onError: (e) => toast.error(e.message || '更新失败'),
       },
     )
@@ -280,126 +245,80 @@ function CaseNumberCard({
   const hasExecution = cn.execution_cutoff_date || cn.execution_paid_amount > 0 || cn.execution_manual_text
 
   return (
-    <Card className="gap-0 py-0">
-      <Collapsible open={expanded} onOpenChange={setExpanded}>
-        <CardHeader className="pb-0 pt-4">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <Hash className="text-muted-foreground size-4 shrink-0" />
-              <span className="text-sm font-medium truncate font-mono">{cn.number}</span>
-              {cn.document_name && (
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0">
-                  <FileText className="size-2.5 mr-0.5" />
-                  {cn.document_name}
-                </Badge>
-              )}
-              <Badge variant={cn.is_active ? 'default' : 'secondary'} className="text-[10px] px-1.5 py-0 shrink-0">
-                {cn.is_active ? '生效' : '未生效'}
-              </Badge>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="flex items-center gap-1 text-muted-foreground shrink-0">
-                <Clock className="size-3" />
-                <span className="text-xs">{formatDateOnly(cn.created_at)}</span>
-              </div>
-              {hasExecution && (
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="icon-xs">
-                    {expanded ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
-                  </Button>
-                </CollapsibleTrigger>
-              )}
-              {editable && caseId && (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    onClick={() => {
-                      setEditForm(toForm(cn))
-                      setEditOpen(true)
-                    }}
-                  >
-                    <Pencil className="text-muted-foreground size-3" />
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon-xs">
-                        <Trash2 className="text-muted-foreground size-3" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent size="sm">
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>确认删除</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          确定要删除案号「{cn.number}」吗？
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>取消</AlertDialogCancel>
-                        <AlertDialogAction variant="destructive" onClick={handleDelete}>
-                          删除
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </>
-              )}
-            </div>
+    <>
+      <div className="group flex items-start gap-2 py-1.5">
+        <Hash className="text-muted-foreground size-3.5 mt-0.5 shrink-0" />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[13px] font-medium font-mono">{cn.number}</span>
+            {cn.document_name && (
+              <span className="text-[11px] text-muted-foreground">({cn.document_name})</span>
+            )}
+            <span className={`inline-block size-1.5 rounded-full ${cn.is_active ? 'bg-green-500' : 'bg-muted-foreground/30'}`} />
           </div>
-        </CardHeader>
-        {cn.remarks && (
-          <CardContent className="pb-2 pt-2">
-            <p className="text-muted-foreground text-xs">{cn.remarks}</p>
-          </CardContent>
+          {cn.remarks && <p className="text-xs text-muted-foreground mt-0.5">{cn.remarks}</p>}
+          {hasExecution && (
+            <Collapsible open={expanded} onOpenChange={setExpanded}>
+              <CollapsibleTrigger asChild>
+                <button type="button" className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground mt-0.5">
+                  {expanded ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
+                  执行参数
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="mt-1.5 rounded-md border border-border/60 bg-muted/30 px-2.5 py-2 text-[11px]">
+                  <div className="grid gap-1.5 sm:grid-cols-2">
+                    {cn.execution_cutoff_date && (
+                      <div><span className="text-muted-foreground">利息截止日：</span><span className="font-medium">{formatDateOnly(cn.execution_cutoff_date)}</span></div>
+                    )}
+                    {cn.execution_paid_amount > 0 && (
+                      <div><span className="text-muted-foreground">已付金额：</span><span className="font-medium">{formatAmountInt(cn.execution_paid_amount)}</span></div>
+                    )}
+                    {cn.execution_year_days != null && (
+                      <div><span className="text-muted-foreground">年天数：</span><span className="font-medium">{cn.execution_year_days === 0 ? '按实际天数' : `${cn.execution_year_days}天`}</span></div>
+                    )}
+                    {cn.execution_date_inclusion && (
+                      <div><span className="text-muted-foreground">日期包含：</span><span className="font-medium">{DATE_INCLUSION_CHOICES.find(o => o.value === cn.execution_date_inclusion)?.label ?? cn.execution_date_inclusion}</span></div>
+                    )}
+                    <div><span className="text-muted-foreground">扣减令：</span><span className="font-medium">{cn.execution_use_deduction_order ? '是' : '否'}</span></div>
+                  </div>
+                  {cn.execution_manual_text && (
+                    <div className="mt-1.5 pt-1.5 border-t border-border/40">
+                      <p className="text-muted-foreground mb-0.5">手动执行文本：</p>
+                      <p className="whitespace-pre-wrap">{cn.execution_manual_text}</p>
+                    </div>
+                  )}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
+        </div>
+        {editable && caseId && (
+          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+            <Button variant="ghost" size="icon-xs" onClick={() => { setEditForm(toForm(cn)); setEditOpen(true) }}>
+              <Pencil className="text-muted-foreground size-3" />
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon-xs">
+                  <Trash2 className="text-muted-foreground size-3" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent size="sm">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>确认删除</AlertDialogTitle>
+                  <AlertDialogDescription>确定要删除案号「{cn.number}」吗？</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>取消</AlertDialogCancel>
+                  <AlertDialogAction variant="destructive" onClick={handleDelete}>删除</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         )}
-        <CollapsibleContent>
-          <CardContent className="pb-4 pt-2">
-            <div className="rounded-md border border-border/60 bg-muted/30 px-3 py-2.5">
-              <p className="text-xs font-medium text-muted-foreground mb-2">执行参数</p>
-              <div className="grid gap-2 sm:grid-cols-2 text-[12px]">
-                {cn.execution_cutoff_date && (
-                  <div>
-                    <span className="text-muted-foreground">利息截止日：</span>
-                    <span className="font-medium">{formatDateOnly(cn.execution_cutoff_date)}</span>
-                  </div>
-                )}
-                {cn.execution_paid_amount > 0 && (
-                  <div>
-                    <span className="text-muted-foreground">已付金额：</span>
-                    <span className="font-medium">{formatAmountInt(cn.execution_paid_amount)}</span>
-                  </div>
-                )}
-                {cn.execution_year_days != null && (
-                  <div>
-                    <span className="text-muted-foreground">年天数：</span>
-                    <span className="font-medium">{cn.execution_year_days === 0 ? '按实际天数' : `${cn.execution_year_days}天`}</span>
-                  </div>
-                )}
-                {cn.execution_date_inclusion && (
-                  <div>
-                    <span className="text-muted-foreground">日期包含：</span>
-                    <span className="font-medium">
-                      {DATE_INCLUSION_CHOICES.find(o => o.value === cn.execution_date_inclusion)?.label ?? cn.execution_date_inclusion}
-                    </span>
-                  </div>
-                )}
-                <div>
-                  <span className="text-muted-foreground">扣减令：</span>
-                  <span className="font-medium">{cn.execution_use_deduction_order ? '是' : '否'}</span>
-                </div>
-              </div>
-              {cn.execution_manual_text && (
-                <div className="mt-2 pt-2 border-t border-border/40">
-                  <p className="text-xs text-muted-foreground mb-1">手动执行文本：</p>
-                  <p className="text-[12px] whitespace-pre-wrap">{cn.execution_manual_text}</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </CollapsibleContent>
-      </Collapsible>
+      </div>
 
-      {/* Edit Dialog */}
       {editable && caseId && (
         <CaseNumberDialog
           open={editOpen}
@@ -411,14 +330,13 @@ function CaseNumberCard({
           loading={mutations?.updateCaseNumber.isPending ?? false}
         />
       )}
-    </Card>
+    </>
   )
 }
 
 export function CaseNumberSection({ caseNumbers, editable, caseId }: CaseNumberSectionProps) {
   const [addOpen, setAddOpen] = useState(false)
   const [addForm, setAddForm] = useState<FormData>(EMPTY_FORM)
-
   const mutations = useCaseNumberMutations(caseId ?? 0)
 
   const handleAdd = () => {
@@ -426,22 +344,22 @@ export function CaseNumberSection({ caseNumbers, editable, caseId }: CaseNumberS
     mutations.createCaseNumber.mutate(
       { case_id: caseId, ...toPayload(addForm) },
       {
-        onSuccess: () => {
-          toast.success('添加案号成功')
-          setAddOpen(false)
-          setAddForm(EMPTY_FORM)
-        },
+        onSuccess: () => { toast.success('添加案号成功'); setAddOpen(false); setAddForm(EMPTY_FORM) },
         onError: (e) => toast.error(e.message || '添加失败'),
       },
     )
   }
 
+  if (caseNumbers.length === 0 && !editable) {
+    return <p className="text-muted-foreground text-xs">暂无案号</p>
+  }
+
   return (
-    <div className="space-y-3">
+    <div>
       {editable && caseId && (
-        <div className="flex justify-end">
-          <Button size="sm" variant="outline" onClick={() => { setAddForm(EMPTY_FORM); setAddOpen(true) }}>
-            <Plus className="mr-1 size-3" /> 添加案号
+        <div className="flex justify-end mb-1">
+          <Button size="xs" variant="ghost" className="h-5 px-1.5 text-[11px]" onClick={() => { setAddForm(EMPTY_FORM); setAddOpen(true) }}>
+            <Plus className="size-3 mr-0.5" /> 添加
           </Button>
           <CaseNumberDialog
             open={addOpen}
@@ -456,17 +374,19 @@ export function CaseNumberSection({ caseNumbers, editable, caseId }: CaseNumberS
       )}
 
       {caseNumbers.length === 0 ? (
-        <EmptyState />
+        <p className="text-muted-foreground text-xs">暂无案号</p>
       ) : (
-        caseNumbers.map((cn) => (
-          <CaseNumberCard
-            key={cn.id}
-            cn={cn}
-            editable={editable}
-            caseId={caseId}
-            mutations={mutations}
-          />
-        ))
+        <div className="divide-y divide-border/40">
+          {caseNumbers.map((cn) => (
+            <CaseNumberItem
+              key={cn.id}
+              cn={cn}
+              editable={editable}
+              caseId={caseId}
+              mutations={mutations}
+            />
+          ))}
+        </div>
       )}
     </div>
   )
