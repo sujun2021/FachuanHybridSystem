@@ -4987,12 +4987,25 @@
 
         .wb-ai-grid {
             display: grid;
-            grid-template-columns: repeat(10, 1fr);
+            grid-template-columns: repeat(8, 1fr);
             gap: 4px;
             padding: 1rem;
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(148, 163, 184, 0.12);
             border-radius: 16px;
+        }
+
+        .wb-grid-more {
+            text-align: center;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
         }
 
         .wb-ai-cell {
@@ -5166,7 +5179,7 @@
             }
 
             .wb-ai-grid {
-                grid-template-columns: repeat(5, 1fr);
+                grid-template-columns: repeat(4, 1fr);
             }
 
             .workbench-highlights {

@@ -1814,15 +1814,14 @@
         let workbenchAnimationRunning = false;
         let workbenchTimeline = null;
 
-        // 生成 100 个 AI 单元格
+        // 生成 48 个 AI 单元格（6x8），代表 100 个并发
         function initAiGrid() {
             const grid = document.getElementById('wbAiGrid');
             if (!grid || grid.children.length > 0) return;
-            for (let i = 0; i < 100; i++) {
+            for (let i = 0; i < 48; i++) {
                 const cell = document.createElement('div');
                 cell.className = 'wb-ai-cell';
                 cell.id = 'wbCell' + i;
-                cell.textContent = i + 1;
                 grid.appendChild(cell);
             }
         }
@@ -1856,11 +1855,11 @@
 
             initAiGrid();
 
-            const indices = shuffle([...Array(100).keys()]);
-            const batch1 = indices.slice(0, 20);
-            const batch2 = indices.slice(20, 50);
-            const batch3 = indices.slice(50, 80);
-            const batch4 = indices.slice(80, 100);
+            const indices = shuffle([...Array(48).keys()]);
+            const batch1 = indices.slice(0, 12);
+            const batch2 = indices.slice(12, 24);
+            const batch3 = indices.slice(24, 36);
+            const batch4 = indices.slice(36, 48);
 
             workbenchTimeline = gsap.timeline({
                 onComplete: () => {
