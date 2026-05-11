@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router'
-import { ArrowLeft, Download, Eye, Paperclip, ChevronDown } from 'lucide-react'
-import { useState } from 'react'
+import { ArrowLeft, Download, Eye, Paperclip, FileText, Image, File } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -17,14 +16,26 @@ const SOURCE_LABELS: Record<string, string> = {
   court_schedule: '一张网庭审日程',
 }
 
+const SOURCE_COLORS: Record<string, string> = {
+  imap: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
+  court_inbox: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300',
+  court_schedule: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300',
+}
+
 function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes}B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)}KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 function canPreview(contentType: string): boolean {
   return contentType.includes('pdf') || contentType.startsWith('image/')
+}
+
+function getFileIcon(contentType: string) {
+  if (contentType.includes('pdf')) return FileText
+  if (contentType.startsWith('image/')) return Image
+  return File
 }
 
 function openAttachment(messageId: number, att: AttachmentMeta, inline: boolean) {
@@ -58,157 +69,159 @@ interface Props {
 
 export function InboxMessageView({ message }: Props) {
   const navigate = useNavigate()
-  const [showDetails, setShowDetails] = useState(false)
 
   return (
-    <div className="space-y-3">
-      {/* 顶部：返回 + 标题 */}
-      <div className="flex items-center gap-3">
+    <div className="space-y-4">
+      {/* 顶部导航 */}
+      <div className="flex items-center justify-between">
         <Button
           variant="ghost" size="sm"
           onClick={() => navigate(PATHS.ADMIN_INBOX)}
-          className="shrink-0 gap-1"
+          className="gap-1.5 text-muted-foreground"
         >
           <ArrowLeft className="size-4" />
-          返回
+          返回列表
         </Button>
-        <h1 className="text-lg font-semibold leading-snug truncate">
-          {message.subject || '(无主题)'}
-        </h1>
       </div>
 
-      {/* 元信息卡片 */}
-      <Card className="py-3">
+      {/* 主题标题 */}
+      <div>
+        <h1 className="text-xl font-semibold leading-snug">
+          {message.subject || '(无主题)'}
+        </h1>
+        <div className="flex items-center gap-2 mt-1.5">
+          <Badge variant="outline" className={`text-[11px] font-medium ${SOURCE_COLORS[message.source_type] ?? ''}`}>
+            {SOURCE_LABELS[message.source_type] || message.source_type}
+          </Badge>
+          {message.attachments.length > 0 && (
+            <Badge variant="secondary" className="text-[11px]">
+              {message.attachments.length} 个附件
+            </Badge>
+          )}
+        </div>
+      </div>
+
+      {/* Section 1: 基本信息 */}
+      <Card className="py-4">
         <CardContent className="px-4">
-          <div className="grid gap-y-2 gap-x-6 text-[13px] sm:grid-cols-2 lg:grid-cols-3">
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground w-14 shrink-0">发件人</span>
-              <span className="font-medium truncate">{message.sender || '-'}</span>
+          <div className="text-xs font-medium text-muted-foreground mb-3">基本信息</div>
+          <div className="grid gap-y-2.5 gap-x-8 text-sm sm:grid-cols-2">
+            <div className="flex gap-2">
+              <span className="text-muted-foreground w-14 shrink-0 text-right">发件人</span>
+              <span className="font-medium">{message.sender || '-'}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground w-14 shrink-0">收件人</span>
-              <span className="truncate">{message.recipient}</span>
+            <div className="flex gap-2">
+              <span className="text-muted-foreground w-14 shrink-0 text-right">收件人</span>
+              <span>{message.recipient}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground w-14 shrink-0">时间</span>
+            <div className="flex gap-2">
+              <span className="text-muted-foreground w-14 shrink-0 text-right">来源</span>
+              <span>{message.source_name}</span>
+            </div>
+            <div className="flex gap-2">
+              <span className="text-muted-foreground w-14 shrink-0 text-right">接收时间</span>
               <span>{formatDate(message.received_at)}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground w-14 shrink-0">来源</span>
-              <Badge variant="outline" className="text-[11px] font-normal">
-                {SOURCE_LABELS[message.source_type] || message.source_type}
-              </Badge>
-              <span className="text-muted-foreground text-[12px]">{message.source_name}</span>
+            <div className="flex gap-2">
+              <span className="text-muted-foreground w-14 shrink-0 text-right">原始 ID</span>
+              <span className="font-mono text-xs text-muted-foreground truncate">{message.message_id}</span>
             </div>
-            {message.attachments.length > 0 && (
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground w-14 shrink-0">附件</span>
-                <Badge variant="secondary" className="text-[11px]">
-                  {message.attachments.length} 个
-                </Badge>
-              </div>
-            )}
+            <div className="flex gap-2">
+              <span className="text-muted-foreground w-14 shrink-0 text-right">入库时间</span>
+              <span>{formatDate(message.created_at)}</span>
+            </div>
           </div>
-
-          {/* 可展开的详细信息 */}
-          <button
-            type="button"
-            onClick={() => setShowDetails(!showDetails)}
-            className="flex items-center gap-1 mt-2 text-[12px] text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ChevronDown className={`size-3.5 transition-transform ${showDetails ? 'rotate-180' : ''}`} />
-            {showDetails ? '收起详情' : '展开详情'}
-          </button>
-          {showDetails && (
-            <div className="mt-2 pt-2 border-t border-border grid gap-y-1.5 gap-x-6 text-[12px] sm:grid-cols-2">
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground w-14 shrink-0">原始 ID</span>
-                <span className="font-mono truncate">{message.message_id}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground w-14 shrink-0">入库时间</span>
-                <span>{formatDate(message.created_at)}</span>
-              </div>
-            </div>
-          )}
         </CardContent>
       </Card>
 
-      {/* 邮件正文 */}
-      <Card className="py-3">
+      {/* Section 2: 正文 */}
+      <Card className="py-4">
         <CardContent className="px-4">
-          <div className="text-xs font-medium text-muted-foreground mb-2">邮件正文</div>
+          <div className="text-xs font-medium text-muted-foreground mb-3">正文</div>
           {message.body_html ? (
             <iframe
               srcDoc={message.body_html}
               sandbox=""
-              className="w-full bg-white rounded-md border border-border min-h-[400px] h-auto"
-              onLoad={(e) => {
-                const iframe = e.currentTarget
-                const doc = iframe.contentDocument
-                if (doc?.body) {
-                  iframe.style.height = `${doc.body.scrollHeight + 24}px`
-                }
-              }}
+              className="w-full bg-white rounded-md border border-border"
+              style={{ height: 'min(60vh, 750px)' }}
             />
           ) : message.body_text ? (
-            <div className="whitespace-pre-wrap text-sm leading-relaxed p-4 bg-muted/30 rounded-md border border-border max-h-[600px] overflow-y-auto">
+            <div className="whitespace-pre-wrap text-sm leading-relaxed p-4 bg-muted/30 rounded-md border border-border overflow-auto max-h-[min(60vh,750px)]">
               {message.body_text}
             </div>
           ) : (
-            <div className="text-muted-foreground text-sm text-center py-12">
+            <div className="text-muted-foreground text-sm text-center py-16 border border-dashed border-border rounded-md">
               无正文内容
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* 附件 */}
-      {message.attachments.length > 0 && (
-        <Card className="py-3">
-          <CardContent className="px-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                <Paperclip className="size-3.5" />
-                附件 ({message.attachments.length})
-              </div>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              {message.attachments.map((att) => (
-                <div
-                  key={att.part_index}
-                  className="flex items-center gap-3 px-3 py-2 rounded-md border border-border hover:bg-muted/30 transition-colors"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[13px] truncate">{att.filename}</p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {formatSize(att.size)} · {att.content_type || '未知类型'}
-                    </p>
+      {/* Section 3: 附件 */}
+      <Card className="py-4">
+        <CardContent className="px-4">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground mb-3">
+            <Paperclip className="size-3.5" />
+            附件 ({message.attachments.length})
+          </div>
+          {message.attachments.length > 0 ? (
+            <div className="flex flex-col gap-3">
+              {message.attachments.map((att) => {
+                const Icon = getFileIcon(att.content_type)
+                return (
+                  <div
+                    key={att.part_index}
+                    className="group p-3.5 rounded-xl border border-border bg-gradient-to-b from-white to-slate-50/50 dark:from-slate-900 dark:to-slate-950/50 shadow-sm hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="shrink-0 p-2 rounded-lg bg-muted">
+                          <Icon className="size-5 text-muted-foreground" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">{att.filename}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-muted text-[11px] text-muted-foreground">
+                              {formatSize(att.size)}
+                            </span>
+                            <span className="text-[11px] text-muted-foreground">
+                              {att.content_type || '未知类型'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-1.5 shrink-0">
+                        {canPreview(att.content_type) && (
+                          <Button
+                            variant="outline" size="sm"
+                            onClick={() => openAttachment(message.id, att, true)}
+                            className="h-8 px-3 text-xs"
+                          >
+                            <Eye className="size-3.5 mr-1" />
+                            预览
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline" size="sm"
+                          onClick={() => openAttachment(message.id, att, false)}
+                          className="h-8 px-3 text-xs"
+                        >
+                          <Download className="size-3.5 mr-1" />
+                          下载
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex gap-1 shrink-0">
-                    {canPreview(att.content_type) && (
-                      <Button
-                        variant="ghost" size="sm"
-                        onClick={() => openAttachment(message.id, att, true)}
-                        className="h-7 px-2 text-[11px]"
-                      >
-                        <Eye className="size-3" />
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost" size="sm"
-                      onClick={() => openAttachment(message.id, att, false)}
-                      className="h-7 px-2 text-[11px]"
-                    >
-                      <Download className="size-3" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <div className="text-muted-foreground text-sm text-center py-8 border border-dashed border-border rounded-md">
+              无附件
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }
@@ -216,16 +229,18 @@ export function InboxMessageView({ message }: Props) {
 /** 详情页加载骨架 */
 export function InboxMessageSkeleton() {
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-3">
-        <Skeleton className="h-8 w-16" />
-        <Skeleton className="h-6 w-2/3" />
+    <div className="space-y-4">
+      <Skeleton className="h-8 w-20" />
+      <div>
+        <Skeleton className="h-7 w-2/3" />
+        <Skeleton className="h-5 w-24 mt-2" />
       </div>
-      <Card className="py-3">
+      <Card className="py-4">
         <CardContent className="px-4">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-2">
+          <Skeleton className="h-4 w-16 mb-3" />
+          <div className="grid gap-3 sm:grid-cols-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex gap-2">
                 <Skeleton className="h-4 w-14" />
                 <Skeleton className="h-4 flex-1" />
               </div>
@@ -233,9 +248,10 @@ export function InboxMessageSkeleton() {
           </div>
         </CardContent>
       </Card>
-      <Card className="py-3">
+      <Card className="py-4">
         <CardContent className="px-4">
-          <Skeleton className="h-[400px] w-full" />
+          <Skeleton className="h-4 w-10 mb-3" />
+          <Skeleton className="h-[500px] w-full" />
         </CardContent>
       </Card>
     </div>
