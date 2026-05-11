@@ -22,7 +22,7 @@ import {
 
 import { useCredentials } from '@/features/organization/hooks/use-credentials'
 import { messageSourceApi } from '../api'
-import { SOURCE_TYPE_LABELS, type SourceType, type MessageSource } from '../types'
+import { SOURCE_TYPE_LABELS, SYNC_STATUS_LABELS, type SourceType, type SyncStatus, type MessageSource } from '../types'
 
 interface MessageSourceFormDialogProps {
   open: boolean
@@ -36,14 +36,32 @@ const createSchema = z.object({
   credential_id: z.number({ message: '请选择关联凭证' }).min(1, '请选择关联凭证'),
   poll_interval_minutes: z.number().int().min(1, '至少 1 分钟').max(1440, '最多 1440 分钟'),
   is_enabled: z.boolean(),
+  sync_since: z.string().optional(),
+  imap_host: z.string().optional(),
+  imap_account: z.string().optional(),
+  sender_whitelist: z.string().optional(),
+  sender_blacklist: z.string().optional(),
 })
 
 const editSchema = z.object({
   display_name: z.string().min(1, '显示名称不能为空'),
   poll_interval_minutes: z.number().int().min(1, '至少 1 分钟').max(1440, '最多 1440 分钟'),
   is_enabled: z.boolean(),
+  sync_since: z.string().optional(),
+  imap_host: z.string().optional(),
+  imap_account: z.string().optional(),
+  sender_whitelist: z.string().optional(),
+  sender_blacklist: z.string().optional(),
 })
 
+function toDatetimeLocal(iso: string | null | undefined): string {
+  if (!iso) return ''
+  try {
+    return iso.slice(0, 16)
+  } catch {
+    return ''
+  }
+}
 
 export function MessageSourceFormDialog({ open, onOpenChange, source }: MessageSourceFormDialogProps) {
   const isEditMode = !!source
@@ -53,13 +71,22 @@ export function MessageSourceFormDialog({ open, onOpenChange, source }: MessageS
 
   const createForm = useForm({
     resolver: zodResolver(createSchema),
-    defaultValues: { display_name: '', source_type: 'imap', credential_id: undefined as unknown as number, poll_interval_minutes: 30, is_enabled: true },
+    defaultValues: {
+      display_name: '', source_type: 'imap', credential_id: undefined as unknown as number,
+      poll_interval_minutes: 30, is_enabled: true,
+      sync_since: '', imap_host: '', imap_account: '', sender_whitelist: '', sender_blacklist: '',
+    },
   })
 
   const editForm = useForm({
     resolver: zodResolver(editSchema),
-    defaultValues: { display_name: '', poll_interval_minutes: 30, is_enabled: true },
+    defaultValues: {
+      display_name: '', poll_interval_minutes: 30, is_enabled: true,
+      sync_since: '', imap_host: '', imap_account: '', sender_whitelist: '', sender_blacklist: '',
+    },
   })
+
+  const watchSourceType = isEditMode ? source?.source_type : createForm.watch('source_type')
 
   useEffect(() => {
     if (!open) return
@@ -68,14 +95,17 @@ export function MessageSourceFormDialog({ open, onOpenChange, source }: MessageS
         display_name: source.display_name,
         poll_interval_minutes: source.poll_interval_minutes,
         is_enabled: source.is_enabled,
+        sync_since: toDatetimeLocal(source.sync_since),
+        imap_host: source.imap_host ?? '',
+        imap_account: source.imap_account ?? '',
+        sender_whitelist: source.sender_whitelist ?? '',
+        sender_blacklist: source.sender_blacklist ?? '',
       })
     } else {
       createForm.reset({
-        display_name: '',
-        source_type: 'imap',
-        credential_id: undefined as unknown as number,
-        poll_interval_minutes: 30,
-        is_enabled: true,
+        display_name: '', source_type: 'imap', credential_id: undefined as unknown as number,
+        poll_interval_minutes: 30, is_enabled: true,
+        sync_since: '', imap_host: '', imap_account: '', sender_whitelist: '', sender_blacklist: '',
       })
     }
   }, [open, isEditMode, source, createForm, editForm])
@@ -89,6 +119,11 @@ export function MessageSourceFormDialog({ open, onOpenChange, source }: MessageS
         credential_id: data.credential_id as number,
         poll_interval_minutes: data.poll_interval_minutes as number,
         is_enabled: data.is_enabled as boolean,
+        sync_since: data.sync_since ? new Date(data.sync_since as string).toISOString() : null,
+        imap_host: (data.imap_host as string) ?? '',
+        imap_account: (data.imap_account as string) ?? '',
+        sender_whitelist: (data.sender_whitelist as string) ?? '',
+        sender_blacklist: (data.sender_blacklist as string) ?? '',
       })
       toast.success('消息来源创建成功')
       queryClient.invalidateQueries({ queryKey: ['message-sources'] })
@@ -108,6 +143,11 @@ export function MessageSourceFormDialog({ open, onOpenChange, source }: MessageS
         display_name: data.display_name as string,
         poll_interval_minutes: data.poll_interval_minutes as number,
         is_enabled: data.is_enabled as boolean,
+        sync_since: data.sync_since ? new Date(data.sync_since as string).toISOString() : null,
+        imap_host: (data.imap_host as string) ?? '',
+        imap_account: (data.imap_account as string) ?? '',
+        sender_whitelist: (data.sender_whitelist as string) ?? '',
+        sender_blacklist: (data.sender_blacklist as string) ?? '',
       })
       toast.success('消息来源更新成功')
       queryClient.invalidateQueries({ queryKey: ['message-sources'] })
@@ -121,7 +161,7 @@ export function MessageSourceFormDialog({ open, onOpenChange, source }: MessageS
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[560px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditMode ? '编辑消息来源' : '添加消息来源'}</DialogTitle>
           <DialogDescription>
@@ -132,44 +172,109 @@ export function MessageSourceFormDialog({ open, onOpenChange, source }: MessageS
         {isEditMode ? (
           <Form {...editForm}>
             <form onSubmit={editForm.handleSubmit(handleEdit)} className="space-y-4">
+              {/* 基本信息 */}
+              <div className="text-xs font-medium text-muted-foreground">基本配置</div>
               <FormField control={editForm.control} name="display_name" render={({ field }) => (
                 <FormItem>
                   <FormLabel>显示名称 <span className="text-destructive">*</span></FormLabel>
-                  <FormControl>
-                    <Input placeholder="例：法院邮件" disabled={isPending} {...field} />
-                  </FormControl>
+                  <FormControl><Input placeholder="例：法院邮件" disabled={isPending} {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
 
-              <div className="space-y-1.5">
-                <FormLabel>来源类型</FormLabel>
-                <Input value={SOURCE_TYPE_LABELS[source?.source_type as SourceType] ?? source?.source_type} disabled />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <FormLabel>来源类型</FormLabel>
+                  <Input value={SOURCE_TYPE_LABELS[source?.source_type as SourceType] ?? source?.source_type} disabled />
+                </div>
+                <div className="space-y-1.5">
+                  <FormLabel>关联凭证</FormLabel>
+                  <Input value={source?.credential_account ?? ''} disabled />
+                </div>
               </div>
 
-              <div className="space-y-1.5">
-                <FormLabel>关联凭证</FormLabel>
-                <Input value={source?.credential_account ?? ''} disabled />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField control={editForm.control} name="poll_interval_minutes" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>轮询间隔（分钟）</FormLabel>
+                    <FormControl><Input type="number" min={1} max={1440} disabled={isPending} {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={editForm.control} name="sync_since" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>同步起始时间</FormLabel>
+                    <FormControl><Input type="datetime-local" disabled={isPending} {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
               </div>
-
-              <FormField control={editForm.control} name="poll_interval_minutes" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>轮询间隔（分钟）</FormLabel>
-                  <FormControl>
-                    <Input type="number" min={1} max={1440} disabled={isPending} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
 
               <FormField control={editForm.control} name="is_enabled" render={({ field }) => (
                 <FormItem className="flex items-center gap-3">
-                  <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} disabled={isPending} />
-                  </FormControl>
+                  <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} disabled={isPending} /></FormControl>
                   <FormLabel className="!mt-0">启用</FormLabel>
                 </FormItem>
               )} />
+
+              {/* IMAP 配置 */}
+              {watchSourceType === 'imap' && (
+                <>
+                  <div className="text-xs font-medium text-muted-foreground">IMAP 配置</div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField control={editForm.control} name="imap_host" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>IMAP 主机</FormLabel>
+                        <FormControl><Input placeholder="留空则从凭证推断" disabled={isPending} {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <FormField control={editForm.control} name="imap_account" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>IMAP 账号</FormLabel>
+                        <FormControl><Input placeholder="留空则使用凭证账号" disabled={isPending} {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  </div>
+                </>
+              )}
+
+              {/* 发件人过滤 */}
+              <div className="text-xs font-medium text-muted-foreground">发件人过滤</div>
+              <FormField control={editForm.control} name="sender_whitelist" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>白名单（每行一个邮箱或名称）</FormLabel>
+                  <FormControl><textarea className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50" placeholder="留空则不限制" disabled={isPending} {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={editForm.control} name="sender_blacklist" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>黑名单（每行一个邮箱或名称）</FormLabel>
+                  <FormControl><textarea className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50" placeholder="留空则不排除" disabled={isPending} {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              {/* 同步状态（只读） */}
+              <div className="text-xs font-medium text-muted-foreground">同步状态</div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <FormLabel>最后同步时间</FormLabel>
+                  <Input value={source?.last_sync_at ? new Date(source.last_sync_at).toLocaleString('zh-CN') : '-'} disabled />
+                </div>
+                <div className="space-y-1.5">
+                  <FormLabel>同步状态</FormLabel>
+                  <Input value={SYNC_STATUS_LABELS[source?.last_sync_status as SyncStatus] ?? source?.last_sync_status ?? '-'} disabled />
+                </div>
+              </div>
+              {source?.last_sync_error && (
+                <div className="space-y-1.5">
+                  <FormLabel>同步错误信息</FormLabel>
+                  <textarea className="flex min-h-[60px] w-full rounded-md border border-input bg-muted px-3 py-2 text-sm text-destructive" value={source.last_sync_error} disabled />
+                </div>
+              )}
 
               <DialogFooter className="pt-2">
                 <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
@@ -184,76 +289,108 @@ export function MessageSourceFormDialog({ open, onOpenChange, source }: MessageS
         ) : (
           <Form {...createForm}>
             <form onSubmit={createForm.handleSubmit(handleCreate)} className="space-y-4">
+              {/* 基本信息 */}
+              <div className="text-xs font-medium text-muted-foreground">基本配置</div>
               <FormField control={createForm.control} name="display_name" render={({ field }) => (
                 <FormItem>
                   <FormLabel>显示名称 <span className="text-destructive">*</span></FormLabel>
-                  <FormControl>
-                    <Input placeholder="例：法院邮件" disabled={isPending} {...field} />
-                  </FormControl>
+                  <FormControl><Input placeholder="例：法院邮件" disabled={isPending} {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
 
-              <FormField control={createForm.control} name="source_type" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>来源类型 <span className="text-destructive">*</span></FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} disabled={isPending}>
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="请选择来源类型" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {Object.entries(SOURCE_TYPE_LABELS).map(([v, l]) => (
-                        <SelectItem key={v} value={v}>{l}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )} />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField control={createForm.control} name="source_type" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>来源类型 <span className="text-destructive">*</span></FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value} disabled={isPending}>
+                      <FormControl><SelectTrigger className="w-full"><SelectValue placeholder="请选择来源类型" /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        {Object.entries(SOURCE_TYPE_LABELS).map(([v, l]) => (
+                          <SelectItem key={v} value={v}>{l}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={createForm.control} name="credential_id" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>关联凭证 <span className="text-destructive">*</span></FormLabel>
+                    <Select onValueChange={(v) => field.onChange(Number(v))} value={field.value?.toString()} disabled={isPending || isLoadingCredentials}>
+                      <FormControl><SelectTrigger className="w-full"><SelectValue placeholder={isLoadingCredentials ? '加载中...' : '请选择关联凭证'} /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        {credentials.map((c) => (
+                          <SelectItem key={c.id} value={c.id.toString()}>{c.site_name} ({c.account})</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
 
-              <FormField control={createForm.control} name="credential_id" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>关联凭证 <span className="text-destructive">*</span></FormLabel>
-                  <Select
-                    onValueChange={(v) => field.onChange(Number(v))}
-                    value={field.value?.toString()}
-                    disabled={isPending || isLoadingCredentials}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder={isLoadingCredentials ? '加载中...' : '请选择关联凭证'} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {credentials.map((c) => (
-                        <SelectItem key={c.id} value={c.id.toString()}>
-                          {c.site_name} ({c.account})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )} />
-
-              <FormField control={createForm.control} name="poll_interval_minutes" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>轮询间隔（分钟）</FormLabel>
-                  <FormControl>
-                    <Input type="number" min={1} max={1440} disabled={isPending} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField control={createForm.control} name="poll_interval_minutes" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>轮询间隔（分钟）</FormLabel>
+                    <FormControl><Input type="number" min={1} max={1440} disabled={isPending} {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={createForm.control} name="sync_since" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>同步起始时间</FormLabel>
+                    <FormControl><Input type="datetime-local" disabled={isPending} {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
 
               <FormField control={createForm.control} name="is_enabled" render={({ field }) => (
                 <FormItem className="flex items-center gap-3">
-                  <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} disabled={isPending} />
-                  </FormControl>
+                  <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} disabled={isPending} /></FormControl>
                   <FormLabel className="!mt-0">启用</FormLabel>
+                </FormItem>
+              )} />
+
+              {/* IMAP 配置 */}
+              {watchSourceType === 'imap' && (
+                <>
+                  <div className="text-xs font-medium text-muted-foreground">IMAP 配置</div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField control={createForm.control} name="imap_host" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>IMAP 主机</FormLabel>
+                        <FormControl><Input placeholder="留空则从凭证推断" disabled={isPending} {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <FormField control={createForm.control} name="imap_account" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>IMAP 账号</FormLabel>
+                        <FormControl><Input placeholder="留空则使用凭证账号" disabled={isPending} {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  </div>
+                </>
+              )}
+
+              {/* 发件人过滤 */}
+              <div className="text-xs font-medium text-muted-foreground">发件人过滤</div>
+              <FormField control={createForm.control} name="sender_whitelist" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>白名单（每行一个邮箱或名称）</FormLabel>
+                  <FormControl><textarea className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50" placeholder="留空则不限制" disabled={isPending} {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={createForm.control} name="sender_blacklist" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>黑名单（每行一个邮箱或名称）</FormLabel>
+                  <FormControl><textarea className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50" placeholder="留空则不排除" disabled={isPending} {...field} /></FormControl>
+                  <FormMessage />
                 </FormItem>
               )} />
 

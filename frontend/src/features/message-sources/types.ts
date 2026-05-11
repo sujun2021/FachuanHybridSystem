@@ -21,7 +21,13 @@ export interface MessageSource {
   credential_account: string
   is_enabled: boolean
   poll_interval_minutes: number
+  sync_since: string | null
+  imap_host: string
+  imap_account: string
+  sender_whitelist: string
+  sender_blacklist: string
   last_sync_at: string | null
   last_sync_status: SyncStatus
+  last_sync_error: string
   created_at: string
 }

@@ -23,13 +23,23 @@ class MessageSourceOut(Schema):
     credential_account: str
     is_enabled: bool
     poll_interval_minutes: int
+    sync_since: str | None
+    imap_host: str
+    imap_account: str
+    sender_whitelist: str
+    sender_blacklist: str
     last_sync_at: str | None
     last_sync_status: str
+    last_sync_error: str
     created_at: str
 
     @staticmethod
     def resolve_credential_account(obj: MessageSource) -> str:
         return obj.credential.account if obj.credential else ""
+
+    @staticmethod
+    def resolve_sync_since(obj: MessageSource) -> str | None:
+        return obj.sync_since.isoformat() if obj.sync_since else None
 
     @staticmethod
     def resolve_last_sync_at(obj: MessageSource) -> str | None:
@@ -50,12 +60,20 @@ class MessageSourceCreateIn(Schema):
     credential_id: int
     is_enabled: bool = True
     poll_interval_minutes: int = 30
+    sync_since: datetime | None = None
+    imap_host: str = ""
+    imap_account: str = ""
+    sender_whitelist: str = ""
+    sender_blacklist: str = ""
 
 
 class MessageSourceUpdateIn(Schema):
     display_name: str | None = None
     is_enabled: bool | None = None
     poll_interval_minutes: int | None = None
+    sync_since: datetime | None = None
+    imap_host: str | None = None
+    imap_account: str | None = None
     sender_whitelist: str | None = None
     sender_blacklist: str | None = None
 
@@ -83,6 +101,11 @@ def create_source(request: Any, payload: MessageSourceCreateIn) -> tuple[int, Me
         credential=credential,
         is_enabled=payload.is_enabled,
         poll_interval_minutes=payload.poll_interval_minutes,
+        sync_since=payload.sync_since,
+        imap_host=payload.imap_host,
+        imap_account=payload.imap_account,
+        sender_whitelist=payload.sender_whitelist,
+        sender_blacklist=payload.sender_blacklist,
     )
     return 201, source
 
