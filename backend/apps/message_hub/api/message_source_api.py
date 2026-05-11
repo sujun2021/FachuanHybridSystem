@@ -16,6 +16,7 @@ router = Router()
 
 # ── Schemas ──────────────────────────────────────────────
 
+
 class MessageSourceOut(Schema):
     id: int
     display_name: str
@@ -80,6 +81,7 @@ class MessageSourceUpdateIn(Schema):
 
 # ── Endpoints ────────────────────────────────────────────
 
+
 @router.get("/sources", response=list[MessageSourceOut])
 def list_sources(request: Any) -> list[MessageSource]:
     return list(MessageSource.objects.select_related("credential").all())
@@ -95,18 +97,20 @@ def create_source(request: Any, payload: MessageSourceCreateIn) -> tuple[int, Me
     from apps.organization.models import AccountCredential
 
     credential = get_object_or_404(AccountCredential, pk=payload.credential_id)
-    source = MessageSource.objects.create(
-        display_name=payload.display_name,
-        source_type=payload.source_type,
-        credential=credential,
-        is_enabled=payload.is_enabled,
-        poll_interval_minutes=payload.poll_interval_minutes,
-        sync_since=payload.sync_since,
-        imap_host=payload.imap_host,
-        imap_account=payload.imap_account,
-        sender_whitelist=payload.sender_whitelist,
-        sender_blacklist=payload.sender_blacklist,
-    )
+    kwargs: dict[str, Any] = {
+        "display_name": payload.display_name,
+        "source_type": payload.source_type,
+        "credential": credential,
+        "is_enabled": payload.is_enabled,
+        "poll_interval_minutes": payload.poll_interval_minutes,
+        "imap_host": payload.imap_host,
+        "imap_account": payload.imap_account,
+        "sender_whitelist": payload.sender_whitelist,
+        "sender_blacklist": payload.sender_blacklist,
+    }
+    if payload.sync_since is not None:
+        kwargs["sync_since"] = payload.sync_since
+    source = MessageSource.objects.create(**kwargs)
     return 201, source
 
 
