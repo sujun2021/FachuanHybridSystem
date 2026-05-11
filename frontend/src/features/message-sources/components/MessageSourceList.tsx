@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, RefreshCw, Trash2, Power, PowerOff } from 'lucide-react'
+import { Plus, RefreshCw, Trash2, Power, PowerOff, Pencil } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 
 import { Button } from '@/components/ui/button'
@@ -13,6 +13,8 @@ import {
 } from '@/components/ui/alert-dialog'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { useMessageSources } from '../hooks/use-message-sources'
+import { MessageSourceFormDialog } from './MessageSourceFormDialog'
+import type { MessageSource } from '../types'
 import { messageSourceApi } from '../api'
 import {
   SOURCE_TYPE_LABELS, SYNC_STATUS_LABELS,
@@ -23,6 +25,8 @@ export function MessageSourceList() {
   const { data: sources, isLoading } = useMessageSources()
   const queryClient = useQueryClient()
   const [syncingIds, setSyncingIds] = useState<Set<number>>(new Set())
+  const [formOpen, setFormOpen] = useState(false)
+  const [editingSource, setEditingSource] = useState<MessageSource | null>(null)
 
   const sourceList = sources ?? []
 
@@ -90,7 +94,7 @@ export function MessageSourceList() {
           <Button variant="outline" size="sm" onClick={handleSyncAll}>
             <RefreshCw className="mr-1.5 size-4" />全部同步
           </Button>
-          <Button size="sm">
+          <Button size="sm" onClick={() => { setEditingSource(null); setFormOpen(true) }}>
             <Plus className="mr-1.5 size-4" />添加来源
           </Button>
         </div>
@@ -103,6 +107,7 @@ export function MessageSourceList() {
           title="暂无消息来源"
           description="还没有配置消息来源，添加 IMAP 邮箱或一张网收件箱来开始同步消息"
           actionText="添加来源"
+          onAction={() => { setEditingSource(null); setFormOpen(true) }}
         />
       ) : (
         <div className="overflow-x-auto rounded-md border">
@@ -173,6 +178,15 @@ export function MessageSourceList() {
                           variant="outline"
                           size="sm"
                           className="h-7 text-xs"
+                          onClick={() => { setEditingSource(s); setFormOpen(true) }}
+                        >
+                          <Pencil className="size-3 mr-0.5" />
+                          编辑
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs"
                           onClick={() => handleSync(s.id)}
                           disabled={isSyncing}
                         >
@@ -196,6 +210,12 @@ export function MessageSourceList() {
           </Table>
         </div>
       )}
+
+      <MessageSourceFormDialog
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        source={editingSource}
+      />
 
       <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <AlertDialogContent>
