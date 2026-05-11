@@ -858,6 +858,15 @@ class CaseFolderBindingService(FolderBindingCrudService):
             return ""
         return self.path_validator.normalize_relative_path(raw)
 
+    def _split_match_tokens(self, text: str) -> list[str]:
+        return [part for part in re.split(r"[\s/\\\-_()??]+", str(text or "").strip()) if part]
+
+    def _normalize_match_text(self, text: str) -> str:
+        raw = str(text or "").strip()
+        if not raw:
+            return ""
+        return re.sub(r"[\s/\\\-_()??]+", "", raw).lower()
+
     def _is_more_specific_path(self, candidate: str, current: str) -> bool:
         candidate_depth = str(candidate or "").count("/")
         current_depth = str(current or "").count("/")
