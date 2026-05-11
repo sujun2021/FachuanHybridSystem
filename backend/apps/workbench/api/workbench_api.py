@@ -343,19 +343,25 @@ def _generate_filtered_csv(job_id: UUID, *, only_relevant: bool) -> str:
         if only_relevant:
             if not parsed["is_relevant"]:
                 continue
-            if parsed["parse_method"] == "regex" and parsed["case_number"] == "未注明" and parsed["conclusion"] == "未注明":
+            if (
+                parsed["parse_method"] == "regex"
+                and parsed["case_number"] == "未注明"
+                and parsed["conclusion"] == "未注明"
+            ):
                 continue
-        rows.append({
-            "文件名": item.file_name,
-            "案号": parsed["case_number"],
-            "案由": parsed["cause"],
-            "审理法院": parsed["court"],
-            "法官": parsed["judge"],
-            "书记员": parsed["clerk"],
-            "与研究问题相关": "是" if parsed["is_relevant"] else "否",
-            "结论": parsed["conclusion"],
-            "详细分析": parsed["analysis"],
-        })
+        rows.append(
+            {
+                "文件名": item.file_name,
+                "案号": parsed["case_number"],
+                "案由": parsed["cause"],
+                "审理法院": parsed["court"],
+                "法官": parsed["judge"],
+                "书记员": parsed["clerk"],
+                "与研究问题相关": "是" if parsed["is_relevant"] else "否",
+                "结论": parsed["conclusion"],
+                "详细分析": parsed["analysis"],
+            }
+        )
 
     output = io.StringIO()
     fieldnames = ["文件名", "案号", "案由", "审理法院", "法官", "书记员", "与研究问题相关", "结论", "详细分析"]
@@ -384,7 +390,11 @@ def _generate_filtered_zip(job_id: UUID, *, only_relevant: bool) -> bytes:
             if only_relevant:
                 if not parsed["is_relevant"]:
                     continue
-                if parsed["parse_method"] == "regex" and parsed["case_number"] == "未注明" and parsed["conclusion"] == "未注明":
+                if (
+                    parsed["parse_method"] == "regex"
+                    and parsed["case_number"] == "未注明"
+                    and parsed["conclusion"] == "未注明"
+                ):
                     continue
 
             md_parts = [
