@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import { Upload, X, FileText, Briefcase, Archive } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -91,6 +91,15 @@ export function TemplateForm({ template, onSubmit }: TemplateFormProps) {
   const [fileSource, setFileSource] = useState<'upload' | 'path' | 'existing'>(template?.file ? 'upload' : template?.file_path ? 'path' : 'upload')
   const [filePath, setFilePath] = useState(template?.file_path ?? '')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+
+  // 模板库文件加载后，判断 file_path 是否匹配模板库文件（与后端 admin 逻辑一致）
+  useEffect(() => {
+    if (!libraryFiles || !template?.file_path) return
+    const matched = libraryFiles.some((f) => f.path === template.file_path)
+    if (matched) {
+      setFileSource('existing')
+    }
+  }, [libraryFiles, template?.file_path])
 
   const handleTypeChange = useCallback((type: TemplateType) => {
     setTemplateType(type)
