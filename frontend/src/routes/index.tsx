@@ -73,8 +73,8 @@ const RecognitionDetailPage = lazy(() => import('@/pages/dashboard/automation/do
 
 // Phase 3: 新功能模块
 const TemplateListPage = lazy(() => import('@/pages/dashboard/templates/TemplateListPage'))
-const TemplateDetailPage = lazy(() => import('@/pages/dashboard/templates/TemplateDetailPage'))
 const TemplateNewPage = lazy(() => import('@/pages/dashboard/templates/TemplateNewPage'))
+const TemplateEditPage = lazy(() => import('@/pages/dashboard/templates/TemplateEditPage'))
 const MessageSourceListPage = lazy(() => import('@/pages/dashboard/message-sources/MessageSourceListPage'))
 const CourtSmsPage = lazy(() => import('@/pages/dashboard/tools/CourtSmsPage'))
 const CourtSmsDetailPage = lazy(() => import('@/pages/dashboard/tools/CourtSmsDetailPage'))
@@ -324,8 +324,8 @@ export const router = createBrowserRouter([
             element: <TemplateNewPage />,
           },
           {
-            path: PATHS.ADMIN_TEMPLATE_DETAIL,
-            element: <TemplateDetailPage />,
+            path: PATHS.ADMIN_TEMPLATE_EDIT,
+            element: <TemplateEditPage />,
           },
           // 消息来源
           {

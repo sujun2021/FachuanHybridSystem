@@ -63,8 +63,8 @@ export const PATHS = {
 
   // Phase 3: 新功能模块
   ADMIN_TEMPLATES: '/admin/templates',
-  ADMIN_TEMPLATE_DETAIL: '/admin/templates/:id',
   ADMIN_TEMPLATE_NEW: '/admin/templates/new',
+  ADMIN_TEMPLATE_EDIT: '/admin/templates/:id/edit',
   ADMIN_MESSAGE_SOURCES: '/admin/message-sources',
   ADMIN_TASK_QUEUE: '/admin/task-queue',
   ADMIN_LOGS: '/admin/logs',
@@ -108,7 +108,7 @@ export const generatePath = {
   quoteDetail: (id: string | number) => `/admin/automation/preservation-quotes/${id}`,
   recognitionDetail: (id: string | number) => `/admin/automation/document-recognition/${id}`,
   // 模板管理
-  templateDetail: (id: string | number) => `/admin/templates/${id}`,
+  templateEdit: (id: string | number) => `/admin/templates/${id}/edit`,
   // 法院短信
   courtSmsDetail: (id: number) => `/admin/tools/court-sms/${id}`,
   // 工作台

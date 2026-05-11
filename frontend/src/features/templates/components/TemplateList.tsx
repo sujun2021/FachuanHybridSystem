@@ -64,7 +64,7 @@ export function TemplateList() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm"><Download className="mr-1.5 size-4" />初始化默认模板</Button>
-          <Button size="sm"><Plus className="mr-1.5 size-4" />新建模板</Button>
+          <Button size="sm" onClick={() => navigate(PATHS.ADMIN_TEMPLATE_NEW)}><Plus className="mr-1.5 size-4" />新建模板</Button>
         </div>
       </div>
 
@@ -133,7 +133,7 @@ export function TemplateList() {
                 return (
                   <TableRow
                     key={t.id}
-                    onClick={() => navigate(generatePath.templateDetail?.(String(t.id)) ?? `${PATHS.ADMIN_TEMPLATES}/${t.id}`)}
+                    onClick={() => navigate(generatePath.templateEdit(String(t.id)))}
                     className="cursor-pointer hover:bg-muted/50 transition-colors"
                   >
                     <TableCell className="text-muted-foreground text-sm">{t.id}</TableCell>
@@ -169,8 +169,8 @@ export function TemplateList() {
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">{t.updated_at}</TableCell>
                     <TableCell>
-                      <Button variant="outline" size="sm" className="h-7 text-xs" onClick={(e) => e.stopPropagation()}>
-                        查看
+                      <Button variant="outline" size="sm" className="h-7 text-xs" onClick={(e) => { e.stopPropagation(); navigate(generatePath.templateEdit(String(t.id))) }}>
+                        编辑
                       </Button>
                     </TableCell>
                   </TableRow>
