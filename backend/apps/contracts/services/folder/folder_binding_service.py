@@ -647,7 +647,7 @@ class FolderBindingService(FolderBindingCrudService):
         try:
             target.relative_to(root)
         except ValueError:
-            raise ValidationException(message="瀛愮洰褰曡秺鐣?", errors={"path": target.as_posix()}) from None
+            raise ValidationException(message="子目录越界", errors={"path": target.as_posix()}) from None
 
     def _collect_relative_subdirs(self, root: Path) -> list[str]:
         results: list[str] = []
