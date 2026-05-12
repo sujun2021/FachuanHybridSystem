@@ -6,15 +6,11 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select'
-import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { DetailCard } from '@/components/shared'
-import { formatAmount } from '@/lib/format'
 import { caseApi } from '../api'
 import type { CourtGuaranteeCaseInfo, CourtGuaranteeSession } from '../api/court-guarantee'
 
@@ -53,7 +49,7 @@ function persistRespondentIds(caseId: number, ids: number[]) {
 export function CourtGuaranteeSection({ caseId }: Props) {
   const [guaranteeInfo, setGuaranteeInfo] = useState<CourtGuaranteeCaseInfo | null>(null)
   const [loadingInfo, setLoadingInfo] = useState(false)
-  const [insurerId, setInsurerId] = useState<string>('')
+  const [selectedInsurer, setSelectedInsurer] = useState<string>('')
   const [selectedRespondentIds, setSelectedRespondentIds] = useState<number[]>([])
   const [consultantCode, setConsultantCode] = useState('')
   const [executing, setExecuting] = useState(false)
@@ -63,18 +59,33 @@ export function CourtGuaranteeSection({ caseId }: Props) {
 
   const respondentOptions = useMemo(() => guaranteeInfo?.respondent_options ?? [], [guaranteeInfo?.respondent_options])
   const showRespondentSelector = respondentOptions.length > 1
+  const quoteContext = guaranteeInfo?.quote_context
+  const quoteItems = useMemo(() => quoteContext?.items ?? [], [quoteContext?.items])
+  const hasPreservationAmount = useMemo(() => {
+    const raw = guaranteeInfo?.preserve_amount
+    if (!raw) return false
+    const num = Number(raw)
+    return Number.isFinite(num) && num > 0
+  }, [guaranteeInfo?.preserve_amount])
+  const hasQuote = quoteContext?.quote_id != null
 
   const loadInfo = useCallback(async () => {
     setLoadingInfo(true)
     try {
       const info = await caseApi.getCourtGuaranteeInfo(caseId)
       setGuaranteeInfo(info)
+      if (info.insurance_company_name && !selectedInsurer) {
+        setSelectedInsurer(info.insurance_company_name)
+      }
+      if (info.consultant_code && !consultantCode) {
+        setConsultantCode(info.consultant_code)
+      }
     } catch {
       // silently fail
     } finally {
       setLoadingInfo(false)
     }
-  }, [caseId])
+  }, [caseId, selectedInsurer, consultantCode])
 
   useEffect(() => { loadInfo() }, [loadInfo])
   useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current) }, [])
@@ -84,7 +95,7 @@ export function CourtGuaranteeSection({ caseId }: Props) {
       setSelectedRespondentIds([])
       return
     }
-    const allIds = respondentOptions.map((opt) => Number(opt.id)).filter((id) => Number.isInteger(id) && id > 0)
+    const allIds = respondentOptions.map((opt) => Number(opt.party_id)).filter((id) => Number.isInteger(id) && id > 0)
     if (respondentOptions.length === 1) {
       setSelectedRespondentIds(allIds)
       return
@@ -128,7 +139,7 @@ export function CourtGuaranteeSection({ caseId }: Props) {
     try {
       await caseApi.ensureGuaranteeQuote({
         case_id: caseId,
-        insurer_id: insurerId || undefined,
+        insurer_id: selectedInsurer || undefined,
         respondent_id: selectedRespondentIds.length === 1 ? selectedRespondentIds[0] : undefined,
       })
       toast.success('询价已提交')
@@ -154,9 +165,23 @@ export function CourtGuaranteeSection({ caseId }: Props) {
     }
   }
 
-  const quoteContext = guaranteeInfo?.quote_context
-  const hasPreservationAmount = guaranteeInfo?.preservation_amount != null && guaranteeInfo.preservation_amount > 0
-  const hasQuote = quoteContext?.quote_id != null
+  const formatQuoteRange = (min: string, max: string) => {
+    if (min && max) {
+      return min === max ? `¥${min}` : `¥${min} ~ ¥${max}`
+    }
+    if (min) return `¥${min}`
+    if (max) return `~ ¥${max}`
+    return '-'
+  }
+
+  const formatMaxApplyAmount = (raw: string) => {
+    if (!raw) return '-'
+    const value = Number(raw)
+    if (!Number.isFinite(value)) return '-'
+    const yiValue = value / 100000000
+    return `¥${yiValue.toFixed(2)}亿`
+  }
+
   const statusColor = session?.status === 'completed' ? 'bg-green-50 text-green-700'
     : session?.status === 'failed' ? 'bg-red-50 text-red-700'
     : session?.status === 'running' ? 'bg-blue-50 text-blue-700'
@@ -174,13 +199,13 @@ export function CourtGuaranteeSection({ caseId }: Props) {
                 <span className="font-medium truncate">{guaranteeInfo.court_name || '—'}</span>
               </div>
               <div className="flex items-center gap-1.5 min-w-0">
-                <span className="text-muted-foreground shrink-0">保全类型：</span>
-                <span className="font-medium">{guaranteeInfo.category || '—'}</span>
+                <span className="text-muted-foreground shrink-0">保全类别：</span>
+                <span className="font-medium">{guaranteeInfo.preserve_category || '—'}</span>
               </div>
               <div className="flex items-center gap-1.5 min-w-0">
                 <span className="text-muted-foreground shrink-0">保全金额：</span>
                 <span className={`font-semibold ${hasPreservationAmount ? 'text-foreground' : 'text-destructive'}`}>
-                  {formatAmount(guaranteeInfo.preservation_amount)}
+                  {guaranteeInfo.preserve_amount ? `¥${guaranteeInfo.preserve_amount}` : '-'}
                 </span>
               </div>
             </div>
@@ -204,8 +229,11 @@ export function CourtGuaranteeSection({ caseId }: Props) {
             <div className="text-xs font-medium text-slate-600 mb-2.5">被申请人（可多选，默认全选）</div>
             <div className="flex flex-wrap gap-x-4 gap-y-2">
               {respondentOptions.map((opt) => {
-                const id = Number(opt.id)
+                const id = Number(opt.party_id)
                 const checked = selectedRespondentIds.includes(id)
+                const label = opt.legal_status_display
+                  ? `${opt.name}（${opt.legal_status_display}）`
+                  : opt.name
                 return (
                   <label key={id} className="flex items-center gap-1.5 text-xs text-foreground cursor-pointer">
                     <Checkbox
@@ -214,7 +242,7 @@ export function CourtGuaranteeSection({ caseId }: Props) {
                       disabled={executing}
                       className="size-3.5"
                     />
-                    <span>{opt.name}</span>
+                    <span>{label}</span>
                   </label>
                 )
               })}
@@ -247,94 +275,108 @@ export function CourtGuaranteeSection({ caseId }: Props) {
           </div>
 
           <div className="px-4 py-3">
-            {/* 保险公司选择 */}
-            {guaranteeInfo?.insurance_options && guaranteeInfo.insurance_options.length > 0 && (
-              <div className="mb-3">
-                <Select value={insurerId} onValueChange={setInsurerId}>
-                  <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="选择保险公司" /></SelectTrigger>
-                  <SelectContent>
-                    {guaranteeInfo.insurance_options.map((opt, i) => (
-                      <SelectItem key={opt.id ?? `insurer-${i}`} value={opt.id}>{opt.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            {/* 询价结果表格 */}
+            {quoteItems.length > 0 ? (
+              <div className="border border-blue-100 rounded-lg overflow-hidden bg-white">
+                <div className="max-h-[220px] overflow-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="bg-blue-50 text-blue-800">
+                        <th className="text-center py-2 px-2 font-medium w-8">序号</th>
+                        <th className="text-left py-2 px-2 font-medium">担保机构</th>
+                        <th className="text-center py-2 px-2 font-medium">报价区间</th>
+                        <th className="text-right py-2 px-2 font-medium">最高保全金额</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {quoteItems.map((item, idx) => (
+                        <tr key={item.id} className="border-t border-slate-100 hover:bg-slate-50/50">
+                          <td className="text-center py-2 px-2 text-muted-foreground">{idx + 1}</td>
+                          <td className="py-2 px-2">
+                            <span className="font-medium">{item.company_name}</span>
+                            {item.is_recommended && (
+                              <span className="ml-1 text-green-600" title="推荐">🏆</span>
+                            )}
+                          </td>
+                          <td className="text-center py-2 px-2 whitespace-nowrap">
+                            {formatQuoteRange(item.min_amount, item.max_amount)}
+                          </td>
+                          <td className="text-right py-2 px-2">
+                            {formatMaxApplyAmount(item.max_apply_amount)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            )}
-
-            {/* 询价结果 */}
-            {quoteContext && quoteContext.quote_id ? (
-              <div className="rounded-md bg-blue-50/50 border border-blue-100 px-3 py-2.5 space-y-2">
+            ) : hasQuote ? (
+              <div className="rounded-md bg-blue-50/50 border border-blue-100 px-3 py-2.5">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-blue-800">报价信息</span>
+                  <span className="text-xs font-medium text-blue-800">询价中</span>
                   <Badge variant="outline" className="text-[10px] border-blue-200 text-blue-700">
-                    {quoteContext.status === 'completed' ? '已完成' : quoteContext.status === 'failed' ? '失败' : quoteContext.status}
+                    {quoteContext?.status || '处理中'}
                   </Badge>
                 </div>
-                <div className="grid gap-1.5 sm:grid-cols-3 text-xs">
-                  {quoteContext.insurer && (
-                    <div><span className="text-muted-foreground">保险公司：</span><span className="font-medium">{quoteContext.insurer}</span></div>
-                  )}
-                  {quoteContext.amount != null && (
-                    <div><span className="text-muted-foreground">保额：</span><span className="font-medium">{formatAmount(quoteContext.amount)}</span></div>
-                  )}
-                  {quoteContext.premium != null && (
-                    <div><span className="text-muted-foreground">保费：</span><span className="font-medium">{formatAmount(quoteContext.premium)}</span></div>
-                  )}
-                </div>
-                <div className="flex items-center gap-1.5 pt-0.5">
-                  {quoteContext.binding_id ? (
-                    <Badge variant="outline" className="text-[10px] bg-green-50 text-green-700 border-green-200">已绑定</Badge>
-                  ) : (
-                    <Button size="sm" variant="outline" className="h-6 text-[11px]" onClick={async () => {
-                      try {
-                        await caseApi.bindGuaranteeQuote(quoteContext.quote_id!)
-                        toast.success('绑定成功')
-                        loadInfo()
-                      } catch { toast.error('绑定失败') }
-                    }}>
-                      <Link2 className="size-3 mr-1" />绑定
-                    </Button>
-                  )}
-                  {quoteContext.status === 'failed' && (
-                    <Button size="sm" variant="outline" className="h-6 text-[11px]" onClick={async () => {
-                      try {
-                        await caseApi.retryGuaranteeQuote(quoteContext.quote_id!)
-                        toast.success('重试已提交')
-                        loadInfo()
-                      } catch { toast.error('重试失败') }
-                    }}>
-                      <RotateCw className="size-3 mr-1" />重试
-                    </Button>
-                  )}
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button size="sm" variant="outline" className="h-6 text-[11px] text-destructive hover:text-destructive">
-                        <Trash2 className="size-3 mr-1" />删除
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>确认删除报价</AlertDialogTitle>
-                        <AlertDialogDescription>此操作不可撤销</AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>取消</AlertDialogCancel>
-                        <AlertDialogAction onClick={async () => {
-                          try {
-                            await caseApi.deleteGuaranteeQuote(quoteContext.quote_id!)
-                            toast.success('已删除')
-                            loadInfo()
-                          } catch { toast.error('删除失败') }
-                        }}>确认</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
+                <p className="text-xs text-muted-foreground mt-1">正在获取报价，请稍候...</p>
               </div>
             ) : (
               <div className="text-center py-4">
                 <Search className="size-8 text-muted-foreground/40 mx-auto mb-2" />
                 <p className="text-xs text-muted-foreground">尚未发起询价，点击上方「发起询价」获取担保报价</p>
+              </div>
+            )}
+
+            {/* 操作按钮 */}
+            {hasQuote && (
+              <div className="flex items-center gap-1.5 mt-2.5">
+                {quoteContext?.binding_id ? (
+                  <Badge variant="outline" className="text-[10px] bg-green-50 text-green-700 border-green-200">已绑定</Badge>
+                ) : (
+                  <Button size="sm" variant="outline" className="h-6 text-[11px]" onClick={async () => {
+                    try {
+                      await caseApi.bindGuaranteeQuote(quoteContext!.quote_id)
+                      toast.success('绑定成功')
+                      loadInfo()
+                    } catch { toast.error('绑定失败') }
+                  }}>
+                    <Link2 className="size-3 mr-1" />绑定
+                  </Button>
+                )}
+                {quoteContext?.status === 'failed' && (
+                  <Button size="sm" variant="outline" className="h-6 text-[11px]" onClick={async () => {
+                    try {
+                      await caseApi.retryGuaranteeQuote(quoteContext!.quote_id)
+                      toast.success('重试已提交')
+                      loadInfo()
+                    } catch { toast.error('重试失败') }
+                  }}>
+                    <RotateCw className="size-3 mr-1" />重试
+                  </Button>
+                )}
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="sm" variant="outline" className="h-6 text-[11px] text-destructive hover:text-destructive">
+                      <Trash2 className="size-3 mr-1" />删除
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>确认删除报价</AlertDialogTitle>
+                      <AlertDialogDescription>此操作不可撤销</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>取消</AlertDialogCancel>
+                      <AlertDialogAction onClick={async () => {
+                        try {
+                          await caseApi.deleteGuaranteeQuote(quoteContext!.quote_id)
+                          toast.success('已删除')
+                          loadInfo()
+                        } catch { toast.error('删除失败') }
+                      }}>确认</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             )}
           </div>
