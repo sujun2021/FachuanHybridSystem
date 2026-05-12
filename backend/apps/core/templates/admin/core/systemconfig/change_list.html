@@ -11,9 +11,8 @@
     /* 隐藏过滤器 */
     #changelist-filter { display: none !important; }
 
-    /* 让内容区域占满宽度 */
-    #changelist.filtered .changelist-form-container { margin-right: 0 !important; }
-    #changelist.filtered { padding-right: 0 !important; }
+    /* 让内容区域占满宽度（覆盖 Django changelists.css 的 :has() 约束） */
+    #changelist .changelist-form-container > div { max-width: 100% !important; }
 
     /* 分组折叠面板样式 */
     .config-groups {
