@@ -73,42 +73,30 @@ class BaoquanTokenService:
 
         # ── 回退: Playwright 浏览器流程 ──
         def _do_login_and_fetch() -> str:
-            from playwright.sync_api import sync_playwright
+            from apps.core.services.browser import create_browser
+            from apps.core.services.wiring import get_court_zxfw_service_factory
 
-            from apps.core.services.wiring import get_anti_detection, get_court_zxfw_service_factory
+            headless = not bool(os.environ.get("DISPLAY"))
 
-            anti_detection = get_anti_detection()
+            with create_browser(headless=headless) as (page, context):
+                service = get_court_zxfw_service_factory(page=page, context=context, site_name=self.COURT_SITE_NAME)
+                login_result = service.login(
+                    account=account,
+                    password=password,
+                    max_captcha_retries=3,
+                    save_debug=False,
+                )
+                if not login_result.get("success"):
+                    raise TokenError(f"登录失败: {login_result.get('message')}")
 
-            with sync_playwright() as p:
-                # Docker/NAS 环境通常没有 XServer，缺少 DISPLAY 时自动走无头模式。
-                headless = not bool(os.environ.get("DISPLAY"))
-                browser = p.chromium.launch(headless=headless)
-                context_options = anti_detection.get_browser_context_options()
-                context = browser.new_context(**context_options)
-                page = context.new_page()
+                result = service.fetch_baoquan_token(save_debug=False)
+                if not result.get("success"):
+                    raise TokenError(result.get("message") or "获取保全 Token 失败")
 
-                try:
-                    service = get_court_zxfw_service_factory(page=page, context=context, site_name=self.COURT_SITE_NAME)
-                    login_result = service.login(
-                        account=account,
-                        password=password,
-                        max_captcha_retries=3,
-                        save_debug=False,
-                    )
-                    if not login_result.get("success"):
-                        raise TokenError(f"登录失败: {login_result.get('message')}")
-
-                    result = service.fetch_baoquan_token(save_debug=False)
-                    if not result.get("success"):
-                        raise TokenError(result.get("message") or "获取保全 Token 失败")
-
-                    token = result.get("token")
-                    if not token or not token.startswith(self._BAOQUAN_TOKEN_PREFIX):
-                        raise TokenError("获取到的保全 Token 非 HS512 格式")
-                    return str(token)
-                finally:
-                    context.close()
-                    browser.close()
+                token = result.get("token")
+                if not token or not token.startswith(self._BAOQUAN_TOKEN_PREFIX):
+                    raise TokenError("获取到的保全 Token 非 HS512 格式")
+                return str(token)
 
         import asyncio
 

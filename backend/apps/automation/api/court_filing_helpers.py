@@ -577,7 +577,7 @@ def _run_filing(
     session_id: int | None = None,
 ) -> None:
     """在后台线程中执行立案"""
-    from playwright.sync_api import sync_playwright
+    from apps.core.services.browser import create_browser
 
     from apps.automation.models import ScraperTaskStatus
     from apps.automation.services.scraper.sites.court_zxfw import CourtZxfwService
@@ -739,13 +739,9 @@ def _run_filing(
         set_started=True,
     )
 
-    with sync_playwright() as p:
-        # Docker/NAS 环境通常没有 XServer，缺少 DISPLAY 时自动走无头模式。
-        _headless = not bool(os.environ.get("DISPLAY"))
-        browser = p.chromium.launch(headless=_headless)
-        context = browser.new_context()
-        page = context.new_page()
-
+    # Docker/NAS 环境通常没有 XServer，缺少 DISPLAY 时自动走无头模式。
+    _headless = not bool(os.environ.get("DISPLAY"))
+    with create_browser(headless=_headless) as (page, context):
         try:
             login_service = CourtZxfwService(page=page, context=context)
             # Playwright 立案模式必须用浏览器登录，禁用 HTTP 逆向登录
@@ -886,6 +882,3 @@ def _run_filing(
                 result=failed_result,
                 set_finished=True,
             )
-        finally:
-            context.close()
-            browser.close()

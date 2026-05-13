@@ -777,7 +777,7 @@ def _run_guarantee(
     case_data: dict[str, Any],
     session_id: int | None,
 ) -> None:
-    from playwright.sync_api import sync_playwright
+    from apps.core.services.browser import create_browser
 
     from apps.automation.models import ScraperTaskStatus
     from apps.automation.services.scraper.sites.court_zxfw import CourtZxfwService
@@ -804,11 +804,9 @@ def _run_guarantee(
         set_started=True,
     )
 
-    with sync_playwright() as pw:
-        _headless = not bool(os.environ.get("DISPLAY"))
-        browser = pw.chromium.launch(headless=_headless, slow_mo=_BROWSER_SLOW_MO_MS)
-        context = browser.new_context()
-        page = context.new_page()
+    # Docker/NAS 环境通常没有 XServer，缺少 DISPLAY 时自动走无头模式。
+    _headless = not bool(os.environ.get("DISPLAY"))
+    with create_browser("court_zxfw", headless=_headless, slow_mo=_BROWSER_SLOW_MO_MS) as (page, context):
         run_success = False
 
         try:
@@ -892,5 +890,4 @@ def _run_guarantee(
                 page.wait_for_timeout(hold_seconds * 1000)
             except Exception:
                 logger.debug("court_guarantee_wait_before_close_failed", exc_info=True)
-            context.close()
-            browser.close()
+            # browser cleanup handled by create_browser()
