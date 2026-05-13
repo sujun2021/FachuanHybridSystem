@@ -6,7 +6,6 @@
 
 - 只想最快跑起来（推荐）：直接看 **Docker 部署（推荐）**。
 - 需要本地开发：先看 **本地 PostgreSQL 安装与初始化**，再看对应系统的 **本地开发** 章节。
-- MCP 仅在你要对接 AI Agent 时需要：可最后看 **附录（可选）：MCP Server**。
 
 ## 目录
 
@@ -17,7 +16,6 @@
 - 环境变量
 - 启动顺序与运行检查
 - 推送前本地检查（进阶，可选）
-- 附录（可选）：MCP Server（AI Agent 集成）
 
 ## Docker 部署（推荐）
 
@@ -228,14 +226,6 @@ DB_HOST=127.0.0.1
 DB_PORT=5432
 ```
 
-如果使用 MCP Server，还需在 `backend/.env` 配置：
-
-```bash
-FACHUAN_BASE_URL=http://127.0.0.1:8002/api/v1
-FACHUAN_USERNAME=你的账号
-FACHUAN_PASSWORD=你的密码
-```
-
 ## 启动顺序与运行检查
 
 启动建议：
@@ -280,94 +270,3 @@ git status --short --ignored | grep -E 'backend/\.env|db\.sqlite3|sqlite3-(shm|w
 - `check` / `migrate --check` / `smoke_check` / `ci-check-full` 全部成功
 - `git ls-files` 不出现本地 `.env`、`db.sqlite3`、`db.sqlite3-shm/wal` 等文件
 
-## 附录（可选）：MCP Server（AI Agent 集成）
-
-仅当你需要对接 AI Agent（如 OpenClaw、Claude Desktop）时再阅读本节；普通部署与本地开发可跳过。
-
-通过 MCP Server，OpenClaw、Claude Desktop 等 AI Agent 工具可以用自然语言直接操作法穿系统。
-
-### 支持的操作
-
-| 分类 | Tool | 说明 |
-|------|------|------|
-| 案件 | `list_cases` | 查询案件列表 |
-| 案件 | `search_cases` | 关键词搜索案件 |
-| 案件 | `get_case` | 获取案件详情 |
-| 案件 | `create_case` | 创建新案件 |
-| 案件当事人 | `list_case_parties` | 查询案件当事人 |
-| 案件当事人 | `add_case_party` | 添加案件当事人 |
-| 案件日志 | `list_case_logs` | 查询案件进展日志 |
-| 案件日志 | `create_case_log` | 添加案件进展日志 |
-| 案号 | `list_case_numbers` | 查询案件案号 |
-| 案号 | `create_case_number` | 添加案号 |
-| 律师指派 | `list_case_assignments` | 查询案件律师指派 |
-| 律师指派 | `assign_lawyer` | 为案件指派律师 |
-| 客户 | `list_clients` | 查询客户列表 |
-| 客户 | `get_client` | 获取客户详情 |
-| 客户 | `create_client` | 创建新客户 |
-| 客户 | `parse_client_text` | 从文本解析客户信息 |
-| 客户财产 | `list_property_clues` | 查询客户财产线索 |
-| 客户财产 | `create_property_clue` | 添加财产线索 |
-| 合同 | `list_contracts` | 查询合同列表 |
-| 合同 | `get_contract` | 获取合同详情 |
-| 合同 | `create_contract` | 创建新合同 |
-| 财务 | `list_payments` | 查询付款记录 |
-| 财务 | `get_finance_stats` | 获取财务统计概览 |
-| 催收提醒 | `list_reminders` | 查询催收提醒待办 |
-| 催收提醒 | `create_reminder` | 创建催收提醒 |
-| 组织架构 | `list_lawyers` | 查询律师列表 |
-| 组织架构 | `list_teams` | 查询团队列表 |
-| OA 立案 | `list_oa_configs` | 查询可用 OA 系统 |
-| OA 立案 | `trigger_oa_filing` | 发起 OA 立案 |
-| OA 立案 | `get_filing_status` | 查询立案进度 |
-
-### 配置
-
-在 `backend/.env` 中添加：
-
-```bash
-FACHUAN_BASE_URL=http://127.0.0.1:8002/api/v1
-FACHUAN_USERNAME=你的账号
-FACHUAN_PASSWORD=你的密码
-```
-
-### 启动方式
-
-```bash
-cd backend
-
-# 开发调试（MCP Inspector）
-uv run mcp dev mcp_server/server.py
-
-# 直接运行（stdio 模式）
-uv run python -m mcp_server
-```
-
-### 扩展 Tools
-
-Tools 按业务域组织在 `backend/mcp_server/tools/` 下：
-
-```text
-tools/
-├── cases/          案件（案件、当事人、日志、案号、律师指派）
-├── clients/        客户（客户、财产线索）
-├── contracts/      合同（合同、财务、催收提醒）
-└── organization/   组织（律师、团队、OA立案）
-```
-
-新增 tool：在对应域的文件中添加函数 -> 在该域的 `__init__.py` 导出 -> 在 `server.py` 注册。
-
-### 在 OpenClaw / Claude Desktop 中注册
-
-在 MCP 配置文件中添加：
-
-```json
-{
-  "mcpServers": {
-    "fachuan": {
-      "command": "uv",
-      "args": ["run", "--directory", "/path/to/FachuanHybridSystem/backend", "python", "-m", "mcp_server"]
-    }
-  }
-}
-```
