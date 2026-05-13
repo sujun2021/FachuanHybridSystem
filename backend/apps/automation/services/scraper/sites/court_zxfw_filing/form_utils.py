@@ -82,11 +82,12 @@ class FormUtilsMixin:
         self._random_wait(1, 2)
         return False
 
-    def _fill_field(self, label_text: str, value: str) -> None:
+    def _fill_field(self, label_text: str, value: str, *, form: Any = None) -> None:
         """通过 label 文本定位并填写当前编辑表单中的 input 字段"""
         if not value:
             return
-        form = self.page.locator(".fd-wsla-ryxx-box:has(uni-button:has-text('保存'))").first
+        if form is None:
+            form = self.page.locator(".fd-wsla-ryxx-box:has(uni-button:has-text('保存'))").first
         inp = form.locator(
             f".uni-forms-item:has(.uni-forms-item__label:has-text('{label_text}')) .uni-input-input"
         ).first
@@ -96,39 +97,49 @@ class FormUtilsMixin:
             return
         self._random_wait(0.3, 0.5)
 
-    def _fill_field_exact(self, label_text: str, value: str) -> None:
+    def _fill_field_exact(self, label_text: str, value: str, *, form: Any = None) -> None:
         """通过 label 精确匹配填写字段（避免 has-text 的模糊匹配）"""
         if not value:
             return
-        found = self.page.evaluate(
-            """([label]) => {
-                const forms = document.querySelectorAll('.fd-wsla-ryxx-box');
-                for (const form of forms) {
-                    if (!form.querySelector('uni-button')) continue;
-                    const items = form.querySelectorAll('.uni-forms-item');
-                    for (const item of items) {
-                        const lbl = item.querySelector('.uni-forms-item__label');
-                        if (lbl && lbl.textContent.trim() === label) {
-                            const input = item.querySelector('.uni-input-input');
-                            if (input) {
-                                input.setAttribute('data-exact-fill', '1');
-                                return true;
+        if form is not None:
+            inp = form.locator(
+                f".uni-forms-item:has(.uni-forms-item__label:text-is('{label_text}')) .uni-input-input"
+            ).first
+            try:
+                inp.fill(value, timeout=5000)
+            except Exception:
+                pass
+        else:
+            found = self.page.evaluate(
+                """([label]) => {
+                    const forms = document.querySelectorAll('.fd-wsla-ryxx-box');
+                    for (const form of forms) {
+                        if (!form.querySelector('uni-button')) continue;
+                        const items = form.querySelectorAll('.uni-forms-item');
+                        for (const item of items) {
+                            const lbl = item.querySelector('.uni-forms-item__label');
+                            if (lbl && lbl.textContent.trim() === label) {
+                                const input = item.querySelector('.uni-input-input');
+                                if (input) {
+                                    input.setAttribute('data-exact-fill', '1');
+                                    return true;
+                                }
                             }
                         }
                     }
-                }
-                return false;
-            }""",
-            [label_text],
-        )
-        if found:
-            self.page.locator("[data-exact-fill='1']").fill(value)
-            self.page.evaluate("() => document.querySelector('[data-exact-fill]')?.removeAttribute('data-exact-fill')")
+                    return false;
+                }""",
+                [label_text],
+            )
+            if found:
+                self.page.locator("[data-exact-fill='1']").fill(value)
+                self.page.evaluate("() => document.querySelector('[data-exact-fill]')?.removeAttribute('data-exact-fill')")
         self._random_wait(0.3, 0.5)
 
-    def _select_dropdown(self, label_text: str, option_text: str) -> bool:
+    def _select_dropdown(self, label_text: str, option_text: str, *, form: Any = None) -> bool:
         """点击表单内下拉框并选择选项（.item-text 类型）"""
-        form = self.page.locator(".fd-wsla-ryxx-box:has(uni-button:has-text('保存'))").first
+        if form is None:
+            form = self.page.locator(".fd-wsla-ryxx-box:has(uni-button:has-text('保存'))").first
         try:
             form.locator(
                 f".uni-forms-item:has(.uni-forms-item__label:has-text('{label_text}')) .input-value"
@@ -144,9 +155,10 @@ class FormUtilsMixin:
         self._random_wait(0.5, 1)
         return True
 
-    def _select_tree_dropdown(self, label_text: str, option_text: str) -> bool:
+    def _select_tree_dropdown(self, label_text: str, option_text: str, *, form: Any = None) -> bool:
         """点击 uni-data-tree 下拉框并选择选项（.fd-item 类型）"""
-        form = self.page.locator(".fd-wsla-ryxx-box:has(uni-button:has-text('保存'))").first
+        if form is None:
+            form = self.page.locator(".fd-wsla-ryxx-box:has(uni-button:has-text('保存'))").first
         try:
             form.locator(
                 f".uni-forms-item:has(.uni-forms-item__label:has-text('{label_text}')) .input-value"
@@ -162,9 +174,12 @@ class FormUtilsMixin:
         self._random_wait(0.5, 1)
         return True
 
-    def _click_save(self) -> None:
+    def _click_save(self, *, form: Any = None) -> None:
         """点击当前表单的保存按钮"""
-        save = self.page.locator("uni-button:has-text('保存')").first
+        if form is not None:
+            save = form.locator("uni-button:has-text('保存')").first
+        else:
+            save = self.page.locator("uni-button:has-text('保存')").first
         save.scroll_into_view_if_needed()
         self._random_wait(0.3, 0.5)
         save.click()
