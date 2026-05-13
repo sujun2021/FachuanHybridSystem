@@ -253,6 +253,20 @@ class FilingStepsMixin(FormUtilsMixin):
             pass
         self._random_wait(2, 3)
 
+        # 引入送达地址确认书（一张网新增步骤，按钮可能不存在）
+        try:
+            confirm_book_btn = self.page.get_by_text("引入送达地址确认书")
+            confirm_book_btn.wait_for(state="visible", timeout=5000)
+            confirm_book_btn.click()
+            logger.info("已点击「引入送达地址确认书」")
+            self._random_wait(3, 5)
+            try:
+                loading.wait_for(state="hidden", timeout=30000)
+            except Exception:
+                pass
+        except Exception:
+            logger.debug("未发现「引入送达地址确认书」按钮，跳过")
+
         self.page.locator("uni-button:has-text('下一步')").click()
         try:
             loading.wait_for(state="hidden", timeout=90000)
