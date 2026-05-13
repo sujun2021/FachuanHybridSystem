@@ -254,18 +254,7 @@ class FilingStepsMixin(FormUtilsMixin):
         self._random_wait(2, 3)
 
         # 引入送达地址确认书（一张网新增步骤，按钮可能不存在）
-        try:
-            confirm_book_btn = self.page.get_by_text("引入送达地址确认书")
-            confirm_book_btn.wait_for(state="visible", timeout=5000)
-            confirm_book_btn.click()
-            logger.info("已点击「引入送达地址确认书」")
-            self._random_wait(3, 5)
-            try:
-                loading.wait_for(state="hidden", timeout=30000)
-            except Exception:
-                pass
-        except Exception:
-            logger.debug("未发现「引入送达地址确认书」按钮，跳过")
+        self._confirm_address_confirmation_book(loading)
 
         self.page.locator("uni-button:has-text('下一步')").click()
         try:
@@ -285,6 +274,105 @@ class FilingStepsMixin(FormUtilsMixin):
             if any("".join(keyword.split()).lower() in normalized_text for keyword in keywords):
                 return slot
         return None
+
+    def _confirm_address_confirmation_book(self, loading: Any) -> None:
+        """点击「引入送达地址确认书」，处理弹窗：选择地址 → 确认生成。
+
+        弹窗结构（uni-popup fd-import-file-layer）:
+          - 邮寄送达: 选择地址下拉框 (uni-data-tree) + 添加按钮
+          - 电子送达: 送达方式复选框（人民法院在线服务默认勾选）
+          - 底部: 取消 / 确认生成
+        """
+        try:
+            confirm_book_btn = self.page.get_by_text("引入送达地址确认书")
+            confirm_book_btn.wait_for(state="visible", timeout=5000)
+        except Exception:
+            logger.debug("未发现「引入送达地址确认书」按钮，跳过")
+            return
+
+        confirm_book_btn.click()
+        logger.info("已点击「引入送达地址确认书」")
+        self._random_wait(2, 3)
+
+        # 等待弹窗出现
+        try:
+            self.page.locator(".uni-popup__wrapper").first.wait_for(state="visible", timeout=10000)
+        except Exception:
+            logger.warning("送达地址确认书弹窗未出现")
+            return
+
+        # 选择邮寄送达地址（如果下拉框存在且有可选项）
+        self._select_address_from_popup()
+        self._random_wait(1, 2)
+
+        # 点击「确认生成」
+        try:
+            confirm_gen_btn = self.page.locator(".uni-popup__wrapper uni-button:has-text('确认生成')")
+            confirm_gen_btn.wait_for(state="visible", timeout=5000)
+            confirm_gen_btn.click()
+            logger.info("已点击「确认生成」")
+            self._random_wait(3, 5)
+            try:
+                loading.wait_for(state="hidden", timeout=30000)
+            except Exception:
+                pass
+        except Exception:
+            logger.warning("未找到「确认生成」按钮")
+
+        # 关闭可能残留的弹窗
+        self._dismiss_address_popup()
+
+    def _select_address_from_popup(self) -> None:
+        """在送达地址确认书弹窗中选择邮寄送达地址。"""
+        popup = self.page.locator(".uni-popup__wrapper").first
+        address_input = popup.locator(".uni-data-tree .input-value")
+
+        if not address_input.count():
+            logger.debug("未找到地址下拉框，跳过地址选择")
+            return
+
+        try:
+            address_input.first.click(timeout=5000)
+            self._random_wait(1, 2)
+        except Exception:
+            logger.debug("无法点击地址下拉框")
+            return
+
+        # 尝试选择第一个可用选项
+        try:
+            option = self.page.locator(".uni-data-tree .uni-data-tree__node-child-text").first
+            if option.count() and option.is_visible():
+                option.click()
+                logger.info("已选择邮寄送达地址")
+                self._random_wait(0.5, 1)
+                return
+        except Exception:
+            pass
+
+        # 备选：尝试 .item-text 类型的选项
+        try:
+            option = self.page.locator(".item-text").first
+            if option.count() and option.is_visible():
+                option.click()
+                logger.info("已选择邮寄送达地址 (item-text)")
+                self._random_wait(0.5, 1)
+                return
+        except Exception:
+            pass
+
+        logger.debug("地址下拉框中未找到可选项，跳过地址选择")
+        self.page.keyboard.press("Escape")
+        self._random_wait(0.5, 1)
+
+    def _dismiss_address_popup(self) -> None:
+        """关闭送达地址确认书弹窗（如果仍打开）。"""
+        try:
+            close_btn = self.page.locator(".uni-popup__wrapper .fd-com-layer-close")
+            if close_btn.count() and close_btn.is_visible():
+                close_btn.click()
+                self._random_wait(1, 2)
+        except Exception:
+            pass
 
     @staticmethod
     def _extract_court_keyword(court_name: str) -> str:
