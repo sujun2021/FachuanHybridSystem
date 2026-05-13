@@ -20,7 +20,8 @@
 {
   "registry-mirrors": [
     "https://docker.1ms.run",
-    "https://docker.xuanyuan.me"
+    "https://docker.xuanyuan.me",
+    "https://docker.m.daocloud.io"
   ]
 }
 ```
