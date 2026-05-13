@@ -106,13 +106,8 @@ class BrowserService:
                 from apps.core.services.system_config_service import SystemConfigService
 
                 svc = SystemConfigService()
-                raw = svc.get_value("SCRAPER_HEADLESS", "")
-                if raw:
-                    headless = raw.lower() in ("true", "1", "yes")
-                else:
-                    # 默认：生产环境无头，开发环境有头
-                    debug_raw = svc.get_value("DEBUG_MODE", "false")
-                    headless = debug_raw.lower() not in ("true", "1", "yes")
+                headed = svc.get_value("PLAYWRIGHT_HEADED", "").lower()
+                headless = headed not in ("true", "1", "yes")
 
             mode = "无头" if headless else "有头"
             logger.info(f"启动 Playwright 浏览器（{mode}模式）...")
