@@ -234,11 +234,13 @@ class FilingStepsMixin(FormUtilsMixin):
             try:
                 mask.wait_for(state="hidden", timeout=5000)
             except Exception:
-                pass
+                # 遮罩未消失，强制移除（uni-toast duration 可能极长）
+                self.page.evaluate("document.querySelectorAll('.uni-mask').forEach(e => e.remove())")
+                self.page.wait_for_timeout(500)
 
             for file_path in files:
                 with self.page.expect_file_chooser() as fc_info:
-                    btn.click(force=True)
+                    btn.click()
                 fc_info.value.set_files(file_path)
                 self.page.wait_for_timeout(2000)
 
