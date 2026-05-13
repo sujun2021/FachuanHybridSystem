@@ -2,7 +2,7 @@ FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    UV_INDEX_URL=https://mirrors.cloud.tencent.com/pypi/simple/ \
+    UV_INDEX_URL=https://pypi.org/simple/ \
     TZ=Asia/Shanghai
 
 WORKDIR /app
@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # 安装 uv（pip 方式，避免 astral.sh/ghcr.io 国内无法访问）
-RUN pip install --no-cache-dir uv -i https://mirrors.cloud.tencent.com/pypi/simple/
+RUN pip install --no-cache-dir uv -i https://pypi.org/simple/
 
 # 安装 Python 依赖（利用 layer 缓存）
 COPY pyproject.toml uv.lock ./
