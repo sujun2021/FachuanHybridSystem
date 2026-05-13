@@ -7,7 +7,6 @@
 1. Docker 部署（推荐）
 2. 本地开发（macOS）
 3. 本地开发（Linux / Windows）
-4. 环境变量
 
 ## 1. Docker 部署（推荐）
 
@@ -216,18 +215,4 @@ uv run python manage.py qcluster
 
 # 终端2
 uv run python manage.py runserver 0.0.0.0:8002
-```
-
-## 4. 环境变量
-
-最小配置：
-
-```bash
-DJANGO_SECRET_KEY=请替换为强随机密钥
-DB_ENGINE=postgresql
-DB_NAME=fachuan_dev
-DB_USER=postgres
-DB_PASSWORD=postgres
-DB_HOST=127.0.0.1
-DB_PORT=5432
 ```
