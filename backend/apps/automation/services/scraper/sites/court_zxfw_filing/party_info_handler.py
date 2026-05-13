@@ -123,19 +123,21 @@ class PartyInfoHandlerMixin(FormUtilsMixin):
             return
 
         for index, agent in enumerate(agents):
-            if not self._open_agent_form(index=index):
+            opened, form = self._open_agent_form(index=index)
+            if not opened:
                 logger.warning("代理人表单无法打开: index=%s", index)
                 break
-            self._fill_agent_form(case_data=case_data, agent=agent)
-            self._click_save()
+            self._fill_agent_form(case_data=case_data, agent=agent, form=form)
+            self._click_save(form=form)
 
-    def _open_agent_form(self, *, index: int) -> bool:
+    def _open_agent_form(self, *, index: int) -> tuple[bool, Any]:
         section = self.page.locator(".uni-section:has(.uni-section__content-title:has-text('代理人信息'))").first
         edit_cards = section.locator(".fd-wsla-ryxx-box:has(.fd-sscyr-option-pc-icon:has-text('编辑'))")
         if edit_cards.count() > index:
             edit_cards.nth(index).locator(".fd-sscyr-option-pc-icon:has-text('编辑')").first.click()
             self._random_wait(1, 2)
-            return True
+            form = section.locator(".fd-wsla-ryxx-box:has(uni-button:has-text('保存'))").first
+            return True, form
 
         create_buttons = (
             '.fd-sscyr-add-btn:has-text("添加律师"), '
@@ -144,68 +146,99 @@ class PartyInfoHandlerMixin(FormUtilsMixin):
         )
         add_btn = section.locator(create_buttons).first
         if not add_btn.count():
-            return False
+            return False, None
         add_btn.scroll_into_view_if_needed()
         add_btn.click(timeout=5000)
         self._random_wait(1, 2)
-        return bool(self.page.locator(".fd-wsla-ryxx-box:has(uni-button:has-text('保存'))").count() > 0)
+        form = section.locator(".fd-wsla-ryxx-box:has(uni-button:has-text('保存'))").first
+        return bool(form.count() > 0), form
 
-    def _fill_agent_form(self, *, case_data: dict[str, Any], agent: dict[str, Any]) -> None:
-        self.page.evaluate(
-            """() => {
-                const form = document.querySelector('.fd-wsla-ryxx-box:has(uni-button)');
-                if (!form) return;
-                form.querySelectorAll('uni-checkbox').forEach(uc => {
-                    const input = uc.querySelector('.uni-checkbox-input');
-                    if (input && !input.classList.contains('uni-checkbox-input-checked')) {
-                        uc.click();
-                    }
-                });
-            }"""
-        )
+    def _fill_agent_form(self, *, case_data: dict[str, Any], agent: dict[str, Any], form: Any = None) -> None:
+        if form is not None:
+            form.evaluate(
+                """el => {
+                    el.querySelectorAll('uni-checkbox').forEach(uc => {
+                        const input = uc.querySelector('.uni-checkbox-input');
+                        if (input && !input.classList.contains('uni-checkbox-input-checked')) {
+                            uc.click();
+                        }
+                    });
+                }"""
+            )
+        else:
+            self.page.evaluate(
+                """() => {
+                    const form = document.querySelector('.fd-wsla-ryxx-box:has(uni-button)');
+                    if (!form) return;
+                    form.querySelectorAll('uni-checkbox').forEach(uc => {
+                        const input = uc.querySelector('.uni-checkbox-input');
+                        if (input && !input.classList.contains('uni-checkbox-input-checked')) {
+                            uc.click();
+                        }
+                    });
+                }"""
+            )
         self._random_wait(0.5, 1)
 
         plaintiffs = [item for item in case_data.get("plaintiffs", []) if isinstance(item, dict)]
         principal_name = str((plaintiffs[0].get("name") if plaintiffs else "") or "")
         if principal_name:
-            if not self._select_dropdown("被代理人", principal_name):
-                self._select_tree_dropdown("被代理人", principal_name)
+            if not self._select_dropdown("被代理人", principal_name, form=form):
+                self._select_tree_dropdown("被代理人", principal_name, form=form)
 
-        self._select_dropdown("代理人类型", "执业律师")
-        self._select_dropdown("代理类型", "委托代理")
+        self._select_dropdown("代理人类型", "执业律师", form=form)
+        self._select_dropdown("代理类型", "委托代理", form=form)
 
         phone = str(agent.get("phone", "") or "")
         address = str(agent.get("address", "") or "")
-        self._fill_field("姓名", str(agent.get("name", "") or ""))
-        self._fill_field("代理人姓名", str(agent.get("name", "") or ""))
-        self._fill_field("证件号码", str(agent.get("id_number", "") or ""))
-        self._fill_field("代理人证件号码", str(agent.get("id_number", "") or ""))
-        self._fill_field("执业证号", str(agent.get("bar_number", "") or ""))
-        self._fill_field("执业机构", str(agent.get("law_firm", "") or ""))
-        self._fill_field("手机号码", phone)
-        self._fill_field("联系电话", phone)
-        self._fill_field_exact("联系电话", phone)
-        self._fill_field("现住址", address)
-        self._fill_field("住所地", address)
+        self._fill_field("姓名", str(agent.get("name", "") or ""), form=form)
+        self._fill_field("代理人姓名", str(agent.get("name", "") or ""), form=form)
+        self._fill_field("证件号码", str(agent.get("id_number", "") or ""), form=form)
+        self._fill_field("代理人证件号码", str(agent.get("id_number", "") or ""), form=form)
+        self._fill_field("执业证号", str(agent.get("bar_number", "") or ""), form=form)
+        self._fill_field("执业机构", str(agent.get("law_firm", "") or ""), form=form)
+        self._fill_field("手机号码", phone, form=form)
+        self._fill_field("联系电话", phone, form=form)
+        self._fill_field_exact("联系电话", phone, form=form)
+        self._fill_field("现住址", address, form=form)
+        self._fill_field("住所地", address, form=form)
 
-        self.page.evaluate(
-            """() => {
-                const form = document.querySelector('.fd-wsla-ryxx-box:has(uni-button)');
-                if (!form) return;
-                form.querySelectorAll('.uni-forms-item').forEach(item => {
-                    const lbl = item.querySelector('.uni-forms-item__label');
-                    if (!lbl) return;
-                    const text = lbl.textContent.trim();
-                    let target = null;
-                    if (text === '是否法律援助') target = '否';
-                    if (text === '同意电子送达') target = '是';
-                    if (!target) return;
-                    item.querySelectorAll('uni-label').forEach(l => {
-                        if (l.textContent.trim() === target) l.click();
+        if form is not None:
+            form.evaluate(
+                """el => {
+                    el.querySelectorAll('.uni-forms-item').forEach(item => {
+                        const lbl = item.querySelector('.uni-forms-item__label');
+                        if (!lbl) return;
+                        const text = lbl.textContent.trim();
+                        let target = null;
+                        if (text === '是否法律援助') target = '否';
+                        if (text === '同意电子送达') target = '是';
+                        if (!target) return;
+                        item.querySelectorAll('uni-label').forEach(l => {
+                            if (l.textContent.trim() === target) l.click();
+                        });
                     });
-                });
-            }"""
-        )
+                }"""
+            )
+        else:
+            self.page.evaluate(
+                """() => {
+                    const form = document.querySelector('.fd-wsla-ryxx-box:has(uni-button)');
+                    if (!form) return;
+                    form.querySelectorAll('.uni-forms-item').forEach(item => {
+                        const lbl = item.querySelector('.uni-forms-item__label');
+                        if (!lbl) return;
+                        const text = lbl.textContent.trim();
+                        let target = null;
+                        if (text === '是否法律援助') target = '否';
+                        if (text === '同意电子送达') target = '是';
+                        if (!target) return;
+                        item.querySelectorAll('uni-label').forEach(l => {
+                            if (l.textContent.trim() === target) l.click();
+                        });
+                    });
+                }"""
+            )
         self._random_wait(0.5, 1)
 
     def _import_original_party(
@@ -268,16 +301,19 @@ class PartyInfoHandlerMixin(FormUtilsMixin):
         popup.locator("uni-button:has-text('确定')").click()
         self._random_wait(2, 3)
 
-        if address:
-            self._fill_field("住所地", address)
-            self._fill_field("现住址", address)
-            self._fill_field_exact("现住址", address)
-        if phone:
-            self._fill_field("联系电话", phone)
-            self._fill_field_exact("联系电话", phone)
-            self._fill_field("手机号码", phone)
+        # 定位引入后打开的表单
+        form = section.locator(".fd-wsla-ryxx-box:has(uni-button:has-text('保存'))").first
 
-        self._click_save()
+        if address:
+            self._fill_field("住所地", address, form=form)
+            self._fill_field("现住址", address, form=form)
+            self._fill_field_exact("现住址", address, form=form)
+        if phone:
+            self._fill_field("联系电话", phone, form=form)
+            self._fill_field_exact("联系电话", phone, form=form)
+            self._fill_field("手机号码", phone, form=form)
+
+        self._click_save(form=form)
         return True
 
     def _add_legal_person(
@@ -303,22 +339,25 @@ class PartyInfoHandlerMixin(FormUtilsMixin):
         add_btn.evaluate("el => el.click()")
         self._random_wait(1, 2)
 
+        # 定位新打开的表单（section 内第一个含保存按钮的表单）
+        form = section.locator(".fd-wsla-ryxx-box:has(uni-button:has-text('保存'))").first
+
         mobile = phone if re.fullmatch(r"1\d{10}", phone) else agent_phone
 
-        self._fill_field("名称", name)
-        self._fill_field("住所地", address)
-        self._select_dropdown("证照类型", "统一社会信用代码证")
-        self._fill_field("统一社会信用代码", uscc)
-        self._fill_field("法定代表人/负责人", legal_rep)
-        self._fill_field("法定代表人姓名", legal_rep)
+        self._fill_field("名称", name, form=form)
+        self._fill_field("住所地", address, form=form)
+        self._select_dropdown("证照类型", "统一社会信用代码证", form=form)
+        self._fill_field("统一社会信用代码", uscc, form=form)
+        self._fill_field("法定代表人/负责人", legal_rep, form=form)
+        self._fill_field("法定代表人姓名", legal_rep, form=form)
         if legal_rep_id_number:
-            self._select_dropdown("法定代表人证件类型", "居民身份证")
-            self._fill_field("法定代表人证件号码", legal_rep_id_number)
-        self._fill_field("法定代表人手机号码", mobile)
-        self._fill_field("法定代表人联系电话", mobile)
-        self._fill_field_exact("联系电话", mobile)
+            self._select_dropdown("法定代表人证件类型", "居民身份证", form=form)
+            self._fill_field("法定代表人证件号码", legal_rep_id_number, form=form)
+        self._fill_field("法定代表人手机号码", mobile, form=form)
+        self._fill_field("法定代表人联系电话", mobile, form=form)
+        self._fill_field_exact("联系电话", mobile, form=form)
 
-        self._click_save()
+        self._click_save(form=form)
 
     def _add_natural_person(
         self,
@@ -341,14 +380,17 @@ class PartyInfoHandlerMixin(FormUtilsMixin):
         add_btn.evaluate("el => el.click()")
         self._random_wait(1, 2)
 
-        self._fill_field("姓名", name)
-        self._select_dropdown("性别", gender)
-        self._select_dropdown("证件类型", "居民身份证")
-        self._fill_field("证件号码", id_number)
-        self._fill_field("住所地", address)
-        self._fill_field("联系电话", phone)
+        # 定位新打开的表单（section 内第一个含保存按钮的表单）
+        form = section.locator(".fd-wsla-ryxx-box:has(uni-button:has-text('保存'))").first
 
-        self._click_save()
+        self._fill_field("姓名", name, form=form)
+        self._select_dropdown("性别", gender, form=form)
+        self._select_dropdown("证件类型", "居民身份证", form=form)
+        self._fill_field("证件号码", id_number, form=form)
+        self._fill_field("住所地", address, form=form)
+        self._fill_field("联系电话", phone, form=form)
+
+        self._click_save(form=form)
 
     def _fill_execution_target_info(self, case_data: dict[str, Any]) -> None:
         """申请执行特有：填写执行理由、执行请求、执行标的类型"""
