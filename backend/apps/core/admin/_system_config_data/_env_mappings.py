@@ -200,18 +200,6 @@ def get_env_mappings() -> dict[str, dict[str, Any]]:
             "description": "爬虫加密密钥",
             "is_secret": True,
         },
-        "SCRAPER_HEADLESS": {
-            "key": "SCRAPER_HEADLESS",
-            "category": "scraper",
-            "description": "爬虫无头模式",
-            "is_secret": False,
-        },
-        "SCRAPER_TIMEOUT": {
-            "key": "SCRAPER_TIMEOUT",
-            "category": "scraper",
-            "description": "爬虫超时时间",
-            "is_secret": False,
-        },
         "PLAYWRIGHT_HEADED": {
             "key": "PLAYWRIGHT_HEADED",
             "category": "scraper",
