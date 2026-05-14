@@ -19,6 +19,7 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.core.exceptions import NotFoundError, ValidationException
 from apps.core.models.enums import CaseType
+from apps.core.services.filename_template_service import FilenameTemplateService
 
 if TYPE_CHECKING:
     from apps.core.interfaces import IContractService
@@ -468,7 +469,12 @@ class FolderGenerationService:
                         from django.utils import timezone
 
                         date_str = timezone.now().strftime("%Y%m%d")
-                        filename = f"法定代表人身份证明书({party.client.name})V1_{date_str}.docx"
+                        filename = (
+                            FilenameTemplateService.render_generated_doc(
+                                doc_type="法定代表人身份证明书", case_name=party.client.name, version="1", date=date_str
+                            )
+                            + ".docx"
+                        )
                         documents.append((folder_path, content, filename))
                         logger.info(
                             "案件文件夹 - 法定代表人身份证明书已生成: %s → %s",
@@ -576,7 +582,12 @@ class FolderGenerationService:
                 else:
                     date_str = timezone.now().strftime("%Y%m%d")
                 case_name = case.name or "案件"
-                filename = f"{template.name}({case_name})V1_{date_str}.docx"
+                filename = (
+                    FilenameTemplateService.render_generated_doc(
+                        doc_type=template.name, case_name=case_name, version="1", date=date_str
+                    )
+                    + ".docx"
+                )
                 documents.append((folder_path, content, filename))
                 logger.info(
                     "案件文件夹 - 文书生成成功: %s → %s",

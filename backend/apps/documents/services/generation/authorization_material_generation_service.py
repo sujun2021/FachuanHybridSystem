@@ -10,6 +10,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from apps.core.exceptions import NotFoundError, ValidationException
+from apps.core.services.filename_template_service import FilenameTemplateService
 from apps.core.utils.path import Path
 from apps.documents.models import DocumentTemplate, DocumentTemplateType
 from apps.documents.services.generation.path_utils import resolve_media_path, safe_arcname, safe_name
@@ -538,32 +539,54 @@ class AuthorizationMaterialGenerationService:
 
     def _build_authority_letter_filename(self, *, case_name: str) -> str:
         date_str = timezone.now().strftime("%Y%m%d")
-        template_name = "所函"
         safe_case_name = case_name or "案件"
-        return f"{template_name}({safe_case_name})V1_{date_str}.docx"
+        return (
+            FilenameTemplateService.render_generated_doc(
+                doc_type="所函", case_name=safe_case_name, version="1", date=date_str
+            )
+            + ".docx"
+        )
 
     def _build_legal_rep_certificate_filename(self, *, company_name: str) -> str:
         date_str = timezone.now().strftime("%Y%m%d")
-        template_name = "法定代表人身份证明书"
         safe_company_name = company_name or "公司"
-        return f"{template_name}({safe_company_name})V1_{date_str}.docx"
+        return (
+            FilenameTemplateService.render_generated_doc(
+                doc_type="法定代表人身份证明书", case_name=safe_company_name, version="1", date=date_str
+            )
+            + ".docx"
+        )
 
     def _build_power_of_attorney_filename(
         self, *, case: Any, selected_clients: list[Any], combined: bool = False
     ) -> str:
         date_str = timezone.now().strftime("%Y%m%d")
-        template_name = "授权委托书"
         case_name = getattr(case, "name", "") or "案件"
 
         if combined:
-            return f"{template_name}({case_name})V1_{date_str}.docx"
+            return (
+                FilenameTemplateService.render_generated_doc(
+                    doc_type="授权委托书", case_name=case_name, version="1", date=date_str
+                )
+                + ".docx"
+            )
 
         if self._count_our_parties(case) <= 1:
-            return f"{template_name}({case_name})V1_{date_str}.docx"
+            return (
+                FilenameTemplateService.render_generated_doc(
+                    doc_type="授权委托书", case_name=case_name, version="1", date=date_str
+                )
+                + ".docx"
+            )
 
         client = selected_clients[0] if selected_clients else None
         client_name = getattr(client, "name", "") or "委托人"
-        return f"{template_name}({client_name})({case_name})V1_{date_str}.docx"
+        return (
+            FilenameTemplateService.render_generated_doc(
+                doc_type=f"授权委托书（{client_name}）", case_name=case_name, version="1", date=date_str
+            )
+            + ".docx"
+        )
 
     def _count_our_parties(self, case: Any) -> int:
         try:

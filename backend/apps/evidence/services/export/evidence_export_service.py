@@ -16,6 +16,7 @@ from docx.shared import Cm
 from docxtpl import DocxTemplate
 
 from apps.core.exceptions import NotFoundError, ValidationException
+from apps.core.services.filename_template_service import FilenameTemplateService
 from apps.documents.services.placeholders.fallback import build_docx_render_context
 from apps.evidence.models import EvidenceItem, EvidenceList
 
@@ -423,18 +424,23 @@ class EvidenceExportService:
 
         # 根据文档类型生成文件名
         if doc_type == "证据清单":
-            # 格式:{证据清单名称}({案件名称})V{版本号}_{日期}.docx
-            filename = f"{evidence_list.title}({case_name})V{version}_{date_str}.docx"
+            doc_type_display = evidence_list.title
         else:
-            # 格式:证据明细{清单序号}({案件名称})V{版本号}_{日期}.docx
             # 从证据清单标题中提取序号部分(如"证据清单一"提取"一")
             list_suffix = ""
             title = evidence_list.title
             if title.startswith("证据清单"):
-                list_suffix = title[4:]  # 提取"证据清单"后面的部分
+                list_suffix = title[4:]
             elif title.startswith("补充证据清单"):
-                list_suffix = title[6:]  # 提取"补充证据清单"后面的部分
-            filename = f"证据明细{list_suffix}({case_name})V{version}_{date_str}.docx"
+                list_suffix = title[6:]
+            doc_type_display = f"证据明细{list_suffix}"
+
+        filename = (
+            FilenameTemplateService.render_generated_doc(
+                doc_type=doc_type_display, case_name=case_name, version=str(version), date=date_str
+            )
+            + ".docx"
+        )
 
         return filename
 

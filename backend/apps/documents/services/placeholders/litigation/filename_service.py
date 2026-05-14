@@ -10,6 +10,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from apps.core.exceptions import NotFoundError
+from apps.core.services.filename_template_service import FilenameTemplateService
 from apps.documents.services.infrastructure.wiring import get_case_service
 
 logger = logging.getLogger(__name__)
@@ -57,7 +58,12 @@ class FilenameService:
         date_str = self._format_date()
 
         # 生成文件名:起诉状(案件名称)V1_日期.docx
-        filename = f"起诉状（{case_name}）V1_{date_str}.docx"
+        filename = (
+            FilenameTemplateService.render_generated_doc(
+                doc_type="起诉状", case_name=case_name, version="1", date=date_str
+            )
+            + ".docx"
+        )
 
         logger.info("生成起诉状文件名: %s", filename)
 
@@ -91,7 +97,12 @@ class FilenameService:
         date_str = self._format_date()
 
         # 生成文件名:答辩状(案件名称)V1_日期.docx
-        filename = f"答辩状（{case_name}）V1_{date_str}.docx"
+        filename = (
+            FilenameTemplateService.render_generated_doc(
+                doc_type="答辩状", case_name=case_name, version="1", date=date_str
+            )
+            + ".docx"
+        )
 
         logger.info("生成答辩状文件名: %s", filename)
 

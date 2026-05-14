@@ -13,6 +13,8 @@ from typing import Any, cast
 
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+
+from apps.core.services.filename_template_service import FilenameTemplateService
 from docxtpl import DocxTemplate
 
 from apps.core.exceptions import NotFoundError, ValidationException
@@ -151,7 +153,12 @@ class PreservationMaterialsGenerationService:
         missing_clue_respondents = self.property_clue_service.get_respondents_without_clues(case_id)
         now = timezone.now()
         case_name = getattr(case, "name", "") or "案件"
-        zip_filename = f"全套保全材料({case_name})V1_{now.strftime('%Y%m%d')}.zip"
+        zip_filename = (
+            FilenameTemplateService.render_generated_doc(
+                doc_type="全套保全材料", case_name=case_name, version="1", date=now.strftime("%Y%m%d")
+            )
+            + ".zip"
+        )
         buffer = io.BytesIO()
         with zipfile.ZipFile(buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
             try:
@@ -326,4 +333,9 @@ class PreservationMaterialsGenerationService:
         """
         date_str = timezone.now().strftime("%Y%m%d")
         case_name = getattr(case, "name", "") or "案件"
-        return f"{template_name}({case_name})V1_{date_str}.docx"
+        return (
+            FilenameTemplateService.render_generated_doc(
+                doc_type=template_name, case_name=case_name, version="1", date=date_str
+            )
+            + ".docx"
+        )
