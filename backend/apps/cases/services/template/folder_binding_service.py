@@ -767,6 +767,7 @@ class CaseFolderBindingService(FolderBindingCrudService):
                 continue
             if relative:
                 results.append(relative)
+        results.sort()
         return results
 
     def _match_preferred_existing_subdir(
