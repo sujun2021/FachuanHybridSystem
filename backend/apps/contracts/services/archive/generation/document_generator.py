@@ -8,6 +8,7 @@ from typing import Any
 
 from apps.contracts.models import Contract
 from apps.contracts.models.finalized_material import FinalizedMaterial, MaterialCategory
+from apps.core.services.filename_template_service import FilenameTemplateService
 
 from ..category_mapping import get_archive_category
 from ..constants import ARCHIVE_CHECKLIST, ChecklistItem
@@ -185,8 +186,12 @@ def _generate_filename(contract: Contract, item: ChecklistItem) -> str:
     contract_name = contract.name or "未命名合同"
     item_name = item["name"]
     today_str = date.today().strftime("%Y%m%d")
-
-    return f"{item_name}（{contract_name}）_{today_str}.docx"
+    return (
+        FilenameTemplateService.render_generated_doc(
+            doc_type=item_name, case_name=contract_name, version="1", date=today_str
+        )
+        + ".docx"
+    )
 
 
 def _save_as_material(

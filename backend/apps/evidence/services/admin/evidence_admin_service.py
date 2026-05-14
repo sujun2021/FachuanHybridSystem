@@ -6,6 +6,7 @@ from typing import Any
 
 from django.utils import timezone
 
+from apps.core.services.filename_template_service import FilenameTemplateService
 from apps.evidence.services.core.evidence_service import EvidenceService
 from apps.evidence.services.export.evidence_export_service import EvidenceExportService
 from apps.evidence.services.infrastructure.pdf_merge_service import PDFMergeService
@@ -210,7 +211,12 @@ class EvidenceAdminService:
         version = evidence_list.export_version
 
         # 格式:证据明细{序号}({案件名称})V{版本号}_{日期}.pdf
-        filename = f"证据明细{list_suffix}({case_name})V{version}_{date_str}.pdf"
+        filename = (
+            FilenameTemplateService.render_generated_doc(
+                doc_type=f"证据明细{list_suffix}", case_name=case_name, version=str(version), date=date_str
+            )
+            + ".pdf"
+        )
 
         return filename
 
