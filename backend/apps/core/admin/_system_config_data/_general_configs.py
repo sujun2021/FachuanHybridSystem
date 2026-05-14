@@ -11,7 +11,7 @@ def get_general_configs() -> list[dict[str, Any]]:
         {
             "key": "CASE_LOG_ATTACHMENT_AUTO_SUBDIR",
             "category": "general",
-            "description": "案件日志附件自动创建子目录（true=上传附件时自动在案件文件夹下创建「案件日志附件」子目录；false=直接存入案件文件夹根目录）",
+            "description": "案件日志附件存入绑定文件夹（true=上传附件时存入绑定文件夹的「案件日志附件」子目录；false=存入 MEDIA_ROOT，不使用绑定文件夹）",
             "value": "true",
             "is_secret": False,
         },
