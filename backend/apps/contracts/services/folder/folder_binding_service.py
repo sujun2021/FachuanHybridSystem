@@ -8,7 +8,7 @@ from __future__ import annotations
 import logging
 import re
 from pathlib import Path
-from typing import Any, ClassVar, cast
+from typing import Any, ClassVar
 
 from apps.contracts.models import ArchiveClassificationRule, Contract, ContractFolderBinding
 from apps.contracts.services.archive.category_mapping import get_archive_category
@@ -423,7 +423,7 @@ class FolderBindingService(FolderBindingCrudService):
         if not contract:
             return None
 
-        contract_suffix = self._build_contract_business_root_suffix(cast(Contract, contract))
+        contract_suffix = self._build_contract_business_root_suffix(contract)
         if not contract_suffix:
             return None
 

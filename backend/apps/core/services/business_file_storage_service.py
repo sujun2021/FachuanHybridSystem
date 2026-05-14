@@ -70,7 +70,7 @@ class StoredBusinessFile:
     is_fallback: bool = False
     reason: str = ""
 
-    def __iter__(self):
+    def __iter__(self) -> Any:
         yield self.legacy_file_path
         yield self.original_filename
 
@@ -280,6 +280,7 @@ class BusinessFileStorageService:
                 exists=False,
             )
 
+        root_path: Path | None
         if root_type == "media":
             root_path = self._get_media_root_path()
         elif root_type == "case_folder":
