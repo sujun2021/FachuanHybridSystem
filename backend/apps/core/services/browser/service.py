@@ -26,11 +26,12 @@ class BrowserService:
     """
 
     _instance: BrowserService | None = None
+    _browsers: dict[str, tuple[Any, Any]]
 
     def __new__(cls) -> BrowserService:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-            cls._instance._browsers: dict[str, Any] = {}  # profile_name -> (playwright, browser)
+            cls._instance._browsers = {}
         return cls._instance
 
     def get_context(
@@ -82,7 +83,8 @@ class BrowserService:
     def _get_or_create_browser(self, profile: BrowserProfile) -> tuple[Any, Any]:
         """获取或创建浏览器实例。"""
         if profile.name in self._browsers:
-            return self._browsers[profile.name]
+            pw, browser = self._browsers[profile.name]
+            return pw, browser
 
         from playwright.sync_api import sync_playwright
 
