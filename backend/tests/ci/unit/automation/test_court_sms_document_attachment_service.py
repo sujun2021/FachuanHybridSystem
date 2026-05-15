@@ -25,11 +25,12 @@ def test_add_single_attachment_passes_original_file_path_to_case_service(tmp_pat
 
     result = service._add_single_attachment(sms, str(source_file))
 
+    expected_date = timezone.now().strftime("%Y%m%d")
     assert result is True
     case_service.add_case_log_attachment_internal.assert_called_once_with(
         case_log_id=88,
         file_path=str(source_file),
-        file_name="source（测试案件）_20260514收.pdf",
+        file_name=f"source（测试案件）_{expected_date}收.pdf",
         source_scene="court_sms_attachment",
         recommendation_file_name="source.pdf",
     )
@@ -55,11 +56,12 @@ def test_add_single_attachment_prefers_original_recommendation_name(tmp_path: Pa
         recommendation_file_name="对方证据目录.pdf",
     )
 
+    expected_date = timezone.now().strftime("%Y%m%d")
     assert result is True
     case_service.add_case_log_attachment_internal.assert_called_once_with(
         case_log_id=88,
         file_path=str(source_file),
-        file_name="renamed（测试案件）_20260514收.pdf",
+        file_name=f"renamed（测试案件）_{expected_date}收.pdf",
         source_scene="court_sms_attachment",
         recommendation_file_name="对方证据目录.pdf",
     )
