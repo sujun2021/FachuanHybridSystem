@@ -118,7 +118,7 @@ class Command(BaseCommand):
     def _check_admin_pages(self, client: Client) -> None:
         paths: list[Any] = ["/admin/", "/admin/cases/case/", "/admin/contracts/contract/"]
         for p in paths:
-            resp = client.get(p, HTTP_HOST="localhost")
+            resp = client.get(p, follow=True, HTTP_HOST="localhost")
             if resp.status_code != 200:
                 raise CommandError(f"Admin 冒烟失败:GET {p} -> {resp.status_code}")
 
