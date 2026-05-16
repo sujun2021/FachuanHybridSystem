@@ -10,9 +10,8 @@ from .case_chat_admin import CaseChatAdmin
 from .caselog_admin import CaseLogAdmin, CaseLogAttachmentAdmin
 from .caseassignment_admin import CaseAssignmentAdmin
 from .caseparty_admin import CasePartyAdmin
-
-# 所有Admin类通过装饰器自动注册
-# 无需手动注册，admin/__init__.py中的类会自动处理
+from .log_batch_admin import CaseLogBatchAdmin
+from .payment_admin import CasePaymentRecordAdmin, PaymentRecordCategoryAdmin
 
 __all__ = [
     "CaseAdmin",
@@ -20,5 +19,8 @@ __all__ = [
     "CaseChatAdmin",
     "CaseLogAdmin",
     "CaseLogAttachmentAdmin",
+    "CaseLogBatchAdmin",
     "CasePartyAdmin",
+    "CasePaymentRecordAdmin",
+    "PaymentRecordCategoryAdmin",
 ]

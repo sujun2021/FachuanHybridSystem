@@ -38,6 +38,15 @@ from .party import CaseAccessGrant, CaseAssignment, CaseParty
 # template_binding.py - 模板绑定相关模型和枚举
 from .template_binding import BindingSource, CaseTemplateBinding
 
+# payment_category.py - 款项用途字典
+from .payment_category import PaymentRecordCategory
+
+# payment_record.py - 收支记录
+from .payment_record import CasePaymentRecord, PaymentMethod, SourceType
+
+# log_batch.py - 批量日志
+from .log_batch import CaseLogBatch
+
 __all__ = [
     # 从 core.enums 重新导出(向后兼容)
     "CaseStage",
@@ -75,4 +84,12 @@ __all__ = [
     # template_binding.py
     "BindingSource",
     "CaseTemplateBinding",
+    # payment_category.py
+    "PaymentRecordCategory",
+    # payment_record.py
+    "CasePaymentRecord",
+    "PaymentMethod",
+    "SourceType",
+    # log_batch.py
+    "CaseLogBatch",
 ]

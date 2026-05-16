@@ -1286,7 +1286,7 @@ wheels = [
 
 [[package]]
 name = "fachuan-backend"
-version = "26.48.8"
+version = "26.48.11"
 source = { virtual = "." }
 dependencies = [
     { name = "beautifulsoup4" },

@@ -6,6 +6,8 @@ import { courtFilingApi } from './court-filing'
 import { courtGuaranteeApi } from './court-guarantee'
 import { authorizationApi } from './authorization'
 import { preservationApi } from './preservation'
+import { paymentApi } from './payment'
+import { logBatchApi } from './logBatch'
 
 export const caseApi = {
   ...casesCrudApi,
@@ -80,6 +82,20 @@ export const caseApi = {
   downloadPreservationApplication: preservationApi.downloadApplication,
   downloadPreservationDelayDelivery: preservationApi.downloadDelayDelivery,
   downloadPreservationPackage: preservationApi.downloadPackage,
+  // Payment Records
+  listCasePayments: paymentApi.listCasePayments,
+  getPaymentSummary: paymentApi.getPaymentSummary,
+  createPayment: paymentApi.createPayment,
+  updatePayment: paymentApi.updatePayment,
+  deletePayment: paymentApi.deletePayment,
+  listPaymentCategories: paymentApi.listCategories,
+  createPaymentCategory: paymentApi.createCategory,
+  deletePaymentCategory: paymentApi.deleteCategory,
+  // Batch Log
+  previewBatchLog: logBatchApi.previewBatchLog,
+  createBatchLog: logBatchApi.createBatchLog,
+  getBatchDetail: logBatchApi.getBatchDetail,
+  listBatches: logBatchApi.listBatches,
 }
 
 export default caseApi

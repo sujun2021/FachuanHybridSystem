@@ -18,6 +18,8 @@ from .folder_binding_api import router as folder_binding_router
 from .folder_generation_api import router as folder_generation_router
 from .folder_scan_api import router as folder_scan_router
 from .litigation_fee_api import router as litigation_fee_router
+from .log_batch_api import router as log_batch_router
+from .payment_api import router as payment_router
 from .template_binding_api import router as template_binding_router
 
 # 创建模块路由器
@@ -37,5 +39,7 @@ router.add_router("", folder_binding_router, tags=["案件文件夹绑定"])
 router.add_router("", case_material_router, tags=["案件材料"])
 router.add_router("", folder_scan_router, tags=["案件文件夹自动捕获"])
 router.add_router("", template_binding_router, tags=["案件模板绑定"])
+router.add_router("", payment_router, tags=["收支记录"])
+router.add_router("", log_batch_router, tags=["批量日志"])
 
 __all__ = ["router"]

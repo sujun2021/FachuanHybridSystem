@@ -63,6 +63,22 @@ from .material_schemas import (
 )
 from .number_schemas import CaseNumberIn, CaseNumberOut, CaseNumberUpdate
 from .party_schemas import CasePartyCreate, CasePartyIn, CasePartyOut, CasePartyUpdate
+from .payment_schemas import (
+    PaymentRecordCategoryCreate,
+    PaymentRecordCategoryOut,
+    PaymentRecordIn,
+    PaymentRecordOut,
+    PaymentRecordUpdate,
+    PaymentStatisticsOut,
+    PaymentSummaryOut,
+)
+from .log_batch_schemas import (
+    LogBatchCreateIn,
+    LogBatchListOut,
+    LogBatchOut,
+    LogBatchPreviewItem,
+    LogBatchPreviewOut,
+)
 from .supervising_authority_schemas import SupervisingAuthorityIn, SupervisingAuthorityOut, SupervisingAuthorityUpdate
 from .template_binding_schemas import (
     AvailableTemplateSchema,
@@ -139,6 +155,18 @@ __all__ = [
     "FolderBrowseResponseSchema",
     "LawyerOutFromDTO",
     "LegalStatusItem",
+    "LogBatchCreateIn",
+    "LogBatchListOut",
+    "LogBatchOut",
+    "LogBatchPreviewItem",
+    "LogBatchPreviewOut",
+    "PaymentRecordCategoryCreate",
+    "PaymentRecordCategoryOut",
+    "PaymentRecordIn",
+    "PaymentRecordOut",
+    "PaymentRecordUpdate",
+    "PaymentStatisticsOut",
+    "PaymentSummaryOut",
     "ReminderOut",
     "SupervisingAuthorityIn",
     "SupervisingAuthorityOut",

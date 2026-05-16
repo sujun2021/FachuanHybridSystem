@@ -563,3 +563,82 @@ export interface CaseListParams {
   case_type?: SimpleCaseType
   status?: string
 }
+
+// ============================================================================
+// 收支记录类型
+// ============================================================================
+
+export interface PaymentRecordCategory {
+  id: number
+  name: string
+  is_income: boolean
+  is_system: boolean
+  sort_order: number
+  created_at: string
+}
+
+export interface PaymentRecord {
+  id: number
+  case: number
+  category: number
+  category_detail?: PaymentRecordCategory
+  category_name?: string
+  amount: string | number
+  record_date: string
+  is_income: boolean
+  is_income_display?: string
+  payment_method?: string | null
+  payment_method_display?: string | null
+  payer_payee_name?: string
+  case_number?: number | null
+  source_type?: string
+  source_type_display?: string | null
+  source_id?: number | null
+  is_split?: boolean
+  split_count?: number
+  has_receipt?: boolean
+  receipt_note?: string
+  description?: string
+  created_at?: string
+  updated_at?: string
+  case_name?: string
+  actor_name?: string
+}
+
+export interface PaymentSummary {
+  case_id: number
+  total_income: string | number
+  total_expense: string | number
+  net_amount: string | number
+  income_count: number
+  expense_count: number
+  income_records: PaymentRecord[]
+  expense_records: PaymentRecord[]
+}
+
+// ============================================================================
+// 批量日志类型
+// ============================================================================
+
+export interface CaseLogBatch {
+  id: number
+  original_content: string
+  case_ids: number[]
+  reminder_type?: string | null
+  reminder_time?: string | null
+  has_expense_split: boolean
+  expense_amount?: string | number | null
+  expense_category?: number | null
+  expense_category_name?: string | null
+  expense_split_count?: number | null
+  expense_per_case?: string | number | null
+  expense_record_date?: string | null
+  total_cases: number
+  success_count: number
+  fail_count: number
+  error_message?: string
+  actor?: number
+  actor_name?: string
+  created_at: string
+  logs?: CaseLog[]
+}
