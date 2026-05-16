@@ -41,12 +41,23 @@ redis_url = os.environ.get("REDIS_URL", "")
 parsed = urlparse(redis_url)
 host = parsed.hostname or "redis"
 port = parsed.port or 6379
+password = parsed.password
 
 deadline = time.time() + 60
 while True:
     try:
         import socket
         sock = socket.create_connection((host, port), timeout=5)
+        
+        # 如果有密码，先发送认证命令
+        if password:
+            auth_cmd = f"AUTH {password}\r\n".encode()
+            sock.sendall(auth_cmd)
+            resp = sock.recv(1024)
+            if b"ERR" in resp and b"invalid password" in resp.lower():
+                raise Exception("Redis authentication failed")
+        
+        # 发送 PING 命令
         sock.sendall(b"PING\r\n")
         resp = sock.recv(1024)
         sock.close()
@@ -66,4 +77,8 @@ echo "Collecting static files..."
 uv run python manage.py collectstatic --noinput
 
 echo "Starting server..."
-exec uv run python manage.py runserver --insecure 0.0.0.0:8002
+if [ $# -gt 0 ]; then
+    exec "$@"
+else
+    exec uv run python manage.py runserver --insecure 0.0.0.0:8002
+fi

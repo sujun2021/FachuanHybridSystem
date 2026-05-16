@@ -89,11 +89,11 @@ class WeChatWorkProvider(WeChatWorkTokenMixin, WeChatWorkFileMixin, ChatProvider
             url = f"https://qyapi.weixin.qq.com/cgi-bin/appchat/create?access_token={access_token}"
             headers = {"Content-Type": "application/json"}
 
+            # 企业微信创建群聊至少需要2个成员
             payload: dict[str, Any] = {
                 "name": chat_name,
                 "owner": effective_owner_id,
-                "userlist": [effective_owner_id],
-                "chatid": f"case_{chat_name[:50]}",
+                "userlist": [effective_owner_id, "SuJunZiYong"],
             }
 
             timeout = self.config.get("TIMEOUT", 30)
