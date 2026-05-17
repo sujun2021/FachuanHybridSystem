@@ -25,7 +25,7 @@ def cleanup_temp_files(max_age_hours: int = 24) -> dict[str, Any]:
     tmp_dir = media_root / "tmp"
 
     if not tmp_dir.is_dir():
-        logger.info("tmp directory does not exist, skipping: %s", tmp_dir)
+        logger.debug("tmp directory does not exist, skipping: %s", tmp_dir)
         return {"removed": 0, "failed": 0, "skipped": True}
 
     import time
@@ -57,7 +57,7 @@ def cleanup_export_files(max_age_days: int = 7) -> dict[str, Any]:
     exports_dir = media_root / "exports"
 
     if not exports_dir.is_dir():
-        logger.info("exports directory does not exist, skipping: %s", exports_dir)
+        logger.debug("exports directory does not exist, skipping: %s", exports_dir)
         return {"removed": 0, "failed": 0, "skipped": True}
 
     import time
@@ -85,6 +85,8 @@ def check_disk_space(warning_pct: float = 85.0, critical_pct: float = 95.0) -> d
 
     Returns a dict with usage info and status ('ok', 'warning', 'critical').
     """
+    warning_pct = float(warning_pct) if warning_pct else 85.0
+    critical_pct = float(critical_pct) if critical_pct else 95.0
     media_root = str(settings.MEDIA_ROOT)
 
     try:
@@ -118,6 +120,7 @@ def check_disk_space(warning_pct: float = 85.0, critical_pct: float = 95.0) -> d
 # ---------------------------------------------------------------------------
 # 定时任务调度注册
 # ---------------------------------------------------------------------------
+
 
 def _register_schedules() -> None:
     """注册文件清理和磁盘监控定时任务。"""

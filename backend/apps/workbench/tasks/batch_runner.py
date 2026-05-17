@@ -60,7 +60,7 @@ def run_batch_analysis(job_id: str) -> None:
         # 已有运行中的循环 → 用线程隔离执行
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
             future = pool.submit(asyncio.run, _run_batch_async(UUID(job_id)))
-            future.result(timeout=3600)
+            future.result(timeout=7200)  # 2 小时超时
     except RuntimeError:
         # 没有运行中的循环 → 直接用 asyncio.run()
         asyncio.run(_run_batch_async(UUID(job_id)))
@@ -77,13 +77,46 @@ def run_batch_retry(job_id: str, item_ids: list[str]) -> None:
         asyncio.run(_run_batch_retry_async(UUID(job_id), [UUID(i) for i in item_ids]))
 
 
-def _sync_llm_chat(llm: Any, messages: list[dict[str, str]], model: str, temperature: float) -> str:
-    """同步调用 LLM（在线程池中运行，使用同步 chat() 方法避免 async 上下文问题）"""
+def _sync_llm_chat(
+    llm: Any,
+    messages: list[dict[str, str]],
+    model: str,
+    temperature: float,
+    max_retries: int = 3,
+    retry_delay: float = 2.0,
+) -> str:
+    """同步调用 LLM（在线程池中运行，使用同步 chat() 方法避免 async 上下文问题）
+
+    对临时性错误（超时、502、网络错误）自动重试。
+    """
     from apps.core.llm.config import LLMConfig
+    from apps.core.llm.exceptions import LLMAPIError, LLMNetworkError, LLMTimeoutError
 
     backend = LLMConfig.resolve_backend_for_model(model)
-    response = llm.chat(messages=messages, model=model, temperature=temperature, backend=backend, fallback=False)
-    return response.content  # type: ignore[no-any-return]
+    retryable_errors = (LLMTimeoutError, LLMNetworkError, LLMAPIError)
+
+    last_error: Exception | None = None
+    for attempt in range(max_retries):
+        try:
+            response = llm.chat(
+                messages=messages, model=model, temperature=temperature, backend=backend, fallback=False
+            )
+            return response.content  # type: ignore[no-any-return]
+        except retryable_errors as e:
+            last_error = e
+            if attempt < max_retries - 1:
+                delay = retry_delay * (2**attempt)  # 指数退避
+                logger.warning(
+                    "LLM 调用失败 (尝试 %d/%d): %s，%.1f 秒后重试",
+                    attempt + 1,
+                    max_retries,
+                    e,
+                    delay,
+                )
+                time.sleep(delay)
+            else:
+                raise
+    raise last_error  # type: ignore[misc]
 
 
 # ─── 辅助函数 ────────────────────────────────────────────────────────────────
@@ -265,7 +298,14 @@ async def _run_batch_async(job_id: UUID) -> None:
                 return
 
             except Exception as e:
-                logger.error("文件分析失败: %s - %s", item.file_name, e, exc_info=True)
+                from apps.core.llm.exceptions import LLMError
+
+                if isinstance(e, LLMError):
+                    # LLM 临时性错误：简化日志，不打印完整 traceback
+                    logger.error("文件分析失败 (LLM 错误): %s - %s", item.file_name, e)
+                else:
+                    # 其他错误：保留完整 traceback 便于排查
+                    logger.error("文件分析失败: %s - %s", item.file_name, e, exc_info=True)
                 await sync_to_async(BatchJobItem.objects.filter(id=item.id).update)(
                     status=BatchJobStatus.FAILED,
                     error=str(e)[:2000],
