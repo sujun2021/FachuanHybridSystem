@@ -53,7 +53,7 @@ class CaseContactAdminForm(forms.ModelForm[CaseContact]):
         cleaned = super().clean() or {}
         authority_name = cleaned.pop("authority_name", "").strip()
         case = cleaned.get("case")
-        if authority_name and case:
+        if authority_name and case and case.pk:
             from apps.cases.models import SupervisingAuthority
 
             authority, _created = SupervisingAuthority.objects.get_or_create(
@@ -96,7 +96,7 @@ class CaseContactInlineForm(forms.ModelForm[CaseContact]):
         cleaned = super().clean() or {}
         authority_name = cleaned.pop("authority_name", "").strip()
         case = cleaned.get("case") or getattr(self.instance, "case", None)
-        if authority_name and case:
+        if authority_name and case and case.pk:
             from apps.cases.models import SupervisingAuthority
 
             authority, _created = SupervisingAuthority.objects.get_or_create(
