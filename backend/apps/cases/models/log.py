@@ -172,6 +172,14 @@ class CaseLogAttachment(models.Model):
             models.Index(fields=["log"]),
         ]
 
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if not self.original_filename and self.file:
+            # 从 UploadedFile 或已存储的文件名中提取原始文件名
+            name = getattr(self.file, "name", "")
+            if name:
+                self.original_filename = Path(name).name
+        super().save(*args, **kwargs)
+
 
 class CaseLogVersion(models.Model):
     id: int
