@@ -8,10 +8,26 @@
 from typing import Literal
 
 __all__ = [
+    "has_court_automation_plugin",
     "has_court_filing_api_plugin",
     "has_weike_private_api_plugin",
     "get_plugin_status",
 ]
+
+
+def has_court_automation_plugin() -> bool:
+    """
+    检测法院自动化立案/担保插件是否已安装。
+
+    Returns:
+        bool: 插件存在返回 True，否则返回 False
+    """
+    try:
+        from plugins.court_automation import _installed
+
+        return True
+    except ImportError:
+        return False
 
 
 def has_court_filing_api_plugin() -> bool:
@@ -52,6 +68,7 @@ def get_plugin_status() -> dict[str, Literal["installed", "not_installed"]]:
         dict: 插件名称 -> 状态映射
     """
     return {
+        "court_automation": "installed" if has_court_automation_plugin() else "not_installed",
         "court_filing_http": "installed" if has_court_filing_api_plugin() else "not_installed",
         "weike_private_api": "installed" if has_weike_private_api_plugin() else "not_installed",
     }
