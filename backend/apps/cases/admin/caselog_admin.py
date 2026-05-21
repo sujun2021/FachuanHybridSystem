@@ -13,7 +13,8 @@ from apps.cases.models import CaseLog, CaseLogAttachment
 class CaseLogAttachmentInline(BaseTabularInline):
     model = CaseLogAttachment
     extra = 0
-    readonly_fields = ("uploaded_at",)
+    fields = ("file", "original_filename", "uploaded_at")
+    readonly_fields = ("original_filename", "uploaded_at")
     autocomplete_fields = ("log",)
 
 
@@ -60,8 +61,8 @@ class CaseLogAdmin(BaseModelAdmin):
 
 @admin.register(CaseLogAttachment)
 class CaseLogAttachmentAdmin(BaseModelAdmin):
-    list_display = ("id", "log", "uploaded_at")
-    search_fields = ("log__case__name",)
+    list_display = ("id", "log", "original_filename", "uploaded_at")
+    search_fields = ("log__case__name", "original_filename")
     autocomplete_fields = ("log",)
 
     def get_model_perms(self, request: HttpRequest) -> dict[str, bool]:

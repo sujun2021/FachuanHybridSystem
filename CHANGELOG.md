@@ -2,6 +2,117 @@
 
 本项目的所有重要更改都将记录在此文件中。
 
+## [26.48.16] - 2026-05-21
+
+### 前端
+
+#### 修复
+
+- **附件显示 UUID 文件名而非原始文件名**：`CaseLogSection` 中附件显示 "附件 #id"，现改为显示 `original_filename`
+
+### 后端
+
+#### 修复
+
+- **CaseLogAttachment 创建报 NOT NULL 约束错误**：PR #217 被 revert 但数据库列未回滚，`cases_caselogattachment` 表有 4 个 NOT NULL 列（`original_filename`、`relative_file_path`、`storage_root_type`、`subdir_path`）不在 model 中。补充 model 字段定义并用 `SeparateDatabaseAndState` migration 注册
+
+- **附件显示 UUID 文件名而非原始文件名**：`DatedUUIDPath` 将文件名替换为 UUID 导致原文件名丢失。Model `save()` 自动填充 `original_filename`，数据迁移回填 255 条已有记录
+
+- **材料绑定和导出中附件文件名仍显示 UUID**：`case_material_query_service`、`case_material_service`、`case_export_serializer_service` 从 `file.name` 提取文件名得到 UUID，改为优先使用 `original_filename`
+
+- **一张网担保 Page.evaluate JS 语法错误**：`dialog_field_filling.py` 中 `// pragma: allowlist secret` 和 `# pragma: allowlist secret` 注释被放在 JavaScript 字符串内，前者在 JS 中注释掉 `']` 和 `,`，后者是无效 token。移除 JS 字符串内的 Python 注释
+
+#### 依赖变更
+
+- **idna** 3.13 → 3.15（修复 CVE-2026-45409）
+- **pip-audit** 忽略无修复版本的 PYSEC-2026-89（markdown）和 PYSEC-2025-183（pyjwt）
+
+## [26.48.15] - 2026-05-19
+
+### 前端
+
+#### 修复
+
+- **当事人表单「我方当事人」开关缺失**：`ClientForm` 的 zod schema 定义了 `is_our_client` 字段但表单 JSX 中缺少对应输入控件，导致新建时默认为 `true` 且无法切换。在地址字段下方添加 Switch 开关
+
+### 后端
+
+#### 修复
+
+- **新建案件 CaseContactInline 未保存实例报错**：`CaseContactInlineForm.clean()` 中用未保存的 Case 实例（无 pk）查询 `SupervisingAuthority`，触发 `ValueError: Model instances passed to related filters must be saved`。增加 `case.pk` 守卫
+
+- **新建案件 CaseAssignment 唯一约束冲突**：`save_model()` 中 `sync_assignments_from_contract()` 从合同同步律师指派后，`save_formset()` 处理 inline 表单时用户选了相同律师导致 `IntegrityError`。在 `save_formset()` 中对 `CaseAssignment` 增加去重检查
+
+- **合同非在办状态仍可点击「保存并创建案件」**：合同 change form 模板中 `updateCreateCaseButton()` 只检查合同类型未检查状态，已归档合同点击后后端抛 `CONTRACT_INACTIVE`。现在归档合同禁用该按钮
+
+- **未签约合同无法创建案件**：`validate_contract_active()` 仅允许 `active` 状态，`unsigned`（未签约）合同也被拒绝。改为 `active` 和 `unsigned` 均允许，仅 `archived` 不可创建
+
+- **CaseAssignmentInline 显示溢出**：未配置 `fields` 导致冗余的 `case` 父 FK 和巨大的 `lawyer` 下拉框同时显示。隐藏 `case` 字段并启用 `lawyer` autocomplete
+
+- **CasePartyInline 末行重复显示当事人**：`extra = 1` 在页面加载时渲染空表单，JS 的 `updateClientOptions` 操作所有 select 时污染该空行。改为 `extra = 0`
+
+## [26.48.14] - 2026-05-19
+
+### 后端
+
+#### 修复
+
+- **OA 立案 async context 报错**：修复 `sync_playwright().start()` 在 ThreadPoolExecutor 后台线程中创建事件循环，导致 Django `@async_unsafe` 装饰器拒绝 ORM 操作的问题（`SynchronousOnlyOperation`）。在 `_run_in_thread` 中设置 `DJANGO_ALLOW_ASYNC_UNSAFE=true` 并管理数据库连接生命周期
+
+- **删除 workbench_session 幽灵列**：移除 `workbench_session` 表中不存在于 model 的 `pinned` 和 `tags` 列（migration `0008_remove_session_pinned`）
+
+#### 新功能
+
+- **适配 OA 新 SSO 登录流程**：OA 系统从 form-based 登录迁移到 OAuth/OIDC SSO (`access.jtn.com`)，需要先通过企业微信扫码完成 SSO 认证，再输入 OA 账号密码登录。新增 `sso_login.py` 实现完整 SSO 扫码登录流程 + cookie 持久化（`~/.fachuan/jtn_cookies.json`），HTTP 和 Playwright 立案路径均优先使用缓存 cookies，过期自动触发重新登录
+
+## [26.48.13] - 2026-05-17
+
+### 前端
+
+#### 修复
+
+- **批量分析 JSON 解析修复**：修复 `parseBatchResult` 中无效转义序列和字符串内括号匹配的问题
+
+### 后端
+
+#### 优化
+
+- **默认文档模板更新**：`complete_defaults.json` 新增 3 个东莞第三法院模板（被告送达地址线索书、原告送达地址确认书、账户确认书），总模板数从 22 个增至 25 个
+
+## [26.48.12] - 2026-05-17
+
+### 前端
+
+#### 新功能
+
+- **批量分析实时结果展示**：每个文件分析完成后通过 SSE 实时注入消息列表，不再等全部完成才显示
+
+#### 修复
+
+- **批量分析 JSON 解析增强**：改进 `parseBatchResult` 解析器，使用深度匹配 `{}` 定位 JSON 边界，支持 LLM 返回的未转义控制字符（`\n`、`\t`、`\r`）和末尾多余逗号
+- **批量分析结果渲染修复**：移除注入时的 `formatBatchContent` 预处理，统一由 `BatchItemContent` 组件负责 JSON 解析和结构化卡片渲染，修复已格式化 markdown 无法二次解析导致回退为纯文本的问题
+
+### 后端
+
+#### 修复
+
+- **Django Q 任务参数类型转换**：`check_disk_space` 的 `warning_pct`/`critical_pct` 参数从 SystemConfig 读取时为字符串，添加 `float()` 转换，空字符串回退到默认值
+- **SSE 端点 async ORM 修复**：`stream_batch_progress` 中 `get_job_by_id` 调用使用 `sync_to_async` 包装，修复 `SynchronousOnlyOperation` 错误
+- **LLM 临时性错误自动重试**：对 `LLMTimeoutError`、`LLMNetworkError`、`LLMAPIError` 自动重试最多 3 次，指数退避（2s → 4s → 8s），简化 LLM 错误日志为单行
+- **临时目录日志降级**：`tmp/`、`exports/` 目录不存在时从 INFO 降级为 DEBUG，减少噪音日志
+- **批量分析任务超时增加**：Django Q2 任务超时从 1 小时增加到 2 小时，`future.result()` 超时同步调整
+
+## [26.48.11] - 2026-05-16
+
+### 前端
+
+#### 新功能
+
+- **仪表盘日历增强**：对 Dashboard 的 CalendarCard 进行三项升级
+  - **事件类型颜色区分**：日历网格中的事件条根据 reminder_type 使用 8 种类型颜色（红=开庭、橙=保全到期、黄=举证到期、紫=上诉到期、粉=诉讼时效、蓝=缴费期限、青=材料提交、灰=其他），已逾期事件统一用红色底色 + 删除线，与待处理事件清晰区分
+  - **议程视图**：新增 AgendaView 组件，在日历 header 增加「月/议程」Tabs 切换，议程模式按日期分组、按时间排序展示当月所有事件，支持类型 Badge、逾期标记、律师/法庭信息
+  - **事件溢出 Popover**：超过 3 条事件时点击「共 N 条」弹出 Popover 滚动列表，可直接点击查看事件详情，无需跳转
+
 ## [26.48.10] - 2026-05-15
 
 ### 后端
@@ -26,7 +137,7 @@
 
 #### 优化
 
-- **OA 脚本目录重构**：将 `oa_scripts/` 下散落的金诚同达专属文件（`jtn_case_html_parser.py`、`jtn_case_import_models.py`、`jtn_client_import.py`）归入统一的 `jtn/` 目录，与已有的 `jtn_case_import/`、`jtn_filing/` 子包保持一致。新增律所时只需创建一个新目录，无需辨认哪些文件属于哪个律所
+- **OA 脚本目录重构**：将 `oa_scripts/` 下散落的JT专属文件（`jtn_case_html_parser.py`、`jtn_case_import_models.py`、`jtn_client_import.py`）归入统一的 `jtn/` 目录，与已有的 `jtn_case_import/`、`jtn_filing/` 子包保持一致。新增律所时只需创建一个新目录，无需辨认哪些文件属于哪个律所
 
 ## [26.48.8] - 2026-05-13
 
@@ -1206,7 +1317,7 @@
 - **案件详情页案号增强显示**：basic_info 中案号列表增加文书名称、生效/未生效标签，案号状态一目了然
 - **合同详情页关联案件显示案号**：基本信息 Tab 关联案件卡片增加主案号展示
 - **合同详情页财务 Tab 快捷添加收款/回款**：收款记录和回款记录区域新增「添加收款」「添加回款」快捷按钮，跳转至编辑页对应内联区域
-- **金诚同达 OA 导入独立页面**：OA 导入功能从列表页内嵌迁移为独立页面（`jtn_oa_import_view`），解耦列表页模板，便于未来替换其他律所 OA；立案 Tab 的 JS 逻辑也独立为 `jtn_oa_filing.js`
+- ** OA 导入独立页面**：OA 导入功能从列表页内嵌迁移为独立页面（`jtn_oa_import_view`），解耦列表页模板，便于未来替换其他律所 OA；立案 Tab 的 JS 逻辑也独立为 `jtn_oa_filing.js`
 
 ### 变更
 

@@ -146,6 +146,7 @@ class CaseFilingInfoOut(Schema):
     has_http_plugin: bool = False
     suggested_filing_type: str = _FILING_TYPE_CIVIL
     default_filing_engine: str = _FILING_ENGINE_API
+    plugin_available: bool = True
 
 
 class ExecuteCourtFilingIn(Schema):

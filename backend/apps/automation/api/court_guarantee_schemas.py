@@ -67,6 +67,7 @@ class CaseGuaranteeInfoOut(Schema):
     quote_context: dict[str, Any] | None = None
     reusable_quotes: list[dict[str, Any]] = []
     respondent_options: list[dict[str, Any]] = []
+    plugin_available: bool = True
 
 
 class CaseQuoteOperationIn(Schema):

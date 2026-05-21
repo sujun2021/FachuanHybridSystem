@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
+import { useQuery } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowLeft, Edit, Trash2, FileWarning, Hash, Building2, MessageSquare,
@@ -21,6 +22,7 @@ import {
 import { PATHS, generatePath } from '@/routes/paths'
 import { DetailField, DetailCard, StatusBadge } from '@/components/shared'
 
+import { caseApi } from '../api'
 import { useCase } from '../hooks/use-case'
 import { useCaseMutations } from '../hooks/use-case-mutations'
 import { useMaterialCandidates } from '../hooks/use-material-candidates'
@@ -242,13 +244,20 @@ export function CaseDetail({ caseId }: CaseDetailProps) {
     return ourParties.length > 0 && ourParties.every(p => p.legal_status === 'defendant')
   }, [caseData?.parties])
 
+  const { data: courtStatus } = useQuery({
+    queryKey: ['court-status'],
+    queryFn: () => caseApi.getCourtStatus(),
+    staleTime: 5 * 60 * 1000,
+  })
+
   const tabs = useMemo(() => {
     const list = [...BASE_TABS]
-    if (!isOurPartyAllDefendant) {
+    const showCourtFiling = courtStatus?.available && !isOurPartyAllDefendant
+    if (showCourtFiling) {
       list.splice(6, 0, { value: 'court_filing', label: '一张网立案' })
     }
     return list
-  }, [isOurPartyAllDefendant])
+  }, [isOurPartyAllDefendant, courtStatus?.available])
   const [selectedParty, setSelectedParty] = useState<CaseParty | null>(null)
   const [selectedLawyer, setSelectedLawyer] = useState<CaseAssignment | null>(null)
   const [selectedContact, setSelectedContact] = useState<CaseContact | null>(null)

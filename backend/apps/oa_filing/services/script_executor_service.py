@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import logging
+import os
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 from django.apps import apps as django_apps
+from django.db import connection
 
 logger = logging.getLogger("apps.oa_filing")
 
@@ -67,6 +69,11 @@ class ScriptExecutorService:
         """后台线程：执行脚本并更新会话状态。"""
         from apps.oa_filing.models import FilingSession, SessionStatus
 
+        # Playwright sync_playwright().start() 会在当前线程创建事件循环，
+        # 导致 Django 的 @async_unsafe 装饰器拒绝 ORM 操作。
+        # 在后台线程中绕过此检查是安全的，因为该线程由 ThreadPoolExecutor 管理。
+        os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
+        connection.close()
         try:
             self._dispatch(site_name, credential, contract_id, case_id)
             FilingSession.objects.filter(pk=session_id).update(status=SessionStatus.COMPLETED)
@@ -77,6 +84,8 @@ class ScriptExecutorService:
                 error_message=str(exc),
             )
             logger.error("立案失败: session=%d, error=%s", session_id, exc)
+        finally:
+            connection.close()
 
     def _dispatch(
         self,

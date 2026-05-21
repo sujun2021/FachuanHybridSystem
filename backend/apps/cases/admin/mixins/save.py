@@ -14,7 +14,7 @@ from django.forms import ModelForm
 from django.http import HttpRequest
 from django.utils.translation import gettext_lazy as _
 
-from apps.cases.models import Case, CaseLog
+from apps.cases.models import Case, CaseAssignment, CaseLog
 
 from .service import CaseAdminServiceMixin
 
@@ -171,13 +171,18 @@ class CaseAdminSaveMixin(CaseAdminServiceMixin):
                 user_id = getattr(request.user, "id", None)
                 if user_id is not None:
                     obj.actor_id = user_id
+            if isinstance(obj, CaseAssignment) and not obj.pk and obj.case_id and obj.lawyer_id:
+                if CaseAssignment.objects.filter(case_id=obj.case_id, lawyer_id=obj.lawyer_id).exists():
+                    continue
             obj.save()
         formset.save_m2m()
         for obj in formset.deleted_objects:
             try:
                 obj.delete()
             except Exception:
-                logger.warning("删除关联对象失败: %s pk=%s", type(obj).__name__, getattr(obj, "pk", None), exc_info=True)
+                logger.warning(
+                    "删除关联对象失败: %s pk=%s", type(obj).__name__, getattr(obj, "pk", None), exc_info=True
+                )
 
 
 __all__: list[str] = ["CaseAdminSaveMixin"]

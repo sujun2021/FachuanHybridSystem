@@ -186,6 +186,10 @@ class CaseLogAttachment(models.Model):
         validators=[validate_log_attachment],
         verbose_name=_("相关文书"),
     )
+    original_filename = models.CharField(max_length=500, blank=True, default="", verbose_name=_("原始文件名"))
+    relative_file_path = models.CharField(max_length=1000, blank=True, default="", verbose_name=_("相对文件路径"))
+    storage_root_type = models.CharField(max_length=100, blank=True, default="", verbose_name=_("存储根类型"))
+    subdir_path = models.CharField(max_length=1000, blank=True, default="", verbose_name=_("子目录路径"))
     uploaded_at = models.DateTimeField(auto_now_add=True, verbose_name=_("上传时间"))
 
     class Meta:
@@ -194,6 +198,14 @@ class CaseLogAttachment(models.Model):
         indexes: ClassVar = [
             models.Index(fields=["log"]),
         ]
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if not self.original_filename and self.file:
+            # 从 UploadedFile 或已存储的文件名中提取原始文件名
+            name = getattr(self.file, "name", "")
+            if name:
+                self.original_filename = Path(name).name
+        super().save(*args, **kwargs)
 
 
 class CaseLogVersion(models.Model):

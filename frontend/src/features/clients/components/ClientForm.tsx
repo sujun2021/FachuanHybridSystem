@@ -22,6 +22,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 
 import { useClient } from '../hooks/use-client'
 import { useClientMutations } from '../hooks/use-client-mutations'
@@ -238,6 +239,13 @@ export function ClientForm({ clientId, mode }: ClientFormProps) {
                   <FormLabel>地址</FormLabel>
                   <FormControl><Input placeholder="请输入地址" disabled={isPending} className="h-11" {...field} /></FormControl>
                   <FormMessage />
+                </FormItem>
+              )} />
+
+              <FormField control={form.control} name="is_our_client" render={({ field }) => (
+                <FormItem className="flex flex-row items-center gap-3 lg:col-span-2">
+                  <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} disabled={isPending} /></FormControl>
+                  <FormLabel className="!mt-0">我方当事人</FormLabel>
                 </FormItem>
               )} />
 

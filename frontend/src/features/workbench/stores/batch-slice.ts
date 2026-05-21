@@ -22,7 +22,8 @@ function injectCompletedItem(
 ) {
   if (_shownBatchItemIds.has(itemId)) return
   _shownBatchItemIds.add(itemId)
-  get().appendMessages(createBatchItemMessage(fileName, formatBatchContent(stripMetadataBlock(result)), jobId))
+  // 传原始 JSON 给 BatchItemContent，由组件负责解析和格式化渲染
+  get().appendMessages(createBatchItemMessage(fileName, stripMetadataBlock(result), jobId))
 }
 
 async function handleTerminal(set: SetFn, get: GetFn, progress: BatchProgress) {
@@ -58,7 +59,8 @@ async function handleTerminal(set: SetFn, get: GetFn, progress: BatchProgress) {
         progress.job.id,
         completedItems.map((item) => ({
           file_name: item.file_name,
-          content: `### ${item.file_name}\n\n${formatBatchContent(stripMetadataBlock(item.result))}`,
+          // 存原始 JSON，由 BatchItemContent 组件负责解析和格式化渲染
+          content: `### ${item.file_name}\n\n${stripMetadataBlock(item.result)}`,
           metadata: { source: 'batch_item', job_id: progress.job.id },
         })),
       )
@@ -141,6 +143,11 @@ function handleSSEEvent(set: SetFn, get: GetFn, event: { type: string; data: Rec
         job: { ...bp.job, completed_items: completed, failed_items: failed, progress },
       },
     })
+
+    // 实时注入已完成的分析结果到消息列表
+    if (isCompleted && event.data.result) {
+      injectCompletedItem(get, itemId, fileName, event.data.result as string, bp.job.id)
+    }
   } else if (event.type === 'progress') {
     const data = event.data
     set({
