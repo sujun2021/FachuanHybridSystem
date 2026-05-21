@@ -67,7 +67,7 @@ class CaseMaterialQueryService:
             results.append(
                 {
                     "attachment_id": att.id,
-                    "file_name": (getattr(att.file, "name", "") or "").rsplit("/", 1)[-1],
+                    "file_name": att.original_filename or (getattr(att.file, "name", "") or "").rsplit("/", 1)[-1],
                     "file_url": getattr(att.file, "url", "") or "",
                     "uploaded_at": att.uploaded_at,
                     "log_id": att.log_id,
@@ -211,7 +211,7 @@ class CaseMaterialQueryService:
 
     def _material_item_payload(self, m: CaseMaterial) -> dict[str, Any]:
         att = m.source_attachment
-        file_name = getattr(getattr(att, "file", None), "name", "") if att else ""
+        file_name = (getattr(att, "original_filename", "") if att else "") or (getattr(getattr(att, "file", None), "name", "") if att else "")
         url = getattr(getattr(att, "file", None), "url", "") if att else ""
         uploaded_at = getattr(att, "uploaded_at", None)
         party_labels = []
