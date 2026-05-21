@@ -52,8 +52,31 @@ router = Router()
 _EXECUTOR = ThreadPoolExecutor(max_workers=2, thread_name_prefix="court-guarantee")
 
 
+def _check_plugin() -> bool:
+    """检查法院自动化插件是否已安装。"""
+    try:
+        from plugins import has_court_automation_plugin
+
+        return has_court_automation_plugin()
+    except ImportError:
+        return False
+
+
 @router.get("/case-info/{case_id}", response=CaseGuaranteeInfoOut)
 def get_case_guarantee_info(request: HttpRequest, case_id: int) -> Any:
+    if not _check_plugin():
+        return {
+            "case_id": case_id,
+            "case_name": "",
+            "preserve_amount": "",
+            "preserve_category": "",
+            "court_name": None,
+            "has_case_number": False,
+            "insurer_options": [],
+            "respondent_options": [],
+            "quote_context": None,
+            "plugin_available": False,
+        }
     from apps.cases.models import Case, CaseNumber, CaseParty, SupervisingAuthority
 
     case = Case.objects.get(pk=case_id)
@@ -96,6 +119,7 @@ def get_case_guarantee_info(request: HttpRequest, case_id: int) -> Any:
         "quote_context": quote_context,
         "reusable_quotes": reusable_quotes,
         "respondent_options": respondent_options,
+        "plugin_available": True,
     }
 
 
@@ -323,6 +347,8 @@ def delete_case_quote_binding(request: HttpRequest, binding_id: int, payload: Ca
 
 @router.post("/execute", response=ExecuteCourtGuaranteeOut)
 def execute_court_guarantee(request: HttpRequest, payload: ExecuteCourtGuaranteeIn) -> Any:
+    if not _check_plugin():
+        return {"success": False, "message": "法院自动化插件未安装", "session_id": None, "status": "failed"}
     from apps.automation.models import ScraperTask, ScraperTaskStatus, ScraperTaskType
     from apps.cases.models import Case, CaseParty
 

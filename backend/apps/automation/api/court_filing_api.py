@@ -43,9 +43,35 @@ router = Router()
 _EXECUTOR = ThreadPoolExecutor(max_workers=2, thread_name_prefix="court-filing")
 
 
+def _check_plugin() -> bool:
+    """检查法院自动化插件是否已安装。"""
+    try:
+        from plugins import has_court_automation_plugin
+
+        return has_court_automation_plugin()
+    except ImportError:
+        return False
+
+
 @router.get("/case-info/{case_id}", response=CaseFilingInfoOut)
 def get_case_filing_info(request: HttpRequest, case_id: int) -> Any:
     """获取案件立案所需信息"""
+    if not _check_plugin():
+        return {
+            "case_id": case_id,
+            "case_name": "",
+            "cause_of_action": "",
+            "court_name": None,
+            "target_amount": None,
+            "plaintiff_name": None,
+            "defendant_name": None,
+            "our_party_is_plaintiff_side": False,
+            "has_court_credential": False,
+            "has_http_plugin": False,
+            "suggested_filing_type": "",
+            "default_filing_engine": "",
+            "plugin_available": False,
+        }
     from apps.cases.models import Case, CaseParty, SupervisingAuthority
 
     case = Case.objects.get(pk=case_id)
@@ -100,12 +126,15 @@ def get_case_filing_info(request: HttpRequest, case_id: int) -> Any:
         "has_http_plugin": has_http_plugin,
         "suggested_filing_type": suggested_filing_type,
         "default_filing_engine": default_filing_engine,
+        "plugin_available": True,
     }
 
 
 @router.post("/execute", response=ExecuteCourtFilingOut)
 def execute_court_filing(request: HttpRequest, payload: ExecuteCourtFilingIn) -> Any:
     """执行一张网在线立案（后台线程）"""
+    if not _check_plugin():
+        return {"success": False, "message": "法院自动化插件未安装", "session_id": None, "status": "failed"}
     from apps.automation.models import ScraperTask, ScraperTaskStatus, ScraperTaskType
     from apps.cases.models import Case, CaseParty, SupervisingAuthority
     from apps.core.models import Court as CourtModel

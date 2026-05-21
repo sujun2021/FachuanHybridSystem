@@ -208,6 +208,10 @@ backend/apps/automation/services/scraper/sites/court_zxfw_login_private/
 backend/plugins/court_filing_http/*
 !backend/plugins/court_filing_http/__init__.py
 
+# 法院自动化插件（Playwright 立案/担保，用户需单独获取，不入库）
+backend/plugins/court_automation/*
+!backend/plugins/court_automation/__init__.py
+
 # legal_research 基线评估样本（本地标注数据，不入库）
 backend/apps/legal_research/evaluation/
 backend/apps/legal_research/evaluation/baseline_cases.json
