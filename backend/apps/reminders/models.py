@@ -59,7 +59,7 @@ class Reminder(models.Model):
         help_text=_("同步到案件重要时间：勾选后会在案件详情的重要时间中展示，不会复制生成新数据。"),
     )
     metadata: Any = models.JSONField(default=dict, blank=True, verbose_name=_("扩展数据"))
-    include_in_important_time: bool = models.BooleanField(
+    include_in_important_time: Any = models.BooleanField(
         default=False,
         verbose_name=_("列入重要时间"),
         help_text=_("同步到案件重要时间：勾选后会在案件详情的重要时间中展示，不会复制生成新数据。"),
