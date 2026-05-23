@@ -283,6 +283,10 @@ def _register_app_routers() -> None:
 
     api_v1.add_router("/wechat-mp", wechat_mp_router, auth=JWTOrSessionAuth(), tags=["公众号发布"])
 
+    from apps.content_ops.api import router as content_ops_router
+
+    api_v1.add_router("/content-ops", content_ops_router, auth=JWTOrSessionAuth(), tags=["内容运营"])
+
     api_v1.add_router("/court-filing", court_filing_router, auth=JWTOrSessionAuth(), tags=["一张网立案"])
     api_v1.add_router("/court-guarantee", court_guarantee_router, auth=JWTOrSessionAuth(), tags=["一张网担保"])
     api_v1.add_router("/court", court_status_router, auth=JWTOrSessionAuth(), tags=["法院自动化状态"])
