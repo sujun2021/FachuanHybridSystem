@@ -1,15 +1,21 @@
+import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { contentOpsApi } from '../api'
-import type { CreateTaskInput, ReviewActionInput } from '../types'
+import type { CreateTaskInput, ReviewActionInput, TopicSuggestion } from '../types'
 
-// 选题建议
+// 选题建议（手动触发，使用 mutation）
 export function useTopicSuggestions() {
-  return useQuery({
-    queryKey: ['content-ops', 'topics'],
-    queryFn: () => contentOpsApi.suggestTopics(),
-    enabled: false, // 手动触发
-    staleTime: Infinity,
+  const [data, setData] = useState<TopicSuggestion[] | null>(null)
+  const mutation = useMutation({
+    mutationFn: () => contentOpsApi.suggestTopics(),
+    onSuccess: (result) => setData(result),
   })
+
+  return {
+    data,
+    isFetching: mutation.isPending,
+    refetch: () => mutation.mutateAsync(),
+  }
 }
 
 // 任务列表

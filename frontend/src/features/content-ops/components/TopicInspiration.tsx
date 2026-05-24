@@ -72,7 +72,7 @@ export function TopicInspiration({ onSelectTopic }: TopicInspirationProps) {
 
       {topics && topics.length > 0 && !isFetching && (
         <div className="grid gap-3 sm:grid-cols-2">
-          {topics.map((topic, index) => (
+          {topics.map((topic: TopicSuggestion, index: number) => (
             <Card
               key={index}
               className="cursor-pointer transition-all hover:border-primary/50 hover:shadow-sm group"
