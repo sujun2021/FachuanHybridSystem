@@ -96,7 +96,9 @@ def _diagnose_unavailable(name: str, backend: ILLMBackend) -> str:
         model = getattr(backend, "default_model", None)
         if not model:
             return "默认模型未配置"
-        return f"is_available() 返回 False (api_key={'有' if api_key else '无'}, base_url={base_url!r}, model={model!r})"
+        return (
+            f"is_available() 返回 False (api_key={'有' if api_key else '无'}, base_url={base_url!r}, model={model!r})"
+        )
     except Exception as e:
         return f"诊断失败: {e}"
 

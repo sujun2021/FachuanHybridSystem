@@ -34,7 +34,7 @@ class CaseClientPaymentInline(BaseTabularInline[ClientPaymentRecord, ClientPayme
 
     def save_formset(self, request: HttpRequest, form: Any, formset: Any, change: bool) -> None:
         instances = formset.save(commit=False)
-        parent_case = self.instance
+        parent_case = self.instance  # type: ignore[attr-defined]
         for instance in instances:
             if parent_case and parent_case.pk:
                 if not instance.contract_id:

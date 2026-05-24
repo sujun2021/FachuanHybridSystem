@@ -243,7 +243,13 @@ def list_available_models(request: Any) -> Any:
     default_model = LLMConfig.get_default_model().strip()
     if default_model:
         seen.add(default_model)
-        models.append({"id": default_model, "name": f"{default_model}（默认）", "backend": LLMConfig.resolve_backend_for_model(default_model)})
+        models.append(
+            {
+                "id": default_model,
+                "name": f"{default_model}（默认）",
+                "backend": LLMConfig.resolve_backend_for_model(default_model),
+            }
+        )
 
     for item in result.models:
         model_id = str(item.get("id", "")).strip()
@@ -251,10 +257,12 @@ def list_available_models(request: Any) -> Any:
             continue
         seen.add(model_id)
         model_name = str(item.get("name", "")).strip()
-        models.append({
-            "id": model_id,
-            "name": model_name if model_name and model_name != model_id else model_id,
-            "backend": LLMConfig.resolve_backend_for_model(model_id),
-        })
+        models.append(
+            {
+                "id": model_id,
+                "name": model_name if model_name and model_name != model_id else model_id,
+                "backend": LLMConfig.resolve_backend_for_model(model_id),
+            }
+        )
 
     return ModelListResponse(models=[ModelInfo(id=m["id"], name=m["name"], backend=m["backend"]) for m in models])

@@ -120,11 +120,7 @@ class Case(models.Model):
         root_id: int = self.pk
         visited: set[int] = {root_id}
         while True:
-            parent_id = (
-                Case.objects.filter(pk=root_id)
-                .values_list("previous_case_id", flat=True)
-                .first()
-            )
+            parent_id = Case.objects.filter(pk=root_id).values_list("previous_case_id", flat=True).first()
             if not parent_id or parent_id in visited:
                 break
             visited.add(parent_id)
@@ -134,17 +130,12 @@ class Case(models.Model):
         chain: list[int] = [root_id]
         frontier = [root_id]
         while frontier:
-            children = list(
-                Case.objects.filter(previous_case_id__in=frontier)
-                .values_list("pk", flat=True)
-            )
+            children = list(Case.objects.filter(previous_case_id__in=frontier).values_list("pk", flat=True))
             frontier = [c for c in children if c not in chain]
             chain.extend(frontier)
 
         # 3. 一次性取出所有案件，按收案日期排序
-        return list(
-            Case.objects.filter(pk__in=chain).order_by("start_date", "pk")
-        )
+        return list(Case.objects.filter(pk__in=chain).order_by("start_date", "pk"))
 
     def clean(self) -> None:
         """

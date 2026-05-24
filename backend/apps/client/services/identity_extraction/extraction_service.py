@@ -527,8 +527,8 @@ class IdentityExtractionService:
         registration_date = None
         date_match = re.search(r"(?:成立日期|注册日期|营业期限)[:：]?\s*(\d{4})\D(\d{1,2})\D(\d{1,2})", text)
         if date_match:
-            y, m, d = date_match.group(1), date_match.group(2), date_match.group(3)
-            registration_date = f"{y}-{int(m):02d}-{int(d):02d}"
+            y_s, m_s, d_s = date_match.group(1), date_match.group(2), date_match.group(3)
+            registration_date = f"{y_s}-{int(m_s):02d}-{int(d_s):02d}"
 
         # 经营范围
         business_scope = None
@@ -667,16 +667,19 @@ class IdentityExtractionService:
             json_start = content.find("```json") + 7
             json_end = content.find("```", json_start)
             if json_end > json_start:
-                return json.loads(content[json_start:json_end].strip())
+                result: dict[str, Any] = json.loads(content[json_start:json_end].strip())
+                return result
         # 2. 尝试从 ``` ... ``` 代码块中提取
         if "```" in content:
             json_start = content.find("```") + 3
             json_end = content.find("```", json_start)
             if json_end > json_start:
-                return json.loads(content[json_start:json_end].strip())
+                result2: dict[str, Any] = json.loads(content[json_start:json_end].strip())
+                return result2
         # 3. 尝试直接解析整个内容
         try:
-            return json.loads(content.strip())
+            result3: dict[str, Any] = json.loads(content.strip())
+            return result3
         except json.JSONDecodeError:
             pass
         # 4. 尝试从文本中提取第一个 JSON 对象
@@ -684,7 +687,8 @@ class IdentityExtractionService:
 
         match = re.search(r"\{[^{}]*\}", content, re.DOTALL)
         if match:
-            return json.loads(match.group())
+            result4: dict[str, Any] = json.loads(match.group())
+            return result4
         raise ValueError("无法从 LLM 输出中提取 JSON")
 
     def _llm_extract(self, raw_text: str, doc_type: str, model: str) -> dict[str, Any]:
@@ -743,9 +747,7 @@ class IdentityExtractionService:
 
         except ConnectionError as e:
             logger.exception("LLM 服务连接失败: %s", e)
-            raise ServiceUnavailableError(
-                message=_("LLM 服务连接失败: %(e)s") % {"e": e}, service_name="LLM"
-            ) from e
+            raise ServiceUnavailableError(message=_("LLM 服务连接失败: %(e)s") % {"e": e}, service_name="LLM") from e
         except LLMTimeoutError as e:
             logger.warning("LLM 请求超时: %s", e)
             raise OllamaExtractionError(_("智能识别超时，请稍后重试")) from e

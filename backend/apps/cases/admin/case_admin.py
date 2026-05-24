@@ -16,6 +16,7 @@ from apps.cases.admin.case_forms_admin import (
     CasePartyInlineFormSet,
     SupervisingAuthorityInlineForm,
 )
+from apps.cases.admin.case_payment_inline import CaseClientPaymentInline
 from apps.cases.admin.mixins import (
     CaseAdminActionsMixin,
     CaseAdminSaveMixin,
@@ -32,7 +33,6 @@ from apps.cases.models import (
     SupervisingAuthority,
 )
 from apps.contacts.admin import CaseContactInline
-from apps.cases.admin.case_payment_inline import CaseClientPaymentInline
 from apps.core.admin.mixins import AdminImportExportMixin
 
 if TYPE_CHECKING:
