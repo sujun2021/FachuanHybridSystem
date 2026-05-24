@@ -39,7 +39,7 @@ export function TaskList({ selectedTaskId, onSelectTask }: TaskListProps) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div className="flex items-center justify-center py-8">
         <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
       </div>
     )
@@ -47,8 +47,7 @@ export function TaskList({ selectedTaskId, onSelectTask }: TaskListProps) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium">任务记录</h3>
+      <div className="flex items-center justify-end">
         <Button variant="ghost" size="sm" onClick={() => refetch()} disabled={isFetching}>
           <RefreshCw className={cn('w-3.5 h-3.5', isFetching && 'animate-spin')} />
         </Button>
@@ -59,7 +58,7 @@ export function TaskList({ selectedTaskId, onSelectTask }: TaskListProps) {
           暂无任务记录
         </div>
       ) : (
-        <ScrollArea className="h-[calc(100vh-280px)]">
+        <ScrollArea className="h-[calc(100vh-320px)]">
           <div className="space-y-2 pr-3">
             {tasks.map((task) => (
               <TaskCard

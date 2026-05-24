@@ -12,8 +12,11 @@ const api = createFeatureApiClient('content-ops')
 
 export const contentOpsApi = {
   // 选题建议（LLM 调用耗时较长，需要更长超时）
-  suggestTopics: () =>
-    api.get('topics/suggest', { timeout: 120_000 }).json<TopicSuggestion[]>(),
+  suggestTopics: (model?: string) =>
+    api.post('topics/suggest', {
+      json: { model: model || '' },
+      timeout: 120_000,
+    }).json<TopicSuggestion[]>(),
 
   // 任务 CRUD
   createTask: (data: CreateTaskInput) =>

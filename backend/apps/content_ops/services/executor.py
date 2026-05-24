@@ -106,7 +106,7 @@ class ContentOpsExecutor:
     # -- Pipeline phases --
 
     def _run_search_mode(self, task: ContentTask) -> None:
-        """检索模式：通过威科先行搜索裁判文书。"""
+        """检索模式：通过威科先行搜索裁判文书，并智能筛选最有传播价值的案例。"""
         if not task.credential:
             raise RuntimeError("检索模式下凭证不能为空")
 
@@ -125,16 +125,22 @@ class ContentOpsExecutor:
         items = source_client.search_cases(
             session=session,
             keyword=task.keyword,
-            max_candidates=1,
+            max_candidates=5,
         )
         if not items:
             raise RuntimeError(f"未找到与 '{task.keyword}' 相关的裁判文书")
 
-        item = items[0]
-        task.source_doc_id = getattr(item, "doc_id", "") or ""
+        # 智能筛选：使用LLM选择最有传播价值的案例
+        if len(items) > 1:
+            self._update_progress(task, 30, "正在智能筛选最有价值的案例...")
+            selected_item = self._select_best_case(items, task.keyword)
+        else:
+            selected_item = items[0]
+
+        task.source_doc_id = getattr(selected_item, "doc_id", "") or ""
 
         self._update_progress(task, 40, "正在获取文书详情...")
-        detail = source_client.fetch_case_detail(session=session, item=item)
+        detail = source_client.fetch_case_detail(session=session, item=selected_item)
 
         task.source_title = getattr(detail, "title", "") or ""
         task.source_court_text = getattr(detail, "court_text", "") or ""
@@ -153,6 +159,63 @@ class ContentOpsExecutor:
 
         if not task.source_facts:
             raise RuntimeError("未能从裁判文书中提取案件事实")
+
+    def _select_best_case(self, items: list[Any], keyword: str) -> Any:
+        """使用LLM从多个案例中选择最有传播价值的一个。"""
+        from apps.core.interfaces import ServiceLocator
+        from apps.core.llm.config import LLMConfig
+        from apps.core.llm.structured_output import clean_text, parse_json_content
+
+        # 构建案例摘要列表
+        case_summaries = []
+        for i, item in enumerate(items):
+            title = getattr(item, "title", "") or f"案例{i+1}"
+            court = getattr(item, "court", "") or "未知法院"
+            case_summaries.append(f"[{i}] {title} - {court}")
+
+        cases_text = "\n".join(case_summaries)
+
+        system_prompt = """你是一位资深的法律内容运营专家。请从以下案例中选择最有传播价值的1个。
+
+评估标准：
+1. 故事性：是否有引人入胜的情节，适合写成故事
+2. 争议性：是否涉及常见纠纷，能引起读者共鸣
+3. 教育性：是否能给读者带来实用的法律知识
+4. 时效性：是否与当前社会热点相关
+
+请严格按照JSON格式输出：{"selected_index": 0, "reason": "选择理由"}"""
+
+        user_msg = f"检索关键词：{keyword}\n\n找到的案例：\n{cases_text}\n\n请选择最有传播价值的1个案例。"
+
+        try:
+            llm_service = ServiceLocator.get_llm_service()
+            model_name = "mimo-v2.5-pro"
+            backend = LLMConfig.resolve_backend_for_model(model_name)
+
+            response = llm_service.chat(
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_msg},
+                ],
+                model=model_name,
+                backend=backend,
+                temperature=0.3,
+            )
+
+            content = clean_text(response.content)
+            parsed = parse_json_content(content)
+
+            if isinstance(parsed, dict) and "selected_index" in parsed:
+                index = int(parsed["selected_index"])
+                if 0 <= index < len(items):
+                    reason = parsed.get("reason", "")
+                    logger.info("LLM selected case %d: %s", index, reason)
+                    return items[index]
+
+        except Exception as e:
+            logger.warning("Failed to select best case via LLM: %s, using first result", e)
+
+        return items[0]
 
     def _run_direct_mode(self, task: ContentTask) -> None:
         """直投模式：直接使用用户提供的内容。"""

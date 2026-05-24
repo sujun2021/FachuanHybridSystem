@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from apps.core.interfaces import ServiceLocator
+from apps.core.llm.config import LLMConfig
 from apps.core.llm.service import LLMService
 from apps.core.llm.structured_output import clean_text, parse_json_content
 
@@ -37,8 +38,12 @@ class TopicResult:
 class TopicService:
     """使用 LLM 生成选题建议。"""
 
-    def suggest(self) -> TopicResult:
+    def suggest(self, model: str | None = None) -> TopicResult:
         llm_service = ServiceLocator.get_llm_service()
+
+        # 确定使用的模型和后端
+        model_name = model or "mimo-v2.5-pro"
+        backend = LLMConfig.resolve_backend_for_model(model_name)
 
         messages = [
             {"role": "system", "content": _SYSTEM_PROMPT},
@@ -47,8 +52,8 @@ class TopicService:
 
         response = llm_service.chat(
             messages=messages,
-            model="mimo-v2.5-pro",
-            backend=LLMService.BACKEND_OPENAI_COMPATIBLE,
+            model=model_name,
+            backend=backend,
             temperature=0.8,
         )
 

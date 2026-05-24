@@ -7,14 +7,14 @@ import type { CreateTaskInput, ReviewActionInput, TopicSuggestion } from '../typ
 export function useTopicSuggestions() {
   const [data, setData] = useState<TopicSuggestion[] | null>(null)
   const mutation = useMutation({
-    mutationFn: () => contentOpsApi.suggestTopics(),
+    mutationFn: (model?: string) => contentOpsApi.suggestTopics(model),
     onSuccess: (result) => setData(result),
   })
 
   return {
     data,
     isFetching: mutation.isPending,
-    refetch: () => mutation.mutateAsync(),
+    refetch: (model?: string) => mutation.mutateAsync(model),
   }
 }
 

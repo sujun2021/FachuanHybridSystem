@@ -24,6 +24,12 @@ class ContentTaskCreateIn(Schema):
     tts_style_prompt: str = ""
 
 
+class TopicSuggestIn(Schema):
+    """选题建议请求参数。"""
+
+    model: str = ""
+
+
 class ReviewActionIn(Schema):
     notes: str = ""
 

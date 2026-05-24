@@ -14,6 +14,7 @@ from apps.content_ops.schemas.content_ops_schemas import (
     GeneratedArticleOut,
     PodcastEpisodeOut,
     ReviewActionIn,
+    TopicSuggestIn,
     TopicSuggestionOut,
     TTSTestIn,
 )
@@ -77,12 +78,12 @@ def tts_test(request: HttpRequest, payload: TTSTestIn) -> dict[str, str] | FileR
 # --- 选题建议 ---
 
 
-@router.get("/topics/suggest", response=list[TopicSuggestionOut])
-def topic_suggest(request: HttpRequest) -> list[dict[str, str]]:
+@router.post("/topics/suggest", response=list[TopicSuggestionOut])
+def topic_suggest(request: HttpRequest, payload: TopicSuggestIn) -> list[dict[str, str]]:
     """获取选题建议。"""
     from apps.content_ops.services.topic_service import TopicService
 
-    result = TopicService().suggest()
+    result = TopicService().suggest(model=payload.model or None)
     return result.topics
 
 
