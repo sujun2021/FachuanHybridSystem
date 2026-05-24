@@ -209,6 +209,7 @@ class CaseAdmin(
             _("阶段与建档"),
             {
                 "fields": (
+                    "start_date",
                     "current_stage",
                     "is_filed",
                     "filing_number",

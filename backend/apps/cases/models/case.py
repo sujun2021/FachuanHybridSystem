@@ -23,28 +23,6 @@ if TYPE_CHECKING:
     from .party import CaseAccessGrant, CaseAssignment, CaseParty
     from .template_binding import CaseTemplateBinding
 
-# 阶段逻辑排序：数字越小越靠前
-_STAGE_ORDER: dict[str, int] = {
-    CaseStage.FIRST_TRIAL: 1,
-    CaseStage.LABOR_ARBITRATION: 2,
-    CaseStage.INVESTIGATION: 3,
-    CaseStage.PROSECUTION_REVIEW: 4,
-    CaseStage.PRIVATE_PROSECUTION: 5,
-    CaseStage.ADMIN_REVIEW: 6,
-    CaseStage.SECOND_TRIAL: 10,
-    CaseStage.RETRIAL_FIRST: 11,
-    CaseStage.RETRIAL_SECOND: 12,
-    CaseStage.APPLY_RETRIAL: 13,
-    CaseStage.REHEARING_FIRST: 14,
-    CaseStage.REHEARING_SECOND: 15,
-    CaseStage.REVIEW: 16,
-    CaseStage.DEATH_PENALTY_REVIEW: 17,
-    CaseStage.PETITION: 18,
-    CaseStage.APPLY_PROTEST: 19,
-    CaseStage.PETITION_PROTEST: 20,
-    CaseStage.ENFORCEMENT: 30,
-}
-
 
 class Case(models.Model):
     id: int
@@ -163,10 +141,10 @@ class Case(models.Model):
             frontier = [c for c in children if c not in chain]
             chain.extend(frontier)
 
-        # 3. 一次性取出所有案件，按阶段逻辑顺序排序
-        cases = list(Case.objects.filter(pk__in=chain))
-        cases.sort(key=lambda c: _STAGE_ORDER.get(c.current_stage or "", 99))
-        return cases
+        # 3. 一次性取出所有案件，按收案日期排序
+        return list(
+            Case.objects.filter(pk__in=chain).order_by("start_date", "pk")
+        )
 
     def clean(self) -> None:
         """
