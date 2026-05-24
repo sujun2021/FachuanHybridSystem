@@ -379,7 +379,6 @@
                 console.log('[TextParserApp] 初始化文本解析组件');
                 this.initClientTypeWatcher();
                 this.selectedModel = localStorage.getItem('client_recognize_last_model') || '';
-                console.log('[TextParserApp] 从 localStorage 恢复模型: %s', this.selectedModel);
                 this.fetchModels();
             },
 
@@ -389,13 +388,6 @@
                     const resp = await fetch('/api/v1/llm/models');
                     const data = await resp.json();
                     this.models = (data.models || []).map(m => ({ id: m.id, name: m.name }));
-                    // 模型列表加载完成后，强制同步 select DOM 值
-                    if (this.selectedModel) {
-                        this.$nextTick(() => {
-                            const sel = document.querySelector('.text-parser-section select');
-                            if (sel) sel.value = this.selectedModel;
-                        });
-                    }
                 } catch (e) {
                     console.warn('[TextParserApp] 加载模型列表失败:', e);
                 }
@@ -505,12 +497,10 @@
                 formData.append('file', file);
                 const docType = 'auto';
                 formData.append('doc_type', docType);
-                // 直接从 DOM 读取 select 值，避免 Alpine x-model 同步问题
-                const sel = document.querySelector('.text-parser-section select');
-                const domModel = sel ? sel.value : this.selectedModel;
-                if (domModel) {
-                    formData.append('model', domModel);
+                if (this.selectedModel) {
+                    formData.append('model', this.selectedModel);
                 }
+                console.log('[TextParserApp] handleOcrFile: selectedModel=%s', this.selectedModel);
 
                 try {
                     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
