@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -46,6 +46,15 @@ export function CreateTaskDialog({
   const [directContent, setDirectContent] = useState('')
   const [voice, setVoice] = useState('冰糖')
   const [credentialId, setCredentialId] = useState<number | null>(null)
+
+  // Sync props when dialog opens
+  useEffect(() => {
+    if (open) {
+      setMode(defaultMode)
+      setKeyword(defaultKeyword)
+      setCaseSummary(defaultCaseSummary)
+    }
+  }, [open, defaultMode, defaultKeyword, defaultCaseSummary])
 
   const createTask = useCreateTask()
   const { data: credentials = [] } = useCredentials()
