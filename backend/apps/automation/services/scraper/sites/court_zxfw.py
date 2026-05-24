@@ -14,9 +14,7 @@ from playwright.sync_api import Error as PlaywrightError
 from playwright.sync_api import Page
 
 if TYPE_CHECKING:
-    from apps.automation.services.captcha.captcha_recognition_service import (
-        CaptchaRecognizer,  # type: ignore[attr-defined]
-    )
+    from apps.automation.services.scraper.core.captcha_recognizer import CaptchaRecognizer
     from apps.automation.services.scraper.core.token_service import TokenService
 
 
@@ -90,7 +88,7 @@ class CourtZxfwService:
         if captcha_recognizer is None:
             from apps.automation.services.scraper.core.captcha_recognizer import DdddocrRecognizer
 
-            self.captcha_recognizer = DdddocrRecognizer(show_ad=False)
+            self.captcha_recognizer: CaptchaRecognizer = DdddocrRecognizer(show_ad=False)
             logger.info("使用默认的 DdddocrRecognizer")
         else:
             self.captcha_recognizer = captcha_recognizer

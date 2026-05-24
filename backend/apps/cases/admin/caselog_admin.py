@@ -172,7 +172,7 @@ class CaseLogAdmin(BaseModelAdmin):
 
         user_id = getattr(request.user, "id", None)
         with transaction.atomic():
-            logs = [CaseLog(case_id=case_id, content=content, actor_id=user_id) for case_id in case_ids]
+            logs = [CaseLog(case_id=case_id, content=content, actor_id=user_id or 0) for case_id in case_ids]
             created = CaseLog.objects.bulk_create(logs)
 
         return JsonResponse({"success": True, "created_count": len(created)})

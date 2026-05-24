@@ -8,7 +8,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Callable
-from typing import Any, TypeVar
+from typing import Any
 
 from django.db import close_old_connections
 from django.utils import timezone
@@ -235,10 +235,7 @@ class _BytesIO:
         return self._pos
 
 
-T = TypeVar("T")
-
-
-def _run_orm_safely(operation: Callable[[], T]) -> T:
+def _run_orm_safely[T](operation: Callable[[], T]) -> T:
     """Run ORM operation safely, even from async context."""
     try:
         loop = asyncio.get_running_loop()

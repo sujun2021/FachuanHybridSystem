@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 from django.conf import settings
@@ -21,7 +21,7 @@ from ..extraction.title_extractor import TitleExtractor
 from ..formatting.docx_formatter import DocxFormatter
 from ..formatting.docx_revision_tool import DocxRevisionTool
 from ..formatting.page_numbering import PageNumbering
-from .contract_reviewer import ContractReviewer
+from .contract_reviewer import ContractReviewer, ReviewResult
 from .party_identifier import PartyIdentifier
 from .typo_checker import TypoChecker
 
@@ -233,10 +233,10 @@ def process_review(task_id_str: str) -> None:
 
         if need_review and need_report:
             _update_step(repository, task, ProcessStep.CONTRACT_REVIEW)
-            reviews: list[object] = []
+            reviews: list[ReviewResult] = []
             report = ""
 
-            def _run_review() -> list[object]:
+            def _run_review() -> list[ReviewResult]:
                 return reviewer.review_contract(
                     paragraphs,
                     task.represented_party,
@@ -255,7 +255,7 @@ def process_review(task_id_str: str) -> None:
                 )
 
             with ThreadPoolExecutor(max_workers=2) as pool:
-                futures = {
+                futures: dict[Future[object], str] = {
                     pool.submit(_run_review): "review",
                     pool.submit(_run_report): "report",
                 }
@@ -263,7 +263,7 @@ def process_review(task_id_str: str) -> None:
                     kind = futures[future]
                     try:
                         if kind == "review":
-                            reviews = future.result()
+                            reviews = future.result()  # type: ignore[assignment]
                         else:
                             report = future.result()  # type: ignore[assignment]
                     except Exception:
