@@ -67,15 +67,15 @@ class Case(models.Model):
     current_stage = models.CharField(
         max_length=64, choices=CaseStage.choices, blank=True, null=True, verbose_name=_("当前阶段")
     )
-    case_group = models.ForeignKey(
-        "cases.CaseGroup",
+    previous_case = models.ForeignKey(
+        "self",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="cases",
-        verbose_name=_("案件组"),
+        related_name="next_cases",
+        verbose_name=_("前序案件"),
+        help_text=_("该案的前一个审理阶段，如二审案件指向前一审案件"),
     )
-    group_sequence = models.PositiveIntegerField(default=0, verbose_name=_("组内顺序"))
 
     history = HistoricalRecords()
 
@@ -107,6 +107,27 @@ class Case(models.Model):
 
     def __str__(self) -> str:
         return f"{self.name}"
+
+    def get_case_chain(self) -> list[Case]:
+        """获取完整案件链（按 start_date 升序）。
+
+        沿 previous_case 回溯到根节点，再沿 next_cases 遍历整条链。
+        """
+        # 回溯到链首
+        root: Case = self
+        visited: set[int] = {root.pk}
+        while root.previous_case_id and root.previous_case_id not in visited:
+            root = root.previous_case  # type: ignore[assignment]
+            visited.add(root.pk)
+        # 从链首向下收集
+        chain: list[Case] = []
+        current: Case | None = root
+        seen: set[int] = set()
+        while current and current.pk not in seen:
+            chain.append(current)
+            seen.add(current.pk)
+            current = current.next_cases.order_by("start_date").first()
+        return chain
 
     def clean(self) -> None:
         """

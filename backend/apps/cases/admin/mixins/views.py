@@ -285,13 +285,7 @@ class CaseAdminViewsMixin:
                 "contacts": list(case.contacts.select_related("authority").all()),
                 "contact_role_choices": list(_get_contact_role_choices()),
                 "case_stage_choices": list(_get_case_stage_choices()),
-                "related_cases": (
-                    list(
-                        case.case_group.cases.order_by("group_sequence", "start_date").all()
-                    )
-                    if case.case_group
-                    else []
-                ),
+                "related_cases": case.get_case_chain() if case.previous_case_id else [],
                 "media_url": getattr(__import__("django.conf", fromlist=["settings"]).settings, "MEDIA_URL", "/media/"),
             }
         )
