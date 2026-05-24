@@ -8,8 +8,8 @@
 
 #### 新功能
 
-- **WXMP 自动化发布系统**：完整实现基于 Playwright CDP 的 WX 公众号自动化发布，支持账号密码登录 + 扫码二次验证、自动导航到新建文章、标题填写、Markdown 内容注入（ProseMirror 剪贴板粘贴）、封面图上传、保存草稿/群发
-- **专业级公众号排版系统**：新增 `markdown_converter.py`，支持 3 种排版主题（classic/elegant/green），内联样式 HTML 输出，包含渐变边框标题、卡片式引用块、深色表头表格、斑马纹行、Callout 盒子（GFM alert 语法）、代码高亮、SVG 装饰元素等
+- **WXMP 自动化发布系统**：完整实现基于 Playwright CDP 的 WXMP 自动化发布，支持账号密码登录 + 扫码二次验证、自动导航到新建文章、标题填写、Markdown 内容注入（ProseMirror 剪贴板粘贴）、封面图上传、保存草稿/群发
+- **专业级 WXMP 排版系统**：新增 `markdown_converter.py`，支持 3 种排版主题（classic/elegant/green），内联样式 HTML 输出，包含渐变边框标题、卡片式引用块、深色表头表格、斑马纹行、Callout 盒子（GFM alert 语法）、代码高亮、SVG 装饰元素等
 - **AI 排版集成**：新增 `llm_formatter.py`，调用 LLM 服务生成花哨的内联样式 HTML，支持 5 种风格（auto/professional/creative/minimal/colorful），失败自动降级到规则排版
 - **排版方式选择**：`PublishTask` 新增 `format_method` 字段，支持 `rule`（规则排版）和 `llm`（AI 排版）两种方式
 - **多人播客讨论**：新增 `discussion_chain.py`，支持多角色 VoiceDesign 讨论稿生成，TTS 并行合成（83s → 12s，6.7x 提速）
