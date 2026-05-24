@@ -59,9 +59,9 @@ export function ContentWorkbench() {
         </div>
 
         {/* 主内容区 */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_minmax(280px,360px)] gap-6">
           {/* 左侧：创作区 */}
-          <div className="space-y-6 min-w-0">
+          <div className="space-y-6 min-w-0 overflow-hidden">
             <Tabs defaultValue="topics">
               <TabsList>
                 <TabsTrigger value="topics">
@@ -105,7 +105,7 @@ export function ContentWorkbench() {
           </div>
 
           {/* 右侧：任务列表 */}
-          <div className="lg:border-l lg:pl-6">
+          <div className="lg:border-l lg:pl-6 min-w-0 overflow-hidden">
             <Card className="border-0 shadow-none bg-muted/30">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-3">

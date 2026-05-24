@@ -180,25 +180,23 @@ function TaskCard({ task, isSelected, onClick }: {
   return (
     <Card
       className={cn(
-        'cursor-pointer transition-all hover:border-primary/30',
+        'cursor-pointer transition-all hover:border-primary/30 overflow-hidden',
         isSelected && 'border-primary/50 bg-primary/5',
       )}
       onClick={onClick}
     >
-      <CardContent className="p-3 space-y-2">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            {task.mode === 'search' ? (
-              <Search className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-            ) : (
-              <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-            )}
-            <span className="text-sm font-medium truncate">
-              {task.source_title || task.keyword || (task.mode === 'direct' ? `直投内容 #${task.id}` : `任务 #${task.id}`)}
-            </span>
-          </div>
-          <Badge variant={STATUS_VARIANT[task.status]} className="shrink-0 text-[10px] px-1.5 py-0">
-            <Icon className={cn('w-3 h-3 mr-0.5', isActive && 'animate-spin')} />
+      <CardContent className="p-3 space-y-1.5">
+        <div className="flex items-center gap-2">
+          {task.mode === 'search' ? (
+            <Search className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+          ) : (
+            <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+          )}
+          <span className="text-sm font-medium truncate min-w-0 flex-1">
+            {task.source_title || task.keyword || (task.mode === 'direct' ? `直投内容 #${task.id}` : `任务 #${task.id}`)}
+          </span>
+          <Badge variant={STATUS_VARIANT[task.status]} className="shrink-0 text-[10px] px-1.5 py-0 h-4">
+            <Icon className={cn('w-2.5 h-2.5 mr-0.5', isActive && 'animate-spin')} />
             {STATUS_LABEL[task.status]}
           </Badge>
         </div>
@@ -206,7 +204,7 @@ function TaskCard({ task, isSelected, onClick }: {
         {isActive && (
           <div className="space-y-1">
             <Progress value={task.progress} className="h-1" />
-            <p className="text-[10px] text-muted-foreground">{task.message || '处理中...'}</p>
+            <p className="text-[10px] text-muted-foreground truncate">{task.message || '处理中...'}</p>
           </div>
         )}
 
@@ -214,10 +212,10 @@ function TaskCard({ task, isSelected, onClick }: {
           <p className="text-[10px] text-destructive line-clamp-2">{task.error}</p>
         )}
 
-        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
           <span>{MODE_LABEL[task.mode]}</span>
-          <span>·</span>
-          <span>{formatDistanceToNow(new Date(task.created_at), { addSuffix: true, locale: zhCN })}</span>
+          <span className="text-muted-foreground/50">·</span>
+          <span className="truncate">{formatDistanceToNow(new Date(task.created_at), { addSuffix: true, locale: zhCN })}</span>
         </div>
       </CardContent>
     </Card>

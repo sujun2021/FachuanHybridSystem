@@ -175,24 +175,24 @@ export function TaskDetail({ taskId }: TaskDetailProps) {
 
       {/* 文章、音频、讨论稿 Tab */}
       {(articles.length > 0 || episodes.length > 0 || discussions.length > 0) && (
-        <Tabs defaultValue="articles">
-          <div className="flex items-center justify-between">
-            <TabsList>
+        <Tabs defaultValue={discussions.length > 0 ? 'discussions' : 'articles'}>
+          <div className="flex items-center justify-between gap-2">
+            <TabsList className="min-w-0">
               {articles.length > 0 && (
-                <TabsTrigger value="articles">
-                  <FileText className="w-4 h-4 mr-1" />
+                <TabsTrigger value="articles" className="text-xs">
+                  <FileText className="w-3.5 h-3.5 mr-1" />
                   文章 ({articles.length})
                 </TabsTrigger>
               )}
               {discussions.length > 0 && (
-                <TabsTrigger value="discussions">
-                  <FileText className="w-4 h-4 mr-1" />
+                <TabsTrigger value="discussions" className="text-xs">
+                  <FileText className="w-3.5 h-3.5 mr-1" />
                   讨论稿 ({discussions.length})
                 </TabsTrigger>
               )}
               {episodes.length > 0 && (
-                <TabsTrigger value="episodes">
-                  <Volume2 className="w-4 h-4 mr-1" />
+                <TabsTrigger value="episodes" className="text-xs">
+                  <Volume2 className="w-3.5 h-3.5 mr-1" />
                   音频 ({episodes.length})
                 </TabsTrigger>
               )}
@@ -353,11 +353,11 @@ function ArticleCard({ article }: { article: GeneratedArticle }) {
   }
 
   return (
-    <Card>
+    <Card className="overflow-hidden">
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2">
-          <div>
-            <CardTitle className="text-sm">{article.title}</CardTitle>
+          <div className="min-w-0 flex-1">
+            <CardTitle className="text-sm truncate">{article.title}</CardTitle>
             <CardDescription className="text-xs mt-0.5">
               <span>{wordCount} 字 · 约 {readingTime} 分钟</span>
               {article.llm_model && <span className="ml-2">模型: {article.llm_model}</span>}
@@ -690,12 +690,12 @@ function DiscussionScriptCard({ script }: { script: DiscussionScript }) {
   })
 
   return (
-    <Card>
+    <Card className="overflow-hidden">
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2">
-          <div>
-            <CardTitle className="text-sm">{script.title}</CardTitle>
-            {script.topic && <CardDescription className="text-xs mt-0.5">{script.topic}</CardDescription>}
+          <div className="min-w-0 flex-1">
+            <CardTitle className="text-sm truncate">{script.title}</CardTitle>
+            {script.topic && <CardDescription className="text-xs mt-0.5 line-clamp-2">{script.topic}</CardDescription>}
             <CardDescription className="text-xs mt-0.5">
               {script.turns.length} 轮对话
               {script.llm_model && <span className="ml-2">模型: {script.llm_model}</span>}
