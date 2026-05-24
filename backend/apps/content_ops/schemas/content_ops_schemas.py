@@ -131,3 +131,25 @@ class TopicSuggestionOut(Schema):
     title: str
     description: str
     suggested_keyword: str
+
+
+class HotTopicOut(Schema):
+    """热点话题输出。"""
+
+    rank: int
+    title: str
+    heat: int | None = None
+    url: str = ""
+    source: str
+
+
+class HotTopicRefreshIn(Schema):
+    """刷新热点话题请求参数。"""
+
+    source: str = ""
+
+
+class TopicInspirationIn(Schema):
+    """基于热点的选题灵感请求参数。"""
+
+    model: str = ""

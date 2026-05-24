@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { contentOpsApi } from '../api'
-import type { CreateTaskInput, ReviewActionInput, TopicSuggestion } from '../types'
+import type { CreateTaskInput, HotTopic, ReviewActionInput, TopicSuggestion } from '../types'
 
 // 任务关联讨论稿
 export function useTaskDiscussions(taskId: number | null) {
@@ -36,6 +36,48 @@ export function useTopicSuggestions() {
     },
   })
 
+  return {
+    data,
+    error,
+    isFetching: mutation.isPending,
+    refetch: (model?: string) => mutation.mutateAsync(model),
+  }
+}
+
+// 热点话题列表（快速，非 LLM）
+export function useHotTopics(source?: string) {
+  return useQuery<HotTopic[]>({
+    queryKey: ['content-ops', 'hot-topics', source],
+    queryFn: () => contentOpsApi.getHotTopics(source),
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+// 刷新热点话题
+export function useRefreshHotTopics() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (source?: string) => contentOpsApi.refreshHotTopics(source),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['content-ops', 'hot-topics'] })
+    },
+  })
+}
+
+// 基于热点的 AI 选题灵感（手动触发）
+export function useInspiration() {
+  const [data, setData] = useState<TopicSuggestion[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const mutation = useMutation({
+    mutationFn: (model?: string) => contentOpsApi.getInspiration(model),
+    onSuccess: (result) => {
+      setData(result)
+      setError(null)
+    },
+    onError: (err: Error) => {
+      setError(err.message || '获取灵感失败')
+    },
+  })
   return {
     data,
     error,

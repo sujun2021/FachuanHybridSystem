@@ -6,6 +6,7 @@ import type {
   DiscussionScript,
   DiscussionTurn,
   GeneratedArticle,
+  HotTopic,
   PodcastEpisode,
   ReviewActionInput,
   TopicSuggestion,
@@ -17,6 +18,21 @@ export const contentOpsApi = {
   // 选题建议（LLM 调用耗时较长，需要更长超时）
   suggestTopics: (model?: string) =>
     api.post('topics/suggest', {
+      json: { model: model || '' },
+      timeout: 120_000,
+    }).json<TopicSuggestion[]>(),
+
+  // 热点话题（非 LLM，快速响应）
+  getHotTopics: (source?: string) =>
+    api.get('topics/hot', { searchParams: source ? { source } : undefined }).json<HotTopic[]>(),
+
+  // 刷新热点话题
+  refreshHotTopics: (source?: string) =>
+    api.post('topics/hot/refresh', { json: { source: source || '' } }).json<HotTopic[]>(),
+
+  // 基于热点的 AI 选题灵感
+  getInspiration: (model?: string) =>
+    api.post('topics/inspiration', {
       json: { model: model || '' },
       timeout: 120_000,
     }).json<TopicSuggestion[]>(),

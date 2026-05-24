@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
@@ -8,16 +9,18 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
-import { Plus, Sparkles, FileInput } from 'lucide-react'
+import { Plus, Sparkles, FileInput, ArrowRight } from 'lucide-react'
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary'
 import { TopicInspiration } from './TopicInspiration'
 import { DirectInput } from './DirectInput'
 import { TaskList } from './TaskList'
 import { TaskDetail } from './TaskDetail'
 import { CreateTaskDialog } from './CreateTaskDialog'
+import { PATHS } from '@/routes/paths'
 import type { TopicSuggestion } from '../types'
 
 export function ContentWorkbench() {
+  const navigate = useNavigate()
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
@@ -91,7 +94,21 @@ export function ContentWorkbench() {
                       exit={{ opacity: 0, y: -8 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <TopicInspiration onSelectTopic={handleSelectTopic} />
+                      <div className="space-y-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full h-8 text-xs justify-between"
+                          onClick={() => navigate(PATHS.ADMIN_TOOLS_CONTENT_OPS_INSPIRATION)}
+                        >
+                          <span className="flex items-center gap-1">
+                            <Sparkles className="w-3.5 h-3.5" />
+                            查看完整灵感页（热搜 + AI 筛选）
+                          </span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </Button>
+                        <TopicInspiration onSelectTopic={handleSelectTopic} />
+                      </div>
                     </motion.div>
                   </TabsContent>
                 </AnimatePresence>

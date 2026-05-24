@@ -16,8 +16,11 @@ from apps.content_ops.schemas.content_ops_schemas import (
     DiscussionTurnOut,
     DiscussionTurnUpdateIn,
     GeneratedArticleOut,
+    HotTopicOut,
+    HotTopicRefreshIn,
     PodcastEpisodeOut,
     ReviewActionIn,
+    TopicInspirationIn,
     TopicSuggestIn,
     TopicSuggestionOut,
     TTSTestIn,
@@ -77,7 +80,7 @@ def tts_test(request: HttpRequest, payload: TTSTestIn) -> dict[str, str] | FileR
 
 @router.post("/topics/suggest", response=list[TopicSuggestionOut])
 def topic_suggest(request: HttpRequest, payload: TopicSuggestIn) -> list[dict[str, str]]:
-    """获取选题建议。"""
+    """获取选题建议（纯 LLM 推荐）。"""
     from apps.content_ops.services.topic_service import TopicService
 
     try:
@@ -85,6 +88,67 @@ def topic_suggest(request: HttpRequest, payload: TopicSuggestIn) -> list[dict[st
         return result.topics
     except Exception as e:
         logger.error("Topic suggestion failed: %s", e)
+        return []
+
+
+@router.get("/topics/hot", response=list[HotTopicOut])
+def get_hot_topics(request: HttpRequest, source: str | None = None) -> list[dict[str, Any]]:
+    """获取热点话题列表（从缓存读取，30 分钟刷新一次）。"""
+    from apps.content_ops.services.hot_topic_service import HotTopicService
+
+    try:
+        items = HotTopicService().get_hot_topics(source=source or None)
+        return [
+            {
+                "rank": item.rank,
+                "title": item.title,
+                "heat": item.heat,
+                "url": item.url,
+                "source": item.source,
+            }
+            for item in items
+        ]
+    except Exception as e:
+        logger.error("Get hot topics failed: %s", e)
+        return []
+
+
+@router.post("/topics/hot/refresh", response=list[HotTopicOut])
+def refresh_hot_topics(request: HttpRequest, payload: HotTopicRefreshIn) -> list[dict[str, Any]]:
+    """强制刷新热点话题（绕过缓存）。"""
+    from apps.content_ops.services.hot_topic_service import HotTopicService
+
+    try:
+        items = HotTopicService().refresh(source=payload.source or None)
+        return [
+            {
+                "rank": item.rank,
+                "title": item.title,
+                "heat": item.heat,
+                "url": item.url,
+                "source": item.source,
+            }
+            for item in items
+        ]
+    except Exception as e:
+        logger.error("Refresh hot topics failed: %s", e)
+        return []
+
+
+@router.post("/topics/inspiration", response=list[TopicSuggestionOut])
+def topic_inspiration(request: HttpRequest, payload: TopicInspirationIn) -> list[dict[str, str]]:
+    """基于热点话题的 AI 选题灵感。"""
+    from apps.content_ops.services.hot_topic_service import HotTopicService
+    from apps.content_ops.services.topic_service import TopicService
+
+    try:
+        hot_topics = HotTopicService().get_hot_topics()
+        if not hot_topics:
+            return []
+        result = TopicService().suggest_from_trends(hot_topics=hot_topics, model=payload.model or None)
+        return result.topics
+    except Exception as e:
+        logger.error("Topic inspiration failed: %s", e)
         return []
 
 

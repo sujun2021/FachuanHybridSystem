@@ -12,6 +12,22 @@ export interface TopicSuggestion {
   suggested_keyword: string
 }
 
+export interface HotTopic {
+  rank: number
+  title: string
+  heat: number | null
+  url: string
+  source: string
+}
+
+export const HOT_TOPIC_SOURCE_LABEL: Record<string, string> = {
+  toutiao: '头条',
+  baidu: '百度',
+  weibo: '微博',
+  zhihu: '知乎',
+  douyin: '抖音',
+}
+
 export interface DiscussionSpeaker {
   name: string
   role: string
