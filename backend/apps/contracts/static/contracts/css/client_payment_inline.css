@@ -10,7 +10,14 @@
     width: 120px;
 }
 
-/* 备注字段：自动伸缩 */
+/* 备注字段：限制宽度 */
 #client_payment_records-group .field-note {
-    width: auto;
+    width: 220px;
+}
+
+#client_payment_records-group .field-note textarea {
+    width: 200px;
+    max-width: 200px;
+    height: 60px;
+    resize: vertical;
 }
