@@ -185,14 +185,14 @@ function TaskCard({ task, isSelected, onClick }: {
       )}
       onClick={onClick}
     >
-      <CardContent className="p-3 space-y-1.5">
-        <div className="flex items-center gap-2">
+      <CardContent className="p-3 space-y-1.5 overflow-hidden">
+        <div className="flex items-center gap-2 overflow-hidden">
           {task.mode === 'search' ? (
             <Search className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
           ) : (
             <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
           )}
-          <span className="text-sm font-medium truncate min-w-0 flex-1">
+          <span className="text-sm font-medium shrink min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
             {task.source_title || task.keyword || (task.mode === 'direct' ? `直投内容 #${task.id}` : `任务 #${task.id}`)}
           </span>
           <Badge variant={STATUS_VARIANT[task.status]} className="shrink-0 text-[10px] px-1.5 py-0 h-4">
@@ -202,19 +202,19 @@ function TaskCard({ task, isSelected, onClick }: {
         </div>
 
         {isActive && (
-          <div className="space-y-1">
+          <div className="space-y-1 overflow-hidden">
             <Progress value={task.progress} className="h-1" />
             <p className="text-[10px] text-muted-foreground truncate">{task.message || '处理中...'}</p>
           </div>
         )}
 
         {task.status === 'failed' && task.error && (
-          <p className="text-[10px] text-destructive line-clamp-2">{task.error}</p>
+          <p className="text-[10px] text-destructive overflow-hidden text-ellipsis whitespace-nowrap">{task.error}</p>
         )}
 
-        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-          <span>{MODE_LABEL[task.mode]}</span>
-          <span className="text-muted-foreground/50">·</span>
+        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground overflow-hidden">
+          <span className="shrink-0">{MODE_LABEL[task.mode]}</span>
+          <span className="text-muted-foreground/50 shrink-0">·</span>
           <span className="truncate">{formatDistanceToNow(new Date(task.created_at), { addSuffix: true, locale: zhCN })}</span>
         </div>
       </CardContent>
