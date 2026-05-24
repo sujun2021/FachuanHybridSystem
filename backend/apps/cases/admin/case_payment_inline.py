@@ -32,15 +32,17 @@ class CaseClientPaymentInline(BaseTabularInline[ClientPaymentRecord, ClientPayme
     def get_formset(self, request: HttpRequest, obj: Any = None, **kwargs: Any) -> Any:
         return super().get_formset(request, obj, **kwargs)
 
-    def save_new(self, form: Any, commit: bool = True) -> ClientPaymentRecord:
-        instance = super().save_new(form, commit=False)
-        # self.instance 是父级 Case 对象
+    def save_formset(self, request: HttpRequest, form: Any, formset: Any, change: bool) -> None:
+        instances = formset.save(commit=False)
         parent_case = self.instance
-        if parent_case and parent_case.pk:
+        for instance in instances:
+            if parent_case and parent_case.pk:
+                if not instance.contract_id:
+                    instance.contract_id = parent_case.contract_id
+                if not instance.case_id:
+                    instance.case_id = parent_case.pk
+            # 合同为必填项，没有合同则跳过
             if not instance.contract_id:
-                instance.contract_id = parent_case.contract_id
-            if not instance.case_id:
-                instance.case_id = parent_case.pk
-        if commit:
+                continue
             instance.save()
-        return instance
+        formset.save_m2m()
