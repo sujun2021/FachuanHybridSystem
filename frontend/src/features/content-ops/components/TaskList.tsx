@@ -101,7 +101,7 @@ function TaskCard({ task, isSelected, onClick }: {
               <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
             )}
             <span className="text-sm font-medium truncate">
-              {task.source_title || task.keyword || (task.mode === 'direct' ? `直投内容 #${task.id}` : `任务 #${task.id}`)}
+              {task.source_title || task.keyword || `任务 #${task.id}`}
             </span>
           </div>
           <Badge variant={STATUS_VARIANT[task.status]} className="shrink-0 text-[10px] px-1.5 py-0">
