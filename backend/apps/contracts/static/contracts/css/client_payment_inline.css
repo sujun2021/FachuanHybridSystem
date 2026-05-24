@@ -1,0 +1,16 @@
+/* 客户回款 Inline 样式 */
+
+/* 案件字段：限制 autocomplete 宽度 */
+#client_payment_records-group .field-case {
+    width: 260px;
+}
+
+/* 金额字段 */
+#client_payment_records-group .field-amount {
+    width: 120px;
+}
+
+/* 备注字段：自动伸缩 */
+#client_payment_records-group .field-note {
+    width: auto;
+}

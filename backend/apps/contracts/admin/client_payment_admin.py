@@ -112,6 +112,7 @@ class ClientPaymentRecordInline(BaseTabularInline[ClientPaymentRecord, ClientPay
     fields = ("case", "amount", "note")
     verbose_name = _("客户回款")
     verbose_name_plural = _("客户回款")
+    autocomplete_fields: ClassVar = ["case"]
 
     def get_formset(self, request: HttpRequest, obj: Any = None, **kwargs: Any) -> Any:
         FormSet = super().get_formset(request, obj, **kwargs)
@@ -134,6 +135,9 @@ class ClientPaymentRecordInline(BaseTabularInline[ClientPaymentRecord, ClientPay
 
         FormSet.__init__ = patched_init  # type: ignore[assignment]
         return FormSet
+
+    class Media:
+        css = {"all": ("contracts/css/client_payment_inline.css",)}
 
 
 @admin.register(ClientPaymentRecord)
