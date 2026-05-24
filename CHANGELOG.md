@@ -2,6 +2,77 @@
 
 本项目的所有重要更改都将记录在此文件中。
 
+## [26.50.1] - 2026-05-24
+
+### 前端
+
+#### 新功能
+
+- **证件识别 LLM 模型选择器**：「快速填充当事人信息」的 Ollama 开关替换为通用 LLM 模型下拉框，支持选择任意已配置模型，自动记住上次选择。不选模型时仅走 OCR + 正则
+- **识别流程说明**：鼠标悬停标题可查看完整识别流程说明（OCR → 自动判型 → 正则提取 → LLM 兜底）
+
+#### 修复
+
+- **未提取到数据时误显示成功**：OCR + 正则均未提取到有效字段时，改为显示 ⚠️ 警告而非 ✅ 成功
+- **Alpine.js 模型选择器 DOM 同步**：模型列表异步加载后，用 `$nextTick` 强制同步 `<select>` 选中值，修复 x-model 不生效问题
+
+### 后端
+
+#### 新功能
+
+- **证件识别支持通用 LLM 模型**：API 参数 `enable_ollama: bool` 改为 `model: str | None`，支持 SiliconFlow/Ollama/OpenAI-compatible 任意后端，由模型名自动路由
+- **营业执照正则提取**：新增 `_extract_business_license()` 方法，不选 LLM 时也能用正则提取企业名称、统一社会信用代码、法定代表人、地址、电话等字段
+- **推理模型支持**：`_extract_content()` 增加 `reasoning_content`（OpenAI-compatible）和 `thinking`（Ollama）字段回退，支持 MiMo、DeepSeek R1 等推理模型
+- **案件组 (CaseGroup)**：新增 CaseGroup 模型，支持将多个案件归组管理
+- **案件日志批量添加搜索**：支持关键词搜索选择案件，不再只能从下拉框逐个找
+- **案件/合同编辑页客户回款**：新增 ClientPaymentInline，支持在案件和合同编辑页直接添加客户回款记录
+- **工作人员搜索**：添加工作人员对话框支持搜索已有工作人员
+
+#### 修复
+
+- **LLM 模型列表显示不可用模型**：`/api/v1/llm/models` 改用 `ModelListService` 返回实际可用模型，不再返回 20+ 硬编码模型
+- **推理模型返回空内容**：`max_tokens` 从 256 提升至 2048，给推理模型足够的 reasoning + output 空间
+- **LLM 返回非 JSON 内容**：新增 `_parse_llm_json()` 方法，支持从代码块、混合文本中提取 JSON
+- **客户回款保存缺少 contract_id**：`save_formset` 自动填充 `contract_id` 和 `case_id`
+
+## [26.50.0] - 2026-05-24
+
+### 前端
+
+#### 新功能
+
+- **内容运营创作工作台**：新增「内容运营」前端页面，支持 AI 选题推荐、直投内容、检索模式三种创作方式。包含选题灵感卡片、任务创建对话框、任务列表和详情面板，可预览生成的文章和播客音频
+
+#### 修复
+
+- **AI 选题推荐功能无法使用**：ky HTTP 客户端默认 10 秒超时，而 LLM 调用需约 35 秒，导致请求被中断。将 topics/suggest API 超时延长至 120 秒；同时将 `useTopicSuggestions` 从 `useQuery(enabled:false)` 改为 `useMutation` 模式，避免 React Query 在 `enabled:false` 时取消 refetch 请求
+
+- **选题建议字段匹配失败**：LLM 返回的 JSON 字段名不一致（title/topic/选题/主题、keyword/关键词/建议检索关键词等），导致前端解析失败。改为 pattern 匹配 + 位置 fallback 双重策略，同时支持中英文字段名和列表类型关键词
+
+- **合同审查多项体验修复**：修复当事人识别逻辑、支持手动输入当事人、并行化审查流程
+
+- **案件日志批量添加下拉菜单高度截断**：admin base.css 的 `select` 样式覆盖了下拉菜单高度，导致文字被截断。新增专用模板覆盖样式
+
+- **案件日志批量添加标题重复**：去重标题、美化 UI、案件名称支持点击跳转
+
+### 后端
+
+#### 新功能
+
+- **内容运营模块 (content_ops)**：新增完整的内容运营应用，包含数据模型（ContentTask、GeneratedArticle、PodcastEpisode）、API 接口、任务执行器、TTS 服务、RSS 生成、LLM 选题建议等。支持检索模式和直投模式，自动调用威科先行检索案例并生成叙事文章和播客音频
+
+- **VoiceDesign 模式**：TTS 服务支持自然语言描述音色风格，通过 `tts_style_prompt` 字段自定义语音特征
+
+- **案件日志批量添加**：Admin 支持按合同选择案件，一键写入相同日志内容
+
+#### 修复
+
+- **LLM 服务调用和选题解析**：修复 openai_compatible 后端 SSL 握手问题、MiMo 模型调用配置、content_chain 字段校验
+
+- **credential 字段改名**：content_ops 的 credential 字段改名为「法律检索网站账号」并添加筛选逻辑，只显示威科先行相关账号
+
+- **内容运营收纳到其他工具菜单**：将 content_ops 模块从 Django admin 侧边栏移除，收纳到「其他工具」聚合页中
+
 ## [26.48.17] - 2026-05-22
 
 ### 前端
@@ -95,17 +166,6 @@
 
 - **默认文档模板更新**：`complete_defaults.json` 新增 3 个东莞第三法院模板（被告送达地址线索书、原告送达地址确认书、账户确认书），总模板数从 22 个增至 25 个
 
-## [26.49.4] - 2026-05-16
-
-### 前端
-
-#### 新功能
-
-- **仪表盘日历增强**：对 Dashboard 的 CalendarCard 进行三项升级
-  - **事件类型颜色区分**：日历网格中的事件条根据 reminder_type 使用 8 种类型颜色（红=开庭、橙=保全到期、黄=举证到期、紫=上诉到期、粉=诉讼时效、蓝=缴费期限、青=材料提交、灰=其他），已逾期事件统一用红色底色 + 删除线，与待处理事件清晰区分
-  - **议程视图**：新增 AgendaView 组件，在日历 header 增加「月/议程」Tabs 切换，议程模式按日期分组、按时间排序展示当月所有事件，支持类型 Badge、逾期标记、律师/法庭信息
-  - **事件溢出 Popover**：超过 3 条事件时点击「共 N 条」弹出 Popover 滚动列表，可直接点击查看事件详情，无需跳转
-
 ## [26.48.12] - 2026-05-17
 
 ### 前端
@@ -129,89 +189,34 @@
 - **临时目录日志降级**：`tmp/`、`exports/` 目录不存在时从 INFO 降级为 DEBUG，减少噪音日志
 - **批量分析任务超时增加**：Django Q2 任务超时从 1 小时增加到 2 小时，`future.result()` 超时同步调整
 
-## [26.49.3] - 2026-05-14
+## [26.48.11] - 2026-05-16
+
+### 前端
+
+#### 新功能
+
+- **仪表盘日历增强**：对 Dashboard 的 CalendarCard 进行三项升级
+  - **事件类型颜色区分**：日历网格中的事件条根据 reminder_type 使用 8 种类型颜色（红=开庭、橙=保全到期、黄=举证到期、紫=上诉到期、粉=诉讼时效、蓝=缴费期限、青=材料提交、灰=其他），已逾期事件统一用红色底色 + 删除线，与待处理事件清晰区分
+  - **议程视图**：新增 AgendaView 组件，在日历 header 增加「月/议程」Tabs 切换，议程模式按日期分组、按时间排序展示当月所有事件，支持类型 Badge、逾期标记、律师/法庭信息
+  - **事件溢出 Popover**：超过 3 条事件时点击「共 N 条」弹出 Popover 滚动列表，可直接点击查看事件详情，无需跳转
+
+## [26.48.10] - 2026-05-15
 
 ### 后端
 
 #### 新功能
 
-- **文件名模板可配置化**：新增 `FilenameTemplateService` 统一文件名渲染引擎，支持通过 SystemConfig 自定义文件名模板
-  - 新增配置项 `COURT_DOC_TEMPLATE`（法院文书，默认 `{title}（{case_name}）_{date}收`）和 `GENERATE_DOC_TEMPLATE`（生成文书，默认 `{doc_type}（{case_name}）V{version}_{date}`）
-  - 法院文书重命名（短信文书、OCR 识别）统一使用模板服务，碰撞处理改为通用逻辑（不再依赖"收"字）
-  - 诉讼文书（起诉状/答辩状）、合同文书、证据导出、保全申请书、授权委托书、归档文档等 9 个文件全部迁移到模板服务
-  - 碰撞处理统一为 `_1`、`_2` 后缀追加，兼容任意模板内容
-  - admin 页面点击「Init Defaults」或执行 `manage.py init_system_config` 即可写入默认配置
-- **案件日志附件自动子目录开关**：新增 `CASE_LOG_ATTACHMENT_AUTO_SUBDIR` 系统配置项（默认 true），设为 false 时跳过自动创建子目录
+- **Playwright 浏览器公共服务**：新增 `apps/core/services/browser/` 模块，统一管理浏览器生命周期。支持原生 launch、CDP 连接、持久化登录态（session_id）、反检测（stealth）、多 Profile 配置。所有业务模块禁止直接调用 `sync_playwright()` / `async_playwright()`，必须通过 `create_browser()` / `create_browser_async()` 调用
+- **一张网立案流程增强**：优化表单填写步骤（filing_steps.py）、表单工具（form_utils.py）、当事人信息处理（party_info_handler.py），提升立案自动化稳定性
+- **文件名模板可配置化**：新增 `FilenameTemplateService` 统一文件名渲染引擎，支持通过 SystemConfig 自定义文件名模板（`FILENAME_TEMPLATE_COURT_DOC` / `FILENAME_TEMPLATE_GENERATED_DOC`），覆盖法院文书重命名 + 生成文书共 15+ 个调用点。碰撞处理统一为通用 `_1`、`_2` 后缀逻辑
 
 #### 优化
 
-- **括号风格统一**：证据导出等场景的 ASCII 括号 `()` 统一为中文括号 `（）`
+- **多模块迁移至浏览器公共服务**：gsxt、court_filing、scraper、wechat_mp、message_hub、finance 等模块的浏览器调用统一迁移到公共服务
 
-## [26.49.2] - 2026-05-14
+#### 分支策略
 
-### 后端
-
-#### 修复
-
-- **CaseLogAttachment 文件路径溢出**：`BusinessFileStorageService` 将 `legacy_file_path` 从绝对路径（164 字符）改为相对路径（~80 字符），修复写入 `FileField`（varchar(100)）时的 `DataError: value too long` 异常
-- **案件日志附件文书引用无法定位**：`CourtSMSDocumentReferenceService` 从 `file.path`（media 根目录）改为使用 `CaseLogAttachmentStorageService.resolve_attachment()`（case_folder 目录），修复法院短信关联文书显示为空的问题
-- **文书引用显示 UUID 前缀文件名**：`_collect_from_case_log_attachments` 的 `display_name` 从 `Path(normalized).name`（UUID 前缀的存储文件名）改为 `attachment.original_filename`（原始文件名）
-- **original_filename 被 sanitize 丢失中文括号**：`save_uploaded_file` 和 `save_file` 中 `original_filename` 从 `sanitize_upload_filename()` 处理后的值改为存储真正的原始文件名，中文括号 `（）` 不再被替换为下划线
-- **admin 关联文书显示磁盘文件名**：`court_sms_admin_base.py` 的文书显示从 `Path(ref.file_path).name`（磁盘上的 sanitize 后文件名）改为 `ref.display_name`（正确的原始文件名）
-
-## [26.49.1] - 2026-05-14
-
-### 后端
-
-#### 优化
-
-- **一张网立案 Playwright 流程增强**：借鉴 autolian-main 项目的容错策略，对一张网在线立案的 Playwright 自动化流程进行 7 项改进
-  - **法院选择三层降级**：搜索框搜索失败后，依次尝试直接查找 checklist-text 元素、城市选择+法院列表，搜索关键词改用法院全名提高精度
-  - **弹窗处理增强**：新增 `_handle_popups()` 集中扫描处理 4 种弹窗（综治中心、数字诉讼标志、要素式立案、智能识别服务），替代原来分散的逐个调用
-  - **案由选择验证**：优先精确匹配 `.item-text`，选择后检查已选区域文本是否匹配
-  - **清除自动识别当事人**：进入信息填写页后先清除一张网自动识别的错误当事人，避免与手动添加的冲突
-  - **自然人字段补充**：新增国别（默认"中国"）、民族（默认"汉族"）字段，从身份证号第17位自动推导性别
-  - **其他组织当事人类型**：新增 `_add_other_organization()` 方法，支持非法人组织、个体工商户等，字段标签使用"主要负责人"而非"法定代表人"
-  - **上传验证+重试**：上传文件后检查 `.fd-file-name` 数量确认成功，失败自动重试最多 3 次；`_click_next_step` 前后各扫描一次弹窗
-
-## [26.49.0] - 2026-05-14
-
-> 感谢 [@zzdd5201314-ctrl](https://github.com/zzdd5201314-ctrl) 贡献的万行 PR ([#217](https://github.com/Lawyer-ray/FachuanHybridSystem/pull/217))，涵盖文件管理重构、案件重要时间、材料同步等多项功能。
-
-### 后端
-
-#### 新功能
-
-- **业务文件存储服务**：新增 `BusinessFileStorageService`，支持将附件按业务目录（合同、案件）分类存储，不再全部堆入 media 根目录。日志上传时可选择保存到指定文件夹
-- **案件重要时间提醒**：案件详情页新增「重要时间」面板，展示日历提醒及手动添加的关键时间节点，支持逾期、今日到期、即将到期、未到期四种状态
-- **日志附件同步到案件材料**：日志上传时可选择将附件绑定到案件材料页面，避免重复上传同一份文件到 media
-- **案件日志快捷入口**：案件详情页新增「增加日志」按钮，自动关联当前案件，支持日志编辑
-- **合同文件夹绑定增强**：合同详情页文件管理重构，支持从日志选择文件绑定到合同材料，文件夹设备号字段改为 BigInt 防止溢出
-- **附件预览失败友好提示**：文件不存在或路径不合法时展示提示页面，替代原来的空白/报错
-- **提醒重要时间标记**：Reminder 模型新增 `include_in_important_time` 字段，支持在日历提醒中勾选后自动同步到案件重要时间面板
-
-#### 修复
-
-- **案件日志子目录正则崩溃**：修复子目录路径匹配时的正则表达式异常
-- **空当事人证件内联**：防止空的当事人证件文档内联导致 admin 页面报错
-- **合同导出预取冲突**：修复合同导出时与 case log attachment 的 prefetch 冲突
-- **合同文件夹绑定乱码**：修复合同文件夹绑定页面的编码问题
-
-#### 测试
-
-- 新增 `test_business_file_storage_service`（296 行）
-- 新增 `test_case_important_time`（315 行）
-- 新增 `test_case_log_attachment_storage`（348 行）
-- 新增 `test_case_log_material_sync`（398 行）
-- 新增 `test_contract_folder_binding_recommendation`（252 行）
-- 新增 `test_material_service_auto_subdir`（207 行）
-- 新增 `test_case_access_policy`、`test_case_folder_binding_service_access`
-
-#### 迁移
-
-- `cases.0017` ~ `0019`：日志附件原始文件名、默认案件材料类型种子数据
-- `contracts.0029` ~ `0031`：定稿材料存储字段、文件夹设备号 BigInt
-- `reminders.0005`：提醒重要时间标记字段
+- **main + community 双分支**：`main` 为作者维护原始逻辑，`community` 接受所有外部 PR。外部贡献者请将 PR 提交到 `community` 分支
 
 ## [26.48.9] - 2026-05-13
 

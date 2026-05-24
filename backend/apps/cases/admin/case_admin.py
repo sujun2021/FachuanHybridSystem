@@ -16,6 +16,7 @@ from apps.cases.admin.case_forms_admin import (
     CasePartyInlineFormSet,
     SupervisingAuthorityInlineForm,
 )
+from apps.cases.admin.case_payment_inline import CaseClientPaymentInline
 from apps.cases.admin.mixins import (
     CaseAdminActionsMixin,
     CaseAdminSaveMixin,
@@ -208,7 +209,7 @@ class CaseAdmin(
     BaseModelAdmin,
 ):
     form = CaseAdminForm
-    autocomplete_fields = ["contract"]
+    autocomplete_fields = ["contract", "previous_case"]
     fieldsets = (
         (
             None,
@@ -226,12 +227,20 @@ class CaseAdmin(
             _("阶段与建档"),
             {
                 "fields": (
+                    "start_date",
                     "current_stage",
                     "is_filed",
                     "filing_number",
                     "effective_date",
                     "specified_date",
                 ),
+            },
+        ),
+        (
+            _("案件关联"),
+            {
+                "classes": ("collapse",),
+                "fields": ("previous_case",),
             },
         ),
         (
@@ -301,6 +310,7 @@ class CaseAdmin(
         CaseChatInline,
         CaseLogInline,
         CaseContactInline,
+        CaseClientPaymentInline,
     ]
 
     def handle_json_import(
