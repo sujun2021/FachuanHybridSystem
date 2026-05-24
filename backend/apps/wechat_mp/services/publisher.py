@@ -110,7 +110,13 @@ class WeChatPublisher:
         await self._fill_title(page, self.task.title)
 
         # Step 4: 注入内容到编辑器
-        html_content = convert_markdown_to_wechat_html(self.task.content_md)
+        if self.task.format_method == "llm":
+            from .llm_formatter import llm_format_article
+
+            llm_result = await llm_format_article(self.task.content_md)
+            html_content = llm_result if llm_result else convert_markdown_to_wechat_html(self.task.content_md)
+        else:
+            html_content = convert_markdown_to_wechat_html(self.task.content_md)
         await self._inject_content(page, html_content)
 
         # Step 5: 上传封面图（如有）

@@ -27,7 +27,7 @@ class WeChatAccountAdmin(admin.ModelAdmin):
 
 @admin.register(PublishTask)
 class PublishTaskAdmin(admin.ModelAdmin):
-    list_display = ["title", "account", "status", "save_as_draft", "created_at", "finished_at"]
+    list_display = ["title", "account", "status", "format_method", "save_as_draft", "created_at", "finished_at"]
     list_select_related = ("account",)
     list_filter = ["status", "save_as_draft", "account"]
     search_fields = ["title"]
@@ -41,7 +41,7 @@ class PublishTaskAdmin(admin.ModelAdmin):
         "updated_at",
     ]
     fieldsets = [
-        (None, {"fields": ["account", "title", "save_as_draft"]}),
+        (None, {"fields": ["account", "title", "save_as_draft", "format_method"]}),
         ("内容", {"fields": ["content_md", "content_html", "cover_image"]}),
         ("状态", {"fields": ["status", "queue_task_id", "result_data", "error_message"]}),
         ("时间", {"fields": ["created_at", "started_at", "finished_at", "updated_at"]}),

@@ -46,6 +46,11 @@ class PublishTaskStatus(models.TextChoices):
     FAILED = "failed", _("失败")
 
 
+class FormatMethod(models.TextChoices):
+    RULE = "rule", _("规则排版")
+    LLM = "llm", _("AI 排版")
+
+
 class PublishTask(models.Model):
     """公众号文章发布任务"""
 
@@ -72,6 +77,12 @@ class PublishTask(models.Model):
         verbose_name="任务状态",
     )
     save_as_draft = models.BooleanField("保存为草稿", default=True)
+    format_method = models.CharField(
+        max_length=20,
+        choices=FormatMethod.choices,
+        default=FormatMethod.RULE,
+        verbose_name="排版方式",
+    )
     result_data = models.JSONField("结果数据", default=dict, blank=True)
     error_message = models.TextField("错误信息", blank=True, default="")
     queue_task_id = models.CharField("队列任务ID", max_length=64, blank=True, default="")

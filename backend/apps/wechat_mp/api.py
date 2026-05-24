@@ -36,6 +36,7 @@ def create_publish_task(request: HttpRequest, payload: PublishTaskCreate) -> Any
         title=payload.title,
         content_md=payload.content_md,
         save_as_draft=payload.save_as_draft,
+        format_method=payload.format_method,
         created_by=request.user if request.user.is_authenticated else None,
     )
 
