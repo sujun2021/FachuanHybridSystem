@@ -35,6 +35,7 @@ import {
   XCircle,
   Pencil,
   RefreshCw,
+  Trash2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -47,6 +48,7 @@ import {
   useReviewDiscussion,
   useRetryTask,
   useCancelTask,
+  useDeleteTask,
   useUpdateArticle,
   useRegenerateArticle,
   useUpdateDiscussionTurn,
@@ -69,6 +71,7 @@ export function TaskDetail({ taskId }: TaskDetailProps) {
   const { data: discussions = [] } = useTaskDiscussions(taskId)
   const retryTask = useRetryTask()
   const cancelTask = useCancelTask()
+  const deleteTask = useDeleteTask()
 
   if (isLoading || !task) {
     return (
@@ -173,6 +176,35 @@ export function TaskDetail({ taskId }: TaskDetailProps) {
         </AlertDialog>
       )}
 
+      {/* 删除按钮（已完成/失败/已取消的任务） */}
+      {!isActive && (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" disabled={deleteTask.isPending}>
+              <Trash2 className="w-3.5 h-3.5 mr-1" />
+              删除任务
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>删除任务？</AlertDialogTitle>
+              <AlertDialogDescription>
+                任务 #{task.id} 的所有生成内容（文章、音频、讨论稿）将一并删除，此操作不可撤销。
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>取消</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => deleteTask.mutate(task.id)}
+              >
+                确认删除
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+
       {/* 文章、音频、讨论稿 Tab */}
       {(articles.length > 0 || episodes.length > 0 || discussions.length > 0) && (
         <Tabs defaultValue={discussions.length > 0 ? 'discussions' : 'articles'}>
@@ -200,6 +232,7 @@ export function TaskDetail({ taskId }: TaskDetailProps) {
             <BatchApproveButton
               articles={articles}
               episodes={episodes}
+              discussions={discussions}
             />
           </div>
 
@@ -318,6 +351,18 @@ function ArticleCard({ article }: { article: GeneratedArticle }) {
     }
   }, [article.content])
 
+  const handleExportMarkdown = useCallback(() => {
+    const md = `# ${article.title}\n\n${article.content}`
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${article.title || 'article'}.md`
+    a.click()
+    URL.revokeObjectURL(url)
+    toast.success('已导出 Markdown')
+  }, [article.title, article.content])
+
   const startEdit = useCallback(() => {
     setEditTitle(article.title)
     setEditContent(article.content)
@@ -413,6 +458,10 @@ function ArticleCard({ article }: { article: GeneratedArticle }) {
                 {copied ? <Check className="w-3.5 h-3.5 mr-1" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
                 {copied ? '已复制' : '复制全文'}
               </Button>
+              <Button variant="ghost" size="sm" onClick={handleExportMarkdown}>
+                <Download className="w-3.5 h-3.5 mr-1" />
+                导出
+              </Button>
               {article.review_status === 'draft' && (
                 <>
                   <Button variant="outline" size="sm" onClick={startEdit}>
@@ -435,6 +484,13 @@ function ArticleCard({ article }: { article: GeneratedArticle }) {
                 </>
               )}
             </div>
+
+            {/* 审核备注（仅在已审核时显示） */}
+            {article.review_status !== 'draft' && article.reviewer_notes && (
+              <p className="text-xs text-muted-foreground italic border-t pt-2 mt-2">
+                审核备注: {article.reviewer_notes}
+              </p>
+            )}
           </>
         )}
 
@@ -928,13 +984,15 @@ function DiscussionScriptCard({ script }: { script: DiscussionScript }) {
   )
 }
 
-function BatchApproveButton({ articles, episodes }: {
+function BatchApproveButton({ articles, episodes, discussions }: {
   articles: GeneratedArticle[]
   episodes: PodcastEpisode[]
+  discussions: DiscussionScript[]
 }) {
   const queryClient = useQueryClient()
   const draftArticles = articles.filter((a) => a.review_status === 'draft')
   const draftEpisodes = episodes.filter((e) => e.review_status === 'draft')
+  const draftDiscussions = discussions.filter((d) => d.review_status === 'draft')
 
   const handleBatchApprove = async () => {
     try {
@@ -944,24 +1002,30 @@ function BatchApproveButton({ articles, episodes }: {
       if (draftEpisodes.length > 0) {
         await contentOpsApi.batchApproveEpisodes(draftEpisodes.map((e) => e.id))
       }
+      // Approve discussions one by one (no batch endpoint yet)
+      for (const d of draftDiscussions) {
+        await contentOpsApi.approveDiscussion(d.id)
+      }
       queryClient.invalidateQueries({ queryKey: ['content-ops'] })
       const parts: string[] = []
       if (draftArticles.length > 0) parts.push(`${draftArticles.length} 篇文章`)
       if (draftEpisodes.length > 0) parts.push(`${draftEpisodes.length} 个音频`)
+      if (draftDiscussions.length > 0) parts.push(`${draftDiscussions.length} 个讨论稿`)
       toast.success(`已批量通过 ${parts.join('和')}`)
     } catch {
       toast.error('批量操作失败')
     }
   }
 
-  if (draftArticles.length === 0 && draftEpisodes.length === 0) {
+  const totalDrafts = draftArticles.length + draftEpisodes.length + draftDiscussions.length
+  if (totalDrafts === 0) {
     return null
   }
 
   return (
     <Button size="sm" variant="outline" onClick={handleBatchApprove}>
       <Check className="w-3.5 h-3.5 mr-1" />
-      一键全部通过 ({draftArticles.length + draftEpisodes.length})
+      一键全部通过 ({totalDrafts})
     </Button>
   )
 }

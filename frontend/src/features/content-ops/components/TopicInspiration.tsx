@@ -33,8 +33,23 @@ interface TopicInspirationProps {
   onSelectTopic: (topic: TopicSuggestion) => void
 }
 
+// User-scoped localStorage key for favorite model
+function getFavoriteKey(): string {
+  try {
+    // Try to get user ID from JWT payload in localStorage
+    const token = localStorage.getItem('access_token')
+    if (token) {
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      return `content_ops_favorite_model_${payload.user_id || 'default'}`
+    }
+  } catch {
+    // ignore
+  }
+  return 'content_ops_favorite_model_default'
+}
+
 export function TopicInspiration({ onSelectTopic }: TopicInspirationProps) {
-  const { data: topics, isFetching, refetch } = useTopicSuggestions()
+  const { data: topics, isFetching, refetch, error: topicsError } = useTopicSuggestions()
   const { data: modelsData, isLoading: modelsLoading } = useQuery({
     queryKey: ['workbench', 'models'],
     queryFn: () => workbenchApi.get('models').json<ModelsResponse>(),
@@ -43,7 +58,7 @@ export function TopicInspiration({ onSelectTopic }: TopicInspirationProps) {
   const [hasRequested, setHasRequested] = useState(false)
   const [selectedModel, setSelectedModel] = useState<string>('')
   const [favoriteModel, setFavoriteModel] = useState<string>(
-    () => localStorage.getItem('content_ops_favorite_model') || ''
+    () => localStorage.getItem(getFavoriteKey()) || ''
   )
   const [modelSelectorOpen, setModelSelectorOpen] = useState(false)
 
@@ -69,12 +84,13 @@ export function TopicInspiration({ onSelectTopic }: TopicInspirationProps) {
 
   const handleToggleFavorite = (modelId: string, e: React.MouseEvent) => {
     e.stopPropagation()
+    const key = getFavoriteKey()
     const newFav = favoriteModel === modelId ? '' : modelId
     setFavoriteModel(newFav)
     if (newFav) {
-      localStorage.setItem('content_ops_favorite_model', newFav)
+      localStorage.setItem(key, newFav)
     } else {
-      localStorage.removeItem('content_ops_favorite_model')
+      localStorage.removeItem(key)
     }
   }
 
@@ -154,13 +170,25 @@ export function TopicInspiration({ onSelectTopic }: TopicInspirationProps) {
       </div>
 
       {/* 空状态 */}
-      {!hasRequested && !topics && (
+      {!hasRequested && !topics && !topicsError && (
         <div className="flex flex-col items-center justify-center py-10 text-center">
           <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mb-2">
             <Lightbulb className="w-5 h-5 text-muted-foreground" />
           </div>
           <p className="text-xs text-muted-foreground">
             点击「AI 推荐」获取法律故事选题
+          </p>
+        </div>
+      )}
+
+      {/* 错误状态 */}
+      {topicsError && (
+        <div className="text-center py-8 text-xs text-destructive">
+          <p>选题推荐获取失败</p>
+          <p className="text-muted-foreground mt-1">
+            {topicsError && typeof topicsError === 'object' && 'message' in topicsError
+              ? String((topicsError as { message: string }).message)
+              : '请稍后重试'}
           </p>
         </div>
       )}

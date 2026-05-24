@@ -6,6 +6,17 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Input } from '@/components/ui/input'
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import {
   Loader2,
   Clock,
   CheckCircle2,
@@ -13,13 +24,16 @@ import {
   FileText,
   Search,
   RefreshCw,
+  Trash2,
+  Zap,
 } from 'lucide-react'
-import { useTaskList } from '../hooks/use-content-ops'
+import { useTaskList, useDeleteTask } from '../hooks/use-content-ops'
 import { STATUS_LABEL, MODE_LABEL } from '../types'
 import type { ContentTask, TaskStatus } from '../types'
 import { cn } from '@/lib/utils'
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
+import { toast } from 'sonner'
 
 interface TaskListProps {
   selectedTaskId: number | null
@@ -49,10 +63,12 @@ const FILTER_OPTIONS: { value: string; label: string }[] = [
   { value: 'active', label: '进行中' },
   { value: 'completed', label: '已完成' },
   { value: 'failed', label: '失败' },
+  { value: 'cancelled', label: '已取消' },
 ]
 
 export function TaskList({ selectedTaskId, onSelectTask }: TaskListProps) {
   const { data: tasks, isLoading, refetch, isFetching } = useTaskList()
+  const deleteTask = useDeleteTask()
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
 
@@ -89,6 +105,14 @@ export function TaskList({ selectedTaskId, onSelectTask }: TaskListProps) {
     return result
   }, [tasks, searchQuery, statusFilter])
 
+  const handleDelete = (taskId: number, e: React.MouseEvent) => {
+    e.stopPropagation()
+    deleteTask.mutate(taskId, {
+      onSuccess: () => toast.success('任务已删除'),
+      onError: () => toast.error('删除失败'),
+    })
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -96,6 +120,8 @@ export function TaskList({ selectedTaskId, onSelectTask }: TaskListProps) {
       </div>
     )
   }
+
+  const activeCount = tasks?.filter((t) => ['pending', 'queued', 'running'].includes(t.status)).length ?? 0
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -120,6 +146,11 @@ export function TaskList({ selectedTaskId, onSelectTask }: TaskListProps) {
               onClick={() => setStatusFilter(opt.value)}
             >
               {opt.label}
+              {opt.value === 'active' && activeCount > 0 && (
+                <Badge variant="secondary" className="ml-1 h-4 px-1 text-[9px]">
+                  {activeCount}
+                </Badge>
+              )}
             </Button>
           ))}
           <div className="flex-1" />
@@ -162,6 +193,8 @@ export function TaskList({ selectedTaskId, onSelectTask }: TaskListProps) {
                   task={task}
                   isSelected={task.id === selectedTaskId}
                   onClick={() => onSelectTask(task.id)}
+                  onDelete={handleDelete}
+                  isDeleting={deleteTask.isPending}
                 />
               </motion.div>
             ))}
@@ -172,18 +205,21 @@ export function TaskList({ selectedTaskId, onSelectTask }: TaskListProps) {
   )
 }
 
-function TaskCard({ task, isSelected, onClick }: {
+function TaskCard({ task, isSelected, onClick, onDelete, isDeleting }: {
   task: ContentTask
   isSelected: boolean
   onClick: () => void
+  onDelete: (taskId: number, e: React.MouseEvent) => void
+  isDeleting: boolean
 }) {
   const Icon = STATUS_ICON[task.status]
   const isActive = ['pending', 'queued', 'running'].includes(task.status)
+  const canDelete = ['completed', 'failed', 'cancelled'].includes(task.status)
 
   return (
     <Card
       className={cn(
-        'w-full max-w-full cursor-pointer transition-all hover:border-primary/30 overflow-hidden',
+        'w-full max-w-full cursor-pointer transition-all hover:border-primary/30 overflow-hidden group',
         isSelected && 'border-primary/50 bg-primary/5',
       )}
       onClick={onClick}
@@ -200,10 +236,41 @@ function TaskCard({ task, isSelected, onClick }: {
               {task.source_title || task.keyword || (task.mode === 'direct' ? `直投内容 #${task.id}` : `任务 #${task.id}`)}
             </span>
           </div>
-          <Badge variant={STATUS_VARIANT[task.status]} className="shrink-0 text-[10px] px-1.5 py-0 h-4">
-            <Icon className={cn('w-2.5 h-2.5 mr-0.5', isActive && 'animate-spin')} />
-            {STATUS_LABEL[task.status]}
-          </Badge>
+          <div className="flex items-center gap-1 shrink-0">
+            {canDelete && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => e.stopPropagation()}
+                    disabled={isDeleting}
+                  >
+                    <Trash2 className="w-3 h-3 text-muted-foreground hover:text-destructive" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>删除任务？</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      任务 #{task.id} 的所有生成内容（文章、音频）将一并删除，此操作不可撤销。
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>取消</AlertDialogCancel>
+                    <AlertDialogAction onClick={(e) => onDelete(task.id, e)}>
+                      确认删除
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+            <Badge variant={STATUS_VARIANT[task.status]} className="text-[10px] px-1.5 py-0 h-4">
+              <Icon className={cn('w-2.5 h-2.5 mr-0.5', isActive && 'animate-spin')} />
+              {STATUS_LABEL[task.status]}
+            </Badge>
+          </div>
         </div>
 
         {isActive && (
@@ -218,8 +285,11 @@ function TaskCard({ task, isSelected, onClick }: {
         )}
 
         <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground overflow-hidden">
-          <span className="shrink-0">{MODE_LABEL[task.mode]}</span>
-          <span className="text-muted-foreground/50 shrink-0">·</span>
+          <Badge variant="outline" className="text-[9px] h-4 px-1 gap-0.5">
+            {task.mode === 'search' ? <Search className="w-2.5 h-2.5" /> : <Zap className="w-2.5 h-2.5" />}
+            {MODE_LABEL[task.mode]}
+          </Badge>
+          <span className="text-muted-foreground/50">·</span>
           <span className="truncate">{formatDistanceToNow(new Date(task.created_at), { addSuffix: true, locale: zhCN })}</span>
         </div>
       </CardContent>
