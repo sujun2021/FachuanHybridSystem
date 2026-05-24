@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import logging
+
 from django.contrib import admin
 
-from apps.wechat_mp.models import PublishTask, WeChatAccount
+from apps.wechat_mp.models import PublishTask, PublishTaskStatus, WeChatAccount
+
+logger = logging.getLogger(__name__)
 
 
 @admin.register(WeChatAccount)
@@ -42,3 +46,17 @@ class PublishTaskAdmin(admin.ModelAdmin):
         ("状态", {"fields": ["status", "queue_task_id", "result_data", "error_message"]}),
         ("时间", {"fields": ["created_at", "started_at", "finished_at", "updated_at"]}),
     ]
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+
+        # 新建任务且状态为 PENDING 时，自动调度异步执行
+        if not change and obj.status == PublishTaskStatus.PENDING:
+            from django_q.tasks import async_task
+
+            from apps.wechat_mp.tasks import execute_publish_task
+
+            queue_task_id = async_task(execute_publish_task, obj.id)
+            obj.queue_task_id = str(queue_task_id)
+            obj.save(update_fields=["queue_task_id"])
+            logger.info("Admin 创建发布任务并调度: task_id=%d, queue_id=%s", obj.id, queue_task_id)

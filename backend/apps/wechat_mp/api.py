@@ -6,6 +6,7 @@ from typing import Any
 
 from django.http import HttpRequest
 from ninja import Router
+from ninja.errors import HttpError
 
 from apps.wechat_mp.models import PublishTask, PublishTaskStatus, WeChatAccount
 from apps.wechat_mp.schemas import PublishTaskCreate, PublishTaskOut, WeChatAccountOut
@@ -27,7 +28,7 @@ def create_publish_task(request: HttpRequest, payload: PublishTaskCreate) -> Any
     try:
         account = WeChatAccount.objects.get(id=payload.account_id, is_active=True)
     except WeChatAccount.DoesNotExist:
-        return {"error": "公众号账号不存在或已禁用"}, 400
+        raise HttpError(400, "公众号账号不存在或已禁用")
 
     # 创建任务
     task = PublishTask.objects.create(
@@ -60,4 +61,4 @@ def get_task(request: HttpRequest, task_id: int) -> Any:
     try:
         return PublishTask.objects.get(id=task_id)
     except PublishTask.DoesNotExist:
-        return {"error": "任务不存在"}, 404
+        raise HttpError(404, "任务不存在")
