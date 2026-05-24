@@ -1,4 +1,5 @@
 import { createFeatureApiClient, resolveMediaUrl } from '@/lib/api'
+import { getAccessToken } from '@/lib/token'
 import type {
   ContentTask,
   CreateTaskInput,
@@ -93,9 +94,13 @@ export const contentOpsApi = {
   rejectEpisode: (episodeId: number, data?: ReviewActionInput) =>
     api.post(`episodes/${episodeId}/reject`, { json: data ?? {} }).json<PodcastEpisode>(),
 
-  // 音频 URL
-  getAudioUrl: (episodeId: number) =>
-    resolveMediaUrl(`/api/v1/content-ops/episodes/${episodeId}/audio`),
+  // 音频 URL（<audio> 元素无法发送 Authorization header，用 query param 传 token）
+  getAudioUrl: (episodeId: number) => {
+    const base = resolveMediaUrl(`/api/v1/content-ops/episodes/${episodeId}/audio`)
+    if (!base) return null
+    const token = getAccessToken()
+    return token ? `${base}?token=${token}` : base
+  },
 
   // TTS 测试
   testTts: (text: string, voice: string, stylePrompt?: string) =>

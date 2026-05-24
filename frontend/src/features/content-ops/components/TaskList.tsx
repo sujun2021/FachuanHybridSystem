@@ -98,9 +98,9 @@ export function TaskList({ selectedTaskId, onSelectTask }: TaskListProps) {
   }
 
   return (
-    <div className="space-y-3 overflow-hidden w-full">
+    <div className="flex flex-col h-full min-h-0">
       {/* 搜索和筛选 */}
-      <div className="space-y-2 overflow-hidden">
+      <div className="space-y-2 pb-3 border-b shrink-0">
         <div className="relative">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <Input
@@ -110,7 +110,7 @@ export function TaskList({ selectedTaskId, onSelectTask }: TaskListProps) {
             className="h-7 pl-7 text-xs"
           />
         </div>
-        <div className="flex gap-1 flex-wrap">
+        <div className="flex gap-1 flex-wrap items-center">
           {FILTER_OPTIONS.map((opt) => (
             <Button
               key={opt.value}
@@ -123,20 +123,24 @@ export function TaskList({ selectedTaskId, onSelectTask }: TaskListProps) {
             </Button>
           ))}
           <div className="flex-1" />
+          <span className="text-[10px] text-muted-foreground mr-1">
+            {filteredTasks.length} 项
+          </span>
           <Button variant="ghost" size="sm" onClick={() => refetch()} disabled={isFetching} className="h-6 px-2">
             <RefreshCw className={cn('w-3 h-3', isFetching && 'animate-spin')} />
           </Button>
         </div>
       </div>
 
-      {filteredTasks.length === 0 ? (
-        <div className="text-center py-8 text-sm text-muted-foreground">
-          {tasks && tasks.length > 0 ? '没有匹配的任务' : '暂无任务记录'}
-        </div>
-      ) : (
-        <div className="h-[calc(100vh-420px)] w-full overflow-y-auto overflow-x-hidden">
+      {/* 任务列表 */}
+      <div className="flex-1 min-h-0 overflow-y-auto pt-3">
+        {filteredTasks.length === 0 ? (
+          <div className="text-center py-12 text-sm text-muted-foreground">
+            {tasks && tasks.length > 0 ? '没有匹配的任务' : '暂无任务记录'}
+          </div>
+        ) : (
           <motion.div
-            className="space-y-2 pr-3"
+            className="space-y-2 pr-1"
             initial="hidden"
             animate="visible"
             variants={{
@@ -162,8 +166,8 @@ export function TaskList({ selectedTaskId, onSelectTask }: TaskListProps) {
               </motion.div>
             ))}
           </motion.div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }
