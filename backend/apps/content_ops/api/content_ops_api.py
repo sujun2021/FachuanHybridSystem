@@ -5,7 +5,7 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-from django.http import FileResponse, HttpRequest, HttpResponse
+from django.http import FileResponse, HttpRequest, HttpResponse, HttpResponseBase
 from ninja import Router
 
 from apps.content_ops.schemas.content_ops_schemas import (
@@ -78,7 +78,7 @@ def tts_test(request: HttpRequest, payload: TTSTestIn) -> dict[str, str] | FileR
 
 
 @router.get("/topics/suggest", response=list[TopicSuggestionOut])
-def topic_suggest(request: HttpRequest) -> list[TopicSuggestionOut]:
+def topic_suggest(request: HttpRequest) -> list[dict[str, str]]:
     """获取选题建议。"""
     from apps.content_ops.services.topic_service import TopicService
 
@@ -159,7 +159,7 @@ def reject_episode(request: HttpRequest, episode_id: int, payload: ReviewActionI
 
 
 @router.get("/episodes/{episode_id}/audio")
-def episode_audio(request: HttpRequest, episode_id: int) -> dict[str, str] | FileResponse:
+def episode_audio(request: HttpRequest, episode_id: int) -> dict[str, str] | FileResponse | HttpResponseBase:
     """获取播客单集音频。"""
     from apps.content_ops.models import PodcastEpisode
 
