@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from typing import Any
 
 from apps.core.interfaces import ServiceLocator
 from apps.core.llm.service import LLMService
@@ -55,10 +56,11 @@ class TopicService:
         parsed = parse_json_content(content)
 
         # Normalize: LLM may return a list directly or {"topics": [...]}
+        raw_topics: list[dict[str, Any]]
         if isinstance(parsed, list):
             raw_topics = parsed
         elif isinstance(parsed, dict):
-            raw_topics = parsed.get("topics", parsed.get("选题", []))
+            raw_topics = parsed.get("topics", parsed.get("选题", [])) or []
         else:
             raw_topics = []
 

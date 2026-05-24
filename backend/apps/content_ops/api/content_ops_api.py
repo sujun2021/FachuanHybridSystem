@@ -3,8 +3,9 @@ from __future__ import annotations
 import logging
 import tempfile
 from pathlib import Path
+from typing import Any
 
-from django.http import FileResponse, HttpRequest
+from django.http import FileResponse, HttpRequest, HttpResponse
 from ninja import Router
 
 from apps.content_ops.schemas.content_ops_schemas import (
@@ -31,7 +32,7 @@ _task_service = ContentOpsTaskService()
 
 
 @router.post("/tts/test")
-def tts_test(request, payload: TTSTestIn):
+def tts_test(request: HttpRequest, payload: TTSTestIn) -> dict[str, str] | FileResponse:
     """Test TTS synthesis. Returns an MP3/WAV audio file for preview."""
     if not payload.text.strip():
         return {"error": "text 不能为空"}
@@ -77,7 +78,7 @@ def tts_test(request, payload: TTSTestIn):
 
 
 @router.get("/topics/suggest", response=list[TopicSuggestionOut])
-def topic_suggest(request: HttpRequest):
+def topic_suggest(request: HttpRequest) -> list[TopicSuggestionOut]:
     """获取选题建议。"""
     from apps.content_ops.services.topic_service import TopicService
 
@@ -89,35 +90,35 @@ def topic_suggest(request: HttpRequest):
 
 
 @router.post("/tasks", response=ContentTaskOut)
-def create_task(request: HttpRequest, payload: ContentTaskCreateIn):
+def create_task(request: HttpRequest, payload: ContentTaskCreateIn) -> ContentTaskOut:
     """创建内容运营任务。"""
     task = _task_service.create_task(payload=payload, user=request.user)
     return _task_to_out(task)
 
 
 @router.get("/tasks", response=list[ContentTaskOut])
-def list_tasks(request: HttpRequest, mode: str | None = None):
+def list_tasks(request: HttpRequest, mode: str | None = None) -> list[ContentTaskOut]:
     """列出当前用户的任务。"""
     tasks = _task_service.list_tasks(user=request.user, mode=mode)
     return [_task_to_out(t) for t in tasks]
 
 
 @router.get("/tasks/{task_id}", response=ContentTaskOut)
-def get_task(request: HttpRequest, task_id: int):
+def get_task(request: HttpRequest, task_id: int) -> ContentTaskOut:
     """获取任务详情。"""
     task = _task_service.get_task(task_id=task_id, user=request.user)
     return _task_to_out(task)
 
 
 @router.get("/tasks/{task_id}/articles", response=list[GeneratedArticleOut])
-def list_articles(request: HttpRequest, task_id: int):
+def list_articles(request: HttpRequest, task_id: int) -> list[GeneratedArticleOut]:
     """列出任务关联的文章。"""
     articles = _task_service.list_articles(task_id=task_id, user=request.user)
     return [_article_to_out(a) for a in articles]
 
 
 @router.get("/tasks/{task_id}/episodes", response=list[PodcastEpisodeOut])
-def list_episodes(request: HttpRequest, task_id: int):
+def list_episodes(request: HttpRequest, task_id: int) -> list[PodcastEpisodeOut]:
     """列出任务关联的播客单集。"""
     episodes = _task_service.list_episodes(task_id=task_id, user=request.user)
     return [_episode_to_out(e) for e in episodes]
@@ -127,28 +128,28 @@ def list_episodes(request: HttpRequest, task_id: int):
 
 
 @router.post("/articles/{article_id}/approve", response=GeneratedArticleOut)
-def approve_article(request: HttpRequest, article_id: int, payload: ReviewActionIn):
+def approve_article(request: HttpRequest, article_id: int, payload: ReviewActionIn) -> GeneratedArticleOut:
     """审核通过文章。"""
     article = _task_service.approve_article(article_id=article_id, user=request.user, notes=payload.notes)
     return _article_to_out(article)
 
 
 @router.post("/articles/{article_id}/reject", response=GeneratedArticleOut)
-def reject_article(request: HttpRequest, article_id: int, payload: ReviewActionIn):
+def reject_article(request: HttpRequest, article_id: int, payload: ReviewActionIn) -> GeneratedArticleOut:
     """驳回文章。"""
     article = _task_service.reject_article(article_id=article_id, user=request.user, notes=payload.notes)
     return _article_to_out(article)
 
 
 @router.post("/episodes/{episode_id}/approve", response=PodcastEpisodeOut)
-def approve_episode(request: HttpRequest, episode_id: int, payload: ReviewActionIn):
+def approve_episode(request: HttpRequest, episode_id: int, payload: ReviewActionIn) -> PodcastEpisodeOut:
     """审核通过播客单集。"""
     episode = _task_service.approve_episode(episode_id=episode_id, user=request.user, notes=payload.notes)
     return _episode_to_out(episode)
 
 
 @router.post("/episodes/{episode_id}/reject", response=PodcastEpisodeOut)
-def reject_episode(request: HttpRequest, episode_id: int, payload: ReviewActionIn):
+def reject_episode(request: HttpRequest, episode_id: int, payload: ReviewActionIn) -> PodcastEpisodeOut:
     """驳回播客单集。"""
     episode = _task_service.reject_episode(episode_id=episode_id, user=request.user, notes=payload.notes)
     return _episode_to_out(episode)
@@ -158,7 +159,7 @@ def reject_episode(request: HttpRequest, episode_id: int, payload: ReviewActionI
 
 
 @router.get("/episodes/{episode_id}/audio")
-def episode_audio(request: HttpRequest, episode_id: int):
+def episode_audio(request: HttpRequest, episode_id: int) -> dict[str, str] | FileResponse:
     """获取播客单集音频。"""
     from apps.content_ops.models import PodcastEpisode
 
@@ -168,21 +169,20 @@ def episode_audio(request: HttpRequest, episode_id: int):
 
     from apps.core.http.streaming import build_range_file_response
 
-    return build_range_file_response(request, episode.audio_file)
+    return build_range_file_response(request, str(episode.audio_file))
 
 
 # --- RSS ---
 
 
 @router.get("/rss", auth=None)
-def podcast_rss_feed(request: HttpRequest):
+def podcast_rss_feed(request: HttpRequest) -> HttpResponse:
     """播客 RSS Feed（无需认证）。"""
     from apps.content_ops.services.rss_service import RSSService
 
     host = request.get_host()
     scheme = "https" if request.is_secure() else "http"
     xml = RSSService().generate_feed(request_host=f"{scheme}://{host}")
-    from django.http import HttpResponse
 
     return HttpResponse(xml, content_type="application/rss+xml; charset=utf-8")
 
@@ -190,7 +190,7 @@ def podcast_rss_feed(request: HttpRequest):
 # --- Helpers ---
 
 
-def _task_to_out(task) -> ContentTaskOut:
+def _task_to_out(task: Any) -> ContentTaskOut:
     return ContentTaskOut(
         id=task.pk,
         mode=task.mode,
@@ -210,7 +210,7 @@ def _task_to_out(task) -> ContentTaskOut:
     )
 
 
-def _article_to_out(article) -> GeneratedArticleOut:
+def _article_to_out(article: Any) -> GeneratedArticleOut:
     return GeneratedArticleOut(
         id=article.pk,
         title=article.title,
@@ -225,7 +225,7 @@ def _article_to_out(article) -> GeneratedArticleOut:
     )
 
 
-def _episode_to_out(episode) -> PodcastEpisodeOut:
+def _episode_to_out(episode: Any) -> PodcastEpisodeOut:
     audio_url = ""
     if episode.audio_file:
         audio_url = episode.audio_file.url

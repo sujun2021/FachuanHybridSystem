@@ -9,7 +9,7 @@ logger = logging.getLogger("apps.content_ops")
 
 
 @receiver(post_delete, sender="content_ops.PodcastEpisode")
-def delete_episode_audio_file(sender, instance, **kwargs):
+def delete_episode_audio_file(sender: type, instance: "PodcastEpisode", **kwargs: object) -> None:
     """Delete the physical audio file when a PodcastEpisode is deleted."""
     if instance.audio_file:
         try:

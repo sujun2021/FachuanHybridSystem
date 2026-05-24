@@ -7,7 +7,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 from django.db import close_old_connections
 from django.utils import timezone
@@ -198,7 +199,7 @@ class ContentOpsExecutor:
             voice=task.voice,
             file_size_bytes=len(audio_bytes),
         )
-        episode.audio_file.save(f"episode_{task.pk}.mp3", _BytesIO(audio_bytes))
+        episode.audio_file.save(f"episode_{task.pk}.mp3", _BytesIO(audio_bytes))  # type: ignore[arg-type]
         episode.save()
 
         self._update_progress(task, 90, "音频合成完成")
@@ -234,7 +235,10 @@ class _BytesIO:
         return self._pos
 
 
-def _run_orm_safely(operation):
+T = TypeVar("T")
+
+
+def _run_orm_safely(operation: Callable[[], T]) -> T:
     """Run ORM operation safely, even from async context."""
     try:
         loop = asyncio.get_running_loop()
@@ -244,7 +248,7 @@ def _run_orm_safely(operation):
     if loop is not None and loop.is_running():
         from concurrent.futures import ThreadPoolExecutor
 
-        def _wrapped():
+        def _wrapped() -> T:
             close_old_connections()
             try:
                 return operation()
