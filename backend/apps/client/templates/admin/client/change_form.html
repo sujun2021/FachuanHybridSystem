@@ -396,6 +396,11 @@
                     const resp = await fetch('/api/v1/llm/models');
                     const data = await resp.json();
                     this.models = (data.models || []).map(m => ({ id: m.id, name: m.name }));
+                    // 模型列表加载完成后，重新赋值以触发 select 同步
+                    const saved = localStorage.getItem('client_recognize_last_model') || '';
+                    if (saved && this.models.some(m => m.id === saved)) {
+                        this.selectedModel = saved;
+                    }
                 } catch (e) {
                     console.warn('[TextParserApp] 加载模型列表失败:', e);
                 }
