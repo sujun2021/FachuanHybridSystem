@@ -11,9 +11,9 @@ import type {
 const api = createFeatureApiClient('content-ops')
 
 export const contentOpsApi = {
-  // 选题建议
+  // 选题建议（LLM 调用耗时较长，需要更长超时）
   suggestTopics: () =>
-    api.get('topics/suggest').json<TopicSuggestion[]>(),
+    api.get('topics/suggest', { timeout: 120_000 }).json<TopicSuggestion[]>(),
 
   // 任务 CRUD
   createTask: (data: CreateTaskInput) =>
