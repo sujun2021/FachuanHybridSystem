@@ -16,7 +16,7 @@ from django.conf import settings
 from apps.automation.services.ocr.ocr_service import OCRService
 from apps.pdf_splitting.models import PdfSplitOcrProfile
 
-from .split_models import OCRRuntimeProfile, OCRPageResult
+from .split_models import OCRPageResult, OCRRuntimeProfile
 
 logger = logging.getLogger("apps.pdf_splitting")
 

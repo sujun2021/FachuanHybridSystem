@@ -14,7 +14,9 @@ from playwright.sync_api import Error as PlaywrightError
 from playwright.sync_api import Page
 
 if TYPE_CHECKING:
-    from apps.automation.services.captcha.captcha_recognition_service import CaptchaRecognizer  # type: ignore[attr-defined]
+    from apps.automation.services.captcha.captcha_recognition_service import (
+        CaptchaRecognizer,  # type: ignore[attr-defined]
+    )
     from apps.automation.services.scraper.core.token_service import TokenService
 
 

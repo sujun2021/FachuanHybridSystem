@@ -43,7 +43,9 @@ def _get_generation_service() -> Any:
 
 def _get_unified_template_generation_service() -> Any:
     """工厂函数:获取统一模板生成服务"""
-    from apps.cases.services import UnifiedTemplateGenerationService  # type: ignore[attr-defined]  # type: ignore[attr-defined]
+    from apps.cases.services import (
+        UnifiedTemplateGenerationService,  # type: ignore[attr-defined]  # type: ignore[attr-defined]
+    )
 
     return UnifiedTemplateGenerationService()
 

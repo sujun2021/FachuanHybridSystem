@@ -139,10 +139,16 @@ class ContentOpsExecutor:
         task.source_court_text = getattr(detail, "court_text", "") or ""
         task.source_judgment_date = getattr(detail, "judgment_date", "") or ""
         task.source_facts = getattr(detail, "facts", "") or ""
-        task.save(update_fields=[
-            "source_doc_id", "source_title", "source_court_text",
-            "source_judgment_date", "source_facts", "updated_at",
-        ])
+        task.save(
+            update_fields=[
+                "source_doc_id",
+                "source_title",
+                "source_court_text",
+                "source_judgment_date",
+                "source_facts",
+                "updated_at",
+            ]
+        )
 
         if not task.source_facts:
             raise RuntimeError("未能从裁判文书中提取案件事实")
@@ -208,10 +214,10 @@ class _BytesIO:
 
     def read(self, size: int = -1) -> bytes:
         if size == -1:
-            result = self._data[self._pos:]
+            result = self._data[self._pos :]
             self._pos = len(self._data)
         else:
-            result = self._data[self._pos: self._pos + size]
+            result = self._data[self._pos : self._pos + size]
             self._pos += len(result)
         return result
 

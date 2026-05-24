@@ -15,6 +15,4 @@ def delete_episode_audio_file(sender, instance, **kwargs):
         try:
             instance.audio_file.delete(save=False)
         except Exception:
-            logger.warning(
-                "Failed to delete audio file for episode %s", instance.pk, exc_info=True
-            )
+            logger.warning("Failed to delete audio file for episode %s", instance.pk, exc_info=True)

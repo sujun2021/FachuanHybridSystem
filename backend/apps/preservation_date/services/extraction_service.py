@@ -24,10 +24,10 @@ from apps.core.exceptions import ValidationException
 
 from .models import PreservationExtractionResult, PreservationMeasure, ReminderData
 from .prompts import DEFAULT_PENDING_NOTE, PENDING_KEYWORDS, PRESERVATION_DATE_EXTRACTION_PROMPT
-from .validators import MeasureValidator
 
 # 规则引擎
 from .rule_engine import PreservationRuleEngine
+from .validators import MeasureValidator
 
 if TYPE_CHECKING:
     from apps.document_recognition.services import TextExtractionService

@@ -71,8 +71,14 @@ class TopicService:
         for t in raw_topics:
             values = list(t.values())
             # Try key-pattern matching first
-            title = next((v for k, v in t.items() if any(p in k.lower() for p in _title_patterns) and isinstance(v, str) and v), "")
-            description = next((v for k, v in t.items() if any(p in k.lower() for p in _desc_patterns) and isinstance(v, str) and v), "")
+            title = next(
+                (v for k, v in t.items() if any(p in k.lower() for p in _title_patterns) and isinstance(v, str) and v),
+                "",
+            )
+            description = next(
+                (v for k, v in t.items() if any(p in k.lower() for p in _desc_patterns) and isinstance(v, str) and v),
+                "",
+            )
             kw = next((v for k, v in t.items() if any(p in k.lower() for p in _kw_patterns) and v), "")
             # Positional fallback: first str→title, second str→description, third→keyword
             str_values = [v for v in values if isinstance(v, str) and v]
@@ -89,11 +95,13 @@ class TopicService:
                     kw = list_values[0]
             if isinstance(kw, list):
                 kw = "、".join(str(k) for k in kw)
-            topics.append({
-                "title": title,
-                "description": description,
-                "suggested_keyword": kw,
-            })
+            topics.append(
+                {
+                    "title": title,
+                    "description": description,
+                    "suggested_keyword": kw,
+                }
+            )
 
         return TopicResult(
             topics=topics,

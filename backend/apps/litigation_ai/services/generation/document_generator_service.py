@@ -78,6 +78,7 @@ class DocumentGeneratorService:
 
     def get_task_status(self, task_id: int, user: Any | None = None) -> GenerationTaskDTO:
         from apps.core.exceptions import NotFoundError, PermissionDenied
+
         from ..wiring import get_generation_task_service
 
         task = get_generation_task_service().get_task_internal(task_id)

@@ -15,8 +15,8 @@ from django.utils.translation import gettext_lazy as _
 from apps.chat_records.models import ChatRecordRecording, ChatRecordScreenshot, ScreenshotSource
 from apps.core.exceptions import NotFoundError, ValidationException
 
-from .access_policy import ensure_can_access_project
 from ..extraction.frame_selection_service import FrameSelectionService
+from .access_policy import ensure_can_access_project
 from .project_service import ProjectService
 
 if TYPE_CHECKING:

@@ -36,8 +36,8 @@ from apps.legal_research.schemas.legal_research_schemas import (
     RetrievalHitV1,
 )
 from apps.legal_research.services.keywords import normalize_keyword_query
-from apps.legal_research.services.task.executor import LegalResearchExecutor
 from apps.legal_research.services.task.event_service import LegalResearchTaskEventService
+from apps.legal_research.services.task.executor import LegalResearchExecutor
 from apps.legal_research.services.task.service import LegalResearchTaskService
 
 logger = logging.getLogger(__name__)

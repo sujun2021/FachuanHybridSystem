@@ -91,11 +91,7 @@ class ContentOpsTaskService:
 
     def get_task(self, *, task_id: int, user: Any | None = None) -> ContentTask:
         """获取任务详情（含权限检查）。"""
-        task = (
-            ContentTask.objects.select_related("created_by", "credential")
-            .filter(id=task_id)
-            .first()
-        )
+        task = ContentTask.objects.select_related("created_by", "credential").filter(id=task_id).first()
         if not task:
             raise NotFoundError(f"任务 {task_id} 不存在")
         self._check_permission(task, user)

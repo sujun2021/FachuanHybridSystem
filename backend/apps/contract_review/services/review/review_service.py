@@ -12,6 +12,8 @@ from docx.document import Document as DocumentType
 
 from apps.contract_review.models.review_task import ProcessStep, ReviewTask, TaskStatus
 from apps.contract_review.repositories.review_task_repository import ReviewTaskRepository
+from apps.core.llm.service import LLMService, get_llm_service
+
 from ..exceptions import ContractReviewError, ExtractionError
 from ..extraction.content_extractor import ContentExtractor
 from ..extraction.heading_numbering import HeadingNumbering
@@ -22,7 +24,6 @@ from ..formatting.page_numbering import PageNumbering
 from .contract_reviewer import ContractReviewer
 from .party_identifier import PartyIdentifier
 from .typo_checker import TypoChecker
-from apps.core.llm.service import LLMService, get_llm_service
 
 logger = logging.getLogger(__name__)
 
