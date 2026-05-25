@@ -31,7 +31,7 @@ class WeChatWorkTokenMixin:
             key_mapping = {
                 "WECHAT_WORK_CORP_ID": "CORP_ID",
                 "WECHAT_WORK_AGENT_ID": "AGENT_ID",
-                "WECHAT_WORK_SECRET": "SECRET",
+                "WECHAT_WORK_SECRET": "SECRET",  # pragma: allowlist secret
                 "WECHAT_WORK_DEFAULT_OWNER_ID": "DEFAULT_OWNER_ID",
             }
             config = {internal: db_configs[db] for db, internal in key_mapping.items() if db_configs.get(db)}

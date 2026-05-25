@@ -41,7 +41,7 @@ class DingtalkTokenMixin:
                 return {}
             key_mapping = {
                 "DINGTALK_APP_KEY": "APP_KEY",
-                "DINGTALK_APP_SECRET": "APP_SECRET",
+                "DINGTALK_APP_SECRET": "APP_SECRET",  # pragma: allowlist secret
                 "DINGTALK_AGENT_ID": "AGENT_ID",
                 "DINGTALK_DEFAULT_OWNER_ID": "DEFAULT_OWNER_ID",
             }
