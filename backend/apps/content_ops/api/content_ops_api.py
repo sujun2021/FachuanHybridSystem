@@ -177,7 +177,7 @@ def translate_topics(request: HttpRequest, payload: dict[str, Any]) -> dict[str,
             {"role": "system", "content": "你是一个专业的翻译助手，擅长法律科技领域的翻译。"},
             {"role": "user", "content": prompt},
         ]
-        response = llm.chat(messages=messages)
+        response = llm.chat(messages=messages, backend="openai_compatible")
         result = response.content if hasattr(response, "content") else str(response)
         translations = [line.strip() for line in result.strip().split("\n") if line.strip()]
         # 确保翻译数量匹配
