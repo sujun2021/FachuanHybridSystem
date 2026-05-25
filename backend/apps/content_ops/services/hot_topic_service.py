@@ -131,7 +131,7 @@ class HotTopicService:
     def _get_single_source(self, source: str) -> list[HotTopicItem]:
         """从缓存获取单个源的数据，缓存未命中则采集。"""
         cache_key = f"{CACHE_KEY_PREFIX}:{source}"
-        cached = cache.get(cache_key)
+        cached: list[HotTopicItem] | None = cache.get(cache_key)
         if cached is not None:
             return cached
         return self._fetch_and_cache(source)
@@ -147,14 +147,14 @@ class HotTopicService:
         label = _SCRAPERS[source][0]
 
         try:
-            items = fetcher()
+            items: list[HotTopicItem] = fetcher()
             cache.set(cache_key, items, CACHE_TTL)
             logger.info("Fetched %d hot topics from %s", len(items), label)
             return items
         except Exception:
             logger.exception("Failed to fetch hot topics from %s", label)
             # 采集失败时返回缓存中的旧数据（如果有的话）
-            stale = cache.get(cache_key)
+            stale: list[HotTopicItem] | None = cache.get(cache_key)
             if stale is not None:
                 logger.info("Returning stale cache for %s (%d items)", label, len(stale))
             return stale or []
