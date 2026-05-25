@@ -6,6 +6,7 @@ import json
 import logging
 import re
 import xml.etree.ElementTree as ET
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from typing import Any
 
@@ -307,72 +308,59 @@ def _scrape_with_playwright(name: str, url: str, limit: int = 10) -> list[HotTop
 
 
 def _fetch_legaltech(limit: int = 50) -> list[HotTopicItem]:
-    """获取法律科技相关新闻。
+    """获取法律科技相关新闻（并行采集，提升速度）。
 
     来源：
-    1. 英文法律科技 RSS（LawSites、Artificial Lawyer）
-    2. 英文法律科技网站 Playwright 爬虫（LawNext、Law.com）
-    3. 中文科技 RSS（36氪AI、InfoQ、机器之心、量子位）— 过滤法律相关
-    4. 从现有中文热搜中过滤法律科技相关条目
+    1. 英文法律科技 RSS（LawSites、Artificial Lawyer、LawNext）
+    2. 中文科技 RSS（36氪AI、InfoQ、机器之心、量子位）— 过滤法律相关
+    3. 从现有中文热搜中过滤法律科技相关条目
     """
     items: list[HotTopicItem] = []
     rank = 0
 
-    # 1. 英文法律科技 RSS
-    en_rss_sources = [
-        ("lawsites", "https://www.lawsitesblog.com/feed"),
-        ("artificial_lawyer", "https://www.artificiallawyer.com/feed/"),
-        ("bob_ambrogi", "https://www.lawnext.com/feed"),
+    # 并行采集所有 RSS 源
+    rss_tasks: list[tuple[str, str, int]] = [
+        # 英文法律科技 RSS
+        ("lawsites", "https://www.lawsitesblog.com/feed", 15),
+        ("artificial_lawyer", "https://www.artificiallawyer.com/feed/", 15),
+        ("bob_ambrogi", "https://www.lawnext.com/feed", 15),
+        # 中文科技 RSS
+        ("36kr_ai", "https://36kr.com/feed?tag=AI", 30),
+        ("infoq", "https://www.infoq.cn/feed", 30),
+        ("jiqizhixin", "https://www.jiqizhixin.com/rss", 30),
+        ("qbitai", "https://www.qbitai.com/feed", 30),
     ]
-    for source_name, url in en_rss_sources:
-        try:
-            rss_items = _fetch_rss_feed(source_name, url, limit=15)
-            for item in rss_items:
-                rank += 1
-                item.rank = rank
-                items.append(item)
-        except Exception:
-            logger.exception("Failed to fetch RSS from %s", source_name)
 
-    # 2. 英文法律科技网站 Playwright 爬虫
-    playwright_sources = [
-        ("lawnext", "https://www.lawnext.com"),
-        ("law_com", "https://www.law.com/legal-technology/"),
-    ]
-    for source_name, url in playwright_sources:
-        try:
-            scraped_items = _scrape_with_playwright(source_name, url, limit=10)
-            for item in scraped_items:
-                rank += 1
-                item.rank = rank
-                items.append(item)
-        except Exception:
-            logger.exception("Failed to scrape %s", source_name)
-
-    # 3. 中文科技 RSS — 过滤法律相关
-    cn_rss_sources = [
-        ("36kr_ai", "https://36kr.com/feed?tag=AI"),
-        ("infoq", "https://www.infoq.cn/feed"),
-        ("jiqizhixin", "https://www.jiqizhixin.com/rss"),
-        ("qbitai", "https://www.qbitai.com/feed"),
-    ]
-    for source_name, url in cn_rss_sources:
-        try:
-            rss_items = _fetch_rss_feed(source_name, url, limit=30)
-            for item in rss_items:
-                if _is_legal_tech_related(item.title):
+    with ThreadPoolExecutor(max_workers=7) as executor:
+        futures = {
+            executor.submit(_fetch_rss_feed, name, url, limit): (name, url, limit)
+            for name, url, limit in rss_tasks
+        }
+        for future in as_completed(futures):
+            name = futures[future][0]
+            try:
+                rss_items = future.result()
+                # 中文 RSS 需要过滤法律相关
+                if name in ("36kr_ai", "infoq", "jiqizhixin", "qbitai"):
+                    rss_items = [item for item in rss_items if _is_legal_tech_related(item.title)]
+                for item in rss_items:
                     rank += 1
                     item.rank = rank
                     items.append(item)
-        except Exception:
-            logger.exception("Failed to fetch RSS from %s", source_name)
+            except Exception:
+                logger.exception("Failed to fetch RSS from %s", name)
 
-    # 4. 从现有中文热搜中过滤法律科技相关
+    # 从现有中文热搜中过滤法律科技相关（使用缓存，速度快）
     chinese_sources = ["toutiao", "baidu", "douyin", "36kr", "thepaper"]
     for src in chinese_sources:
         try:
-            all_topics = _SCRAPER_FN_MAP[src](limit=50)
-            for topic in all_topics:
+            # 优先使用缓存中的数据
+            cache_key = f"{CACHE_KEY_PREFIX}:{src}"
+            cached: list[HotTopicItem] | None = cache.get(cache_key)
+            if cached is None:
+                # 缓存未命中，快速采集
+                cached = _SCRAPER_FN_MAP[src](limit=50)
+            for topic in (cached or []):
                 if _is_legal_tech_related(topic.title):
                     rank += 1
                     topic.rank = rank
