@@ -163,18 +163,9 @@ def delete_schedule(request: HttpRequest, schedule_id: int) -> dict[str, Any]:
 @router.post("/tasks/{task_id}/resubmit")
 def resubmit_task(request: HttpRequest, task_id: str) -> dict[str, Any]:
     """重新提交失败的任务"""
-    from apps.core.tasking import submit_task
-    from apps.core.tasking.task_queue_query import get_task_or_none
+    from apps.core.tasking.task_queue_query import resubmit_task as _resubmit_task
 
-    task = get_task_or_none(task_id)
-    if not task:
+    new_id = _resubmit_task(task_id)
+    if new_id is None:
         return {"error": "任务不存在"}
-
-    new_id = submit_task(
-        task.func,
-        *task.args or [],
-        kwargs=task.kwargs or {},
-        group=task.group,
-        task_name=task.name,
-    )
-    return {"new_task_id": str(new_id)}
+    return {"new_task_id": new_id}

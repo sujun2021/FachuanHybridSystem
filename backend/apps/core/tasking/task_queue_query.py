@@ -60,3 +60,23 @@ def delete_schedule(schedule_id: int) -> int:
 def get_task_or_none(task_id: str) -> Task | None:
     """获取任务，不存在返回 None。"""
     return Task.objects.filter(id=task_id).first()
+
+
+def resubmit_task(task_id: str) -> str | None:
+    """重新提交失败的任务，返回新任务 ID。不存在返回 None。
+
+    使用 async_task 直接调用原始函数，不经过 run_task 中间件包装。
+    """
+    from django_q.tasks import async_task
+
+    task = get_task_or_none(task_id)
+    if not task:
+        return None
+    new_id = async_task(
+        task.func,
+        *task.args or [],
+        **task.kwargs or {},
+        group=task.group,
+        name=task.name,
+    )
+    return str(new_id)
