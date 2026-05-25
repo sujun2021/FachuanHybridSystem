@@ -152,6 +152,43 @@ def topic_inspiration(request: HttpRequest, payload: TopicInspirationIn) -> list
         return []
 
 
+# --- 翻译 ---
+
+
+@router.post("/topics/translate")
+def translate_topics(request: HttpRequest, payload: dict[str, Any]) -> dict[str, Any]:
+    """批量翻译热点话题标题。"""
+    from apps.core.llm.service import LLMService
+
+    titles = payload.get("titles", [])
+    if not titles:
+        return {"translations": []}
+
+    # 构建批量翻译 prompt
+    titles_text = "\n".join(f"{i+1}. {t}" for i, t in enumerate(titles))
+    prompt = f"""请将以下英文标题翻译成中文，保持简洁准确。
+每行一个翻译结果，只返回翻译后的标题，不要添加序号或其他内容。
+
+{titles_text}"""
+
+    try:
+        llm = LLMService()
+        messages = [
+            {"role": "system", "content": "你是一个专业的翻译助手，擅长法律科技领域的翻译。"},
+            {"role": "user", "content": prompt},
+        ]
+        response = llm.chat(messages=messages)
+        result = response.content if hasattr(response, "content") else str(response)
+        translations = [line.strip() for line in result.strip().split("\n") if line.strip()]
+        # 确保翻译数量匹配
+        if len(translations) < len(titles):
+            translations.extend(titles[len(translations):])
+        return {"translations": translations[:len(titles)]}
+    except Exception as e:
+        logger.error("Translation failed: %s", e)
+        return {"translations": titles}  # 失败时返回原文
+
+
 # --- 任务管理 ---
 
 

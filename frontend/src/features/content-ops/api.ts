@@ -37,6 +37,10 @@ export const contentOpsApi = {
       timeout: 120_000,
     }).json<TopicSuggestion[]>(),
 
+  // 批量翻译标题
+  translateTopics: (titles: string[]) =>
+    api.post('topics/translate', { json: { titles } }).json<{ translations: string[] }>(),
+
   // 任务 CRUD
   createTask: (data: CreateTaskInput) =>
     api.post('tasks', { json: data }).json<ContentTask>(),

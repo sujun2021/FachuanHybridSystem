@@ -233,17 +233,18 @@ def _fetch_legaltech(limit: int = 50) -> list[HotTopicItem]:
 
     来源：
     1. 英文法律科技 RSS（LawSites、Artificial Lawyer）
-    2. 从现有中文热搜中过滤法律科技相关条目
+    2. 中文科技 RSS（36氪AI、InfoQ、机器之心、量子位）— 过滤法律相关
+    3. 从现有中文热搜中过滤法律科技相关条目
     """
     items: list[HotTopicItem] = []
     rank = 0
 
     # 1. 英文法律科技 RSS
-    rss_sources = [
+    en_rss_sources = [
         ("lawsites", "https://www.lawsitesblog.com/feed"),
         ("artificial_lawyer", "https://www.artificiallawyer.com/feed/"),
     ]
-    for source_name, url in rss_sources:
+    for source_name, url in en_rss_sources:
         try:
             rss_items = _fetch_rss_feed(source_name, url, limit=15)
             for item in rss_items:
@@ -253,7 +254,25 @@ def _fetch_legaltech(limit: int = 50) -> list[HotTopicItem]:
         except Exception:
             logger.exception("Failed to fetch RSS from %s", source_name)
 
-    # 2. 从现有中文热搜中过滤法律科技相关
+    # 2. 中文科技 RSS — 过滤法律相关
+    cn_rss_sources = [
+        ("36kr_ai", "https://36kr.com/feed?tag=AI"),
+        ("infoq", "https://www.infoq.cn/feed"),
+        ("jiqizhixin", "https://www.jiqizhixin.com/rss"),
+        ("qbitai", "https://www.qbitai.com/feed"),
+    ]
+    for source_name, url in cn_rss_sources:
+        try:
+            rss_items = _fetch_rss_feed(source_name, url, limit=30)
+            for item in rss_items:
+                if _is_legal_tech_related(item.title):
+                    rank += 1
+                    item.rank = rank
+                    items.append(item)
+        except Exception:
+            logger.exception("Failed to fetch RSS from %s", source_name)
+
+    # 3. 从现有中文热搜中过滤法律科技相关
     chinese_sources = ["toutiao", "baidu", "douyin", "36kr", "thepaper"]
     for src in chinese_sources:
         try:
