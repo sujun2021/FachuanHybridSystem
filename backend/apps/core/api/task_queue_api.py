@@ -51,7 +51,7 @@ class ScheduleOut(Schema):
 @router.get("/queued", response=list[QueuedTaskOut])
 def list_queued(request: HttpRequest) -> Any:
     """获取排队中的任务"""
-    from apps.core.services.task_queue_service import list_queued as _list_queued
+    from apps.core.tasking.task_queue_query import list_queued as _list_queued
 
     items = _list_queued()
     return [
@@ -69,7 +69,7 @@ def list_queued(request: HttpRequest) -> Any:
 @router.get("/completed", response=list[TaskOut])
 def list_completed(request: HttpRequest) -> Any:
     """获取已完成的成功任务"""
-    from apps.core.services.task_queue_service import list_completed as _list_completed
+    from apps.core.tasking.task_queue_query import list_completed as _list_completed
 
     tasks = _list_completed()
     return [
@@ -91,7 +91,7 @@ def list_completed(request: HttpRequest) -> Any:
 @router.get("/failed", response=list[TaskOut])
 def list_failed(request: HttpRequest) -> Any:
     """获取失败的任务"""
-    from apps.core.services.task_queue_service import list_failed as _list_failed
+    from apps.core.tasking.task_queue_query import list_failed as _list_failed
 
     tasks = _list_failed()
     return [
@@ -113,7 +113,7 @@ def list_failed(request: HttpRequest) -> Any:
 @router.get("/scheduled", response=list[ScheduleOut])
 def list_scheduled(request: HttpRequest) -> Any:
     """获取定时调度任务"""
-    from apps.core.services.task_queue_service import (
+    from apps.core.tasking.task_queue_query import (
         SCHEDULE_TYPE_LABELS,
         get_last_run_time,
         list_scheduled as _list_scheduled,
@@ -145,7 +145,7 @@ def list_scheduled(request: HttpRequest) -> Any:
 @router.delete("/tasks/{task_id}")
 def delete_task(request: HttpRequest, task_id: str) -> dict[str, Any]:
     """删除已完成或失败的任务"""
-    from apps.core.services.task_queue_service import delete_task as _delete_task
+    from apps.core.tasking.task_queue_query import delete_task as _delete_task
 
     deleted = _delete_task(task_id)
     return {"deleted": deleted}
@@ -154,7 +154,7 @@ def delete_task(request: HttpRequest, task_id: str) -> dict[str, Any]:
 @router.delete("/schedules/{schedule_id}")
 def delete_schedule(request: HttpRequest, schedule_id: int) -> dict[str, Any]:
     """删除定时调度"""
-    from apps.core.services.task_queue_service import delete_schedule as _delete_schedule
+    from apps.core.tasking.task_queue_query import delete_schedule as _delete_schedule
 
     deleted = _delete_schedule(schedule_id)
     return {"deleted": deleted}
@@ -163,13 +163,18 @@ def delete_schedule(request: HttpRequest, schedule_id: int) -> dict[str, Any]:
 @router.post("/tasks/{task_id}/resubmit")
 def resubmit_task(request: HttpRequest, task_id: str) -> dict[str, Any]:
     """重新提交失败的任务"""
-    from django_q.tasks import async_task
-
-    from apps.core.services.task_queue_service import get_task_or_none
+    from apps.core.tasking import submit_task
+    from apps.core.tasking.task_queue_query import get_task_or_none
 
     task = get_task_or_none(task_id)
     if not task:
         return {"error": "任务不存在"}
 
-    new_id = async_task(task.func, *task.args or [], **task.kwargs or {}, group=task.group, name=task.name)
+    new_id = submit_task(
+        task.func,
+        *task.args or [],
+        kwargs=task.kwargs or {},
+        group=task.group,
+        task_name=task.name,
+    )
     return {"new_task_id": str(new_id)}
