@@ -68,7 +68,7 @@ class DocumentGeneratorService:
                 result_file=relative_path,
                 metadata_updates=metadata_updates,
             )
-        except Exception as e:
+        except (TypeError, ValueError) as e:
             task_service.mark_task_failed_internal(task_id=task.id, error_message=str(e))
             raise ValidationException(
                 message=_("文档生成失败"),

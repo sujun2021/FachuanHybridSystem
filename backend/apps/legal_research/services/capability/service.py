@@ -918,7 +918,7 @@ class LegalResearchCapabilityService:
         open_key = self._failure_circuit_key(kind="open_until", credential_id=credential_id)
         try:
             cache.delete_many([count_key, open_key])
-        except Exception:
+        except (TypeError, ValueError):
             pass
 
     def _load_idempotent_response(

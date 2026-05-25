@@ -186,7 +186,7 @@ def merge_materials_to_single_pdf(materials: list[FinalizedMaterial]) -> dict[st
                             pass
                     else:
                         logger.warning("DOCX转PDF失败: %s", material.original_filename)
-                except Exception as e:
+                except (OSError, ValueError) as e:
                     logger.warning("DOCX转PDF失败: %s, error: %s", material.original_filename, e)
             else:
                 logger.warning("不支持的文件类型: %s (%s)", suffix, material.original_filename)
@@ -284,7 +284,7 @@ def compile_case_materials_pdf(
                             pass
                     else:
                         logger.warning("DOCX转PDF失败: %s", material.original_filename)
-                except Exception as e:
+                except (OSError, ValueError) as e:
                     logger.warning("DOCX转PDF失败: %s, error: %s", material.original_filename, e)
             else:
                 logger.warning("不支持的文件类型: %s (%s)", suffix, material.original_filename)

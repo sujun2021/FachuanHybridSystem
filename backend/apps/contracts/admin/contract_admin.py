@@ -402,7 +402,7 @@ class ContractAdmin(
                     "session_id": int(session.id),
                 }
             )
-        except Exception as exc:
+        except (TypeError, ValueError) as exc:
             logger.exception("contract_oa_sync_start_failed")
             return JsonResponse({"success": False, "message": str(exc)}, status=400)
 
@@ -510,7 +510,7 @@ class ContractAdmin(
     def _parse_json_payload(self, request: HttpRequest) -> dict[str, Any]:
         try:
             data = json.loads(request.body.decode("utf-8"))
-        except Exception:
+        except json.JSONDecodeError:
             return {}
         return data if isinstance(data, dict) else {}
 

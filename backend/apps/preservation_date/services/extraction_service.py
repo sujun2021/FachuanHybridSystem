@@ -950,7 +950,7 @@ class PreservationDateExtractionService:
 
         try:
             original_name: str = validator.sanitize_file_name(file_name)
-        except Exception:
+        except (OSError, ValueError):
             logger.exception("文件名不合法")
             return PreservationExtractionResult(
                 success=False,
@@ -981,5 +981,5 @@ class PreservationDateExtractionService:
             try:
                 if temp_path.exists():
                     temp_path.unlink()
-            except Exception:
+            except (OSError, ValueError):
                 logger.warning("清理临时文件失败", extra={})

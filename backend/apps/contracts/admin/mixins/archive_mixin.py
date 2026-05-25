@@ -210,7 +210,7 @@ class ContractArchiveMixin:
             encoded_filename = urllib.parse.quote(material.original_filename.encode("utf-8"))
             response["Content-Disposition"] = f"inline; filename*=UTF-8''{encoded_filename}"
             return response
-        except Exception as e:
+        except (OSError, ValueError) as e:
             logger.exception("预览归档材料失败: material_id=%s", material_id)
             return JsonResponse({"success": False, "error": str(e)}, status=500)
 

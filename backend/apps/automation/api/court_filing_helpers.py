@@ -256,7 +256,7 @@ def _build_execution_request_text(*, case: Any) -> str:
             or generated.get("申请执行事项")
             or ""
         ).strip()
-    except Exception:
+    except (TypeError, ValueError):
         logger.exception("build_execution_request_text_failed", extra={"case_id": int(case.id)})
 
     if generated_text:
