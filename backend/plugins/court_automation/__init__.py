@@ -20,3 +20,6 @@
 PLUGIN_NAME = "court_automation"
 PLUGIN_VERSION = "1.0.0"
 PLUGIN_DESCRIPTION = "法院自动化立案/担保插件 - 提供一张网 Playwright 立案和担保功能"
+
+# 安装标记 — plugins/__init__.py 通过导入此变量检测插件是否已安装
+_installed = True
