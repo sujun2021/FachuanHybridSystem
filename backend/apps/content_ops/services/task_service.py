@@ -121,6 +121,15 @@ class ContentOpsTaskService:
         task = self.get_task(task_id=task_id, user=user)
         return list(PodcastEpisode.objects.filter(task=task).order_by("-created_at"))
 
+    def get_episode_audio(self, *, episode_id: int, user: Any | None = None) -> PodcastEpisode | None:
+        """获取播客单集（含音频文件和 task 关联），校验所有权。"""
+        episode = PodcastEpisode.objects.filter(id=episode_id).select_related("task").first()
+        if not episode or not episode.audio_file:
+            return None
+        if episode.task.created_by_id and user and episode.task.created_by_id != user.pk:
+            return None
+        return episode
+
     def approve_article(self, *, article_id: int, user: Any | None = None, notes: str = "") -> GeneratedArticle:
         """审核通过文章。"""
         article = self._get_article(article_id)

@@ -341,14 +341,9 @@ def reject_episode(request: HttpRequest, episode_id: int, payload: ReviewActionI
 @router.get("/episodes/{episode_id}/audio")
 def episode_audio(request: HttpRequest, episode_id: int) -> dict[str, str] | FileResponse | HttpResponseBase:
     """获取播客单集音频。"""
-    from apps.content_ops.models import PodcastEpisode
-
-    episode = PodcastEpisode.objects.filter(id=episode_id).select_related("task").first()
-    if not episode or not episode.audio_file:
+    episode = _task_service.get_episode_audio(episode_id=episode_id, user=request.user)
+    if not episode:
         return {"error": "音频不存在"}
-
-    if episode.task.created_by_id and episode.task.created_by_id != request.user.pk:
-        return {"error": "无权访问此音频"}
 
     from apps.core.http.streaming import build_range_file_response
 

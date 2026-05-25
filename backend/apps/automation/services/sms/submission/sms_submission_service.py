@@ -36,7 +36,7 @@ class SMSSubmissionService:
     - 重试处理
 
     遵循架构规范：
-    - 使用实例方法而非 @staticmethod
+    - 使用实例方法而非 staticmethod
     - 通过依赖注入获取依赖
     - 使用 apps.core.exceptions 中定义的异常类
     - 遵循延迟加载模式
