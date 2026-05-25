@@ -32,6 +32,15 @@ def _get_case_stage_choices() -> list[tuple[str, str]]:
     return [(str(k), str(v)) for k, v in CaseStage.choices]
 
 
+def _has_court_filing_plugin() -> bool:
+    try:
+        from plugins import has_court_automation_plugin
+
+        return has_court_automation_plugin()
+    except ImportError:
+        return False
+
+
 def _log_inline_formset(inline_formset: object, logger: logging.Logger) -> None:
     """记录 inline formset 的错误信息（仅记录有错误的表单）"""
     formset = getattr(inline_formset, "formset", None)
@@ -281,6 +290,7 @@ class CaseAdminViewsMixin:
                 "has_preservation_template": has_preservation_template,
                 "has_delay_delivery_template": has_delay_delivery_template,
                 "is_our_party_all_defendant": is_our_party_all_defendant,
+                "has_court_filing_plugin": _has_court_filing_plugin(),
                 "folder_path_auto_repaired": folder_path_auto_repaired,
                 "contacts": list(case.contacts.all()),
                 "contact_role_choices": list(_get_contact_role_choices()),
