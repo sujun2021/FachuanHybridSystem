@@ -13,6 +13,10 @@ else
     exit 1
 fi
 
+# 设置 uv 虚拟环境路径
+VENV_BIN="/app/.venv/bin"
+export PATH="$VENV_BIN:$PATH"
+
 # 读取 .env 文件中的配置（支持生产/开发模式切换）
 if [ -f "${WORK_DIR}/.env" ]; then
     echo "Loading environment from ${WORK_DIR}/.env..."
@@ -89,6 +93,9 @@ uv run python manage.py migrate --noinput
 echo "Collecting static files..."
 uv run python manage.py collectstatic --noinput
 
+echo "Installing Gunicorn..."
+uv pip install gunicorn   # <--- ✨ 就是加这一行！
+
 echo "Starting server..."
 
 # 判断运行模式
@@ -100,16 +107,20 @@ if [ "${DJANGO_DEBUG:-True}" = "False" ] || [ "${RUN_MODE:-development}" = "prod
     echo "  RUN_MODE=${RUN_MODE:-development}"
     
     # 生产模式：使用 Gunicorn
+# 先确保 gunicorn 安装在虚拟环境中
+echo "Ensuring Gunicorn is installed..."
+/app/.venv/bin/pip install gunicorn
+
     if [ -f "${WORK_DIR}/gunicorn_config.py" ]; then
-        echo "Using gunicorn config: ${WORK_DIR}/gunicorn_config.py"
-        exec uv run gunicorn --config "${WORK_DIR}/gunicorn_config.py" apiSystem.wsgi:application
+    echo "Using gunicorn config: ${WORK_DIR}/gunicorn_config.py"
+    exec sh -c "cd ${WORK_DIR} && /app/.venv/bin/gunicorn --config '${WORK_DIR}/gunicorn_config.py' apiSystem.wsgi:application"
     elif [ -f "/app/gunicorn_config.py" ]; then
-        echo "Using gunicorn config: /app/gunicorn_config.py"
-        exec uv run gunicorn --config /app/gunicorn_config.py apiSystem.wsgi:application
+    echo "Using gunicorn config: /app/gunicorn_config.py"
+    exec sh -c "cd ${WORK_DIR} && /app/.venv/bin/gunicorn --config /app/gunicorn_config.py apiSystem.wsgi:application"
     else
-        echo "No gunicorn config found, using default settings..."
-        exec uv run gunicorn --workers=4 --bind=0.0.0.0:8002 --timeout=120 --threads=4 apiSystem.wsgi:application
-    fi
+    echo "No gunicorn config found, using default settings..."
+    exec sh -c "cd ${WORK_DIR} && /app/.venv/bin/gunicorn --workers=4 --bind=0.0.0.0:8002 --timeout=120 --threads=4 apiSystem.wsgi:application"
+    fi  
 else
     echo "Running in DEVELOPMENT mode (Django dev server)..."
     echo "  DJANGO_DEBUG=${DJANGO_DEBUG}"
