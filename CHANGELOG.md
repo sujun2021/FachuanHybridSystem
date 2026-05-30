@@ -2,6 +2,30 @@
 
 本项目的所有重要更改都将记录在此文件中。
 
+## [26.50.8] - 2026-05-30
+
+### 后端
+
+#### 修复
+
+- **文件夹模板导入错误**：修复 `FolderTemplate` 未导入导致的 `NameError`，在 `fetch_template_by_id()` 函数中添加运行时导入
+
+## [26.50.7] - 2026-05-30
+
+### 后端
+
+#### 修复
+
+- **Windows 日志文件轮转错误**：使用 `ConcurrentRotatingFileHandler` 替代 `RotatingFileHandler`，解决 Windows 上 `PermissionError: [WinError 32]` 文件锁定问题
+
+## [26.50.6] - 2026-05-30
+
+### 后端
+
+#### 修复
+
+- **一张网立案功能默认可用**：移除环境变量 `ENABLE_COURT_FILING_PLUGIN=1` 的限制，`has_court_automation_plugin()` 改为检查 `plugins.court_automation` 模块是否存在，用户无需配置环境变量即可使用一张网立案功能
+
 ## [26.50.5] - 2026-05-27
 
 ### 后端
