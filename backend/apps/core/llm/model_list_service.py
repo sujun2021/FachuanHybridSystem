@@ -72,6 +72,21 @@ class ModelListService:
         result = self.get_result()
         return result.models
 
+    def get_cached_models(self) -> list[dict[str, Any]]:
+        """仅返回缓存 + SystemConfig 中的模型，不发 HTTP 请求。
+
+        适用于页面加载等对延迟敏感的场景，避免触发后端连通性检查。
+        """
+        cached: list[dict[str, Any]] | None = cache.get(CACHE_KEY)
+        base = list(cached) if cached is not None else []
+        return self._merge_system_config_models(base)
+
+    def refresh_models(self) -> ModelListResult:
+        """强制刷新模型列表，清除缓存后重新从所有后端获取。"""
+        cache.delete(CACHE_KEY)
+        cache.delete(CACHE_KEY_STATUS)
+        return self.get_result()
+
     def get_result(self) -> ModelListResult:
         """获取模型列表及连接状态，优先从缓存读取。
 
@@ -284,3 +299,50 @@ class ModelListService:
     def _get_fallback_models() -> list[dict[str, Any]]:
         """返回预置默认模型列表"""
         return list(_FALLBACK_MODELS)
+
+    @staticmethod
+    def test_model_connection(model_id: str) -> dict[str, Any]:
+        """测试指定模型的连通性，发送一条简单消息并返回结果。
+
+        Returns:
+            {"ok": True, "latency_ms": 123, "backend": "...", "message": "..."}
+            或 {"ok": False, "error": "...", "backend": "..."}
+        """
+        from apps.core.llm.config import LLMConfig
+        from apps.core.llm.router import LLMBackendRouter
+
+        backend_name = LLMConfig.resolve_backend_for_model(model_id)
+        configs = LLMConfig.get_backend_configs()
+        router = LLMBackendRouter(backend_configs=configs)
+
+        try:
+            backend = router.get_backend(backend_name)
+        except Exception as exc:
+            return {"ok": False, "error": f"无法加载后端 {backend_name}: {exc}", "backend": backend_name}
+
+        import time
+
+        start = time.time()
+        try:
+            resp = backend.chat(
+                messages=[{"role": "user", "content": "回复 OK"}],
+                model=model_id,
+                temperature=0,
+                max_tokens=16,
+                timeout_seconds=10,
+            )
+            latency_ms = int((time.time() - start) * 1000)
+            return {
+                "ok": True,
+                "latency_ms": latency_ms,
+                "backend": resp.backend,
+                "message": f"模型 {model_id} 连通，响应延迟 {latency_ms}ms",
+            }
+        except Exception as exc:
+            latency_ms = int((time.time() - start) * 1000)
+            return {
+                "ok": False,
+                "latency_ms": latency_ms,
+                "error": str(exc),
+                "backend": backend_name,
+            }
