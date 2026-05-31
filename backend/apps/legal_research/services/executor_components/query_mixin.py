@@ -27,14 +27,14 @@ class ExecutorQueryMixin:
     _synonym_groups_cache: tuple[tuple[str, ...], ...] | None = None
     _synonym_groups_cache_ts: float = 0.0
     _SYNONYM_CACHE_TTL: float = 300.0
-    ELEMENT_EXTRACTION_MAX_TOKENS = 300
-    ELEMENT_EXTRACTION_TIMEOUT_SECONDS = 20
+    ELEMENT_EXTRACTION_MAX_TOKENS = 16384
+    ELEMENT_EXTRACTION_TIMEOUT_SECONDS = 60
     QUERY_EXPANSION_TRIGGER_CANDIDATES = 80
     INTENT_QUERY_MAX = 5
     TITLE_PREFILTER_MIN_OVERLAP = 0.15
     QUERY_VARIANT_MAX = 2
-    QUERY_VARIANT_MAX_TOKENS = 220
-    QUERY_VARIANT_TIMEOUT_SECONDS = 25
+    QUERY_VARIANT_MAX_TOKENS = 16384
+    QUERY_VARIANT_TIMEOUT_SECONDS = 60
 
     # ── 主构建器 ──────────────────────────────────────────────
 
