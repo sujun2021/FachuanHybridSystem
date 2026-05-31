@@ -177,4 +177,4 @@ class CourtTokenAdmin(admin.ModelAdmin):
         for token in expired_tokens:
             token.delete()
 
-        self.message_user(request, _(f"成功删除 {count} 个已过期的一张网/保全Token"))
+        self.message_user(request, f"成功删除 {count} 个已过期的一张网/保全Token")

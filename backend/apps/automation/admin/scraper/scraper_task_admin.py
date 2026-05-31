@@ -220,11 +220,11 @@ class ScraperTaskAdmin(admin.ModelAdmin):
                 count += 1
 
         logger.info("已提交 %d 个任务到后台队列", count)
-        self.message_user(request, _(f"已提交 {count} 个任务到后台队列"))
+        self.message_user(request, f"已提交 {count} 个任务到后台队列")
 
     @admin.action(description="重置失败任务状态")
     def reset_failed_tasks(self, request: Any, queryset: Any) -> None:
         """重置失败任务，允许重新执行"""
         count = queryset.filter(status="failed").update(status="pending", retry_count=0, error_message=None)
         logger.info("已重置 %d 个失败任务", count)
-        self.message_user(request, _(f"已重置 {count} 个失败任务"))
+        self.message_user(request, f"已重置 {count} 个失败任务")

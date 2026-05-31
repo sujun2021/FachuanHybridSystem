@@ -8,7 +8,7 @@ class FinanceConfig(AppConfig):
 
     default_auto_field: str = "django.db.models.BigAutoField"
     name: str = "apps.finance"
-    verbose_name: str = "金融工具"  # type: ignore[assignment]
+    verbose_name: str = "金融工具"
 
     def ready(self) -> None:
         """App ready hook."""

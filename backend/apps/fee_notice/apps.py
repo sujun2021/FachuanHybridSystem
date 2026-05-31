@@ -8,4 +8,4 @@ class FeeNoticeConfig(AppConfig):
 
     default_auto_field: str = "django.db.models.BigAutoField"
     name: str = "apps.fee_notice"
-    verbose_name: str = "交费通知书识别"  # type: ignore[assignment]
+    verbose_name: str = "交费通知书识别"

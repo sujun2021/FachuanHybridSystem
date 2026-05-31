@@ -242,7 +242,7 @@ class DocumentQueryHistoryAdmin(admin.ModelAdmin):
 
         old_records.delete()
 
-        self.message_user(request, _(f"成功删除 {count} 条30天前的查询记录"))
+        self.message_user(request, f"成功删除 {count} 条30天前的查询记录")
         logger.info(f"管理员批量删除旧查询记录: Count={count}, User={request.user}")
 
     def get_queryset(self, request: HttpRequest) -> QuerySet[DocumentQueryHistory]:

@@ -122,7 +122,7 @@ class CasePartyMutationService:
             if existing_in_opposing:
                 new_status_label = business_config.get_legal_status_label(legal_status)
                 existing_status_label = business_config.get_legal_status_label(existing_status)
-                conflict_msg = _(
+                conflict_msg = (
                     "我方当事人诉讼地位冲突:案件中已有我方当事人「%(name)s」"
                     "为%(existing)s,不能再添加我方当事人为%(new)s"
                 ) % {"name": client_name, "existing": existing_status_label, "new": new_status_label}

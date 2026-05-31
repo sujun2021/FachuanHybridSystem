@@ -9,4 +9,4 @@ class WechatMpConfig(AppConfig):
     verbose_name = "公众号发布"
 
     def ready(self) -> None:
-        import apps.wechat_mp.signals
+        import apps.wechat_mp.signals  # noqa: F401

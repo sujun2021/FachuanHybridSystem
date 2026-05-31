@@ -52,10 +52,8 @@ class CaseFilingNumberService:
                         code="FILING_NUMBER_MIGRATION_REQUIRED",
                         errors={
                             "detail": str(
-                                _(
-                                    "缺少表 cases_casefilingnumbersequence,"
-                                    "请执行迁移 cases.0009_case_filing_number_sequence"
-                                )
+                                "缺少表 cases_casefilingnumbersequence,"
+                                "请执行迁移 cases.0009_case_filing_number_sequence"
                             ),
                         },
                     ) from e
