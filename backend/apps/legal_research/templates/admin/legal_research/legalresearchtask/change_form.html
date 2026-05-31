@@ -1,5 +1,12 @@
 {% extends "admin/change_form.html" %}
-{% load i18n %}
+{% load i18n static %}
+
+{% block extrahead %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'cases/css/autocomplete.css' %}">
+<script src="{% static 'cases/js/autocomplete.js' %}"></script>
+<script src="{% static 'cases/js/autocomplete_init.js' %}"></script>
+{% endblock %}
 
 {% block after_field_sets %}
 {{ block.super }}

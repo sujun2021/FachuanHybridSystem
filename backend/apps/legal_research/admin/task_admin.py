@@ -284,14 +284,18 @@ class LegalResearchTaskAdmin(admin.ModelAdmin):
             court_field.required = False
             court_field.help_text = "可选。按法院名称精确筛选，例如：北京市第一中级人民法院"
             if hasattr(court_field.widget, "attrs"):
-                court_field.widget.attrs["placeholder"] = "例如：北京市第一中级人民法院（留空不限）"
+                court_field.widget.attrs["class"] = "vTextField js-court-autocomplete"
+                court_field.widget.attrs["placeholder"] = "请输入法院名称..."
+                court_field.widget.attrs["autocomplete"] = "off"
 
         cause_field = form.base_fields.get("cause_of_action_filter")
         if cause_field is not None:
             cause_field.required = False
             cause_field.help_text = "可选。按案由精确筛选，例如：民间借贷纠纷"
             if hasattr(cause_field.widget, "attrs"):
-                cause_field.widget.attrs["placeholder"] = "例如：民间借贷纠纷（留空不限）"
+                cause_field.widget.attrs["class"] = "vTextField js-cause-autocomplete"
+                cause_field.widget.attrs["placeholder"] = "请输入案由关键词..."
+                cause_field.widget.attrs["autocomplete"] = "off"
 
         date_from_field = form.base_fields.get("date_from")
         if date_from_field is not None:
