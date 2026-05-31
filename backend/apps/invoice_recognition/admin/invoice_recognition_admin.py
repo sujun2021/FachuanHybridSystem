@@ -39,7 +39,7 @@ class InvoiceRecognitionTaskAdmin(admin.ModelAdmin):
     ]
     change_form_template = "admin/invoice_recognition/invoicerecognitiontask/change_form.html"
 
-    def get_queryset(self, request: HttpRequest) -> Any:  # type: ignore[override]
+    def get_queryset(self, request: HttpRequest) -> Any:
         return (
             super()
             .get_queryset(request)
