@@ -25,6 +25,7 @@ from apps.enterprise_data.services.types import (
 )
 
 _SAMPLE_CACHE_TTL_SECONDS = 24 * 60 * 60
+_DESCRIBE_TOOLS_CACHE_TTL_SECONDS = 10 * 60  # 10 minutes
 _MAX_SAMPLE_JSON_CHARS = 12000
 
 class McpWorkbenchService:
@@ -77,7 +78,20 @@ class McpWorkbenchService:
         self._ensure_superuser(actor_is_superuser=actor_is_superuser)
         selected_provider = self._registry.get_provider(provider)
         provider_name = selected_provider.name
-        tools = selected_provider.describe_tools()
+
+        cache_key = f"mcp_workbench:describe_tools:{provider_name}"
+        tools = cache.get(cache_key)
+        if tools is None:
+            tools = selected_provider.describe_tools()
+            cache.set(cache_key, tools, timeout=_DESCRIBE_TOOLS_CACHE_TTL_SECONDS)
+
+        tool_names = [
+            str(tool.get("name", "") or "").strip()
+            for tool in tools
+            if str(tool.get("name", "") or "").strip()
+        ]
+        samples = self._load_samples_batch(provider=provider_name, tool_names=tool_names)
+
         normalized_tools: list[dict[str, Any]] = []
         for tool in tools:
             tool_name = str(tool.get("name", "") or "").strip()
@@ -89,7 +103,7 @@ class McpWorkbenchService:
             required = input_schema.get("required")
             if not isinstance(required, list):
                 required = []
-            sample = self._load_sample(provider=provider_name, tool_name=tool_name)
+            sample = samples.get(tool_name)
             normalized_tools.append(
                 {
                     "name": tool_name,
@@ -368,6 +382,50 @@ class McpWorkbenchService:
             self._sample_cache_key(provider=provider, tool_name=tool_name), sample, timeout=self._sample_ttl_seconds
         )
         return sample
+
+    def _load_samples_batch(self, *, provider: str, tool_names: list[str]) -> dict[str, dict[str, Any]]:
+        if not tool_names:
+            return {}
+        result: dict[str, dict[str, Any]] = {}
+        uncached_names: list[str] = []
+        for name in tool_names:
+            sample = cache.get(self._sample_cache_key(provider=provider, tool_name=name))
+            if isinstance(sample, dict):
+                result[name] = sample
+            else:
+                uncached_names.append(name)
+        if uncached_names:
+            from django.db.models import Max
+
+            latest_records = (
+                McpWorkbenchExecution.objects.filter(
+                    provider=provider, tool_name__in=uncached_names, success=True
+                )
+                .values("tool_name")
+                .annotate(latest_id=Max("id"))
+            )
+            record_ids = [row["latest_id"] for row in latest_records if row["latest_id"] is not None]
+            if record_ids:
+                records = {
+                    r.id: r
+                    for r in McpWorkbenchExecution.objects.filter(id__in=record_ids)
+                }
+                for row in latest_records:
+                    tool_name = row["tool_name"]
+                    record = records.get(row["latest_id"])
+                    if record is None:
+                        continue
+                    sample = {
+                        "captured_at": record.created_at.isoformat() if record.created_at else "",
+                        "data": record.response_data if isinstance(record.response_data, (dict, list)) else {},
+                    }
+                    cache.set(
+                        self._sample_cache_key(provider=provider, tool_name=tool_name),
+                        sample,
+                        timeout=self._sample_ttl_seconds,
+                    )
+                    result[tool_name] = sample
+        return result
 
     def _store_sample(self, *, provider: str, tool_name: str, data: Any, captured_at: datetime) -> None:
         sample = {
