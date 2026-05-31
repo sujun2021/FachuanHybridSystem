@@ -227,7 +227,7 @@ class ModelListService:
         if not api_key or not base_url:
             return []
 
-        url = f"{base_url.rstrip('/')}/v1/models"
+        url = f"{base_url.rstrip('/')}/models"
         try:
             resp = httpx.get(
                 url,
