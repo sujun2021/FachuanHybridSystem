@@ -60,13 +60,17 @@ def verify_siliconflow_connectivity(*, model: str | None) -> None:
 
 def _check_siliconflow(base_url: str, api_key: str, model: str) -> None:
     try:
-        response = httpx.get(
-            f"{base_url}/models",
-            headers={"Authorization": f"Bearer {api_key}"},
-            params={"sub_type": "chat"},
-            timeout=12.0,
-            verify=False,
-        )
+        import ssl
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+        transport = httpx.HTTPTransport(verify=ssl_context)
+        with httpx.Client(transport=transport, timeout=12.0) as client:
+            response = client.get(
+                f"{base_url}/models",
+                headers={"Authorization": f"Bearer {api_key}"},
+                params={"sub_type": "chat"},
+            )
     except httpx.RequestError as exc:
         logger.warning("硅基流动连通性检查失败", extra={"base_url": base_url, "error": str(exc)})
         raise ValidationException(f"硅基流动连接失败: {exc}") from exc
@@ -95,12 +99,16 @@ def _check_siliconflow(base_url: str, api_key: str, model: str) -> None:
 
 def _check_openai_compatible(base_url: str, api_key: str) -> None:
     try:
-        response = httpx.get(
-            f"{base_url.rstrip('/')}/models",
-            headers={"Authorization": f"Bearer {api_key}"},
-            timeout=12.0,
-            verify=False,
-        )
+        import ssl
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+        transport = httpx.HTTPTransport(verify=ssl_context)
+        with httpx.Client(transport=transport, timeout=12.0) as client:
+            response = client.get(
+                f"{base_url.rstrip('/')}/models",
+                headers={"Authorization": f"Bearer {api_key}"},
+            )
     except httpx.RequestError as exc:
         logger.warning("OpenAI 兼容后端连通性检查失败", extra={"base_url": base_url, "error": str(exc)})
         raise ValidationException(f"OpenAI 兼容后端连接失败: {exc}") from exc
