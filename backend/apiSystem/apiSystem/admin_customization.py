@@ -417,18 +417,10 @@ def other_tools_hub_view(request: HttpRequest) -> TemplateResponse:
             }
         )
 
-    # 获取当前用户的收藏 URL 集合；首次访问时创建默认收藏
-    existing_favs = ToolFavorite.objects.filter(user=request.user)
-    if not existing_favs.exists():
-        for url in _DEFAULT_FAV_URLS:
-            ToolFavorite.objects.get_or_create(
-                user=request.user,
-                tool_url=url,
-                defaults={"tool_name": url.strip("/").split("/")[-1].replace("_", " ").title()},
-            )
-        existing_favs = ToolFavorite.objects.filter(user=request.user)
-
-    fav_urls: set[str] = set(existing_favs.values_list("tool_url", flat=True))
+    # 获取当前用户的收藏 URL 集合（默认收藏已在 context_processors 中初始化）
+    fav_urls: set[str] = set(
+        ToolFavorite.objects.filter(user=request.user).values_list("tool_url", flat=True)
+    )
 
     context: dict[str, Any] = {
         **admin.site.each_context(request),
