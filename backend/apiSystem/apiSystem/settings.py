@@ -46,7 +46,12 @@ _DEV_SECRET_KEY = "django-insecure-dev-only-do-not-use-in-production"
 _security = resolve_security_config(
     dev_secret_key=_DEV_SECRET_KEY,
     default_allowed_hosts_dev=["*"],
-    default_allowed_hosts_prod=["*"],
+    default_allowed_hosts_prod=[
+        "fachuan.com",
+        "www.fachuan.com",
+        "127.0.0.1",
+        "localhost",
+    ],
 )
 
 _is_production = _security.is_production
@@ -209,7 +214,7 @@ elif DB_ENGINE in ("", "postgres", "postgresql", "django.db.backends.postgresql"
             "PASSWORD": _get_env_str("DB_PASSWORD", "postgres", allow_empty=True),
             "HOST": _get_env_str("DB_HOST", "127.0.0.1"),
             "PORT": int(os.environ.get("DB_PORT", "5432") or "5432"),
-            "CONN_MAX_AGE": 600,
+            "CONN_MAX_AGE": 1800,
             "CONN_HEALTH_CHECKS": True,
             "OPTIONS": {
                 "connect_timeout": 10,
