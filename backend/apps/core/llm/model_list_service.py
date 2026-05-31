@@ -98,6 +98,11 @@ class ModelListService:
 
         # 合并 SystemConfig 中的模型（LLM_EXTRA_MODELS 等）
         result.models = self._merge_system_config_models(result.models)
+
+        # 如果合并后有可用模型，不算 fallback
+        if result.models:
+            result.is_fallback = False
+            result.error_message = ""
         return result
 
     @staticmethod
@@ -130,7 +135,7 @@ class ModelListService:
         return merged + api_models
 
     def _fetch_from_api(self) -> ModelListResult:
-        """从各后端获取模型列表，合并结果"""
+        """从可发现的后端获取模型列表（SiliconFlow / Ollama）"""
         configs = LLMConfig.get_backend_configs()
         all_models: list[dict[str, Any]] = []
 
@@ -138,14 +143,12 @@ class ModelListService:
             all_models.extend(self._fetch_siliconflow_models())
         if configs.get("ollama") and configs["ollama"].enabled:
             all_models.extend(self._fetch_ollama_models())
-        if configs.get("openai_compatible") and configs["openai_compatible"].enabled:
-            all_models.extend(self._fetch_openai_compatible_models())
 
         if all_models:
             return ModelListResult(models=all_models)
 
         return ModelListResult(
-            models=self._get_fallback_models(),
+            models=[],
             is_fallback=True,
             error_message="所有后端均不可用，使用默认模型列表",
         )
@@ -218,40 +221,6 @@ class ModelListService:
             pass
 
         return [_make_model(ollama_model, ctx_window)]
-
-    @staticmethod
-    def _fetch_openai_compatible_models() -> list[dict[str, Any]]:
-        """从 OpenAI 兼容后端获取模型列表（GET /v1/models）"""
-        api_key = LLMConfig.get_openai_compatible_api_key()
-        base_url = LLMConfig.get_openai_compatible_base_url()
-        if not api_key or not base_url:
-            return []
-
-        url = f"{base_url.rstrip('/')}/models"
-        try:
-            resp = httpx.get(
-                url,
-                headers={"Authorization": f"Bearer {api_key}"},
-                timeout=15.0,
-            )
-            resp.raise_for_status()
-            data: dict[str, Any] = resp.json()
-            models: list[dict[str, Any]] = []
-            for m in data.get("data", []):
-                model_id = str(m.get("id", "")).strip()
-                if not model_id:
-                    continue
-                ctx = m.get("max_model_len") or m.get("context_length") or 0
-                models.append(_make_model(model_id, int(ctx) if ctx else 0))
-            if models:
-                logger.info("从 OpenAI 兼容后端获取到 %d 个模型", len(models))
-            return models
-        except (httpx.HTTPStatusError, httpx.ConnectError, httpx.TimeoutException) as exc:
-            logger.warning("OpenAI 兼容后端不可用: %s", exc)
-            return []
-        except Exception:
-            logger.exception("获取 OpenAI 兼容后端模型列表时发生未知错误")
-            return []
 
     @staticmethod
     def _get_fallback_models() -> list[dict[str, Any]]:
