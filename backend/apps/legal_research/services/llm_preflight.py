@@ -16,6 +16,7 @@ _BACKEND_LABELS = {
     "openai_compatible": "OpenAI 兼容",
 }
 
+
 def verify_siliconflow_connectivity(*, model: str | None) -> None:
     """Validate LLM connectivity and optional model availability before queueing a task.
 
@@ -31,17 +32,13 @@ def verify_siliconflow_connectivity(*, model: str | None) -> None:
     config = configs.get(backend)
 
     if not config or not config.enabled:
-        raise ValidationException(
-            f"后端 {_BACKEND_LABELS.get(backend, backend)} 未启用，请先完成系统配置。"
-        )
+        raise ValidationException(f"后端 {_BACKEND_LABELS.get(backend, backend)} 未启用，请先完成系统配置。")
 
     api_key = (config.api_key or "").strip()
     base_url = (config.base_url or "").strip().rstrip("/")
 
     if not base_url:
-        raise ValidationException(
-            f"未配置 {_BACKEND_LABELS.get(backend, backend)} Base URL，请先完成系统配置。"
-        )
+        raise ValidationException(f"未配置 {_BACKEND_LABELS.get(backend, backend)} Base URL，请先完成系统配置。")
 
     # Ollama 不需要 API Key，检查 /api/tags
     if backend == "ollama":
@@ -50,9 +47,7 @@ def verify_siliconflow_connectivity(*, model: str | None) -> None:
 
     # SiliconFlow 和 OpenAI-compatible 需要 API Key
     if not api_key:
-        raise ValidationException(
-            f"未配置 {_BACKEND_LABELS.get(backend, backend)} API Key，请先完成系统配置。"
-        )
+        raise ValidationException(f"未配置 {_BACKEND_LABELS.get(backend, backend)} API Key，请先完成系统配置。")
 
     # OpenAI-compatible: 只检查连通性，不验证模型列表（各提供商模型列表差异大）
     if backend == "openai_compatible":
@@ -62,6 +57,7 @@ def verify_siliconflow_connectivity(*, model: str | None) -> None:
     # SiliconFlow: 检查连通性 + 模型可用性
     _check_siliconflow(base_url, api_key, selected_model)
 
+
 def _check_siliconflow(base_url: str, api_key: str, model: str) -> None:
     try:
         response = httpx.get(
@@ -69,6 +65,7 @@ def _check_siliconflow(base_url: str, api_key: str, model: str) -> None:
             headers={"Authorization": f"Bearer {api_key}"},
             params={"sub_type": "chat"},
             timeout=12.0,
+            verify=False,
         )
     except httpx.RequestError as exc:
         logger.warning("硅基流动连通性检查失败", extra={"base_url": base_url, "error": str(exc)})
@@ -95,12 +92,14 @@ def _check_siliconflow(base_url: str, api_key: str, model: str) -> None:
     if available_models and model not in available_models:
         raise ValidationException(f"所选模型不可用: {model}")
 
+
 def _check_openai_compatible(base_url: str, api_key: str) -> None:
     try:
         response = httpx.get(
             f"{base_url.rstrip('/')}/models",
             headers={"Authorization": f"Bearer {api_key}"},
             timeout=12.0,
+            verify=False,
         )
     except httpx.RequestError as exc:
         logger.warning("OpenAI 兼容后端连通性检查失败", extra={"base_url": base_url, "error": str(exc)})
@@ -110,6 +109,7 @@ def _check_openai_compatible(base_url: str, api_key: str) -> None:
         raise ValidationException("OpenAI 兼容后端鉴权失败，请检查 API Key。")
     if response.status_code != 200:
         raise ValidationException(f"OpenAI 兼容后端服务不可用 (HTTP {response.status_code})。")
+
 
 def _check_ollama(base_url: str, model: str) -> None:
     try:
