@@ -256,12 +256,12 @@ class ExternalTemplateAdmin(admin.ModelAdmin):
                 service.retry_analysis(template_id)
             else:
                 service.analyze_template(template_id)
-            self.message_user(request, gettext("模板分析已完成"))
+            self.message_user(request, "模板分析已完成")
         except Exception:
             logger.exception("模板分析失败: template_id=%s", template_id)
             self.message_user(
                 request,
-                gettext("模板分析失败，请查看日志"),
+                "模板分析失败，请查看日志",
                 level="error",
             )
         change_url = reverse(
@@ -276,7 +276,7 @@ class ExternalTemplateAdmin(admin.ModelAdmin):
         if template_obj is None:
             from django.http import Http404
 
-            raise Http404(gettext("模板不存在"))
+            raise Http404("模板不存在")
 
         service = _get_filling_service()
         custom_fields: list[dict[str, Any]] = service.get_custom_fields(template_id)
@@ -288,7 +288,7 @@ class ExternalTemplateAdmin(admin.ModelAdmin):
             "opts": self.model._meta,
             "template_obj": template_obj,
             "custom_fields_json": _json.dumps(custom_fields, ensure_ascii=False),
-            "title": gettext("填充操作 - %(name)s") % {"name": template_obj.name},
+            "title": "填充操作 - %(name)s" % {"name": template_obj.name},
         }
         return TemplateResponse(
             request,
@@ -302,13 +302,13 @@ class ExternalTemplateAdmin(admin.ModelAdmin):
         if template_obj is None:
             from django.http import Http404
 
-            raise Http404(gettext("模板不存在"))
+            raise Http404("模板不存在")
 
         context: dict[str, Any] = {
             **self.admin_site.each_context(request),
             "opts": self.model._meta,
             "template_obj": template_obj,
-            "title": gettext("映射编辑 - %(name)s") % {"name": template_obj.name},
+            "title": "映射编辑 - %(name)s" % {"name": template_obj.name},
         }
         return TemplateResponse(
             request,

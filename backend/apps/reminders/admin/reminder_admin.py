@@ -18,7 +18,6 @@ from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.safestring import mark_safe
-
 from simple_history.admin import SimpleHistoryAdmin
 
 from ..models import Reminder, ReminderType
@@ -28,7 +27,7 @@ class ReminderAdminForm(forms.ModelForm[Reminder]):
         model = Reminder
         fields: str = "__all__"
         help_texts: dict[str, object] = {
-            "metadata": _(
+            "metadata": (
                 '用于存放"结构化扩展信息"的 JSON(不参与业务必填).可留空或填 {}.'
                 "常见键:source(来源,如 court_sms / manual)、file_name(来源文件名)、"
                 'external_id(外部ID)、note(备注).示例:{"source":"court_sms","file_name":"传票.pdf"}'
