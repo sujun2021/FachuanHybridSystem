@@ -36,6 +36,7 @@ _KNOWN_CONTEXT_WINDOWS: dict[str, int] = {
     "deepseek-ai/DeepSeek-V3": 65536,
     "deepseek-ai/DeepSeek-R1": 65536,
     "kimi26": 262144,
+    "mimo-v2.5-pro": 1048576,
 }
 
 def _make_model(model_id: str, context_window: int = 0) -> dict[str, Any]:
@@ -60,7 +61,7 @@ class ModelListResult:
         return not self.is_fallback
 
 class ModelListService:
-    """模型列表公共服务（SiliconFlow + Ollama）"""
+    """模型列表公共服务（SiliconFlow / Ollama / OpenAI-compatible）"""
 
     def __init__(self, cache_ttl: int = DEFAULT_CACHE_TTL) -> None:
         self._cache_ttl = cache_ttl
@@ -132,7 +133,7 @@ class ModelListService:
         return merged + api_models
 
     def _fetch_from_api(self) -> ModelListResult:
-        """从可发现的后端获取模型列表（SiliconFlow / Ollama）"""
+        """从可发现的后端获取模型列表（SiliconFlow / Ollama / OpenAI-compatible）"""
         configs = LLMConfig.get_backend_configs()
         all_models: list[dict[str, Any]] = []
 
@@ -140,6 +141,8 @@ class ModelListService:
             all_models.extend(self._fetch_siliconflow_models())
         if configs.get("ollama") and configs["ollama"].enabled:
             all_models.extend(self._fetch_ollama_models())
+        if configs.get("openai_compatible") and configs["openai_compatible"].enabled:
+            all_models.extend(self._fetch_openai_compatible_models())
 
         if all_models:
             return ModelListResult(models=all_models)
@@ -180,7 +183,7 @@ class ModelListService:
                 logger.info("从 SiliconFlow API 获取到 %d 个模型", len(models))
             return models
         except (httpx.HTTPStatusError, httpx.ConnectError, httpx.TimeoutException) as exc:
-            logger.warning("SiliconFlow API 不可用: %s", exc)
+            logger.debug("SiliconFlow API 不可用: %s", exc)
             return []
         except Exception:
             logger.exception("获取 SiliconFlow 模型列表时发生未知错误")
@@ -218,6 +221,40 @@ class ModelListService:
             pass
 
         return [_make_model(ollama_model, ctx_window)]
+
+    @staticmethod
+    def _fetch_openai_compatible_models() -> list[dict[str, Any]]:
+        """调用 OpenAI-compatible GET /v1/models API 获取模型列表"""
+        base_url = LLMConfig.get_openai_compatible_base_url()
+        api_key = LLMConfig.get_openai_compatible_api_key()
+        if not base_url:
+            return []
+
+        url = f"{base_url.rstrip('/')}/models"
+        headers: dict[str, str] = {}
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+
+        try:
+            resp = httpx.get(url, headers=headers, timeout=15.0)
+            resp.raise_for_status()
+            data: dict[str, Any] = resp.json()
+            models: list[dict[str, Any]] = []
+            for m in data.get("data", []):
+                if not m.get("id"):
+                    continue
+                model_id: str = m["id"]
+                ctx = m.get("context_length") or m.get("max_model_len") or 0
+                models.append(_make_model(model_id, int(ctx) if ctx else 0))
+            if models:
+                logger.info("从 OpenAI-compatible API 获取到 %d 个模型", len(models))
+            return models
+        except (httpx.HTTPStatusError, httpx.ConnectError, httpx.TimeoutException) as exc:
+            logger.warning("OpenAI-compatible API 不可用: %s", exc)
+            return []
+        except Exception:
+            logger.exception("获取 OpenAI-compatible 模型列表时发生未知错误")
+            return []
 
     @staticmethod
     def _get_fallback_models() -> list[dict[str, Any]]:
