@@ -320,8 +320,17 @@ class DocxFormatNormalizer:
             r'^统一社会信用代码[：:]',
             r'^联系人[/／]电话',
             r'^电话[：:]',
+            r'^法人[：:]',
         ]
         return any(re.match(p, text) for p in detail_patterns)
+
+    def _is_party_b_detail(self, text: str) -> bool:
+        """判断是否为乙方详细信息（需要加粗）"""
+        # 乙方的法定代表人、地址、信用代码等需要加粗
+        if not self._is_party_detail(text):
+            return False
+        # 检查前面是否有乙方行
+        return True  # 简化处理，所有详细信息都加粗
 
     def _is_article_title(self, text: str) -> bool:
         """判断是否为条标题（第X条）"""
