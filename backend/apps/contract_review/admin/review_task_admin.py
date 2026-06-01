@@ -35,7 +35,7 @@ class ReviewTaskAdmin(admin.ModelAdmin):
     )
     ordering = ("-created_at",)
     change_form_template = "admin/contract_review/reviewtask/change_form.html"
-    actions = ["retry_selected_tasks", "delete_selected_with_files"]
+    actions = ["retry_selected_tasks", "delete_selected_with_files", "normalize_format"]
 
     @admin.action(description="重新执行选中的审查任务")
     def retry_selected_tasks(self, request: HttpRequest, queryset: Any) -> None:
@@ -87,6 +87,56 @@ class ReviewTaskAdmin(admin.ModelAdmin):
             deleted_count += 1
 
         self.message_user(request, f"已删除 {deleted_count} 个任务及 {file_count} 个关联文件")
+
+    @admin.action(description="格式规范化（调整字体/行距/页边距）")
+    def normalize_format(self, request: HttpRequest, queryset: Any) -> None:
+        from apps.contract_review.services.format_normalizer import DocxFormatNormalizer
+
+        success_count = 0
+        fail_count = 0
+
+        for task in queryset:
+            if not task.original_file:
+                self.message_user(request, f"任务 {task.contract_title or task.id} 没有原始文件", level="warning")
+                fail_count += 1
+                continue
+
+            original_path = Path(task.original_file)
+            if not original_path.exists():
+                self.message_user(request, f"任务 {task.contract_title or task.id} 的原始文件不存在", level="warning")
+                fail_count += 1
+                continue
+
+            try:
+                # 生成输出文件路径
+                output_dir = original_path.parent
+                output_filename = f"{original_path.stem}_规范化{original_path.suffix}"
+                output_path = output_dir / output_filename
+
+                # 执行格式规范化
+                normalizer = DocxFormatNormalizer(original_path, output_path)
+                result_path = normalizer.normalize()
+
+                # 更新任务的输出文件
+                task.output_file = str(result_path)
+                task.save(update_fields=["output_file"])
+
+                success_count += 1
+                logger.info("格式规范化成功: %s -> %s", original_path, result_path)
+
+            except Exception as e:
+                logger.exception("格式规范化失败: %s", e)
+                self.message_user(
+                    request,
+                    f"任务 {task.contract_title or task.id} 格式规范化失败: {e!s}",
+                    level="error",
+                )
+                fail_count += 1
+
+        if success_count > 0:
+            self.message_user(request, f"成功规范化 {success_count} 个文件")
+        if fail_count > 0:
+            self.message_user(request, f"{fail_count} 个文件规范化失败", level="warning")
 
     @admin.display(description="当前处理步骤")
     def current_step_display(self, obj: ReviewTask) -> str:
