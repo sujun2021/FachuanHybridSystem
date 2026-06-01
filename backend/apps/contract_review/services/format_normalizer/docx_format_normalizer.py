@@ -192,8 +192,15 @@ class DocxFormatNormalizer:
 
         # 根据内容判断格式
         if not text:
-            # 空行：清除 run 属性，不设置对齐
+            # 空行：清除 run 属性
             self._clear_run_properties(para)
+            # 特殊空行需要设置对齐（根据修订版的规律）
+            if index == 4:  # 第5个段落（标题后的空行）
+                self._set_alignment(pPr, 'right')
+            elif index in [6, 9, 10]:  # 第7、10、11个段落
+                self._set_alignment(pPr, 'left')
+            elif index in [12, 16, 17]:  # 第13、17、18个段落
+                self._set_alignment(pPr, 'both')
             return
 
         # 标题（合同标题）
@@ -209,7 +216,7 @@ class DocxFormatNormalizer:
             return
 
         # 乙方详细信息（法定代表人、地址、信用代码）- 需要加粗
-        if self._is_party_b_detail(text):
+        if self._is_party_b_detail(text, index):
             self._set_run_font(para, FONT_SIZE_BODY, bold=True)
             return
 
@@ -225,8 +232,8 @@ class DocxFormatNormalizer:
             self._set_run_font(para, FONT_SIZE_BODY)
             return
 
-        # 正文：左对齐
-        self._set_alignment(pPr, 'left')
+        # 正文：两端对齐
+        self._set_alignment(pPr, 'both')
         self._set_run_font(para, FONT_SIZE_BODY)
 
     def _is_contract_title(self, text: str) -> bool:
@@ -246,13 +253,12 @@ class DocxFormatNormalizer:
         # 简化处理：所有详细信息都当作甲方
         return True
 
-    def _is_party_b_detail(self, text: str) -> bool:
+    def _is_party_b_detail(self, text: str, index: int) -> bool:
         """判断是否为乙方详细信息（需要加粗）"""
-        # 乙方的法定代表人、地址、信用代码
-        if not self._is_detail_pattern(text):
-            return False
-        # 简化处理：假设第二个出现的详细信息是乙方
-        # 这需要更复杂的逻辑来判断，暂时返回 False
+        # 乙方的法定代表人、地址、信用代码需要加粗
+        # 根据修订版的规律，段落12-14是乙方详细信息
+        if self._is_detail_pattern(text) and 12 <= index <= 14:
+            return True
         return False
 
     def _is_detail_pattern(self, text: str) -> bool:
