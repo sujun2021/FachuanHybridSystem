@@ -1,0 +1,97 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block title %}上传合同文件 - 合同格式调整{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    .object-tools {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 10px;
+        float: none;
+        margin-left: auto;
+        list-style: none;
+        padding-left: 0;
+        margin-bottom: 15px;
+    }
+    .object-tools li {
+        float: none;
+        margin: 0;
+        list-style: none;
+    }
+    .object-tools li + li {
+        margin-left: 0;
+    }
+    .upload-form {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    .upload-form .form-row {
+        margin-bottom: 15px;
+    }
+    .upload-form label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #333;
+    }
+    .upload-form input[type="file"] {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    .upload-form .help-text {
+        color: #666;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+    .upload-form .submit-row {
+        margin-top: 20px;
+        text-align: right;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <ul class="object-tools">
+        <li>
+            <a href="{% url 'admin:contract_review_formatnormalize_changelist' %}" class="changelink">
+                返回格式调整列表
+            </a>
+        </li>
+    </ul>
+
+    {% if messages %}
+        {% for message in messages %}
+            <p class="errornote" style="{% if message.tags == 'success' %}background: #dff0d8; border: 1px solid #d6e9c6; color: #3c763d;{% elif message.tags == 'error' %}background: #f2dede; border: 1px solid #ebccd1; color: #a94442;{% endif %} padding: 10px; margin-bottom: 15px;">
+                {{ message }}
+            </p>
+        {% endfor %}
+    {% endif %}
+
+    <div class="module">
+        <h2>上传合同文件</h2>
+        <div class="upload-form">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-row">
+                    <label for="contract_file">选择合同文件</label>
+                    <input type="file" name="contract_file" id="contract_file" accept=".docx,.doc" required>
+                    <p class="help-text">支持 .docx 或 .doc 格式的 Word 文档</p>
+                </div>
+                <div class="submit-row">
+                    <a href="{% url 'admin:contract_review_formatnormalize_changelist' %}" class="button" style="background: #666; margin-right: 10px;">
+                        取消
+                    </a>
+                    <input type="submit" value="上传并格式规范化" class="button" style="background: #417690; color: #fff;">
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

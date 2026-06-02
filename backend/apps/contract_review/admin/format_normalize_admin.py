@@ -81,6 +81,11 @@ class FormatNormalizeAdmin(admin.ModelAdmin):
                 name="contract_review_formatnormalize_changelist",
             ),
             path(
+                "upload/",
+                self.admin_site.admin_view(self.upload_view),
+                name="contract_review_formatnormalize_upload",
+            ),
+            path(
                 "<uuid:task_id>/execute/",
                 self.admin_site.admin_view(self.execute_view),
                 name="contract_review_formatnormalize_execute",
@@ -104,6 +109,47 @@ class FormatNormalizeAdmin(admin.ModelAdmin):
         return TemplateResponse(
             request,
             "admin/contract_review/format_normalize.html",
+            context,
+        )
+
+    def upload_view(self, request: HttpRequest) -> HttpResponse:
+        """上传合同文件页面"""
+        from django.contrib import messages
+        from django.http import HttpResponseRedirect
+
+        if request.method == "POST":
+            uploaded_file = request.FILES.get("contract_file")
+            if not uploaded_file:
+                messages.error(request, "请选择要上传的合同文件")
+                return HttpResponseRedirect("/admin/contract_review/formatnormalize/upload/")
+
+            if not uploaded_file.name.endswith((".docx", ".doc")):
+                messages.error(request, "只支持 .docx 或 .doc 格式的文件")
+                return HttpResponseRedirect("/admin/contract_review/formatnormalize/upload/")
+
+            try:
+                # 创建任务
+                task = ReviewTask.objects.create(
+                    user=request.user,
+                    contract_title=uploaded_file.name.rsplit(".", 1)[0],
+                    original_file=uploaded_file,
+                    status="pending",
+                )
+                messages.success(request, f"文件上传成功: {uploaded_file.name}")
+                return HttpResponseRedirect(f"/admin/contract_review/formatnormalize/{task.id}/execute/")
+            except Exception as e:
+                logger.exception("文件上传失败: %s", e)
+                messages.error(request, f"文件上传失败: {e!s}")
+                return HttpResponseRedirect("/admin/contract_review/formatnormalize/upload/")
+
+        context = {
+            **self.admin_site.each_context(request),
+            "title": "上传合同文件",
+            "opts": self.model._meta,
+        }
+        return TemplateResponse(
+            request,
+            "admin/contract_review/format_normalize_upload.html",
             context,
         )
 
