@@ -20,7 +20,7 @@ _PARTY_FIELDS = ("party_a", "party_b", "party_c", "party_d")
 
 @admin.register(ReviewTask)
 class ReviewTaskAdmin(admin.ModelAdmin):
-    list_display = ("contract_title", "user", "status", "current_step_display", "format_normalize_link", "created_at")
+    list_display = ("contract_title", "user", "status", "current_step_display", "created_at")
     list_filter = ("status", "represented_party", "created_at")
     search_fields = ("contract_title", "party_a", "party_b")
     readonly_fields = (
@@ -35,7 +35,6 @@ class ReviewTaskAdmin(admin.ModelAdmin):
     )
     ordering = ("-created_at",)
     change_form_template = "admin/contract_review/reviewtask/change_form.html"
-    change_list_template = "admin/contract_review/reviewtask/change_list.html"
     actions = ["retry_selected_tasks", "delete_selected_with_files", "normalize_format"]
 
     @admin.action(description="重新执行选中的审查任务")
@@ -148,22 +147,6 @@ class ReviewTaskAdmin(admin.ModelAdmin):
         if obj.current_step:
             return obj.get_current_step_display()
         return "—"
-
-    @admin.display(description="格式调整")
-    def format_normalize_link(self, obj: ReviewTask) -> str:
-        if not obj.original_file:
-            return "—"
-        url = f"/admin/contract_review/reviewtask/{obj.pk}/format-normalize/"
-        style = (
-            "display:inline-flex;align-items:center;gap:4px;padding:4px 8px;"
-            "border-radius:4px;text-decoration:none;font-size:12px;"
-            "background:#417690;color:#fff;"
-        )
-        return format_html(
-            '<a href="{}" style="{}" onclick="return confirm(\'确定要执行格式规范化吗？\')">📐 格式规范化</a>',
-            url,
-            style,
-        )
 
     _STEP_LABELS: dict[str, str] = {
         "typo_check": "错别字校对",

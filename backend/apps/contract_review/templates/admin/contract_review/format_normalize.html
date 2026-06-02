@@ -1,0 +1,132 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    #content {
+        max-width: 900px;
+    }
+    .module {
+        margin-bottom: 20px;
+    }
+    .module h2 {
+        background: #79aec8;
+        color: #fff;
+        padding: 10px 15px;
+        margin: 0;
+        font-size: 14px;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th, td {
+        padding: 10px 15px;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+    }
+    th {
+        background: #f8f9fa;
+        font-weight: bold;
+        color: #333;
+    }
+    tr:hover {
+        background: #f5f5f5;
+    }
+    .btn-normalize {
+        display: inline-block;
+        padding: 6px 12px;
+        background: #417690;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 13px;
+        cursor: pointer;
+    }
+    .btn-normalize:hover {
+        background: #205067;
+        color: #fff;
+    }
+    .help-text {
+        background: #ffffcc;
+        border: 1px solid #e6db55;
+        padding: 12px 15px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+    }
+    .help-text h3 {
+        margin-top: 0;
+        color: #333;
+        font-size: 14px;
+    }
+    .help-text ul {
+        margin-bottom: 0;
+        padding-left: 20px;
+    }
+    .help-text li {
+        margin-bottom: 5px;
+        color: #555;
+    }
+    .empty-message {
+        padding: 20px;
+        text-align: center;
+        color: #999;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>合同格式调整</h1>
+
+<div class="help-text">
+    <h3>💡 功能说明</h3>
+    <ul>
+        <li><strong>统一页边距</strong>：A4 标准（上下 2.54cm，左右 3.17cm）</li>
+        <li><strong>统一字号</strong>：正文 12 磅，标题 26 磅</li>
+        <li><strong>统一行距</strong>：1.5 倍行距</li>
+        <li><strong>自动编号</strong>：支持"一、二、三...条"格式</li>
+        <li><strong>乙方加粗</strong>：乙方信息自动加粗</li>
+    </ul>
+</div>
+
+<div class="module">
+    <h2>待处理任务</h2>
+    {% if tasks %}
+        <table>
+            <thead>
+                <tr>
+                    <th>合同标题</th>
+                    <th>用户</th>
+                    <th>状态</th>
+                    <th>创建时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for task in tasks %}
+                <tr>
+                    <td>{{ task.contract_title|default:"未命名合同" }}</td>
+                    <td>{{ task.user|default:"-" }}</td>
+                    <td>{{ task.get_status_display }}</td>
+                    <td>{{ task.created_at|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        <a href="{% url 'admin:contract_review_formatnormalize_execute' task_id=task.id %}"
+                           class="btn-normalize"
+                           onclick="return confirm('确定要对此任务执行格式规范化吗？')">
+                            📐 格式规范化
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="empty-message">
+            暂无待处理的任务<br>
+            请先在<a href="{% url 'admin:contract_review_reviewtask_changelist' %}">合同审查任务</a>中创建任务
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
