@@ -75,7 +75,7 @@ DEFAULT_PROXY_MATTER_RULES: tuple[ProxyMatterRuleSeed, ...] = (
         "case_stage": "second_trial",
         "legal_statuses": ["appellee"],
         "legal_status_match_mode": "any",
-        "items_text": "代为应诉、答辩、举证、质证、参加庭审及法庭辩论；代为承认、反驳、变更诉讼请求，进行和解、调解，提起反诉；代为签收、领取法律文书及款项；办理本案二审相关的全部诉讼事宜。",
+        "items_text": "代为应诉、答辩、举证、质证、参加庭审及法庭辩论；代为承认、反驳、变更诉讼请求，进行和解、调解；代为签收、领取法律文书及款项；办理本案二审相关的全部诉讼事宜。",
         "priority": 100,
         "is_active": True,
     },
