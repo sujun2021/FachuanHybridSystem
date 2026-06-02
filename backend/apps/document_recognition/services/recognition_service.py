@@ -10,6 +10,8 @@ import logging
 from datetime import date
 from typing import Any
 
+from django.utils.translation import gettext_lazy as _
+
 from apps.core.exceptions import RecognitionTimeoutError, ServiceUnavailableError, ValidationException
 from apps.core.services.filename_template_service import FilenameTemplateService
 
@@ -149,17 +151,17 @@ class CourtDocumentRecognitionService:
             )
         elif doc_type == DocumentType.OTHER:
             binding = BindingResult.failure_result(
-                message="暂时只支持传票识别，其他文书类型敬请期待",
+                message=_("暂时只支持传票识别，其他文书类型敬请期待"),
                 error_code="UNSUPPORTED_DOCUMENT_TYPE",
             )
         elif doc_type == DocumentType.EXECUTION_RULING:
             binding = BindingResult.failure_result(
-                message="执行裁定书绑定功能开发中，敬请期待",
+                message=_("执行裁定书绑定功能开发中，敬请期待"),
                 error_code="FEATURE_NOT_IMPLEMENTED",
             )
         else:
             binding = BindingResult.failure_result(
-                message="未识别到案号，无法绑定案件",
+                message=_("未识别到案号，无法绑定案件"),
                 error_code="CASE_NUMBER_NOT_FOUND",
             )
         return binding, renamed_file_path
@@ -193,7 +195,7 @@ class CourtDocumentRecognitionService:
                         extraction_method=extraction_result.extraction_method,
                     ),
                     binding=BindingResult.failure_result(
-                        message="无法从文书中提取文字",  # type: ignore
+                        message=_("无法从文书中提取文字"),  # type: ignore
                         error_code="TEXT_EXTRACTION_FAILED",
                     ),
                     file_path=file_path,
@@ -264,7 +266,7 @@ class CourtDocumentRecognitionService:
         if not text or not text.strip():
             logger.warning("文本内容为空", extra={"action": "recognize_document_from_text", "result": "empty_text"})
             raise ValidationException(
-                message="文本内容不能为空", code="EMPTY_TEXT", errors={"text": "请提供有效的文书文本"}
+                message=_("文本内容不能为空"), code="EMPTY_TEXT", errors={"text": "请提供有效的文书文本"}
             )
 
         logger.info("开始从文本识别文书", extra={"action": "recognize_document_from_text", "text_length": len(text)})

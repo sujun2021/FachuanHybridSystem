@@ -40,39 +40,6 @@
             display: flex;
             align-items: center;
         }
-        .tooltip-trigger {
-            position: relative;
-            cursor: help;
-        }
-        .tooltip-content {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            background: #1e293b;
-            color: #e2e8f0;
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: normal;
-            line-height: 1.6;
-            white-space: normal;
-            width: 360px;
-            z-index: 1000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            margin-top: 8px;
-        }
-        .tooltip-content::before {
-            content: '';
-            position: absolute;
-            bottom: 100%;
-            left: 20px;
-            border: 6px solid transparent;
-            border-bottom-color: #1e293b;
-        }
-        .tooltip-trigger:hover .tooltip-content {
-            display: block;
-        }
         .text-parser-toggle {
             font-size: 16px;
             color: #64748b;
@@ -157,14 +124,6 @@
             background: #fff3cd;
             color: #856404;
             border-color: #ffeeba;
-        }
-        .warning-message {
-            background: #fff3cd;
-            color: #856404;
-            padding: 10px;
-            border: 1px solid #ffeeba;
-            border-radius: 4px;
-            margin-top: 10px;
         }
         .error-message {
             background: #f8d7da;
@@ -339,17 +298,7 @@
     <div class="text-parser-section" x-data="textParserApp()" x-init="init()">
         <div class="text-parser-header" @click="toggleExpansion()">
             <div class="text-parser-title">
-                <h3 class="tooltip-trigger">🚀 {% trans "快速填充当事人信息" %}
-                    <span class="tooltip-content">
-                        <strong>{% trans "识别流程" %}</strong><br>
-                        1. OCR 提取文字（图片/PDF）<br>
-                        2. 自动判型（身份证/营业执照/护照等）<br>
-                        3. 正则规则提取关键字段<br>
-                        4. 若选了 LLM 模型且正则未命中，自动调用 LLM 兜底<br><br>
-                        <strong>{% trans "不选 LLM" %}</strong>：仅 OCR + 正则，能提取就填充，提取不到会提示<br>
-                        <strong>{% trans "选择 LLM" %}</strong>：正则优先，正则提取不到再调 LLM（支持推理模型）
-                    </span>
-                </h3>
+                <h3>🚀 {% trans "快速填充当事人信息" %}</h3>
                 <span class="format-badge"
                       :class="detectedFormat"
                       x-show="detectedFormat"
@@ -387,6 +336,7 @@
                     <select x-ref="modelSelect"
                             x-model="selectedModel"
                             @change="saveLastModel()"
+                            x-effect="if (models.length) { $nextTick(() => { const s = $refs.modelSelect; if (s) { const v = localStorage.getItem('client_recognize_last_model') || ''; if (v && models.some(m => m.id === v)) { selectedModel = v; s.value = v; } } }) }"
                             style="font-size:12px; padding:2px 4px; border:1px solid #ced4da; border-radius:4px; max-width:260px;">
                         <option value="">{% trans "不使用 LLM（仅 OCR + 规则）" %}</option>
                         <template x-for="m in models" :key="m.id">
@@ -439,15 +389,6 @@
                     const resp = await fetch('/api/v1/llm/models');
                     const data = await resp.json();
                     this.models = (data.models || []).map(m => ({ id: m.id, name: m.name }));
-                    // 模型列表加载完成后，从 localStorage 恢复选中状态
-                    const saved = localStorage.getItem('client_recognize_last_model') || '';
-                    if (saved && this.models.some(m => m.id === saved)) {
-                        this.selectedModel = saved;
-                        this.$nextTick(() => {
-                            const sel = this.$el.querySelector('select');
-                            if (sel && sel.value !== saved) sel.value = saved;
-                        });
-                    }
                 } catch (e) {
                     console.warn('[TextParserApp] 加载模型列表失败:', e);
                 }
@@ -557,8 +498,11 @@
                 formData.append('file', file);
                 const docType = 'auto';
                 let url = '/api/v1/client/identity-doc/recognize?doc_type=' + encodeURIComponent(docType);
-                if (this.selectedModel) {
-                    url += '&model=' + encodeURIComponent(this.selectedModel);
+                // 直接从 DOM 读取 select 值，避免 Alpine x-model 同步问题
+                const sel = document.querySelector('.text-parser-section select');
+                const domModel = sel ? sel.value : this.selectedModel;
+                if (domModel) {
+                    url += '&model=' + encodeURIComponent(domModel);
                 }
 
                 try {
@@ -586,13 +530,6 @@
                         phone: ed.phone || this._extractPhone(data.raw_text || ''),
                         legal_representative: ed.legal_representative || '',
                     };
-
-                    // 检查是否提取到了有效数据
-                    const hasData = mapped.name || mapped.id_number || mapped.address;
-                    if (!hasData) {
-                        this.showMessage('⚠️ OCR 识别完成，但未能提取到有效信息。建议选择一个 LLM 模型后重试。', 'warning');
-                        return;
-                    }
 
                     this.fillFormWithData(mapped);
                     this.showMessage('✅ OCR 识别成功，表单已自动填充！', 'success');

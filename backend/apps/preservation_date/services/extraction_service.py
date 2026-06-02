@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from django.utils.translation import gettext_lazy as _
+
 """
 财产保全日期识别服务
 
@@ -10,6 +12,7 @@ from __future__ import annotations
 
 Requirements: 1.5, 1.6, 2.1, 6.1, 6.2, 6.4
 """
+
 
 import json
 import logging
@@ -296,7 +299,7 @@ class PreservationDateExtractionService:
         )
 
         if not response or not response.content:
-            raise ValidationException(message="大模型调用失败", code="LLM_ERROR", errors={})
+            raise ValidationException(message=_("大模型调用失败"), code="LLM_ERROR", errors={})
 
         model_used = f"{response.backend}/{response.model}" if hasattr(response, "backend") else response.model
         logger.info(f"使用模型: {model_used}")
@@ -947,7 +950,7 @@ class PreservationDateExtractionService:
 
         try:
             original_name: str = validator.sanitize_file_name(file_name)
-        except (OSError, ValueError):
+        except Exception:
             logger.exception("文件名不合法")
             return PreservationExtractionResult(
                 success=False,
@@ -978,5 +981,5 @@ class PreservationDateExtractionService:
             try:
                 if temp_path.exists():
                     temp_path.unlink()
-            except (OSError, ValueError):
+            except Exception:
                 logger.warning("清理临时文件失败", extra={})

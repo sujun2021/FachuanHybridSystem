@@ -11,6 +11,8 @@ from importlib import import_module
 from pathlib import Path
 from typing import Any
 
+from django.utils.translation import gettext_lazy as _
+
 from apps.core.exceptions import ValidationException
 from apps.documents.storage import get_docx_templates_root
 
@@ -83,7 +85,7 @@ class LawyerLetterGeneratorService:
 
         if not template_path.exists():
             raise ValidationException(
-                message="模板文件不存在：%(path)s" % {"path": str(template_path)},
+                message=_("模板文件不存在：%(path)s") % {"path": str(template_path)},
                 code="TEMPLATE_NOT_FOUND",
             )
 
@@ -101,7 +103,7 @@ class LawyerLetterGeneratorService:
                 record=record,
                 action_type="lawyer_letter",
                 action_date=date.today(),
-                description=str("生成律师函（%(tone)s）" % {"tone": tone_display}),
+                description=str(_("生成律师函（%(tone)s）") % {"tone": tone_display}),
                 document_type=f"律师函-{tone_display}",
                 document_filename=filename,
             )
@@ -116,7 +118,8 @@ class LawyerLetterGeneratorService:
         )
         return GeneratedDocument(filename=filename, content=content)
 
-    def _build_docx_renderer(self) -> Any:
+    @staticmethod
+    def _build_docx_renderer() -> Any:
         module = import_module("apps.documents.services.generation.pipeline")
         renderer_cls = module.DocxRenderer
         return renderer_cls()

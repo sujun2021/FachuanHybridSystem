@@ -52,4 +52,6 @@ def execute_filing(request: HttpRequest, payload: ExecuteFilingIn) -> Any:
 @router.get("/session/{session_id}", response=SessionOut)
 def get_session(request: HttpRequest, session_id: int) -> Any:
     """查询立案会话状态。"""
-    return _get_executor_service().get_session(session_id)
+    from apps.oa_filing.models import FilingSession
+
+    return FilingSession.objects.get(pk=session_id)

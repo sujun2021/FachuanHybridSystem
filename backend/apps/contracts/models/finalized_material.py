@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -37,6 +37,24 @@ class FinalizedMaterial(models.Model):
     )
     file_path: models.CharField = models.CharField(max_length=500, verbose_name=_("文件路径"), db_index=True)
     original_filename: models.CharField = models.CharField(max_length=255, verbose_name=_("原始文件名"))
+    relative_file_path: models.CharField = models.CharField(
+        max_length=1000,
+        blank=True,
+        default="",
+        verbose_name=_("相对文件路径"),
+    )
+    storage_root_type: models.CharField = models.CharField(
+        max_length=100,
+        blank=True,
+        default="",
+        verbose_name=_("存储根类型"),
+    )
+    subdir_path: models.CharField = models.CharField(
+        max_length=1000,
+        blank=True,
+        default="",
+        verbose_name=_("子目录路径"),
+    )
     category: models.CharField = models.CharField(
         max_length=32,
         choices=MaterialCategory.choices,
@@ -69,6 +87,17 @@ class FinalizedMaterial(models.Model):
         indexes: ClassVar = [
             models.Index(fields=["contract", "order", "-uploaded_at"]),
         ]
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if self.file_path and self.relative_file_path != self.file_path:
+            self.relative_file_path = self.file_path
+            update_fields = kwargs.get("update_fields")
+            if update_fields is not None:
+                updated_fields = list(update_fields)
+                if "relative_file_path" not in updated_fields:
+                    updated_fields.append("relative_file_path")
+                kwargs["update_fields"] = updated_fields
+        super().save(*args, **kwargs)
 
     def __str__(self) -> str:
         return f"{self.original_filename} ({self.get_category_display()})"

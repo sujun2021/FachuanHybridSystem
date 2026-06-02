@@ -10,6 +10,8 @@ import json
 import logging
 from typing import Any, cast
 
+from django.utils.translation import gettext_lazy as _
+
 from apps.core.exceptions import RecognitionTimeoutError, ServiceUnavailableError
 from apps.core.interfaces import ServiceLocator
 from apps.core.llm.config import LLMConfig
@@ -155,7 +157,7 @@ class DocumentClassifier:
                 extra={"action": "classify", "error_type": "connection_error", "error": str(e)},
             )
             raise ServiceUnavailableError(
-                message="AI 服务暂时不可用，请稍后重试",
+                message=_("AI 服务暂时不可用，请稍后重试"),
                 code="OLLAMA_SERVICE_UNAVAILABLE",
                 errors={"service": "Ollama 服务连接失败"},
                 service_name="Ollama",
@@ -165,7 +167,7 @@ class DocumentClassifier:
                 f"文书分类超时: {e}", extra={"action": "classify", "error_type": "timeout_error", "error": str(e)}
             )
             raise RecognitionTimeoutError(
-                message="文书分类超时，请重试", code="CLASSIFICATION_TIMEOUT", errors={"timeout": "AI 分类超时"}
+                message=_("文书分类超时，请重试"), code="CLASSIFICATION_TIMEOUT", errors={"timeout": "AI 分类超时"}
             ) from e
         except Exception as e:
             logger.error(
@@ -215,7 +217,7 @@ class DocumentClassifier:
 
             return doc_type, confidence
 
-        except (TypeError, ValueError) as e:
+        except Exception as e:
             logger.warning(f"解析分类响应失败: {e!s}")
             return DocumentType.OTHER, 0.0
 

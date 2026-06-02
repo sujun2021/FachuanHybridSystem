@@ -10,10 +10,10 @@ from typing import TYPE_CHECKING, Any
 
 from django.db import transaction
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from apps.automation.models import CourtSMS, CourtSMSStatus
 from apps.core.exceptions import NotFoundError, ValidationException
-from apps.core.tasking import submit_task
 
 from ._sms_case_binding_mixin import SMSCaseBindingMixin
 from ._sms_document_mixin import SMSDocumentMixin
@@ -175,7 +175,7 @@ class CourtSMSService(SMSCaseBindingMixin, SMSDocumentMixin, SMSDownloadMixin):
         """提交短信，创建记录并触发异步处理"""
         if not content or not content.strip():
             raise ValidationException(
-                message="短信内容不能为空", code="EMPTY_SMS_CONTENT", errors={"content": "短信内容不能为空"}
+                message=_("短信内容不能为空"), code="EMPTY_SMS_CONTENT", errors={"content": "短信内容不能为空"}
             )
 
         if received_at is None:
@@ -191,13 +191,12 @@ class CourtSMSService(SMSCaseBindingMixin, SMSDocumentMixin, SMSDownloadMixin):
 
             logger.info(f"创建短信记录成功: ID={sms.id}, 长度={len(content)}")
 
-            task_id = submit_task(
+            self._submit_task_after_commit(
                 "apps.automation.services.sms.court_sms_service.process_sms_async",
                 sms.id,
                 task_name=f"court_sms_processing_{sms.id}",
+                log_message=f"提交异步处理任务: SMS ID={sms.id}, Task ID=%s",
             )
-
-            logger.info(f"提交异步处理任务: SMS ID={sms.id}, Task ID={task_id}")
 
             return sms
 
@@ -242,18 +241,17 @@ class CourtSMSService(SMSCaseBindingMixin, SMSDocumentMixin, SMSDownloadMixin):
                     logger.info(f"案件绑定创建成功，进入重命名阶段: SMS ID={sms_id}")
             else:
                 sms.status = CourtSMSStatus.FAILED
-                sms.error_message = "创建案件绑定失败"
+                sms.error_message = str(_("创建案件绑定失败"))
                 sms.save()
                 logger.error(f"案件绑定创建失败: SMS ID={sms_id}")
                 return sms
 
-            task_id = submit_task(
+            self._submit_task_after_commit(
                 "apps.automation.services.sms.court_sms_service.process_sms_from_renaming",
                 sms.id,
                 task_name=f"court_sms_continue_{sms.id}",
+                log_message=f"触发后续处理任务: SMS ID={sms.id}, Task ID=%s",
             )
-
-            logger.info(f"触发后续处理任务: SMS ID={sms.id}, Task ID={task_id}")
 
             return sms
 
@@ -313,13 +311,12 @@ class CourtSMSService(SMSCaseBindingMixin, SMSDocumentMixin, SMSDownloadMixin):
 
             logger.info(f"重置短信状态成功: SMS ID={sms_id}, 重试次数={sms.retry_count}")
 
-            task_id = submit_task(
+            self._submit_task_after_commit(
                 "apps.automation.services.sms.court_sms_service.process_sms_async",
                 sms.id,
                 task_name=f"court_sms_retry_{sms.id}_{sms.retry_count}",
+                log_message=f"重新提交处理任务: SMS ID={sms.id}, Task ID=%s",
             )
-
-            logger.info(f"重新提交处理任务: SMS ID={sms.id}, Task ID={task_id}")
 
             return sms
 
@@ -361,8 +358,14 @@ class CourtSMSService(SMSCaseBindingMixin, SMSDocumentMixin, SMSDownloadMixin):
                 sms = self._process_downloading_or_matching(sms, process_options=process_options)
 
             if sms.status == CourtSMSStatus.DOWNLOADING:
-                logger.info(f"短信 {sms_id} 进入下载阶段，等待下载完成")
-                return sms
+                # 续跑任务有时会比状态落库稍早到达，这里先复查下载任务是否真的还在进行。
+                if self._should_wait_for_document_download(sms):
+                    logger.info(f"短信 {sms_id} 进入下载阶段，等待下载完成")
+                    return sms
+
+                # 如果下载其实已经成功，只是短信状态还短暂滞留在 downloading，就直接推进到匹配阶段。
+                logger.info(f"短信 {sms_id} 下载已完成但状态仍显示 downloading，直接继续进入匹配阶段")
+                sms = self._process_matching(sms)
 
             if sms.status == CourtSMSStatus.MATCHING:
                 sms = self._process_matching(sms)
@@ -482,10 +485,9 @@ class CourtSMSService(SMSCaseBindingMixin, SMSDocumentMixin, SMSDownloadMixin):
                     f"疑似 OCR 内存不足导致 worker 反复崩溃，标记为待人工处理"
                 )
                 sms.status = CourtSMSStatus.PENDING_MANUAL
-                sms.error_message = (
-                    "匹配阶段反复失败（已重试%(count)d次），可能因OCR内存不足导致处理中断，需要人工处理"
-                    % {"count": sms.retry_count}
-                )
+                sms.error_message = str(
+                    _("匹配阶段反复失败（已重试%(count)d次），可能因OCR内存不足导致处理中断，需要人工处理")
+                ) % {"count": sms.retry_count}
                 sms.save()
                 return sms
 
@@ -496,7 +498,7 @@ class CourtSMSService(SMSCaseBindingMixin, SMSDocumentMixin, SMSDownloadMixin):
                     sms.status = CourtSMSStatus.RENAMING
                 else:
                     sms.status = CourtSMSStatus.FAILED
-                    sms.error_message = "创建案件绑定失败"
+                    sms.error_message = str(_("创建案件绑定失败"))
                 sms.save()
                 return sms
 
@@ -524,13 +526,13 @@ class CourtSMSService(SMSCaseBindingMixin, SMSDocumentMixin, SMSDownloadMixin):
                     logger.info(f"案件自动绑定成功: SMS ID={sms.id}")
                 else:
                     sms.status = CourtSMSStatus.FAILED
-                    sms.error_message = "创建案件绑定失败"
+                    sms.error_message = str(_("创建案件绑定失败"))
                     sms.save()
                     logger.error(f"案件绑定失败: SMS ID={sms.id}")
             else:
                 logger.info(f"案件匹配失败，标记为待人工处理: SMS ID={sms.id}")
                 sms.status = CourtSMSStatus.PENDING_MANUAL
-                sms.error_message = "未能匹配到唯一的在办案件，需要人工处理"
+                sms.error_message = str(_("未能匹配到唯一的在办案件，需要人工处理"))
                 sms.save()
 
             return sms

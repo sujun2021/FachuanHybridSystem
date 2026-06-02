@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -46,23 +46,23 @@ export function ContentWorkbench() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: 'easeOut' }}
       >
-        {/* 页面标题栏 */}
+        {/* 椤甸潰鏍囬鏍?*/}
         <div className="flex items-center justify-between pb-4 border-b">
           <div>
-            <h1 className="text-xl font-bold tracking-tight">内容运营</h1>
+            <h1 className="text-xl font-bold tracking-tight">鍐呭杩愯惀</h1>
             <p className="text-xs text-muted-foreground mt-0.5">
-              AI 驱动的法律内容创作 — 从选题到生成文章和播客音频
+              AI 椹卞姩鐨勬硶寰嬪唴瀹瑰垱浣?鈥?浠庨€夐鍒扮敓鎴愭枃绔犲拰鎾闊抽
             </p>
           </div>
           <Button size="sm" onClick={() => setDialogOpen(true)}>
             <Plus className="w-3.5 h-3.5 mr-1" />
-            新建任务
+            鏂板缓浠诲姟
           </Button>
         </div>
 
-        {/* 主内容区 */}
+        {/* 涓诲唴瀹瑰尯 */}
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-0 lg:divide-x min-h-0 mt-4">
-          {/* 左侧：任务列表（主区域） */}
+          {/* 宸︿晶锛氫换鍔″垪琛紙涓诲尯鍩燂級 */}
           <div className="min-w-0 overflow-hidden flex flex-col">
             <TaskList
               selectedTaskId={selectedTaskId}
@@ -70,17 +70,17 @@ export function ContentWorkbench() {
             />
           </div>
 
-          {/* 右侧：创作工具（辅助区域） */}
+          {/* 鍙充晶锛氬垱浣滃伐鍏凤紙杈呭姪鍖哄煙锛?*/}
           <div className="min-w-0 overflow-hidden flex flex-col pl-0 lg:pl-5">
             <Tabs defaultValue="topics" className="flex flex-col flex-1 min-h-0">
               <TabsList className="self-start">
                 <TabsTrigger value="topics" className="text-xs">
                   <Sparkles className="w-3.5 h-3.5 mr-1" />
-                  选题灵感
+                  閫夐鐏垫劅
                 </TabsTrigger>
                 <TabsTrigger value="direct" className="text-xs">
                   <FileInput className="w-3.5 h-3.5 mr-1" />
-                  直投内容
+                  鐩存姇鍐呭
                 </TabsTrigger>
               </TabsList>
 
@@ -103,7 +103,7 @@ export function ContentWorkbench() {
                         >
                           <span className="flex items-center gap-1">
                             <Sparkles className="w-3.5 h-3.5" />
-                            查看完整灵感页（热搜 + AI 筛选）
+                            鏌ョ湅瀹屾暣鐏垫劅椤碉紙鐑悳 + AI 绛涢€夛級
                           </span>
                           <ArrowRight className="w-3.5 h-3.5" />
                         </Button>
@@ -131,7 +131,7 @@ export function ContentWorkbench() {
           </div>
         </div>
 
-        {/* 创建任务对话框 */}
+        {/* 鍒涘缓浠诲姟瀵硅瘽妗?*/}
         <CreateTaskDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}
@@ -140,7 +140,7 @@ export function ContentWorkbench() {
           defaultMode={dialogKeyword ? 'search' : 'direct'}
         />
 
-        {/* 任务详情侧面板 */}
+        {/* 浠诲姟璇︽儏渚ч潰鏉?*/}
         <Sheet open={detailOpen} onOpenChange={setDetailOpen}>
           <SheetContent
             side="right"
@@ -148,14 +148,14 @@ export function ContentWorkbench() {
             showCloseButton={false}
           >
             <SheetHeader className="border-b px-5 py-3 flex-row items-center justify-between space-y-0">
-              <SheetTitle className="text-base font-semibold">任务详情</SheetTitle>
+              <SheetTitle className="text-base font-semibold">浠诲姟璇︽儏</SheetTitle>
               <Button
                 variant="ghost"
                 size="sm"
                 className="h-7 text-xs"
                 onClick={() => setDetailOpen(false)}
               >
-                关闭
+                鍏抽棴
               </Button>
             </SheetHeader>
             <div className="flex-1 overflow-y-auto p-5">

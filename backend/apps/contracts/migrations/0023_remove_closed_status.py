@@ -6,9 +6,11 @@
 
 from django.db import migrations, models
 
+
 def migrate_closed_to_archived(apps, schema_editor):
     Contract = apps.get_model("contracts", "Contract")
     Contract.objects.filter(status="closed").update(status="archived")
+
 
 class Migration(migrations.Migration):
 

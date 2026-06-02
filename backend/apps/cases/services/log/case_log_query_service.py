@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 from django.db.models import QuerySet
+from django.utils.translation import gettext_lazy as _
 
 from apps.cases.models import Case, CaseLog
 from apps.cases.services.case.case_access_policy import CaseAccessPolicy
@@ -65,7 +66,7 @@ class CaseLogQueryService:
             org_access=org_access,
             perm_open_access=perm_open_access,
             case=log.case,
-            message="无权限访问此日志",
+            message=_("无权限访问此日志"),
         )
         return cast(CaseLog, log)
 
@@ -73,4 +74,4 @@ class CaseLogQueryService:
         try:
             return CaseLog.objects.select_related("actor", "case").prefetch_related("attachments").get(id=log_id)
         except CaseLog.DoesNotExist:
-            raise NotFoundError("日志 %(log_id)s 不存在" % {"log_id": log_id}) from None
+            raise NotFoundError(_("日志 %(log_id)s 不存在") % {"log_id": log_id}) from None

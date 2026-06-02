@@ -6,6 +6,7 @@ import logging
 from typing import Any, ClassVar
 
 from django import forms
+from django.utils.translation import gettext_lazy as _
 
 from apps.cases.domain.validators import normalize_stages
 from apps.cases.models import Case, CaseParty, CaseStage, SupervisingAuthority
@@ -13,7 +14,7 @@ from apps.cases.models import Case, CaseParty, CaseStage, SupervisingAuthority
 
 class CaseAdminForm(forms.ModelForm[Case]):
     current_stage = forms.ChoiceField(
-        choices=[("", "---------")] + list(CaseStage.choices), required=False, label="当前阶段"
+        choices=[("", "---------")] + list(CaseStage.choices), required=False, label=_("当前阶段")
     )
 
     class Meta:
@@ -23,7 +24,7 @@ class CaseAdminForm(forms.ModelForm[Case]):
             "cause_of_action": forms.TextInput(
                 attrs={
                     "class": "vTextField js-cause-autocomplete",
-                    "placeholder": "请输入案由关键词...",
+                    "placeholder": _("请输入案由关键词..."),
                     "autocomplete": "off",
                 }
             ),
@@ -43,16 +44,16 @@ class CaseAdminForm(forms.ModelForm[Case]):
         except ValueError as e:
             code = str(e)
             if code == "invalid_cur":
-                self.add_error("current_stage", "当前阶段不在可选范围内")
+                self.add_error("current_stage", _("当前阶段不在可选范围内"))
             elif code == "cur_not_in_rep":
-                self.add_error("current_stage", "当前阶段必须在合同的代理阶段范围内")
+                self.add_error("current_stage", _("当前阶段必须在合同的代理阶段范围内"))
             elif code == "stages_not_applicable":
-                self.add_error("current_stage", "该案件类型不支持阶段设置")
+                self.add_error("current_stage", _("该案件类型不支持阶段设置"))
             elif code.startswith("invalid_rep:"):
                 invalid_stages = code.split(":", 1)[1]
-                self.add_error("current_stage", "代理阶段包含无效值: %s" % invalid_stages)
+                self.add_error("current_stage", _("代理阶段包含无效值: %s") % invalid_stages)
             else:
-                self.add_error(None, "案件数据验证失败: %s" % code)
+                self.add_error(None, _("案件数据验证失败: %s") % code)
 
         return cleaned
 
@@ -74,7 +75,7 @@ class CasePartyInlineFormSet(forms.BaseInlineFormSet):
             if client is None:
                 continue
             if client.pk in seen_clients:
-                raise forms.ValidationError("同一案件中不能出现相同的当事人。")
+                raise forms.ValidationError(_("同一案件中不能出现相同的当事人。"))
             seen_clients.add(client.pk)
 
 
@@ -86,7 +87,7 @@ class SupervisingAuthorityInlineForm(forms.ModelForm[SupervisingAuthority]):
             "name": forms.TextInput(
                 attrs={
                     "class": "vTextField js-court-autocomplete",
-                    "placeholder": "请输入法院名称...",
+                    "placeholder": _("请输入法院名称..."),
                     "autocomplete": "off",
                 }
             )

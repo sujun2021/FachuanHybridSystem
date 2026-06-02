@@ -9,6 +9,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from django.utils.translation import gettext_lazy as _
 from ninja import Router, Schema
 
 from apps.core.exceptions import ValidationException
@@ -110,9 +111,12 @@ def get_archive_overrides(request: Any, contract_id: int, template_subtype: str 
     if not template_subtype:
         return {"success": False, "error": "缺少 template_subtype 参数"}
 
-    from apps.contracts.services.archive.override_service import get_override
+    from apps.contracts.models.archive_override import ArchivePlaceholderOverride
 
-    override_obj = get_override(contract_id, template_subtype)
+    override_obj = ArchivePlaceholderOverride.objects.filter(
+        contract_id=contract_id,
+        template_subtype=template_subtype,
+    ).first()
 
     return {
         "success": True,
@@ -141,9 +145,13 @@ def save_archive_overrides(
 
     overrides = payload.overrides if payload else {}
 
-    from apps.contracts.services.archive.override_service import save_override
+    from apps.contracts.models.archive_override import ArchivePlaceholderOverride
 
-    obj, created = save_override(contract_id, template_subtype, overrides)
+    obj, created = ArchivePlaceholderOverride.objects.update_or_create(
+        contract_id=contract_id,
+        template_subtype=template_subtype,
+        defaults={"overrides": overrides},
+    )
 
     logger.info(
         "保存归档占位符覆盖值",
@@ -166,9 +174,12 @@ def delete_archive_overrides(request: Any, contract_id: int, template_subtype: s
     if not template_subtype:
         return {"success": False, "error": "缺少 template_subtype 参数"}
 
-    from apps.contracts.services.archive.override_service import delete_override
+    from apps.contracts.models.archive_override import ArchivePlaceholderOverride
 
-    deleted_count = delete_override(contract_id, template_subtype)
+    deleted_count, _ = ArchivePlaceholderOverride.objects.filter(
+        contract_id=contract_id,
+        template_subtype=template_subtype,
+    ).delete()
 
     return {"success": True, "data": {"deleted": deleted_count > 0}}
 
@@ -198,7 +209,7 @@ def download_contract_document(request: Any, contract_id: int, split_fee: bool =
     if error:
         logger.warning("生成合同文档失败: %s", error, extra={"contract_id": contract_id, "error": error})
         raise ValidationException(
-            message="生成合同文档失败", code="CONTRACT_GENERATION_FAILED", errors={"detail": error}
+            message=_("生成合同文档失败"), code="CONTRACT_GENERATION_FAILED", errors={"detail": error}
         )
 
     if saved_path:
@@ -251,7 +262,7 @@ def download_contract_folder(request: Any, contract_id: int) -> Any:
     if error:
         logger.warning("生成合同文件夹失败: %s", error, extra={"contract_id": contract_id, "error": error})
         raise ValidationException(
-            message="生成合同文件夹失败", code="FOLDER_GENERATION_FAILED", errors={"detail": error}
+            message=_("生成合同文件夹失败"), code="FOLDER_GENERATION_FAILED", errors={"detail": error}
         )
 
     if extract_path:
@@ -303,7 +314,7 @@ def download_supplementary_agreement(request: Any, contract_id: int, agreement_i
             extra={"contract_id": contract_id, "agreement_id": agreement_id, "error": error},
         )
         raise ValidationException(
-            message="生成补充协议失败", code="AGREEMENT_GENERATION_FAILED", errors={"detail": error}
+            message=_("生成补充协议失败"), code="AGREEMENT_GENERATION_FAILED", errors={"detail": error}
         )
 
     if saved_path:

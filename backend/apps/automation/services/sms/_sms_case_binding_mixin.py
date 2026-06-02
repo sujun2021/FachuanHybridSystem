@@ -2,9 +2,12 @@
 
 import logging
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+
+from django.db import transaction
 
 from apps.automation.models import CourtSMS
+from apps.organization.models import Lawyer
 
 if TYPE_CHECKING:
     from apps.core.interfaces import ICaseService, ILawyerService
@@ -23,6 +26,27 @@ class SMSCaseBindingMixin:
     def lawyer_service(self) -> "ILawyerService":
         raise NotImplementedError
 
+    def _submit_task_after_commit(
+        self,
+        task_path: str,
+        *args: Any,
+        task_name: str | None = None,
+        log_message: str | None = None,
+    ) -> None:
+        """延后提交异步任务到事务提交之后。"""
+
+        def _submit() -> None:
+            try:
+                from apps.core.tasking import submit_task
+
+                task_id = submit_task(task_path, *args, task_name=task_name)
+                if log_message:
+                    logger.info(log_message, task_id)
+            except Exception as e:
+                logger.error(f"延后提交任务失败: {task_path}, 错误: {e!s}", exc_info=True)
+
+        transaction.on_commit(_submit)
+
     def _create_case_binding(self, sms: CourtSMS) -> bool:
         """创建案件绑定和日志"""
         if not sms.case:
@@ -38,14 +62,11 @@ class SMSCaseBindingMixin:
             case_log_service = build_sms_case_log_service()
             logger.info(f"获取 case_log_service 成功: SMS ID={sms.id}")
 
-            admin_lawyer_dto = self.lawyer_service.get_admin_lawyer()
-            if not admin_lawyer_dto:
-                logger.error("未找到管理员用户，无法创建案件日志")
+            system_user = self._get_system_user()
+            if not system_user:
+                logger.error("未找到管理员律师或可用的活跃律师，无法创建案件日志")
                 return False
 
-            logger.info(f"获取管理员律师成功: {admin_lawyer_dto.real_name}, ID={admin_lawyer_dto.id}")
-
-            system_user = self.lawyer_service.get_lawyer_model(admin_lawyer_dto.id)
             logger.info(f"获取系统用户成功: SMS ID={sms.id}")
 
             if sms.case_numbers:
@@ -57,6 +78,7 @@ class SMSCaseBindingMixin:
                 case_id=sms.case.id,
                 content=f"收到法院短信：{sms.content}",
                 user=system_user,
+                perm_open_access=True,
             )
 
             sms.case_log = case_log
@@ -106,6 +128,30 @@ class SMSCaseBindingMixin:
 
         except Exception as e:
             logger.warning(f"清理旧案件日志失败，继续流程: SMS ID={sms.id}, 错误: {e!s}")
+
+    def _get_system_user(self) -> Any | None:
+        """获取短信自动处理使用的系统操作人。"""
+        try:
+            admin_lawyer_dto = self.lawyer_service.get_admin_lawyer()
+            if admin_lawyer_dto:
+                user = self.lawyer_service.get_lawyer_model(admin_lawyer_dto.id)
+                if user is not None:
+                    logger.info(
+                        f"获取管理员律师成功: {admin_lawyer_dto.real_name}, ID={admin_lawyer_dto.id}"
+                    )
+                    return user
+
+            fallback = Lawyer.objects.filter(is_active=True).order_by("id").first()
+            if fallback is not None:
+                logger.warning(
+                    f"未找到管理员律师，使用首个活跃律师作为系统操作人: {fallback.real_name} (ID={fallback.id})"
+                )
+                return fallback
+
+            return None
+        except Exception as e:
+            logger.warning(f"获取系统用户失败: {e!s}")
+            return None
 
     def _add_case_numbers_to_case(self, sms: CourtSMS) -> None:
         """将短信中提取的案号写入案件（如果不存在）"""

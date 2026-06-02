@@ -13,6 +13,7 @@ from django.http import HttpRequest
 from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.safestring import SafeString
+from django.utils.translation import gettext_lazy as _
 
 from apps.automation.models import CourtToken
 
@@ -74,14 +75,14 @@ class CourtTokenAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (
-            "基本信息",
+            _("基本信息"),
             {
-                "description": "该模块用于管理人民法院在线服务网（一张网）和保全系统的认证Token。",
+                "description": _("该模块用于管理人民法院在线服务网（一张网）和保全系统的认证Token。"),
                 "fields": ("id", "site_name", "account", "token_type"),
             },
         ),
-        ("Token 信息", {"fields": ("token_full", "status_display", "remaining_time")}),
-        ("时间信息", {"fields": ("expires_at", "created_at", "updated_at")}),
+        (_("Token 信息"), {"fields": ("token_full", "status_display", "remaining_time")}),
+        (_("时间信息"), {"fields": ("expires_at", "created_at", "updated_at")}),
     )
 
     ordering = ["-created_at"]
@@ -89,19 +90,19 @@ class CourtTokenAdmin(admin.ModelAdmin):
 
     list_per_page = 50
 
-    @admin.display(description="站点")
+    @admin.display(description=_("站点"))
     def site_name_display(self, obj: CourtToken) -> str:
         """显示可读站点名称"""
         return SITE_NAME_LABELS.get(obj.site_name, obj.site_name)  # type: ignore[no-any-return]
 
-    @admin.display(description="Token 预览")
+    @admin.display(description=_("Token 预览"))
     def token_preview(self, obj: CourtToken) -> str:
         """Token 预览（只显示前20个字符）"""
         if len(obj.token) > 20:
             return f"{obj.token[:20]}..."
         return obj.token  # type: ignore[no-any-return]
 
-    @admin.display(description="完整 Token")
+    @admin.display(description=_("完整 Token"))
     def token_full(self, obj: CourtToken) -> SafeString:
         """完整的 Token（在详情页显示）"""
         return format_html(
@@ -111,7 +112,7 @@ class CourtTokenAdmin(admin.ModelAdmin):
             obj.token,
         )
 
-    @admin.display(description="状态")
+    @admin.display(description=_("状态"))
     def status_display(self, obj: CourtToken) -> SafeString:
         """显示 Token 状态（有效/过期）"""
         if obj.is_expired():
@@ -119,7 +120,7 @@ class CourtTokenAdmin(admin.ModelAdmin):
         else:
             return format_html('<span style="color: green; font-weight: bold;">{}</span>', "✅ 有效")
 
-    @admin.display(description="剩余时间")
+    @admin.display(description=_("剩余时间"))
     def remaining_time(self, obj: CourtToken) -> SafeString:
         """剩余有效时间"""
         if obj.is_expired():
@@ -164,7 +165,7 @@ class CourtTokenAdmin(admin.ModelAdmin):
         actions["delete_expired_tokens"] = (  # type: ignore[assignment]
             self.delete_expired_tokens,
             "delete_expired_tokens",
-            "删除已过期的一张网/保全Token",
+            _("删除已过期的一张网/保全Token"),
         )
 
         return actions
@@ -177,4 +178,4 @@ class CourtTokenAdmin(admin.ModelAdmin):
         for token in expired_tokens:
             token.delete()
 
-        self.message_user(request, f"成功删除 {count} 个已过期的一张网/保全Token")
+        self.message_user(request, _(f"成功删除 {count} 个已过期的一张网/保全Token"))

@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 from django.core.files.uploadedfile import UploadedFile
 from django.db import transaction
 from django.db.models import Case, F, IntegerField, Max, QuerySet, Value, When
+from django.utils.translation import gettext_lazy as _
 
 from apps.chat_records.models import ChatRecordRecording, ChatRecordScreenshot, ScreenshotSource
 from apps.core.exceptions import NotFoundError, ValidationException
@@ -108,9 +109,9 @@ class ScreenshotService:
         try:
             content = file.read()
             file.seek(0)
-        except (TypeError, ValueError):
+        except Exception:
             logger.exception("截图文件读取失败: %s", getattr(file, "name", "<unknown>"))
-            raise ValidationException("截图文件读取失败，无法进行去重")
+            raise ValidationException(_("截图文件读取失败，无法进行去重"))
         if not content:
             return "", ""
         return hashlib.sha256(content).hexdigest(), selection_service.calc_dhash_hex(content)
@@ -120,7 +121,7 @@ class ScreenshotService:
             return default_ordering
         try:
             capture_time_seconds = float(capture_time_seconds)
-        except (TypeError, ValueError):
+        except Exception:
             logger.exception(
                 "capture_time_seconds 转换失败",
                 extra={"capture_time_seconds": capture_time_seconds, "project_id": project_id},

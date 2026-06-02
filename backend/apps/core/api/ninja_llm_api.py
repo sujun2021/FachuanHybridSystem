@@ -9,6 +9,7 @@ LLM Ninja API
 import logging
 from typing import Any, ClassVar
 
+from django.db import transaction
 from ninja import Router
 from ninja.schema import Schema
 
@@ -23,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 # 创建 LLM 路由
 llm_router = Router(tags=["LLM 服务"], auth=JWTOrSessionAuth())
+
 
 # ============================================================
 # 请求/响应 Schema
@@ -83,10 +85,35 @@ class ModelListResponse(Schema):
 
 
 def sync_prompt_templates_impl(*, overwrite: bool = True) -> dict[str, int]:
-    """将代码内置 Prompt 模板同步到数据库。"""
-    from apps.core.services.prompt_template_service import sync_prompt_templates
+    """
+    将代码内置 Prompt 模板同步到数据库。
 
-    return sync_prompt_templates(overwrite=overwrite)
+    该函数保留模块级命名，兼容旧测试对 `sync_prompt_templates_impl` 的 monkeypatch。
+    """
+    from apps.core.llm.prompts import PromptManager
+    from apps.core.models import PromptTemplate
+
+    templates = list(PromptManager._templates.values())
+    synced_count = 0
+    with transaction.atomic():
+        for item in templates:
+            defaults = {
+                "title": (item.description or item.name)[:200],
+                "template": item.template,
+                "description": item.description,
+                "variables": item.variables,
+                "category": (item.name.split("_", maxsplit=1)[0] or "general"),
+                "is_active": True,
+                "version": "1.0",
+            }
+            if overwrite:
+                PromptTemplate.objects.update_or_create(name=item.name, defaults=defaults)
+                synced_count += 1
+                continue
+            _, created = PromptTemplate.objects.get_or_create(name=item.name, defaults=defaults)
+            if created:
+                synced_count += 1
+    return {"synced_count": synced_count}
 
 
 # ============================================================
@@ -239,18 +266,3 @@ def list_available_models(request: Any) -> Any:
         )
 
     return ModelListResponse(models=[ModelInfo(id=m["id"], name=m["name"], backend=m["backend"]) for m in models])
-
-
-@llm_router.post("/test-connection")
-def test_model_connection(request: Any, model_id: str = "") -> dict[str, Any]:
-    """测试指定模型的连通性（仅管理员可用）"""
-    from apps.core.llm.model_list_service import ModelListService
-
-    is_admin = request.user and (request.user.is_staff or request.user.is_superuser)
-    if not is_admin:
-        raise PermissionDenied(message="需要管理员权限", code="PERMISSION_DENIED")
-
-    if not model_id.strip():
-        return {"ok": False, "error": "请指定模型 ID"}
-
-    return ModelListService.test_model_connection(model_id.strip())

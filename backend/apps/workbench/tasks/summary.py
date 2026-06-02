@@ -18,6 +18,7 @@ from .parsing import parse_llm_result
 
 logger = logging.getLogger(__name__)
 
+
 # ─── 汇总报告 ────────────────────────────────────────────────────────────────
 
 

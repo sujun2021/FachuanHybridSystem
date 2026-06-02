@@ -10,6 +10,7 @@ from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.utils import timezone
 from ninja import Router, UploadedFile
 
+from apps.oa_filing.models import CaseImportSession
 from apps.oa_filing.schemas.case_import_schemas import (
     CaseImportResponse,
     CaseImportResult,
@@ -34,7 +35,9 @@ def trigger_case_import(request: HttpRequest) -> Any:
     """
     import json
 
-    from apps.oa_filing.services.import_session_service import get_jtn_credential
+    from django.db.models import Q
+
+    from apps.organization.models import AccountCredential
 
     if not request.user.is_authenticated:
         return {"error": "未登录"}
@@ -44,7 +47,10 @@ def trigger_case_import(request: HttpRequest) -> Any:
         return {"error": "无效用户"}
 
     # 查找用户的 jtn.com 凭证
-    credential = get_jtn_credential(lawyer_id)
+    credential = AccountCredential.objects.filter(
+        Q(account__icontains="jtn.com") | Q(url__icontains="jtn.com"),
+        lawyer_id=lawyer_id,
+    ).first()
 
     if not credential:
         return {"error": "未找到金诚同达OA账号凭证"}
@@ -71,10 +77,15 @@ def trigger_case_import(request: HttpRequest) -> Any:
             f.write(chunk)
 
     # 创建导入会话
-    from apps.oa_filing.services.import_session_service import create_case_session, get_lawyer
+    from apps.organization.models import Lawyer
 
-    lawyer = get_lawyer(lawyer_id)
-    session = create_case_session(lawyer=lawyer, credential=credential, uploaded_filename=file.name or "")
+    lawyer = Lawyer.objects.get(pk=lawyer_id)
+    session = CaseImportSession.objects.create(
+        lawyer=lawyer,
+        credential=credential,
+        status="pending",
+        uploaded_filename=file.name or "",
+    )
 
     logger.info("创建案件导入会话: session_id=%d filename=%s", session.id, file.name)
 
@@ -95,14 +106,7 @@ def trigger_case_import(request: HttpRequest) -> Any:
 @router.get("/case-import/{session_id}", response=CaseImportSessionOut)
 def get_case_import_session(request: HttpRequest, session_id: int) -> Any:
     """查询案件导入会话状态。"""
-    from apps.oa_filing.services.import_session_service import get_case_session_or_none
-
-    session = get_case_session_or_none(session_id)
-    if session is None:
-        from django.http import Http404
-
-        raise Http404("会话不存在")
-    return session
+    return CaseImportSession.objects.get(pk=session_id)
 
 
 @router.post("/case-import/{session_id}/execute")
@@ -121,10 +125,9 @@ def execute_case_import(request: HttpRequest, session_id: int) -> HttpResponse:
         return JsonResponse({"error": "无效用户"}, status=400)
 
     # 获取会话
-    from apps.oa_filing.services.import_session_service import get_case_session_or_none
-
-    session = get_case_session_or_none(session_id)
-    if session is None:
+    try:
+        session = CaseImportSession.objects.get(pk=session_id)
+    except CaseImportSession.DoesNotExist:
         return JsonResponse({"error": "会话不存在"}, status=404)
 
     # 解析请求体
@@ -132,7 +135,7 @@ def execute_case_import(request: HttpRequest, session_id: int) -> HttpResponse:
         body = json.loads(request.body)
         case_nos = body.get("case_nos", [])
         matched_case_nos = body.get("matched_case_nos", [])
-    except json.JSONDecodeError:
+    except Exception:
         return JsonResponse({"error": "无效的请求数据"}, status=400)
 
     if not case_nos:
@@ -163,10 +166,9 @@ def execute_case_import(request: HttpRequest, session_id: int) -> HttpResponse:
 @router.get("/case-import/{session_id}/preview")
 def get_case_import_preview(request: HttpRequest, session_id: int) -> JsonResponse:
     """获取案件导入预览结果。"""
-    from apps.oa_filing.services.import_session_service import get_case_session_or_none
-
-    session = get_case_session_or_none(session_id)
-    if session is None:
+    try:
+        session = CaseImportSession.objects.get(pk=session_id)
+    except CaseImportSession.DoesNotExist:
         return JsonResponse({"error": "会话不存在"}, status=404)
 
     result_data = session.result_data or {}
@@ -205,18 +207,19 @@ def batch_create_cases(request: HttpRequest, session_id: int) -> Any:
     """
     import json
 
-    from apps.oa_filing.services.import_session_service import get_case_session_or_none
+    from apps.oa_filing.models import CaseImportSession
 
     # 获取会话
-    session = get_case_session_or_none(session_id)
-    if session is None:
+    try:
+        session = CaseImportSession.objects.get(pk=session_id)
+    except CaseImportSession.DoesNotExist:
         return {"error": "会话不存在"}
 
     # 解析请求体
     try:
         body = json.loads(request.body)
         cases = body.get("cases", [])
-    except json.JSONDecodeError:
+    except Exception:
         return {"error": "无效的请求数据"}
 
     from apps.oa_filing.services.case_import_service import CaseImportService

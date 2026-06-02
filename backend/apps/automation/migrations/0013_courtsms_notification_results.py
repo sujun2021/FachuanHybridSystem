@@ -2,6 +2,7 @@
 
 from django.db import migrations, models
 
+
 def migrate_feishu_data_to_notification_results(apps, schema_editor):
     """将旧的 feishu_sent_at/feishu_error 数据迁移到 notification_results"""
     CourtSMS = apps.get_model("automation", "CourtSMS")
@@ -39,12 +40,14 @@ def migrate_feishu_data_to_notification_results(apps, schema_editor):
         }
         sms.save(update_fields=["notification_results"])
 
+
 def reverse_migration(apps, schema_editor):
     """反向迁移：清空 notification_results"""
     CourtSMS = apps.get_model("automation", "CourtSMS")
     CourtSMS.objects.filter(notification_results__isnull=False).update(
         notification_results=None
     )
+
 
 class Migration(migrations.Migration):
 

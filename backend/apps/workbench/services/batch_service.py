@@ -13,6 +13,7 @@ from uuid import UUID
 
 from django.core.files.base import ContentFile
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from apps.core.exceptions import NotFoundError, ValidationException
 from apps.core.security.permissions import AccessContext, PermissionMixin
@@ -105,12 +106,12 @@ class BatchAnalysisService(PermissionMixin):
     def validate_files(self, files: list[Any]) -> None:
         """校验上传文件"""
         if not files:
-            raise ValidationException("请上传至少一个文件")
+            raise ValidationException(_("请上传至少一个文件"))
         for f in files:
             ext = f".{f.name.rsplit('.', 1)[-1].lower()}" if f.name and "." in f.name else ""
             if ext not in self.ALLOWED_EXTENSIONS:
                 raise ValidationException(
-                    "不支持的文件格式: %(name)s" % {"name": f.name},
+                    _("不支持的文件格式: %(name)s") % {"name": f.name},
                     errors={"file": "支持 .doc、.docx、.xls、.xlsx"},
                 )
 
@@ -119,7 +120,7 @@ class BatchAnalysisService(PermissionMixin):
         try:
             return BatchJob.objects.get(id=job_id)
         except BatchJob.DoesNotExist:
-            raise NotFoundError("任务不存在") from None
+            raise NotFoundError(_("任务不存在")) from None
 
     def create_job(
         self,
@@ -385,19 +386,6 @@ class BatchAnalysisService(PermissionMixin):
             "items": [self._job_to_dict(j) for j in items],
             "count": total,
         }
-
-    def get_completed_items(self, job_id: UUID) -> Any:
-        """获取指定任务的已完成子项。"""
-        return BatchJobItem.objects.filter(job_id=job_id, status=BatchJobStatus.COMPLETED)
-
-    def get_active_items(self, job_id: UUID) -> Any:
-        """获取指定任务的运行中和已完成/失败子项。"""
-        from django.db.models import Q
-
-        return BatchJobItem.objects.filter(
-            Q(job_id=job_id, status=BatchJobStatus.RUNNING)
-            | Q(job_id=job_id, status__in=(BatchJobStatus.COMPLETED, BatchJobStatus.FAILED)),
-        )
 
     @staticmethod
     def _job_to_dict(job: BatchJob) -> dict[str, Any]:

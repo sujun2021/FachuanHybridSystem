@@ -51,9 +51,9 @@ class ScheduleOut(Schema):
 @router.get("/queued", response=list[QueuedTaskOut])
 def list_queued(request: HttpRequest) -> Any:
     """获取排队中的任务"""
-    from apps.core.tasking.task_queue_query import list_queued as _list_queued
+    from django_q.models import OrmQ
 
-    items = _list_queued()
+    items = OrmQ.objects.all().order_by("-lock")[:200]
     return [
         QueuedTaskOut(
             id=str(item.key),
@@ -69,9 +69,9 @@ def list_queued(request: HttpRequest) -> Any:
 @router.get("/completed", response=list[TaskOut])
 def list_completed(request: HttpRequest) -> Any:
     """获取已完成的成功任务"""
-    from apps.core.tasking.task_queue_query import list_completed as _list_completed
+    from django_q.models import Task
 
-    tasks = _list_completed()
+    tasks = Task.objects.filter(success=True).order_by("-stopped")[:200]
     return [
         TaskOut(
             id=str(t.id),
@@ -91,9 +91,9 @@ def list_completed(request: HttpRequest) -> Any:
 @router.get("/failed", response=list[TaskOut])
 def list_failed(request: HttpRequest) -> Any:
     """获取失败的任务"""
-    from apps.core.tasking.task_queue_query import list_failed as _list_failed
+    from django_q.models import Task
 
-    tasks = _list_failed()
+    tasks = Task.objects.filter(success=False).order_by("-stopped")[:200]
     return [
         TaskOut(
             id=str(t.id),
@@ -113,24 +113,34 @@ def list_failed(request: HttpRequest) -> Any:
 @router.get("/scheduled", response=list[ScheduleOut])
 def list_scheduled(request: HttpRequest) -> Any:
     """获取定时调度任务"""
-    from apps.core.tasking.task_queue_query import SCHEDULE_TYPE_LABELS, get_last_run_time
-    from apps.core.tasking.task_queue_query import list_scheduled as _list_scheduled
+    from django_q.models import Schedule, Success
 
-    schedules = _list_scheduled()
+    schedules = Schedule.objects.all().order_by("next_run")[:200]
+    type_labels = {
+        Schedule.ONCE: "单次",
+        Schedule.MINUTES: "分钟间隔",
+        Schedule.HOURLY: "小时",
+        Schedule.DAILY: "每天",
+        Schedule.WEEKLY: "每周",
+        Schedule.MONTHLY: "每月",
+        Schedule.QUARTERLY: "每季度",
+        Schedule.YEARLY: "每年",
+    }
 
     # Pre-fetch last run times per schedule name
     names = [s.name for s in schedules if s.name]
     last_runs: dict[str, datetime | None] = {}
     if names:
         for name in names:
-            last_runs[name] = get_last_run_time(name)
+            task = Success.objects.filter(name=name).order_by("-stopped").first()
+            last_runs[name] = task.stopped if task else None
 
     return [
         ScheduleOut(
             id=s.id,
             name=s.name or "",
             func=s.func,
-            schedule_type=SCHEDULE_TYPE_LABELS.get(s.schedule_type, str(s.schedule_type)),
+            schedule_type=type_labels.get(s.schedule_type, str(s.schedule_type)),
             repeats=s.repeats,
             next_run=_fmt_dt(s.next_run),
             last_run=_fmt_dt(last_runs.get(s.name)),
@@ -142,27 +152,30 @@ def list_scheduled(request: HttpRequest) -> Any:
 @router.delete("/tasks/{task_id}")
 def delete_task(request: HttpRequest, task_id: str) -> dict[str, Any]:
     """删除已完成或失败的任务"""
-    from apps.core.tasking.task_queue_query import delete_task as _delete_task
+    from django_q.models import Task
 
-    deleted = _delete_task(task_id)
+    deleted, _ = Task.objects.filter(id=task_id).delete()
     return {"deleted": deleted}
 
 
 @router.delete("/schedules/{schedule_id}")
 def delete_schedule(request: HttpRequest, schedule_id: int) -> dict[str, Any]:
     """删除定时调度"""
-    from apps.core.tasking.task_queue_query import delete_schedule as _delete_schedule
+    from django_q.models import Schedule
 
-    deleted = _delete_schedule(schedule_id)
+    deleted, _ = Schedule.objects.filter(id=schedule_id).delete()
     return {"deleted": deleted}
 
 
 @router.post("/tasks/{task_id}/resubmit")
 def resubmit_task(request: HttpRequest, task_id: str) -> dict[str, Any]:
     """重新提交失败的任务"""
-    from apps.core.tasking.task_queue_query import resubmit_task as _resubmit_task
+    from django_q.models import Task
+    from django_q.tasks import async_task
 
-    new_id = _resubmit_task(task_id)
-    if new_id is None:
+    task = Task.objects.filter(id=task_id).first()
+    if not task:
         return {"error": "任务不存在"}
-    return {"new_task_id": new_id}
+
+    new_id = async_task(task.func, *task.args or [], **task.kwargs or {}, group=task.group, name=task.name)
+    return {"new_task_id": str(new_id)}

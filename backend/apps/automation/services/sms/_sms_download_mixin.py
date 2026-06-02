@@ -268,7 +268,7 @@ class SMSDownloadMixin:
     def _should_wait_for_document_download(self, sms: CourtSMS) -> bool:
         """检查是否需要等待文书下载完成后再进行匹配"""
         try:
-            if sms.party_names or not sms.download_links or not sms.scraper_task:
+            if not sms.download_links or not sms.scraper_task:
                 return False
 
             fresh_task = self._refresh_scraper_task(sms)
@@ -392,23 +392,24 @@ class SMSDownloadMixin:
         elif sms.status == CourtSMSStatus.MATCHING:
             logger.info("✅ 下载任务完成，继续匹配流程: SMS ID=%s, Task ID=%s", sms.id, scraper_task.id)
 
-        task_id = submit_task(
-            "apps.automation.services.sms.court_sms_service.process_sms_async",
+        # 下载成功后直接进入“匹配”阶段，避免再走通用入口时被旧状态误导为仍在下载中。
+        self._submit_task_after_commit(
+            "apps.automation.services.sms.court_sms_service.process_sms_from_matching",
             sms.id,
             task_name=f"court_sms_continue_{sms.id}",
+            log_message="提交后续处理任务: SMS ID=%s, Queue Task ID=%s",
         )
-        logger.info("提交后续处理任务: SMS ID=%s, Queue Task ID=%s", sms.id, task_id)
 
     def _handle_sms_download_failed(self, sms: CourtSMS, scraper_task: ScraperTask) -> bool:
         """处理下载失败的 SMS，返回是否需要 continue（跳过重试逻辑）"""
         if sms.status == CourtSMSStatus.MATCHING:
             logger.info("下载失败但继续匹配流程: SMS ID=%s", sms.id)
-            task_id = submit_task(
+            self._submit_task_after_commit(
                 "apps.automation.services.sms.court_sms_service.process_sms_async",
                 sms.id,
                 task_name=f"court_sms_continue_after_download_failed_{sms.id}",
+                log_message="下载失败后继续处理任务: SMS ID=%s, Queue Task ID=%s",
             )
-            logger.info("下载失败后继续处理任务: SMS ID=%s, Queue Task ID=%s", sms.id, task_id)
             return True
 
         sms.status = CourtSMSStatus.DOWNLOAD_FAILED

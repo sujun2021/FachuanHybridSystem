@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 from ninja import Router
 
 from apps.core.exceptions import NotFoundError, ValidationException
@@ -22,21 +23,24 @@ router = Router(auth=JWTOrSessionAuth())
 @rate_limit_from_settings("EXPORT", by_user=True)
 def download_case_template(request: Any, case_id: int, template_id: int) -> Any:
     """渲染案件文件模板并下载"""
-    from apps.documents.services.case_contract_query import get_active_template_or_none, get_case_or_none
+    from apps.cases.models import Case
+    from apps.documents.models import DocumentTemplate
     from apps.documents.services.generation.pipeline import DocxRenderer
     from apps.documents.services.placeholders import EnhancedContextBuilder
 
-    case = get_case_or_none(case_id)
+    case = Case.objects.filter(pk=case_id).first()
     if not case:
-        raise NotFoundError(message="案件不存在", code="CASE_NOT_FOUND", errors={"case_id": str(case_id)})
+        raise NotFoundError(message=_("案件不存在"), code="CASE_NOT_FOUND", errors={"case_id": str(case_id)})
 
-    template = get_active_template_or_none(template_id)
+    template = DocumentTemplate.objects.filter(pk=template_id, is_active=True).first()
     if not template:
-        raise NotFoundError(message="模板不存在", code="TEMPLATE_NOT_FOUND", errors={"template_id": str(template_id)})
+        raise NotFoundError(
+            message=_("模板不存在"), code="TEMPLATE_NOT_FOUND", errors={"template_id": str(template_id)}
+        )
 
     file_path = template.get_file_location()
     if not file_path:
-        raise ValidationException(message="模板文件路径为空", code="TEMPLATE_FILE_EMPTY", errors={})
+        raise ValidationException(message=_("模板文件路径为空"), code="TEMPLATE_FILE_EMPTY", errors={})
 
     context = EnhancedContextBuilder().build_context({"case": case, "case_id": case.id})
     content = DocxRenderer().render(file_path, context)

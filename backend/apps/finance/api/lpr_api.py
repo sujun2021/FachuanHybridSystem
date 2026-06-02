@@ -48,11 +48,17 @@ def list_lpr_rates(
     Returns:
         LPR利率列表
     """
-    from apps.finance.services.lpr.rate_service import LPRRateService
+    from apps.finance.models.lpr_rate import LPRRate
 
-    rate_service = LPRRateService()
-    items = rate_service.get_rate_history(start_date=start_date, end_date=end_date, limit=limit)
-    total = len(items)
+    queryset = LPRRate.objects.all()
+
+    if start_date:
+        queryset = queryset.filter(effective_date__gte=start_date)
+    if end_date:
+        queryset = queryset.filter(effective_date__lte=end_date)
+
+    total = queryset.count()
+    items = list(queryset[:limit])
 
     return LPRRateListResponse(
         items=[
@@ -82,11 +88,10 @@ def get_latest_lpr_rate(request: HttpRequest) -> LPRRateSchema:
     Returns:
         最新LPR利率
     """
-    from apps.finance.services.lpr.rate_service import LPRRateService
+    from apps.finance.models.lpr_rate import LPRRate
 
-    try:
-        rate = LPRRateService().get_latest_rate()
-    except Exception:
+    rate = LPRRate.objects.first()
+    if not rate:
         from apps.core.exceptions import NotFoundException
 
         raise NotFoundException(message="暂无LPR利率数据", code="LPR_RATE_NOT_FOUND")

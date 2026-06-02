@@ -64,7 +64,8 @@ class WindowsOutlookProvider:
 
         return events
 
-    def _convert_event(self, item: Any) -> CalendarEvent | None:
+    @staticmethod
+    def _convert_event(item: Any) -> CalendarEvent | None:
         """Convert an Outlook COM item to CalendarEvent."""
         try:
             title = getattr(item, "Subject", "") or ""

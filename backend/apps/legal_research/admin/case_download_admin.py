@@ -20,6 +20,7 @@ from apps.legal_research.services.task.case_download_service import CaseDownload
 
 # mypy: ignore-errors
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -296,7 +297,7 @@ class CaseDownloadTaskAdmin(admin.ModelAdmin):
             # 清理临时 zip 文件
             try:
                 Path(zip_path).unlink(missing_ok=True)
-            except (OSError, ValueError):
+            except Exception:
                 pass
             return
 
@@ -327,7 +328,7 @@ class CaseDownloadTaskAdmin(admin.ModelAdmin):
         )
         try:
             Path(zip_path).unlink(missing_ok=True)
-        except (OSError, ValueError):
+        except Exception:
             pass
         return
 
@@ -410,7 +411,7 @@ class CaseDownloadTaskAdmin(admin.ModelAdmin):
         )
         try:
             Path(zip_path).unlink(missing_ok=True)
-        except (OSError, ValueError):
+        except Exception:
             pass
         return response
 

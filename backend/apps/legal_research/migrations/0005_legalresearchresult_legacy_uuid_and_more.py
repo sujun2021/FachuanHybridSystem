@@ -4,6 +4,7 @@ import uuid
 import django.db.models.deletion
 from django.db import migrations, models
 
+
 def _prepare_numeric_ids(apps, schema_editor) -> None:
     task_table_name = "legal_research_legalresearchtask"
     result_table_name = "legal_research_legalresearchresult"
@@ -141,6 +142,7 @@ def _prepare_numeric_ids(apps, schema_editor) -> None:
 
         cursor.execute(f"DROP TABLE {task_map_table}")
         cursor.execute(f"DROP TABLE {result_map_table}")
+
 
 class Migration(migrations.Migration):
     dependencies = [

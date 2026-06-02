@@ -1,6 +1,6 @@
 """内容运营管道执行器。
 
-流程：检索/直投 → LLM 生成文章/讨论稿 → TTS 合成音频 → 保存结果
+流程：检索/直投 -> LLM 生成文章/讨论稿 -> TTS 合成音频 -> 保存结果
 """
 
 from __future__ import annotations
@@ -52,7 +52,6 @@ class ContentOpsExecutor:
 
             output_mode = task.output_mode or ContentTaskOutputMode.NARRATION
 
-            # Phase 2: Content generation
             if output_mode in (ContentTaskOutputMode.NARRATION, ContentTaskOutputMode.BOTH):
                 self._run_llm_generation(task)
             if output_mode in (ContentTaskOutputMode.DISCUSSION, ContentTaskOutputMode.BOTH):
@@ -60,7 +59,6 @@ class ContentOpsExecutor:
 
             self._check_cancelled(task)
 
-            # Phase 3: TTS synthesis
             if output_mode in (ContentTaskOutputMode.NARRATION, ContentTaskOutputMode.BOTH):
                 self._run_tts_synthesis(task)
             if output_mode in (ContentTaskOutputMode.DISCUSSION, ContentTaskOutputMode.BOTH):
@@ -69,13 +67,10 @@ class ContentOpsExecutor:
             self._check_cancelled(task)
             self._mark_completed(task)
             return {"task_id": str(task.pk), "status": "completed"}
-
-        except Exception as e:
+        except Exception as exc:
             logger.exception("Content ops task failed: %s", task_id)
-            self._mark_failed(task, str(e))
-            return {"task_id": str(task.pk), "status": "failed", "error": str(e)}
-
-    # -- Task lifecycle --
+            self._mark_failed(task, str(exc))
+            return {"task_id": str(task.pk), "status": "failed", "error": str(exc)}
 
     @staticmethod
     def _acquire_task(task_id: str) -> tuple[ContentTask | None, dict[str, Any] | None]:
@@ -113,7 +108,6 @@ class ContentOpsExecutor:
 
     @staticmethod
     def _check_cancelled(task: ContentTask) -> None:
-        """Check if task was cancelled, raise if so."""
         task.refresh_from_db(fields=["status"])
         if task.status == ContentTaskStatus.CANCELLED:
             raise RuntimeError("任务已被取消")
@@ -131,8 +125,6 @@ class ContentOpsExecutor:
         task.progress = progress
         task.message = message
         task.save(update_fields=["progress", "message", "updated_at"])
-
-    # -- Pipeline phases --
 
     def _run_search_mode(self, task: ContentTask) -> None:
         """检索模式：通过威科先行搜索裁判文书，并智能筛选最有传播价值的案例。"""
@@ -159,7 +151,6 @@ class ContentOpsExecutor:
         if not items:
             raise RuntimeError(f"未找到与 '{task.keyword}' 相关的裁判文书")
 
-        # 智能筛选：使用LLM选择最有传播价值的案例
         if len(items) > 1:
             self._update_progress(task, 30, "正在智能筛选最有价值的案例...")
             selected_item = self._select_best_case(items, task.keyword)
@@ -191,19 +182,17 @@ class ContentOpsExecutor:
             raise RuntimeError("未能从裁判文书中提取案件事实")
 
     def _select_best_case(self, items: list[Any], keyword: str) -> Any:
-        """使用LLM从多个案例中选择最有传播价值的一个。"""
+        """使用 LLM 从多个案例中选择最有传播价值的一个。"""
+        from apps.content_ops.constants import CONTENT_LLM_MODEL
         from apps.core.interfaces import ServiceLocator
         from apps.core.llm.config import LLMConfig
         from apps.core.llm.structured_output import clean_text, parse_json_content
 
-        # 构建案例摘要列表
         case_summaries = []
-        for i, item in enumerate(items):
-            title = getattr(item, "title", "") or f"案例{i + 1}"
+        for idx, item in enumerate(items):
+            title = getattr(item, "title", "") or f"案例{idx + 1}"
             court = getattr(item, "court", "") or "未知法院"
-            case_summaries.append(f"[{i}] {title} - {court}")
-
-        cases_text = "\n".join(case_summaries)
+            case_summaries.append(f"[{idx}] {title} - {court}")
 
         system_prompt = """你是一位资深的法律内容运营专家。请从以下案例中选择最有传播价值的1个。
 
@@ -213,50 +202,39 @@ class ContentOpsExecutor:
 3. 教育性：是否能给读者带来实用的法律知识
 4. 时效性：是否与当前社会热点相关
 
-请严格按照JSON格式输出：{"selected_index": 0, "reason": "选择理由"}"""
+请严格按照 JSON 格式输出：{"selected_index": 0, "reason": "选择理由"}"""
 
-        user_msg = f"检索关键词：{keyword}\n\n找到的案例：\n{cases_text}\n\n请选择最有传播价值的1个案例。"
+        user_msg = f"检索关键词：{keyword}\n\n找到的案例：\n" + "\n".join(case_summaries)
 
         try:
-            from apps.content_ops.constants import CONTENT_LLM_MODEL
-
             llm_service = ServiceLocator.get_llm_service()
-            model_name = CONTENT_LLM_MODEL
-            backend = LLMConfig.resolve_backend_for_model(model_name)
-
+            backend = LLMConfig.resolve_backend_for_model(CONTENT_LLM_MODEL)
             response = llm_service.chat(
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_msg},
                 ],
-                model=model_name,
+                model=CONTENT_LLM_MODEL,
                 backend=backend,
                 temperature=0.3,
             )
-
-            content = clean_text(response.content)
-            parsed = parse_json_content(content)
-
+            parsed = parse_json_content(clean_text(response.content))
             if isinstance(parsed, dict) and "selected_index" in parsed:
                 index = int(parsed["selected_index"])
                 if 0 <= index < len(items):
-                    reason = parsed.get("reason", "")
-                    logger.info("LLM selected case %d: %s", index, reason)
+                    logger.info("LLM selected case %d: %s", index, parsed.get("reason", ""))
                     return items[index]
-
-        except (TypeError, ValueError) as e:
-            logger.warning("Failed to select best case via LLM: %s, using first result", e)
+        except Exception as exc:
+            logger.warning("Failed to select best case via LLM: %s, using first result", exc)
 
         return items[0]
 
     def _run_direct_mode(self, task: ContentTask) -> None:
-        """直投模式：直接使用用户提供的内容。"""
         self._update_progress(task, 10, "正在处理直投内容...")
         task.source_facts = task.direct_content
         task.save(update_fields=["source_facts", "updated_at"])
 
     def _run_llm_generation(self, task: ContentTask) -> None:
-        """Phase 3: LLM 生成叙事文章。"""
         self._update_progress(task, 50, "正在生成叙事文章...")
 
         chain = ContentGenerationChain()
@@ -274,7 +252,6 @@ class ContentOpsExecutor:
         logger.info("Article created: id=%s, task=%s", article.pk, task.pk)
 
     def _run_tts_synthesis(self, task: ContentTask) -> None:
-        """Phase 4: TTS 合成音频。"""
         self._update_progress(task, 70, "正在合成音频...")
 
         article = GeneratedArticle.objects.filter(task=task).order_by("-created_at").first()
@@ -301,7 +278,6 @@ class ContentOpsExecutor:
         logger.info("Episode created: id=%s, task=%s, size=%d", episode.pk, task.pk, len(audio_bytes))
 
     def _run_discussion_generation(self, task: ContentTask) -> None:
-        """LLM 生成多人讨论脚本。"""
         self._update_progress(task, 50, "正在生成讨论脚本...")
 
         speakers = task.discussion_speakers or []
@@ -328,23 +304,20 @@ class ContentOpsExecutor:
             token_usage=result.token_usage,
         )
 
-        # 创建 speaker -> style_prompt 映射
-        style_map = {s["name"]: s.get("style_prompt", "") for s in speakers}
-
-        for i, turn in enumerate(result.turns):
+        style_map = {speaker["name"]: speaker.get("style_prompt", "") for speaker in speakers}
+        for idx, turn in enumerate(result.turns):
             DiscussionTurn.objects.create(
                 script=script,
                 speaker_name=turn["speaker"],
                 speaker_style_prompt=style_map.get(turn["speaker"], ""),
                 text=turn["text"],
-                order=i,
+                order=idx,
             )
 
         logger.info("Discussion script created: id=%s, task=%s, turns=%d", script.pk, task.pk, len(result.turns))
 
     def _run_discussion_tts(self, task: ContentTask) -> None:
-        """多声音 TTS 合成讨论音频。"""
-        self._update_progress(task, 70, "正在合成多人对话音频...")
+        self._update_progress(task, 70, "正在合成人物对话音频...")
 
         script = DiscussionScript.objects.filter(task=task).order_by("-created_at").first()
         if not script:
@@ -355,7 +328,8 @@ class ContentOpsExecutor:
             raise RuntimeError("讨论脚本没有对话轮次")
 
         turn_dicts = [
-            {"text": t.text, "style_prompt": t.speaker_style_prompt, "speaker": t.speaker_name} for t in turns
+            {"text": turn.text, "style_prompt": turn.speaker_style_prompt, "speaker": turn.speaker_name}
+            for turn in turns
         ]
 
         tts_service = TTSService()

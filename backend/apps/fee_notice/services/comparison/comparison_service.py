@@ -10,6 +10,7 @@ from __future__ import annotations
 Requirements: 8.1-8.8
 """
 
+
 import logging
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, cast

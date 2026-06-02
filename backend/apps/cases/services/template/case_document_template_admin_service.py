@@ -12,6 +12,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
+from django.utils.translation import gettext_lazy as _
+
 from .repo import CaseTemplateBindingRepo
 from .wiring import get_document_service
 
@@ -219,7 +221,7 @@ class CaseDocumentTemplateAdminService:
         case = self.repo.get_case_optional(case_id)
         if not case:
             raise NotFoundError(
-                message="案件不存在", code="CASE_NOT_FOUND", errors={"case_id": f"ID 为 {case_id} 的案件不存在"}
+                message=_("案件不存在"), code="CASE_NOT_FOUND", errors={"case_id": f"ID 为 {case_id} 的案件不存在"}
             )
 
         # 获取案件的诉讼地位列表(我方当事人)

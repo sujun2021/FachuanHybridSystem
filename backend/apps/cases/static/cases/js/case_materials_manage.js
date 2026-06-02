@@ -844,7 +844,9 @@
 
         buildBindPayload() {
           const items = [];
+          const selected = new Set((this.selectedIds || []).map(String));
           for (const row of this.rows) {
+            if (!selected.has(String(row.attachmentId))) continue;
             if (!row.category) continue;
             if (!row.typeSelect) {
               throw new Error(`文件「${row.fileName}」未选择类型`);

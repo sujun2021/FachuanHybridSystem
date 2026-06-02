@@ -10,6 +10,8 @@ from importlib import import_module
 from pathlib import Path
 from typing import Any
 
+from django.utils.translation import gettext_lazy as _
+
 from apps.core.exceptions import ValidationException
 from apps.documents.storage import get_docx_templates_root
 
@@ -61,7 +63,7 @@ class ReconciliationGeneratorService:
 
         if not template_path.exists():
             raise ValidationException(
-                message="模板文件不存在：%(path)s" % {"path": str(template_path)},
+                message=_("模板文件不存在：%(path)s") % {"path": str(template_path)},
                 code="TEMPLATE_NOT_FOUND",
             )
 
@@ -78,7 +80,7 @@ class ReconciliationGeneratorService:
                 record=record,
                 action_type="written_collection",
                 action_date=date.today(),
-                description="生成对账函",
+                description=str(_("生成对账函")),
                 document_type="对账函",
                 document_filename=filename,
             )
@@ -92,7 +94,8 @@ class ReconciliationGeneratorService:
         )
         return GeneratedDocument(filename=filename, content=content)
 
-    def _build_docx_renderer(self) -> Any:
+    @staticmethod
+    def _build_docx_renderer() -> Any:
         module = import_module("apps.documents.services.generation.pipeline")
         renderer_cls = module.DocxRenderer
         return renderer_cls()

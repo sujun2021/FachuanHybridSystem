@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from typing import Any, cast
 
+from django.utils.translation import gettext_lazy as _
 from ninja import File, Router, Status
 from ninja.files import UploadedFile
 from pydantic import BaseModel
@@ -79,7 +80,7 @@ def parse_client_text(request: Any, payload: ParseTextRequest) -> dict[str, Any]
         if result.get("name"):
             return {"success": True, "client": result, "parse_method": "regex"}
         else:
-            return {"success": False, "error": "未能解析出客户信息"}
+            return {"success": False, "error": _("未能解析出客户信息")}
 
 
 @router.get("/parse-text")
@@ -98,15 +99,20 @@ def validate_id_card(request: Any, payload: IdCardValidateRequest) -> IdCardVali
 @router.get("/clients/check-oa-credential", response=OACredentialCheckOut)
 def check_oa_credential(request: Any) -> OACredentialCheckOut:
     """检查当前用户是否有金诚同达OA凭证。"""
-    from apps.organization.services.credential.account_credential_service import AccountCredentialService
+    from django.db.models import Q
+
+    from apps.organization.models import AccountCredential
 
     lawyer_id = getattr(request.user, "id", None)
     if lawyer_id is None:
         return OACredentialCheckOut(has_credential=False)
 
-    has_credential = AccountCredentialService().has_jtn_credential(lawyer_id)
+    credential = AccountCredential.objects.filter(
+        Q(account__icontains="jtn.com") | Q(url__icontains="jtn.com"),
+        lawyer_id=lawyer_id,
+    ).exists()
 
-    return OACredentialCheckOut(has_credential=has_credential)
+    return OACredentialCheckOut(has_credential=credential)
 
 
 @router.get("/clients/{client_id}", response=ClientOut)
@@ -135,9 +141,9 @@ def create_client_with_docs(
     """创建客户并上传文档"""
     if doc_types and files and len(doc_types) != len(files):
         raise ValidationException(
-            message="证件类型数量与文件数量不一致",
+            message=_("证件类型数量与文件数量不一致"),
             code="DOC_FILES_MISMATCH",
-            errors={"doc_types": "doc_types 与 files 长度必须一致"},
+            errors={"doc_types": _("doc_types 与 files 长度必须一致")},
         )
 
     mutation_service = _get_mutation_service()
@@ -172,5 +178,36 @@ def delete_client(request: Any, client_id: int) -> Any:
 @router.get("/clients/{client_id}/related-items", response=RelatedItemsOut)
 def get_related_items(request: Any, client_id: int) -> Any:
     """获取客户关联的案件和合同"""
-    facade = _get_query_facade()
-    return facade.get_related_items(client_id=client_id)
+    from apps.cases.models import CaseParty
+    from apps.contracts.models import ContractParty
+
+    case_parties = CaseParty.objects.filter(client_id=client_id).select_related("case").order_by("-case__start_date")
+    contract_parties = (
+        ContractParty.objects.filter(client_id=client_id)
+        .select_related("contract")
+        .order_by("-contract__specified_date")
+    )
+
+    cases = [
+        {
+            "id": cp.case.id,
+            "name": cp.case.name,
+            "case_type": cp.case.case_type,
+            "status": cp.case.get_status_display() if cp.case.status else None,
+            "current_stage": cp.case.get_current_stage_display() if cp.case.current_stage else None,
+            "legal_status": cp.legal_status,
+        }
+        for cp in case_parties
+    ]
+    contracts = [
+        {
+            "id": cp.contract.id,
+            "name": cp.contract.name,
+            "case_type": cp.contract.case_type,
+            "status": cp.contract.get_status_display() if cp.contract.status else None,
+            "role": cp.role,
+        }
+        for cp in contract_parties
+    ]
+
+    return {"cases": cases, "contracts": contracts}

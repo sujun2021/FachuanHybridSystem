@@ -29,8 +29,7 @@ class GeneratedDocumentStorage:
         with file_path.open("wb") as f:
             f.write(content)
 
-        relative = file_path.relative_to(media_root)
-        return relative.as_posix() if relative else ""
+        return str(file_path.relative_to(media_root))
 
     def save_for_case(self, *, case_id: int, filename: str, content: bytes) -> str:
         return self.save_bytes(relative_dir=f"generated_documents/case_{case_id}", filename=filename, content=content)

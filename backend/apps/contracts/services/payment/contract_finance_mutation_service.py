@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any
 
 from django.db import transaction
 from django.db.models import Count, Sum
+from django.utils.translation import gettext_lazy as _
 
 from apps.contracts.models import Contract, ContractPayment
 from apps.core.exceptions import NotFoundError, ValidationException
@@ -40,13 +41,13 @@ class ContractFinanceMutationService(DjangoPermsMixin):
     @property
     def mutation_service(self) -> ContractMutationService:
         if self._get_mutation_service is None:
-            raise RuntimeError("ContractFinanceMutationService.mutation_service 未注入")
+            raise RuntimeError(_("ContractFinanceMutationService.mutation_service 未注入"))
         return self._get_mutation_service()
 
     def get_finance_summary(self, contract_id: int) -> dict[str, Any]:
         contract = Contract.objects.filter(id=contract_id).values("id", "fixed_amount").first()
         if not contract:
-            raise NotFoundError(message="合同不存在", code="CONTRACT_NOT_FOUND")
+            raise NotFoundError(message=_("合同不存在"), code="CONTRACT_NOT_FOUND")
 
         agg = ContractPayment.objects.filter(contract_id=contract_id).aggregate(
             total_received=Sum("amount"),
@@ -86,14 +87,14 @@ class ContractFinanceMutationService(DjangoPermsMixin):
         touch_finance = any(k in update_data for k in finance_keys)
 
         if touch_finance and not confirm_finance:
-            raise ValidationException("关键财务操作需二次确认")
+            raise ValidationException(_("关键财务操作需二次确认"))
         if new_payments and not confirm_finance:
-            raise ValidationException("关键财务操作需二次确认")
+            raise ValidationException(_("关键财务操作需二次确认"))
 
         user_id = getattr(user, "id", None)
 
         if touch_finance:
-            self.ensure_admin(user, message="修改财务数据需要管理员权限")
+            self.ensure_admin(user, message=_("修改财务数据需要管理员权限"))
             old_finance = {k: getattr(contract, k) for k in finance_keys}
 
         contract = self.mutation_service.update_contract(contract_id, update_data)
@@ -177,7 +178,7 @@ class ContractFinanceMutationService(DjangoPermsMixin):
                 contract_id=contract_id,
                 action=action,
                 level=level,
-                actor_id=user_id,  # type: ignore[misc]
+                actor_id=user_id,
                 payload=payload,
             )
         except Exception:

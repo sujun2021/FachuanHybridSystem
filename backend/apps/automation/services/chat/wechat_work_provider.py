@@ -21,6 +21,7 @@ import logging
 from typing import Any
 
 import httpx
+from django.utils.translation import gettext_lazy as _
 
 from apps.core.exceptions import ChatCreationException, ConfigurationException, MessageSendException
 from apps.core.models.enums import ChatPlatform
@@ -64,7 +65,7 @@ class WeChatWorkProvider(WeChatWorkTokenMixin, WeChatWorkFileMixin, ChatProvider
         """
         if not self.is_available():
             raise ConfigurationException(
-                message="企业微信配置不完整，无法创建群聊",
+                message=_("企业微信配置不完整，无法创建群聊"),
                 platform="wechat_work",
                 missing_config="CORP_ID, AGENT_ID, SECRET, DEFAULT_OWNER_ID",
             )
@@ -72,7 +73,7 @@ class WeChatWorkProvider(WeChatWorkTokenMixin, WeChatWorkFileMixin, ChatProvider
         effective_owner_id = owner_id or self.config.get("DEFAULT_OWNER_ID")
         if not effective_owner_id:
             raise ChatCreationException(
-                message="企业微信建群必须指定群主（owner_id）",
+                message=_("企业微信建群必须指定群主（owner_id）"),
                 platform="wechat_work",
                 errors={"missing_config": "DEFAULT_OWNER_ID"},
             )
@@ -116,7 +117,7 @@ class WeChatWorkProvider(WeChatWorkTokenMixin, WeChatWorkFileMixin, ChatProvider
             chat_id = data.get("chatid")
             if not chat_id:
                 raise ChatCreationException(
-                    message="API 响应中缺少群聊ID",
+                    message=_("API 响应中缺少群聊ID"),
                     platform="wechat_work",
                     errors={"api_response": data},
                 )
@@ -127,7 +128,7 @@ class WeChatWorkProvider(WeChatWorkTokenMixin, WeChatWorkFileMixin, ChatProvider
             self._send_initial_message(chat_id, chat_name)
 
             result = ChatResult(
-                success=True, chat_id=chat_id, chat_name=chat_name, message="群聊创建成功", raw_response=data
+                success=True, chat_id=chat_id, chat_name=chat_name, message=str(_("群聊创建成功")), raw_response=data
             )
             if result.raw_response:
                 result.raw_response["owner_info"] = {
@@ -158,7 +159,7 @@ class WeChatWorkProvider(WeChatWorkTokenMixin, WeChatWorkFileMixin, ChatProvider
         """发送消息到群聊"""
         if not self.is_available():
             raise ConfigurationException(
-                message="企业微信配置不完整，无法发送消息",
+                message=_("企业微信配置不完整，无法发送消息"),
                 platform="wechat_work",
                 missing_config="CORP_ID, AGENT_ID, SECRET",
             )
@@ -198,7 +199,7 @@ class WeChatWorkProvider(WeChatWorkTokenMixin, WeChatWorkFileMixin, ChatProvider
             msg_id = data.get("msgid", "")
             logger.info(f"成功发送企业微信消息到群聊: {chat_id} (消息ID: {msg_id})")
 
-            return ChatResult(success=True, chat_id=chat_id, message="消息发送成功", raw_response=data)
+            return ChatResult(success=True, chat_id=chat_id, message=str(_("消息发送成功")), raw_response=data)
 
         except MessageSendException:
             raise
@@ -223,7 +224,7 @@ class WeChatWorkProvider(WeChatWorkTokenMixin, WeChatWorkFileMixin, ChatProvider
         """获取群聊信息"""
         if not self.is_available():
             raise ConfigurationException(
-                message="企业微信配置不完整，无法获取群聊信息",
+                message=_("企业微信配置不完整，无法获取群聊信息"),
                 platform="wechat_work",
                 missing_config="CORP_ID, AGENT_ID, SECRET",
             )
@@ -258,7 +259,7 @@ class WeChatWorkProvider(WeChatWorkTokenMixin, WeChatWorkFileMixin, ChatProvider
                 success=True,
                 chat_id=chat_id,
                 chat_name=chat_name,
-                message="获取群聊信息成功",
+                message=str(_("获取群聊信息成功")),
                 raw_response=data,
             )
 

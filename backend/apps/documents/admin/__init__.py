@@ -14,6 +14,9 @@ __all__ = [
     "FolderTemplateAdmin",
     "DocumentTemplateAdmin",
     "DocumentTemplateFolderBindingAdmin",
+    # Prompt 版本管理
+    # 授权委托书
     "ProxyMatterRuleAdmin",
+    # 外部模板
     "ExternalTemplateAdmin",
 ]

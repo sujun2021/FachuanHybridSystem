@@ -21,6 +21,7 @@ import logging
 from typing import Any
 
 import httpx
+from django.utils.translation import gettext_lazy as _
 
 from apps.core.exceptions import (
     ChatCreationException,
@@ -78,7 +79,7 @@ class DingtalkProvider(DingtalkTokenMixin, DingtalkFileMixin, ChatProvider):
         """
         if not self.is_available():
             raise ConfigurationException(
-                message="钉钉配置不完整，无法创建群聊",
+                message=_("钉钉配置不完整，无法创建群聊"),
                 platform="dingtalk",
                 missing_config="APP_KEY, APP_SECRET, DEFAULT_OWNER_ID",
             )
@@ -86,7 +87,7 @@ class DingtalkProvider(DingtalkTokenMixin, DingtalkFileMixin, ChatProvider):
         effective_owner_id = owner_id or self.config.get("DEFAULT_OWNER_ID")
         if not effective_owner_id:
             raise ChatCreationException(
-                message="钉钉建群必须指定群主（owner_id）",
+                message=_("钉钉建群必须指定群主（owner_id）"),
                 platform="dingtalk",
                 errors={"missing_config": "DEFAULT_OWNER_ID"},
             )
@@ -142,7 +143,7 @@ class DingtalkProvider(DingtalkTokenMixin, DingtalkFileMixin, ChatProvider):
                         },
                     )
                 raise ChatCreationException(
-                    message="API 响应中缺少群聊ID",
+                    message=_("API 响应中缺少群聊ID"),
                     platform="dingtalk",
                     errors={"api_response": data},
                 )
@@ -153,7 +154,7 @@ class DingtalkProvider(DingtalkTokenMixin, DingtalkFileMixin, ChatProvider):
             self._send_initial_message(chat_id, chat_name)
 
             result = ChatResult(
-                success=True, chat_id=chat_id, chat_name=chat_name, message="群聊创建成功", raw_response=data
+                success=True, chat_id=chat_id, chat_name=chat_name, message=str(_("群聊创建成功")), raw_response=data
             )
             if result.raw_response:
                 result.raw_response["owner_info"] = {
@@ -190,7 +191,7 @@ class DingtalkProvider(DingtalkTokenMixin, DingtalkFileMixin, ChatProvider):
         """
         if not self.is_available():
             raise ConfigurationException(
-                message="钉钉配置不完整，无法发送消息",
+                message=_("钉钉配置不完整，无法发送消息"),
                 platform="dingtalk",
                 missing_config="APP_KEY, APP_SECRET, AGENT_ID",
             )
@@ -200,7 +201,7 @@ class DingtalkProvider(DingtalkTokenMixin, DingtalkFileMixin, ChatProvider):
             agent_id = self.config.get("AGENT_ID")
             if not agent_id:
                 raise ConfigurationException(
-                    message="钉钉 AGENT_ID 未配置，无法发送消息",
+                    message=_("钉钉 AGENT_ID 未配置，无法发送消息"),
                     platform="dingtalk",
                     missing_config="AGENT_ID",
                 )
@@ -242,7 +243,7 @@ class DingtalkProvider(DingtalkTokenMixin, DingtalkFileMixin, ChatProvider):
 
             logger.info(f"成功发送钉钉消息到群聊: {chat_id}")
 
-            return ChatResult(success=True, chat_id=chat_id, message="消息发送成功", raw_response=data)
+            return ChatResult(success=True, chat_id=chat_id, message=str(_("消息发送成功")), raw_response=data)
 
         except MessageSendException:
             raise
@@ -272,7 +273,7 @@ class DingtalkProvider(DingtalkTokenMixin, DingtalkFileMixin, ChatProvider):
         """
         if not self.is_available():
             raise ConfigurationException(
-                message="钉钉配置不完整，无法获取群聊信息",
+                message=_("钉钉配置不完整，无法获取群聊信息"),
                 platform="dingtalk",
                 missing_config="APP_KEY, APP_SECRET",
             )
@@ -310,7 +311,7 @@ class DingtalkProvider(DingtalkTokenMixin, DingtalkFileMixin, ChatProvider):
                 success=True,
                 chat_id=chat_id,
                 chat_name=chat_name,
-                message="获取群聊信息成功",
+                message=str(_("获取群聊信息成功")),
                 raw_response=data,
             )
 

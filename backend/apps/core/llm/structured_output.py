@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 TModel = TypeVar("TModel", bound=BaseModel)
 
+
 _CODE_FENCE_RE = re.compile(r"```(?:json)?\s*(.*?)\s*```", re.IGNORECASE | re.DOTALL)
 
 

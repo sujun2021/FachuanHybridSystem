@@ -199,7 +199,7 @@ class CourtSMSAdmin(CourtSMSAdminActions, CourtSMSAdminBase):
         path = Path(str(raw_path or ""))
         if not path.is_absolute():
             path = Path(settings.MEDIA_ROOT) / path
-        return path.resolve(strict=False).as_posix()
+        return str(path.resolve(strict=False))
 
     def _sync_document_references(
         self,

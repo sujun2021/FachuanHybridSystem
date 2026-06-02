@@ -73,6 +73,7 @@ CASE_STAGES: list[StageConfig] = [
     StageConfig("petition_protest", "申诉抗诉", [CaseTypeCode.CRIMINAL]),
 ]
 
+
 # 诉讼地位配置
 LEGAL_STATUSES: list[LegalStatusConfig] = [
     # 民事

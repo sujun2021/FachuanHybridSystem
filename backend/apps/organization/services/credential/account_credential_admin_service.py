@@ -14,6 +14,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 if TYPE_CHECKING:
     from apps.core.interfaces import IAutomationService, IAutoTokenAcquisitionService
@@ -94,7 +95,8 @@ class AccountCredentialAdminService:
             return LoginResult(
                 success=False,
                 duration=0,
-                error_message="账号 %(account)s 不支持自动登录（仅支持法院一张网）" % {"account": credential.account},
+                error_message=str(_("账号 %(account)s 不支持自动登录（仅支持法院一张网）"))
+                % {"account": credential.account},
             )
 
         logger.info(
@@ -131,7 +133,7 @@ class AccountCredentialAdminService:
                 success_count=0,
                 error_count=0,
                 total_duration=0,
-                message="没有找到法院一张网账号",
+                message=str(_("没有找到法院一张网账号")),
             )
 
         total_count = len(court_credentials)
@@ -178,16 +180,16 @@ class AccountCredentialAdminService:
         # 构建消息
         messages = []
         if success_count > 0:
-            messages.append("✅ 成功触发 %(count)d 个账号的自动登录" % {"count": success_count})
+            messages.append(str(_("✅ 成功触发 %(count)d 个账号的自动登录")) % {"count": success_count})
         if error_count > 0:
-            messages.append("❌ %(count)d 个账号登录失败" % {"count": error_count})
-        messages.append("总耗时 %(duration).1f秒" % {"duration": total_duration})
+            messages.append(str(_("❌ %(count)d 个账号登录失败")) % {"count": error_count})
+        messages.append(str(_("总耗时 %(duration).1f秒")) % {"duration": total_duration})
 
         return BatchLoginResult(
             success_count=success_count,
             error_count=error_count,
             total_duration=total_duration,
-            message="，".join(messages),
+            message=str(_("，")).join(messages),
         )
 
     def _execute_single_login(
@@ -237,7 +239,7 @@ class AccountCredentialAdminService:
                     credential=credential,
                     success=False,
                     duration=duration,
-                    error_message="登录失败，未返回Token",
+                    error_message=str(_("登录失败，未返回Token")),
                     trigger_reason=trigger_reason,
                     start_time=start_time,
                     end_time=end_time,
@@ -247,7 +249,7 @@ class AccountCredentialAdminService:
                 return LoginResult(
                     success=False,
                     duration=duration,
-                    error_message="登录失败，未返回Token",
+                    error_message=str(_("登录失败，未返回Token")),
                 )
 
         except Exception as e:

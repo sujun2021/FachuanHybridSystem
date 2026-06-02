@@ -7,6 +7,7 @@ from typing import Any
 
 from django.db import connection, transaction
 from django.db.utils import OperationalError
+from django.utils.translation import gettext_lazy as _
 
 from apps.cases.models import Case, CaseFilingNumberSequence
 from apps.core.exceptions import ConflictError, ValidationException
@@ -20,21 +21,21 @@ class CaseFilingNumberService:
         try:
             if not case_type:
                 raise ValidationException(
-                    message="案件类型不能为空",
+                    message=_("案件类型不能为空"),
                     code="INVALID_CASE_TYPE",
-                    errors={"case_type": "案件类型不能为空"},
+                    errors={"case_type": str(_("案件类型不能为空"))},
                 )
 
             if not (1900 <= created_year <= 2100):
                 raise ValidationException(
-                    message="年份格式无效",
+                    message=_("年份格式无效"),
                     code="INVALID_YEAR",
                     errors={"created_year": f"年份 {created_year} 超出有效范围"},
                 )
 
             if not Case.objects.filter(id=case_id).exists():
                 raise ValidationException(
-                    message="案件不存在",
+                    message=_("案件不存在"),
                     code="CASE_NOT_FOUND",
                     errors={"case_id": f"ID 为 {case_id} 的案件不存在"},
                 )
@@ -48,11 +49,15 @@ class CaseFilingNumberService:
                         extra={"case_id": case_id, "migration": "cases.0009_case_filing_number_sequence"},
                     )
                     raise ConflictError(
-                        message="建档编号生成失败(数据库未迁移)",
+                        message=_("建档编号生成失败(数据库未迁移)"),
                         code="FILING_NUMBER_MIGRATION_REQUIRED",
                         errors={
-                            "detail": "缺少表 cases_casefilingnumbersequence,"
-                            "请执行迁移 cases.0009_case_filing_number_sequence",
+                            "detail": str(
+                                _(
+                                    "缺少表 cases_casefilingnumbersequence,"
+                                    "请执行迁移 cases.0009_case_filing_number_sequence"
+                                )
+                            ),
                         },
                     ) from e
                 raise
@@ -81,7 +86,7 @@ class CaseFilingNumberService:
                 exc_info=True,
             )
             raise ConflictError(
-                message="建档编号生成失败",
+                message=_("建档编号生成失败"),
                 code="FILING_NUMBER_GENERATION_FAILED",
                 errors={"detail": str(e)},
             ) from e

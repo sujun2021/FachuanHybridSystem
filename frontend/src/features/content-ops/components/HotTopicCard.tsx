@@ -6,7 +6,6 @@ import type { HotTopic } from '../types'
 
 interface HotTopicCardProps {
   topic: HotTopic
-  translatedTitle?: string
 }
 
 const sourceColors: Record<string, string> = {
@@ -23,7 +22,7 @@ function formatHeat(heat: number | null): string {
   return heat.toString()
 }
 
-export function HotTopicCard({ topic, translatedTitle }: HotTopicCardProps) {
+export function HotTopicCard({ topic }: HotTopicCardProps) {
   return (
     <a
       href={topic.url || '#'}
@@ -38,13 +37,8 @@ export function HotTopicCard({ topic, translatedTitle }: HotTopicCardProps) {
           </span>
           <div className="flex-1 min-w-0">
             <h4 className="text-sm font-medium leading-snug group-hover:text-primary transition-colors line-clamp-2">
-              {translatedTitle || topic.title}
+              {topic.title}
             </h4>
-            {translatedTitle && (
-              <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">
-                {topic.title}
-              </p>
-            )}
             <div className="flex items-center gap-2 mt-1.5">
               <Badge
                 variant="secondary"

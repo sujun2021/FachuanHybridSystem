@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 from django.db import transaction
 from django.db.models import QuerySet
+from django.utils.translation import gettext_lazy as _
 
 from apps.core.exceptions import NotFoundError, ValidationException
 
@@ -61,13 +62,13 @@ class ReminderService:
         case_id: int | None = None,
         case_log_id: int | None = None,
     ) -> QuerySet[Reminder]:
-        contract_id = normalize_target_id(contract_id, field_name="contract_id")
-        case_id = normalize_target_id(case_id, field_name="case_id")
-        case_log_id = normalize_target_id(case_log_id, field_name="case_log_id")
+        contract_id = normalize_target_id(contract_id, field_name=_("contract_id"))
+        case_id = normalize_target_id(case_id, field_name=_("case_id"))
+        case_log_id = normalize_target_id(case_log_id, field_name=_("case_log_id"))
 
         selected_filters = sum(target_id is not None for target_id in (contract_id, case_id, case_log_id))
         if selected_filters > 1:
-            raise ValidationException("不能同时按合同、案件和案件日志筛选提醒")
+            raise ValidationException(_("不能同时按合同、案件和案件日志筛选提醒"))
 
         qs = Reminder.objects.order_by("-due_at", "-id")
         if contract_id is not None:
@@ -87,7 +88,7 @@ class ReminderService:
             )
             return qs.get(id=reminder_id)
         except Reminder.DoesNotExist:
-            raise NotFoundError("提醒记录 %(id)s 不存在" % {"id": reminder_id}) from None
+            raise NotFoundError(_("提醒记录 %(id)s 不存在") % {"id": reminder_id}) from None
 
     @transaction.atomic
     def create_reminder(
@@ -99,11 +100,12 @@ class ReminderService:
         reminder_type: str | Any,
         content: str,
         due_at: datetime,
+        include_in_important_time: bool = False,
         metadata: dict[str, Any] | None = None,
     ) -> Reminder:
-        contract_id = normalize_target_id(contract_id, field_name="contract_id")
-        case_id = normalize_target_id(case_id, field_name="case_id")
-        case_log_id = normalize_target_id(case_log_id, field_name="case_log_id")
+        contract_id = normalize_target_id(contract_id, field_name=_("contract_id"))
+        case_id = normalize_target_id(case_id, field_name=_("case_id"))
+        case_log_id = normalize_target_id(case_log_id, field_name=_("case_log_id"))
         validate_binding_exclusive(contract_id=contract_id, case_id=case_id, case_log_id=case_log_id)
         validate_fk_exists(
             contract_id=contract_id,
@@ -127,6 +129,7 @@ class ReminderService:
             reminder_type=reminder_type,
             content=content,
             due_at=due_at,
+            include_in_important_time=bool(include_in_important_time),
             metadata=metadata,
         )
 
@@ -149,11 +152,11 @@ class ReminderService:
         fk_changed = any(field in data for field in fk_fields)
 
         if "contract_id" in data:
-            new_contract_id = normalize_target_id(data["contract_id"], field_name="contract_id")
+            new_contract_id = normalize_target_id(data["contract_id"], field_name=_("contract_id"))
         if "case_id" in data:
-            new_case_id = normalize_target_id(data["case_id"], field_name="case_id")
+            new_case_id = normalize_target_id(data["case_id"], field_name=_("case_id"))
         if "case_log_id" in data:
-            new_case_log_id = normalize_target_id(data["case_log_id"], field_name="case_log_id")
+            new_case_log_id = normalize_target_id(data["case_log_id"], field_name=_("case_log_id"))
 
         if fk_changed:
             validate_binding_exclusive(contract_id=new_contract_id, case_id=new_case_id, case_log_id=new_case_log_id)
@@ -190,6 +193,9 @@ class ReminderService:
         if "due_at" in data and data["due_at"] is not None:
             reminder.due_at = normalize_due_at(data["due_at"])
             changed.append("due_at")
+        if "include_in_important_time" in data and data["include_in_important_time"] is not None:
+            reminder.include_in_important_time = bool(data["include_in_important_time"])
+            changed.append("include_in_important_time")
 
         return changed
 
@@ -197,14 +203,27 @@ class ReminderService:
         reminder = self.get_reminder(reminder_id, select_related=False)
         count, deleted_details = reminder.delete()
         if count == 0:
-            raise NotFoundError("提醒记录 %(id)s 不存在" % {"id": reminder_id})
+            raise NotFoundError(_("提醒记录 %(id)s 不存在") % {"id": reminder_id})
         logger.debug("Deleted reminder %s, details=%s", reminder_id, deleted_details)
+
+    @transaction.atomic
+    def remove_from_important_time(self, reminder_id: int) -> None:
+        reminder = self.get_reminder(reminder_id, select_related=False)
+        if reminder.case_log_id is not None:
+            if reminder.include_in_important_time:
+                reminder.include_in_important_time = False
+                reminder.save(update_fields=["include_in_important_time", "updated_at"])
+            return
+        if reminder.case_id is not None:
+            reminder.delete()
+            return
+        raise ValidationException(_("璇ユ彁閱掍笉灞炰簬妗堜欢閲嶈鏃堕棿"))
 
     def get_existing_due_times(self, case_log_id: int, reminder_type: str) -> set[datetime]:
         """获取案件日志已存在的提醒到期时间集合。"""
-        normalized_case_log_id = normalize_target_id(case_log_id, field_name="case_log_id")
+        normalized_case_log_id = normalize_target_id(case_log_id, field_name=_("case_log_id"))
         if normalized_case_log_id is None:
-            raise ValidationException("case_log_id 不能为空")
+            raise ValidationException(_("case_log_id 不能为空"))
         return set(
             Reminder.objects.filter(
                 case_log_id=normalized_case_log_id,

@@ -10,12 +10,14 @@ import logging
 from typing import Any
 
 from django.http import HttpRequest, HttpResponse
+from django.utils.translation import gettext_lazy as _
 from ninja import Router, Schema
 
 from apps.core.security.auth import JWTOrSessionAuth
 
 logger = logging.getLogger("apps.documents.api")
 router = Router(auth=JWTOrSessionAuth())
+
 
 # ---------------------------------------------------------------------------
 # Factory functions
@@ -173,7 +175,7 @@ def match_templates(
     law_firm_id: int | None = getattr(user, "law_firm_id", None)
 
     if law_firm_id is None:
-        return {"success": False, "message": "无法确定所属律所"}
+        return {"success": False, "message": str(_("无法确定所属律所"))}
 
     if case_id is not None:
         results = service.match_by_case(case_id=case_id, law_firm_id=law_firm_id)
@@ -183,7 +185,7 @@ def match_templates(
             law_firm_id=law_firm_id,
         )
     else:
-        return {"success": False, "message": "请提供 case_id 或 source_name 参数"}
+        return {"success": False, "message": str(_("请提供 case_id 或 source_name 参数"))}
 
     return {
         "success": True,
@@ -213,7 +215,7 @@ def get_fill_history(
     elif template_id is not None:
         qs = service.get_fill_history_by_template(template_id)
     else:
-        return {"success": False, "message": "请提供 case_id 或 template_id 参数"}
+        return {"success": False, "message": str(_("请提供 case_id 或 template_id 参数"))}
 
     records = list(
         qs.values(
@@ -237,7 +239,7 @@ def get_statistics(request: HttpRequest) -> dict[str, Any]:
     law_firm_id: int | None = getattr(user, "law_firm_id", None)
 
     if law_firm_id is None:
-        return {"success": False, "message": "无法确定所属律所"}
+        return {"success": False, "message": str(_("无法确定所属律所"))}
 
     stats = service.get_template_statistics(law_firm_id)
     return {"success": True, "statistics": stats}
@@ -256,9 +258,9 @@ def get_preview_html(request: HttpRequest, template_id: int) -> dict[str, Any]:
     import mammoth
     from django.conf import settings
 
-    from apps.documents.services.external_template.query_service import get_template_or_raise
+    from apps.documents.models.external_template import ExternalTemplate
 
-    template = get_template_or_raise(template_id)
+    template = ExternalTemplate.objects.get(pk=template_id)
     abs_path = Path(settings.MEDIA_ROOT) / template.file_path
 
     with abs_path.open("rb") as f:
@@ -273,9 +275,9 @@ def get_preview_html(request: HttpRequest, template_id: int) -> dict[str, Any]:
 @router.get("/{template_id}/mappings")
 def list_mappings(request: HttpRequest, template_id: int) -> list[dict[str, Any]]:
     """获取模板的所有字段映射"""
-    from apps.documents.services.external_template.query_service import get_mappings_by_template
+    from apps.documents.models.external_template import ExternalTemplateFieldMapping
 
-    mappings = get_mappings_by_template(template_id)
+    mappings = ExternalTemplateFieldMapping.objects.filter(template_id=template_id).order_by("sort_order", "id")
 
     return [
         {
@@ -315,9 +317,9 @@ def create_mapping(request: HttpRequest, template_id: int, payload: MappingCreat
 @router.put("/mappings/{mapping_id}")
 def update_mapping(request: HttpRequest, mapping_id: int, payload: MappingUpdateSchema) -> dict[str, Any]:
     """更新字段映射"""
-    from apps.documents.services.external_template.query_service import get_mapping_or_raise
+    from apps.documents.models.external_template import ExternalTemplateFieldMapping
 
-    m = get_mapping_or_raise(mapping_id)
+    m = ExternalTemplateFieldMapping.objects.get(pk=mapping_id)
     update_fields: list[str] = ["updated_at"]
 
     if payload.semantic_label is not None:

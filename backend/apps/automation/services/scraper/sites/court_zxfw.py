@@ -502,7 +502,7 @@ class CourtZxfwService:
 
             return captcha_text
 
-        except (TypeError, ValueError) as e:
+        except Exception as e:
             logger.error(f"获取验证码图片失败: {e}")
             return None
 

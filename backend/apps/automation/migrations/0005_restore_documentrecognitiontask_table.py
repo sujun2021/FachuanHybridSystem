@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from django.db import migrations
 
+
 def _create_legacy_document_recognition_table(apps, schema_editor) -> None:
     """恢复 document_recognition 仍在使用的历史表。"""
     from apps.document_recognition.models import DocumentRecognitionTask
@@ -27,6 +28,7 @@ def _create_legacy_document_recognition_table(apps, schema_editor) -> None:
         f"ON {qn(table_name)} ({qn('notification_sent')})"
     )
 
+
 def _drop_legacy_document_recognition_table(apps, schema_editor) -> None:
     from apps.document_recognition.models import DocumentRecognitionTask
 
@@ -47,6 +49,7 @@ def _drop_legacy_document_recognition_table(apps, schema_editor) -> None:
             pass
 
     schema_editor.delete_model(DocumentRecognitionTask)
+
 
 class Migration(migrations.Migration):
     dependencies = [

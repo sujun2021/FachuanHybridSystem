@@ -22,6 +22,7 @@ from django.apps import apps
 from django.conf import settings
 from django.db.models import QuerySet
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 from docx.document import Document as DocumentType
 
 from apps.documents.services.placeholders.fallback import (
@@ -279,14 +280,14 @@ class FillingService:
                     template_id,
                     mapping.position_locator,
                 )
-                errors.append(str("位置 %(label)s 写入失败" % {"label": mapping.semantic_label}))
+                errors.append(str(_("位置 %(label)s 写入失败") % {"label": mapping.semantic_label}))
                 continue
 
             if success:
                 filled_count += 1
             else:
                 skipped_count += 1
-                errors.append(str("位置 %(label)s 写入未成功" % {"label": mapping.semantic_label}))
+                errors.append(str(_("位置 %(label)s 写入未成功") % {"label": mapping.semantic_label}))
 
         # 4. 保存生成文件
         output_dir: Path = Path(settings.MEDIA_ROOT) / "documents" / "external_filled" / str(case_id)
@@ -653,7 +654,7 @@ class FillingService:
                             "template_id": template_id,
                             "party_id": party_id,
                             "status": "failed",
-                            "error": str("模板 %(tid)s 填充失败" % {"tid": template_id}),
+                            "error": str(_("模板 %(tid)s 填充失败") % {"tid": template_id}),
                         }
                     )
 

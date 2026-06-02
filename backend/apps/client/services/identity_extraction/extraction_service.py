@@ -43,43 +43,46 @@ class IdentityExtractionService:
         source_name: str | None = None,
     ) -> ExtractionResult:
         """
-        提取证件信息
+        Extract structured fields from an identity document image.
 
         Args:
-            image_bytes: 图片字节数据
-            doc_type: 证件类型
-            model: LLM 模型名称（None 或空字符串表示不使用 LLM）
+            image_bytes: Raw image bytes.
+            doc_type: Requested document type.
+            model: Optional LLM model id. Empty means OCR + rules only.
 
         Returns:
-            ExtractionResult: 提取结果
+            ExtractionResult: Structured extraction result.
         """
         if not image_bytes:
             raise ValidationException(
-                message=_("图片数据不能为空"), code="INVALID_IMAGE_DATA", errors={"image": _("图片数据不能为空")}
+                message=_("Image data cannot be empty"),
+                code="INVALID_IMAGE_DATA",
+                errors={"image": _("Image data cannot be empty")},
             )
 
         if not doc_type:
             raise ValidationException(
-                message=_("证件类型不能为空"), code="INVALID_DOC_TYPE", errors={"doc_type": _("证件类型不能为空")}
+                message=_("Document type cannot be empty"),
+                code="INVALID_DOC_TYPE",
+                errors={"doc_type": _("Document type cannot be empty")},
             )
 
         try:
-            # 1. OCR 提取文字
+            # 1. Extract raw OCR text first.
             raw_text = self._ocr_extract(image_bytes)
             resolved_doc_type = self._resolve_doc_type(doc_type, raw_text, source_name=source_name)
 
-            # 2. 优先规则提取（身份证场景稳定且低延迟）
+            # 2. Prefer deterministic rules for stable low-latency extraction.
             extracted_data = self._extract_by_rules(raw_text, resolved_doc_type)
             if extracted_data is not None:
-                # 判断规则提取是否命中关键字段
                 key_field_hit = bool(
                     extracted_data.get("id_number")
                     or extracted_data.get("credit_code")
                     or extracted_data.get("company_name")
                 )
-                if key_field_hit or not model:
+                if key_field_hit:
                     logger.info(
-                        "证件识别使用规则提取: requested_doc_type=%s, resolved_doc_type=%s, model=%s, key_field_hit=%s",
+                        "identity extraction resolved by rules: requested_doc_type=%s, resolved_doc_type=%s, model=%s, key_field_hit=%s",
                         doc_type,
                         resolved_doc_type,
                         model,
@@ -93,17 +96,31 @@ class IdentityExtractionService:
                         extraction_method="ocr_regex",
                     )
 
+                if not model:
+                    logger.info(
+                        "rules produced partial fields without an explicit LLM model; returning partial result: requested_doc_type=%s, resolved_doc_type=%s",
+                        doc_type,
+                        resolved_doc_type,
+                    )
+                    return ExtractionResult(
+                        doc_type=resolved_doc_type,
+                        raw_text=raw_text,
+                        extracted_data=extracted_data,
+                        confidence=0.3,
+                        extraction_method="ocr_regex_partial",
+                    )
+
                 logger.info(
-                    "规则提取未命中关键字段且指定了模型，回退 LLM 提取: requested_doc_type=%s, resolved_doc_type=%s, model=%s",
+                    "rules missed key fields and an explicit model was selected; falling back to LLM: requested_doc_type=%s, resolved_doc_type=%s, model=%s",
                     doc_type,
                     resolved_doc_type,
                     model,
                 )
 
-            # 3. 规则无法覆盖时，仅在用户指定了模型时回退 LLM
+            # 3. Only use LLM fallback when the user explicitly selected a model.
             if not model:
                 logger.info(
-                    "规则提取未覆盖且未指定 LLM 模型，返回部分结果: resolved_doc_type=%s",
+                    "rules did not fully cover the document and no LLM model was selected; returning partial result: resolved_doc_type=%s",
                     resolved_doc_type,
                 )
                 return ExtractionResult(
@@ -127,9 +144,9 @@ class IdentityExtractionService:
         except (OCRExtractionError, OllamaExtractionError, ServiceUnavailableError):
             raise
         except Exception as e:
-            logger.exception("证件信息提取失败: %s", e)
+            logger.exception("identity extraction failed: %s", e)
             raise ValidationException(
-                message=_("证件信息提取失败: %(error)s") % {"error": str(e)},
+                message=_("Identity extraction failed: %(error)s") % {"error": str(e)},
                 code="EXTRACTION_FAILED",
                 errors={"extraction": str(e)},
             ) from e
@@ -276,7 +293,7 @@ class IdentityExtractionService:
 
         except OCRExtractionError:
             raise
-        except (OSError, ValueError) as e:
+        except Exception as e:
             logger.exception("PDF 处理失败: %s", e)
             raise OCRExtractionError(_("PDF 处理失败: %(e)s") % {"e": e}) from e
 
@@ -768,8 +785,8 @@ class IdentityExtractionService:
         source_name: str | None = None,
     ) -> dict[str, Any]:
         """
-        提取证件信息，捕获所有异常，返回含 success 字段的 dict。
-        供 API 层直接调用，无需 try/except。
+        Extract identity fields and return a dict with a success flag.
+        API callers can use this directly without their own try/except.
         """
         result: dict[str, Any] = {
             "success": False,
@@ -778,7 +795,7 @@ class IdentityExtractionService:
             "confidence": 0.0,
             "error": None,
         }
-        # Service 层内部允许 try/except（规范禁止的是 API 层）
+        # Service-layer try/except is allowed here; the API layer stays clean.
         try:
             extraction = self.extract(
                 image_bytes,
@@ -793,11 +810,11 @@ class IdentityExtractionService:
         except (OCRExtractionError, OllamaExtractionError) as e:
             result["error"] = str(e)
         except ServiceUnavailableError as e:
-            logger.warning("证件识别服务不可用: %s", e)
-            result["error"] = str(_("智能识别服务暂时不可用，请稍后重试"))
+            logger.warning("identity extraction service unavailable: %s", e)
+            result["error"] = str(_("The intelligent extraction service is temporarily unavailable. Please try again later."))
         except ValidationException as e:
             result["error"] = str(e)
         except Exception as e:
-            logger.exception("证件识别未知错误: %s", e)
-            result["error"] = str(_("识别过程中发生未知错误，请稍后重试"))
+            logger.exception("unexpected identity extraction error: %s", e)
+            result["error"] = str(_("An unexpected error occurred during identity extraction. Please try again later."))
         return result

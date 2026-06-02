@@ -21,18 +21,14 @@ router = Router()
 
 
 def _get_base_queryset() -> Any:
-    from apps.message_hub.services.inbox_query import get_base_queryset
-
-    return get_base_queryset()
+    return InboxMessage.objects.select_related("source", "source__credential").order_by("-received_at")
 
 
 def _get_message_or_404(pk: int) -> InboxMessage:
-    from apps.message_hub.services.inbox_query import get_message_or_none
-
-    msg = get_message_or_none(pk)
-    if msg is None:
+    try:
+        return _get_base_queryset().get(pk=pk)  # type: ignore[no-any-return]
+    except InboxMessage.DoesNotExist:
         raise NotFoundError(f"消息 {pk} 不存在")
-    return msg
 
 
 # ---------------------------------------------------------------------------

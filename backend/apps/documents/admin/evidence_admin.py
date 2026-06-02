@@ -5,6 +5,7 @@ from typing import Any, ClassVar
 
 from django.contrib import admin
 from django.db.models import Count, QuerySet
+from django.utils.translation import gettext_lazy as _
 
 from apps.documents.models import EvidenceList
 
@@ -57,29 +58,29 @@ class EvidenceListAdmin(
     fieldsets: tuple[Any, ...] = (
         (None, {"fields": ("case",)}),
         (
-            "自动计算信息",
+            _("自动计算信息"),
             {
                 "fields": ("list_type", "order_range_display", "total_pages", "page_range_display"),
-                "description": "以下信息由系统自动计算,无需手动填写.",
+                "description": _("以下信息由系统自动计算,无需手动填写."),
             },
         ),
         (
-            "合并PDF",
+            _("合并PDF"),
             {
                 "fields": ("merged_pdf",),
-                "description": "点击列表页的「合并」按钮将证据文件合并为PDF.",
+                "description": _("点击列表页的「合并」按钮将证据文件合并为PDF."),
             },
         ),
         (
-            "导出设置",
+            _("导出设置"),
             {
                 "fields": ("export_version", "export_template"),
-                "description": "导出版本号用于文件名控制,请手动修改.选择导出模板后,导出清单时将使用该模板格式.",
+                "description": _("导出版本号用于文件名控制,请手动修改.选择导出模板后,导出清单时将使用该模板格式."),
                 "classes": ("evidence-export-section",),
             },
         ),
         (
-            "系统信息",
+            _("系统信息"),
             {
                 "fields": ("created_by", "created_at", "updated_at"),
                 "classes": ("collapse",),

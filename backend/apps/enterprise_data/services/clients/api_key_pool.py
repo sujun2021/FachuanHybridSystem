@@ -54,7 +54,8 @@ class McpApiKeyPool:
         digest = hashlib.sha256(normalized.encode("utf-8")).hexdigest()
         return digest[:16]
 
-    def _normalize_api_keys(self, api_keys: Iterable[str]) -> tuple[str, ...]:
+    @staticmethod
+    def _normalize_api_keys(api_keys: Iterable[str]) -> tuple[str, ...]:
         normalized: list[str] = []
         seen: set[str] = set()
         for item in api_keys:

@@ -5,14 +5,14 @@
      data-inline-formset="{{ inline_admin_formset.inline_formset_data }}">
 
     <!-- 标题栏 - 使用 Django Admin 标准样式 -->
-    <h2 style="cursor: pointer;" onclick="toggleCaseLogSection()">
-        {{ inline_admin_formset.opts.verbose_name_plural|capfirst }}
+    <h2 style="display: flex; align-items: center; gap: 8px; cursor: default;">
+        <button type="button" class="case-log-toggle-btn" onclick="toggleCaseLogSection(this)" aria-label="{% trans '展开或收起案件日志' %}">▶</button>
+        <span>{{ inline_admin_formset.opts.verbose_name_plural|capfirst }}</span>
         <span style="font-weight: normal; font-size: 12px;">({{ inline_admin_formset.formset.initial_form_count }}{% trans "条" %}，<a href="javascript:void(0)" id="case-log-sort-link" style="color: #fff;">{% trans "倒序" %}</a>)</span>
-        <span class="case-log-toggle" style="float: right; font-size: 10px;">▼</span>
     </h2>
 
     <!-- 日志内容区域 -->
-    <div class="case-log-content">
+    <div class="case-log-content" style="display: none;">
         {{ inline_admin_formset.formset.management_form }}
         {{ inline_admin_formset.formset.non_form_errors }}
 
@@ -62,7 +62,7 @@
                             <span class="attachment-label">{% trans "附件" %}：</span>
                             {% for attachment in inline_admin_form.original.attachments.all %}
                             <a href="{{ attachment.file.url }}" target="_blank" class="attachment-link">
-                                {{ attachment.file.name|cut:"case_logs/" }}
+                                {{ attachment.original_filename|default:attachment.file.name|cut:"case_logs/" }}
                             </a>
                             {% endfor %}
                         </div>
@@ -137,19 +137,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-function toggleCaseLogSection() {
+function toggleCaseLogSection(btn) {
     var section = document.querySelector('.case-log-section');
     var content = section.querySelector('.case-log-content');
-    var toggle = section.querySelector('.case-log-toggle');
+    var toggleBtn = btn || section.querySelector('.case-log-toggle-btn');
 
     if (content.style.display === 'none') {
         content.style.display = 'block';
-        toggle.textContent = '▼';
         section.classList.remove('collapsed');
+        if (toggleBtn) toggleBtn.textContent = '▼';
     } else {
         content.style.display = 'none';
-        toggle.textContent = '▶';
         section.classList.add('collapsed');
+        if (toggleBtn) toggleBtn.textContent = '▶';
     }
 }
 
@@ -200,3 +200,28 @@ function toggleLogSort() {
     }
 }
 </script>
+
+<style>
+.case-log-toggle-btn {
+    width: 22px;
+    height: 22px;
+    border: 1px solid #d1d5db;
+    border-radius: 999px;
+    background: #fff;
+    color: #6b7280;
+    font-size: 12px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    flex: 0 0 auto;
+}
+
+.case-log-toggle-btn:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+    color: #374151;
+}
+</style>

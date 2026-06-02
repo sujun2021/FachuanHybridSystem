@@ -90,7 +90,7 @@ class ExecutorCacheMixin:
             from django.core.cache import cache
 
             cache.set(cache_key, payload, timeout=max(60, int(ttl_seconds)))
-        except (TypeError, ValueError):
+        except Exception:
             return
 
     @staticmethod

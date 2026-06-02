@@ -17,6 +17,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 import httpx
+from django.utils.translation import gettext_lazy as _
 
 from apps.core.exceptions import ChatProviderException, ConfigurationException
 
@@ -40,7 +41,7 @@ class DingtalkTokenMixin:
                 return {}
             key_mapping = {
                 "DINGTALK_APP_KEY": "APP_KEY",
-                "DINGTALK_APP_SECRET": "APP_SECRET",  # pragma: allowlist secret
+                "DINGTALK_APP_SECRET": "APP_SECRET",
                 "DINGTALK_AGENT_ID": "AGENT_ID",
                 "DINGTALK_DEFAULT_OWNER_ID": "DEFAULT_OWNER_ID",
             }
@@ -72,7 +73,7 @@ class DingtalkTokenMixin:
             logger.debug(f"最终钉钉配置: {list(filtered_config.keys())}")
             return filtered_config
 
-        except (TypeError, ValueError) as e:
+        except Exception as e:
             logger.error(f"加载钉钉配置失败: {e!s}")
             raise ConfigurationException(
                 message=f"无法加载钉钉配置: {e!s}", platform="dingtalk", errors={"original_error": str(e)}
@@ -107,7 +108,7 @@ class DingtalkTokenMixin:
 
         if not app_key or not app_secret:
             raise ConfigurationException(
-                message="钉钉 APP_KEY 或 APP_SECRET 未配置",
+                message=_("钉钉 APP_KEY 或 APP_SECRET 未配置"),
                 platform="dingtalk",
                 missing_config="APP_KEY, APP_SECRET",
             )

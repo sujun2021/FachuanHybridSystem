@@ -77,7 +77,8 @@ class EvidenceOCRService:
             logger.exception("图片 OCR 失败")
             return ""
 
-    def _ocr_image_bytes(self, image_bytes: bytes) -> str:
+    @staticmethod
+    def _ocr_image_bytes(image_bytes: bytes) -> str:
         from apps.core.interfaces import ServiceLocator
 
         ocr_svc = ServiceLocator.get_ocr_service()

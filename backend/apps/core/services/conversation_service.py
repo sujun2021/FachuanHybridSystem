@@ -32,6 +32,7 @@ HumanMessage = _HumanMessage
 AIMessage = _AIMessage
 SystemMessage = _SystemMessage
 
+
 from apps.core.models import ConversationHistory
 from apps.core.repositories.conversation_repository import ConversationHistoryRepository
 

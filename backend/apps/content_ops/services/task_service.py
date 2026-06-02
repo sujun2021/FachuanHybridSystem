@@ -1,4 +1,4 @@
-"""任务服务 — ContentTask 的 CRUD、审核、队列提交。"""
+"""任务服务 - ContentTask 的 CRUD、审核、队列提交。"""
 
 from __future__ import annotations
 
@@ -32,7 +32,6 @@ class ContentOpsTaskService:
     """ContentTask 的业务操作。"""
 
     def create_task(self, *, payload: Any, user: Any | None = None) -> ContentTask:
-        """创建内容运营任务并提交队列。"""
         mode = getattr(payload, "mode", ContentTaskMode.SEARCH)
 
         if mode == ContentTaskMode.SEARCH:
@@ -40,9 +39,8 @@ class ContentOpsTaskService:
                 raise ValidationException("检索模式下 keyword 不能为空")
             if not getattr(payload, "credential_id", None):
                 raise ValidationException("检索模式下 credential_id 不能为空")
-        elif mode == ContentTaskMode.DIRECT:
-            if not getattr(payload, "direct_content", None):
-                raise ValidationException("直投模式下 direct_content 不能为空")
+        elif mode == ContentTaskMode.DIRECT and not getattr(payload, "direct_content", None):
+            raise ValidationException("直投模式下 direct_content 不能为空")
 
         with transaction.atomic():
             task = ContentTask(
@@ -61,10 +59,7 @@ class ContentOpsTaskService:
             if mode == ContentTaskMode.SEARCH and getattr(payload, "credential_id", None):
                 from apps.organization.models import AccountCredential
 
-                cred = AccountCredential.objects.filter(
-                    id=payload.credential_id,
-                    lawyer=user,
-                ).first()
+                cred = AccountCredential.objects.filter(id=payload.credential_id, lawyer=user).first()
                 if not cred:
                     raise ValidationException("凭证不存在或无权限")
                 task.credential = cred
@@ -74,7 +69,6 @@ class ContentOpsTaskService:
         return task
 
     def dispatch_task(self, *, task: ContentTask) -> bool:
-        """将任务提交到 Django Q 队列。"""
         try:
             q_task_id = submit_task(
                 "apps.content_ops.tasks.execute_content_ops_task",
@@ -86,16 +80,15 @@ class ContentOpsTaskService:
             task.message = _QUEUED_MESSAGE
             task.save(update_fields=["q_task_id", "status", "message", "updated_at"])
             return True
-        except Exception as e:
+        except Exception as exc:
             logger.exception("Failed to dispatch content_ops task %s", task.pk)
             task.status = ContentTaskStatus.FAILED
             task.message = "任务提交失败"
-            task.error = str(e)
+            task.error = str(exc)
             task.save(update_fields=["status", "message", "error", "updated_at"])
             return False
 
     def get_task(self, *, task_id: int, user: Any | None = None) -> ContentTask:
-        """获取任务详情（含权限检查）。"""
         task = ContentTask.objects.select_related("created_by", "credential").filter(id=task_id).first()
         if not task:
             raise NotFoundError(f"任务 {task_id} 不存在")
@@ -103,7 +96,6 @@ class ContentOpsTaskService:
         return task
 
     def list_tasks(self, *, user: Any | None = None, mode: str | None = None) -> list[ContentTask]:
-        """列出当前用户的任务。"""
         qs = ContentTask.objects.select_related("created_by")
         if user and user.is_authenticated:
             qs = qs.filter(created_by=user)
@@ -112,26 +104,18 @@ class ContentOpsTaskService:
         return list(qs[:50])
 
     def list_articles(self, *, task_id: int, user: Any | None = None) -> list[GeneratedArticle]:
-        """列出任务关联的文章。"""
         task = self.get_task(task_id=task_id, user=user)
         return list(GeneratedArticle.objects.filter(task=task).order_by("-created_at"))
 
     def list_episodes(self, *, task_id: int, user: Any | None = None) -> list[PodcastEpisode]:
-        """列出任务关联的播客单集。"""
         task = self.get_task(task_id=task_id, user=user)
         return list(PodcastEpisode.objects.filter(task=task).order_by("-created_at"))
 
-    def get_episode_audio(self, *, episode_id: int, user: Any | None = None) -> PodcastEpisode | None:
-        """获取播客单集（含音频文件和 task 关联），校验所有权。"""
-        episode = PodcastEpisode.objects.filter(id=episode_id).select_related("task").first()
-        if not episode or not episode.audio_file:
-            return None
-        if episode.task.created_by_id and user and episode.task.created_by_id != user.pk:
-            return None
-        return episode
+    def list_discussion_scripts(self, *, task_id: int, user: Any | None = None) -> list[DiscussionScript]:
+        task = self.get_task(task_id=task_id, user=user)
+        return list(DiscussionScript.objects.filter(task=task).order_by("-created_at"))
 
     def approve_article(self, *, article_id: int, user: Any | None = None, notes: str = "") -> GeneratedArticle:
-        """审核通过文章。"""
         article = self._get_article(article_id)
         article.review_status = ReviewStatus.APPROVED
         article.reviewer_notes = notes
@@ -141,7 +125,6 @@ class ContentOpsTaskService:
         return article
 
     def reject_article(self, *, article_id: int, user: Any | None = None, notes: str = "") -> GeneratedArticle:
-        """驳回文章。"""
         article = self._get_article(article_id)
         article.review_status = ReviewStatus.REJECTED
         article.reviewer_notes = notes
@@ -150,33 +133,19 @@ class ContentOpsTaskService:
         article.save(update_fields=["review_status", "reviewer_notes", "reviewed_by", "reviewed_at", "updated_at"])
         return article
 
-    def approve_episode(self, *, episode_id: int, user: Any | None = None, notes: str = "") -> PodcastEpisode:
-        """审核通过播客单集。"""
-        episode = self._get_episode(episode_id)
-        episode.review_status = ReviewStatus.APPROVED
-        episode.reviewer_notes = notes
-        episode.reviewed_by = user if user and user.is_authenticated else None
-        episode.reviewed_at = timezone.now()
-        episode.save(update_fields=["review_status", "reviewer_notes", "reviewed_by", "reviewed_at", "updated_at"])
-        return episode
-
-    def reject_episode(self, *, episode_id: int, user: Any | None = None, notes: str = "") -> PodcastEpisode:
-        """驳回播客单集。"""
-        episode = self._get_episode(episode_id)
-        episode.review_status = ReviewStatus.REJECTED
-        episode.reviewer_notes = notes
-        episode.reviewed_by = user if user and user.is_authenticated else None
-        episode.reviewed_at = timezone.now()
-        episode.save(update_fields=["review_status", "reviewer_notes", "reviewed_by", "reviewed_at", "updated_at"])
-        return episode
-
     def update_article(
-        self, *, article_id: int, title: str | None = None, content: str | None = None, user: Any | None = None
+        self,
+        *,
+        article_id: int,
+        title: str | None = None,
+        content: str | None = None,
+        user: Any | None = None,
     ) -> GeneratedArticle:
-        """编辑文章内容。"""
         article = self._get_article(article_id)
+        self._check_permission(article.task, user)
         if article.review_status != ReviewStatus.DRAFT:
             raise ValidationException("只能编辑草稿状态的文章")
+
         update_fields = ["updated_at"]
         if title is not None:
             article.title = title
@@ -188,11 +157,12 @@ class ContentOpsTaskService:
         return article
 
     def regenerate_article(self, *, article_id: int, user: Any | None = None) -> GeneratedArticle:
-        """重新生成文章（使用原文的事实依据）。"""
         article = self._get_article(article_id)
+        self._check_permission(article.task, user)
         task = article.task
         if not task.source_facts:
             raise ValidationException("没有案件事实，无法重新生成")
+
         from apps.content_ops.services.content_chain import ContentGenerationChain
 
         chain = ContentGenerationChain()
@@ -209,16 +179,35 @@ class ContentOpsTaskService:
         article.save()
         return article
 
+    def approve_episode(self, *, episode_id: int, user: Any | None = None, notes: str = "") -> PodcastEpisode:
+        episode = self._get_episode(episode_id)
+        self._check_permission(episode.task, user)
+        episode.review_status = ReviewStatus.APPROVED
+        episode.reviewer_notes = notes
+        episode.reviewed_by = user if user and user.is_authenticated else None
+        episode.reviewed_at = timezone.now()
+        episode.save(update_fields=["review_status", "reviewer_notes", "reviewed_by", "reviewed_at", "updated_at"])
+        return episode
+
+    def reject_episode(self, *, episode_id: int, user: Any | None = None, notes: str = "") -> PodcastEpisode:
+        episode = self._get_episode(episode_id)
+        self._check_permission(episode.task, user)
+        episode.review_status = ReviewStatus.REJECTED
+        episode.reviewer_notes = notes
+        episode.reviewed_by = user if user and user.is_authenticated else None
+        episode.reviewed_at = timezone.now()
+        episode.save(update_fields=["review_status", "reviewer_notes", "reviewed_by", "reviewed_at", "updated_at"])
+        return episode
+
     def retry_task(self, *, task_id: int, user: Any | None = None) -> ContentTask:
-        """重试失败的任务。"""
         task = self.get_task(task_id=task_id, user=user)
         if task.status != ContentTaskStatus.FAILED:
             raise ValidationException("只能重试失败的任务")
-        # 清除旧的文章、讨论稿和音频
+
         GeneratedArticle.objects.filter(task=task).delete()
         DiscussionScript.objects.filter(task=task).delete()
         PodcastEpisode.objects.filter(task=task).delete()
-        # 重新提交
+
         task.status = ContentTaskStatus.PENDING
         task.progress = 0
         task.message = "任务已重新提交"
@@ -229,7 +218,6 @@ class ContentOpsTaskService:
         return task
 
     def cancel_task(self, *, task_id: int, user: Any | None = None) -> ContentTask:
-        """取消运行中或排队中的任务。"""
         task = self.get_task(task_id=task_id, user=user)
         if task.status not in [ContentTaskStatus.PENDING, ContentTaskStatus.QUEUED, ContentTaskStatus.RUNNING]:
             raise ValidationException("只能取消待执行或运行中的任务")
@@ -240,21 +228,12 @@ class ContentOpsTaskService:
         return task
 
     def delete_task(self, *, task_id: int, user: Any | None = None) -> None:
-        """删除任务及其关联的文章和音频。"""
         task = self.get_task(task_id=task_id, user=user)
         if task.status in [ContentTaskStatus.RUNNING, ContentTaskStatus.QUEUED]:
             raise ValidationException("不能删除正在执行的任务，请先取消")
         task.delete()
 
-    # --- Discussion scripts ---
-
-    def list_discussion_scripts(self, *, task_id: int, user: Any | None = None) -> list[DiscussionScript]:
-        """列出任务关联的讨论稿。"""
-        task = self.get_task(task_id=task_id, user=user)
-        return list(DiscussionScript.objects.filter(task=task).order_by("-created_at"))
-
     def get_discussion_script(self, *, script_id: int, user: Any | None = None) -> DiscussionScript:
-        """获取讨论稿详情（含轮次）。"""
         script = DiscussionScript.objects.select_related("task").filter(id=script_id).first()
         if not script:
             raise NotFoundError(f"讨论稿 {script_id} 不存在")
@@ -262,15 +241,20 @@ class ContentOpsTaskService:
         return script
 
     def update_discussion_turn(
-        self, *, turn_id: int, text: str | None = None, speaker_style_prompt: str | None = None, user: Any | None = None
+        self,
+        *,
+        turn_id: int,
+        text: str | None = None,
+        speaker_style_prompt: str | None = None,
+        user: Any | None = None,
     ) -> DiscussionTurn:
-        """编辑讨论稿单轮对话。"""
         turn = DiscussionTurn.objects.select_related("script__task").filter(id=turn_id).first()
         if not turn:
             raise NotFoundError(f"对话轮次 {turn_id} 不存在")
         self._check_permission(turn.script.task, user)
         if turn.script.review_status != ReviewStatus.DRAFT:
             raise ValidationException("只能编辑草稿状态的讨论稿")
+
         update_fields = ["updated_at"]
         if text is not None:
             turn.text = text
@@ -282,10 +266,14 @@ class ContentOpsTaskService:
         return turn
 
     def approve_discussion_script(
-        self, *, script_id: int, user: Any | None = None, notes: str = ""
+        self,
+        *,
+        script_id: int,
+        user: Any | None = None,
+        notes: str = "",
     ) -> DiscussionScript:
-        """审核通过讨论稿。"""
         script = self._get_discussion_script(script_id)
+        self._check_permission(script.task, user)
         script.review_status = ReviewStatus.APPROVED
         script.reviewer_notes = notes
         script.reviewed_by = user if user and user.is_authenticated else None
@@ -293,9 +281,15 @@ class ContentOpsTaskService:
         script.save(update_fields=["review_status", "reviewer_notes", "reviewed_by", "reviewed_at", "updated_at"])
         return script
 
-    def reject_discussion_script(self, *, script_id: int, user: Any | None = None, notes: str = "") -> DiscussionScript:
-        """驳回讨论稿。"""
+    def reject_discussion_script(
+        self,
+        *,
+        script_id: int,
+        user: Any | None = None,
+        notes: str = "",
+    ) -> DiscussionScript:
         script = self._get_discussion_script(script_id)
+        self._check_permission(script.task, user)
         script.review_status = ReviewStatus.REJECTED
         script.reviewer_notes = notes
         script.reviewed_by = user if user and user.is_authenticated else None
@@ -304,8 +298,8 @@ class ContentOpsTaskService:
         return script
 
     def regenerate_discussion_script(self, *, script_id: int, user: Any | None = None) -> DiscussionScript:
-        """重新生成讨论稿。"""
         script = self._get_discussion_script(script_id)
+        self._check_permission(script.task, user)
         task = script.task
         if not task.source_facts:
             raise ValidationException("没有案件事实，无法重新生成")
@@ -335,23 +329,21 @@ class ContentOpsTaskService:
         script.reviewed_at = None
         script.save()
 
-        # 替换所有轮次
         script.turns.all().delete()
-        style_map = {s["name"]: s.get("style_prompt", "") for s in speakers}
-        for i, turn in enumerate(result.turns):
+        style_map = {speaker["name"]: speaker.get("style_prompt", "") for speaker in speakers}
+        for idx, turn in enumerate(result.turns):
             DiscussionTurn.objects.create(
                 script=script,
                 speaker_name=turn["speaker"],
                 speaker_style_prompt=style_map.get(turn["speaker"], ""),
                 text=turn["text"],
-                order=i,
+                order=idx,
             )
-
         return script
 
     def synthesize_discussion(self, *, script_id: int, user: Any | None = None) -> PodcastEpisode:
-        """编辑后重新合成讨论稿音频。"""
         script = self._get_discussion_script(script_id)
+        self._check_permission(script.task, user)
         task = script.task
 
         turns = list(script.turns.order_by("order"))
@@ -359,14 +351,13 @@ class ContentOpsTaskService:
             raise ValidationException("讨论稿没有对话轮次")
 
         turn_dicts = [
-            {"text": t.text, "style_prompt": t.speaker_style_prompt, "speaker": t.speaker_name} for t in turns
+            {"text": turn.text, "style_prompt": turn.speaker_style_prompt, "speaker": turn.speaker_name}
+            for turn in turns
         ]
 
         from apps.content_ops.services.tts_service import TTSService
 
-        tts_service = TTSService()
-        audio_bytes = tts_service.synthesize_discussion(turns=turn_dicts)
-
+        audio_bytes = TTSService().synthesize_discussion(turns=turn_dicts)
         episode = PodcastEpisode(
             task=task,
             discussion_script=script,
@@ -376,19 +367,18 @@ class ContentOpsTaskService:
         )
         episode.audio_file.save(f"discussion_{task.pk}.mp3", ContentFile(audio_bytes))
         episode.save()
-
         return episode
 
     @staticmethod
     def _get_article(article_id: int) -> GeneratedArticle:
-        article = GeneratedArticle.objects.filter(id=article_id).first()
+        article = GeneratedArticle.objects.select_related("task").filter(id=article_id).first()
         if not article:
             raise NotFoundError(f"文章 {article_id} 不存在")
         return article
 
     @staticmethod
     def _get_episode(episode_id: int) -> PodcastEpisode:
-        episode = PodcastEpisode.objects.filter(id=episode_id).first()
+        episode = PodcastEpisode.objects.select_related("task").filter(id=episode_id).first()
         if not episode:
             raise NotFoundError(f"播客单集 {episode_id} 不存在")
         return episode

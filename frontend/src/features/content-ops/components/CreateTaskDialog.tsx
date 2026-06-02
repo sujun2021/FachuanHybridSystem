@@ -55,8 +55,10 @@ export function CreateTaskDialog({
   const [credentialId, setCredentialId] = useState<number | null>(null)
   const [outputMode, setOutputMode] = useState<OutputMode>('narration')
   const [speakers, setSpeakers] = useState<DiscussionSpeaker[]>(DEFAULT_SPEAKERS)
+  const [previewPlaying, setPreviewPlaying] = useState(false)
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
-  // Sync props when dialog opens
   useEffect(() => {
     if (open) {
       setMode(defaultMode)
@@ -67,9 +69,6 @@ export function CreateTaskDialog({
 
   const createTask = useCreateTask()
   const { data: credentials = [] } = useCredentials()
-  const [previewPlaying, setPreviewPlaying] = useState(false)
-  const [previewLoading, setPreviewLoading] = useState(false)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
 
   const handleVoicePreview = useCallback(async () => {
     if (previewPlaying && audioRef.current) {
@@ -104,9 +103,8 @@ export function CreateTaskDialog({
     }
   }, [voice, previewPlaying])
 
-  // 过滤威科先行相关凭证
-  const weikeCredentials = credentials.filter((c) => {
-    const name = c.site_name.toLowerCase()
+  const weikeCredentials = credentials.filter((credential) => {
+    const name = credential.site_name.toLowerCase()
     return name.includes('wk') || name.includes('weike') || name.includes('wkinfo')
   })
 
@@ -121,6 +119,7 @@ export function CreateTaskDialog({
         return
       }
     }
+
     if (mode === 'direct' && !directContent.trim()) {
       toast.error('请输入内容')
       return
@@ -173,7 +172,6 @@ export function CreateTaskDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* 模式切换 */}
           <div className="flex gap-2">
             <Button
               type="button"
@@ -195,7 +193,6 @@ export function CreateTaskDialog({
             </Button>
           </div>
 
-          {/* 检索模式字段 */}
           {mode === 'search' && (
             <>
               <div className="space-y-2">
@@ -215,15 +212,15 @@ export function CreateTaskDialog({
                 ) : (
                   <Select
                     value={credentialId?.toString() ?? ''}
-                    onValueChange={(v) => setCredentialId(Number(v))}
+                    onValueChange={(value) => setCredentialId(Number(value))}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="选择检索账号" />
                     </SelectTrigger>
                     <SelectContent>
-                      {weikeCredentials.map((c) => (
-                        <SelectItem key={c.id} value={c.id.toString()}>
-                          {c.site_name} - {c.account}
+                      {weikeCredentials.map((credential) => (
+                        <SelectItem key={credential.id} value={credential.id.toString()}>
+                          {credential.site_name} - {credential.account}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -233,7 +230,6 @@ export function CreateTaskDialog({
             </>
           )}
 
-          {/* 直投模式字段 */}
           {mode === 'direct' && (
             <div className="space-y-2">
               <Label>输入内容 *</Label>
@@ -246,9 +242,10 @@ export function CreateTaskDialog({
             </div>
           )}
 
-          {/* 通用字段 */}
           <div className="space-y-2">
-            <Label>案例摘要 <span className="text-muted-foreground">(可选)</span></Label>
+            <Label>
+              案例摘要 <span className="text-muted-foreground">(可选)</span>
+            </Label>
             <Input
               placeholder="简要描述案例背景，帮助 AI 更好理解"
               value={caseSummary}
@@ -264,9 +261,9 @@ export function CreateTaskDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {VOICE_OPTIONS.map((v) => (
-                    <SelectItem key={v.value} value={v.value}>
-                      {v.label}
+                  {VOICE_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -290,7 +287,6 @@ export function CreateTaskDialog({
             </div>
           </div>
 
-          {/* 输出模式 */}
           <div className="space-y-2">
             <Label>输出模式</Label>
             <div className="flex gap-2">
@@ -309,7 +305,6 @@ export function CreateTaskDialog({
             </div>
           </div>
 
-          {/* 讨论角色配置 */}
           {outputMode !== 'narration' && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">

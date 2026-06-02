@@ -1,6 +1,7 @@
 import logging
 from typing import Any
 
+from django.utils.translation import gettext_lazy as _
 from ninja import File, Router, Schema
 from ninja.files import UploadedFile
 
@@ -41,13 +42,13 @@ def recognize_identity_doc(
     doc_type: str = "auto",
     model: str | None = None,
 ) -> IdentityRecognizeOut:
-    """识别证件信息"""
+    """Recognize identity document fields."""
     image_bytes = file.read()
     service = _get_identity_extraction_service()
     normalized_doc_type = (doc_type or "").strip() or "auto"
     normalized_model = (model or "").strip() or None
     logger.info(
-        "证件识别请求入参: doc_type=%s, model=%s, filename=%s",
+        "identity doc recognize request: doc_type=%s, model=%s, filename=%s",
         normalized_doc_type,
         normalized_model,
         getattr(file, "name", ""),
@@ -82,7 +83,7 @@ def add_identity_doc(
         uploaded_file=file,
         user=getattr(request, "user", None),
     )
-    return {"success": True, "doc_id": identity_doc.id, "message": "证件文档添加成功"}
+    return {"success": True, "doc_id": identity_doc.id, "message": _("证件文档添加成功")}
 
 
 class MergeIdCardManualIn(Schema):
@@ -192,7 +193,7 @@ def delete_identity_doc(request: Any, doc_id: int) -> dict[str, Any]:
     service = _get_identity_doc_service()
     service.delete_identity_doc(doc_id=doc_id, user=getattr(request, "user", None))
 
-    return {"success": True, "message": "证件文档删除成功"}
+    return {"success": True, "message": _("证件文档删除成功")}
 
 
 @router.post("/identity-doc/recognize/submit")

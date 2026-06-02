@@ -12,6 +12,7 @@ from django.db import transaction
 from django.db.models import Avg, Count, Q, QuerySet
 from django.http import HttpResponse
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from apps.automation.models import TokenAcquisitionHistory, TokenAcquisitionStatus
 from apps.core.exceptions import BusinessException, ValidationException
@@ -47,7 +48,7 @@ class TokenAcquisitionHistoryAdminService:
         """
         if days <= 0:
             raise ValidationException(
-                message="保留天数必须大于0",
+                message=_("保留天数必须大于0"),
                 code="INVALID_DAYS_PARAMETER",
                 errors={},
             )
@@ -97,7 +98,7 @@ class TokenAcquisitionHistoryAdminService:
             from apps.core.exceptions import BusinessException
 
             raise BusinessException(
-                message="清理历史记录失败",
+                message=_("清理历史记录失败"),
                 code="CLEANUP_RECORDS_FAILED",
                 errors={},
             ) from e
@@ -118,7 +119,7 @@ class TokenAcquisitionHistoryAdminService:
         """
         if not queryset:
             raise ValidationException(
-                message="没有选中任何记录",
+                message=_("没有选中任何记录"),
                 code="NO_RECORDS_SELECTED",
                 errors={},
             )
@@ -193,7 +194,7 @@ class TokenAcquisitionHistoryAdminService:
             from apps.core.exceptions import BusinessException
 
             raise BusinessException(
-                message="导出CSV文件失败",
+                message=_("导出CSV文件失败"),
                 code="EXPORT_CSV_FAILED",
                 errors={},
             ) from e
@@ -214,7 +215,7 @@ class TokenAcquisitionHistoryAdminService:
         """
         if not queryset:
             raise ValidationException(
-                message="没有选中任何记录",
+                message=_("没有选中任何记录"),
                 code="NO_RECORDS_SELECTED",
                 errors={},
             )
@@ -301,7 +302,7 @@ class TokenAcquisitionHistoryAdminService:
             from apps.core.exceptions import BusinessException
 
             raise BusinessException(
-                message="性能数据分析失败",
+                message=_("性能数据分析失败"),
                 code="PERFORMANCE_ANALYSIS_FAILED",
                 errors={},
             ) from e
@@ -406,7 +407,7 @@ class TokenAcquisitionHistoryAdminService:
             from apps.core.exceptions import BusinessException
 
             raise BusinessException(
-                message="获取仪表板统计数据失败",
+                message=_("获取仪表板统计数据失败"),
                 code="GET_DASHBOARD_STATS_FAILED",
                 errors={},
             ) from e

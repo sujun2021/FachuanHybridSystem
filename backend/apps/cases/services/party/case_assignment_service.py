@@ -7,6 +7,7 @@ from typing import Any, cast
 
 from django.db import transaction
 from django.db.models import QuerySet
+from django.utils.translation import gettext_lazy as _
 
 from apps.cases.models import Case, CaseAssignment
 from apps.core.exceptions import ConflictError, NotFoundError
@@ -136,7 +137,7 @@ class CaseAssignmentService(DjangoPermsMixin):
                 },
             )
             raise NotFoundError(
-                message="指派不存在",
+                message=_("指派不存在"),
                 code="ASSIGNMENT_NOT_FOUND",
                 errors={"assignment_id": f"ID 为 {assignment_id} 的指派不存在"},
             ) from None
@@ -178,7 +179,7 @@ class CaseAssignmentService(DjangoPermsMixin):
                 },
             )
             raise NotFoundError(
-                message="案件不存在", code="CASE_NOT_FOUND", errors={"case_id": f"ID 为 {case_id} 的案件不存在"}
+                message=_("案件不存在"), code="CASE_NOT_FOUND", errors={"case_id": f"ID 为 {case_id} 的案件不存在"}
             ) from None
 
         # 检查是否已存在相同的指派
@@ -193,7 +194,7 @@ class CaseAssignmentService(DjangoPermsMixin):
                 },
             )
             raise ConflictError(
-                message="指派已存在",
+                message=_("指派已存在"),
                 code="ASSIGNMENT_ALREADY_EXISTS",
                 errors={"assignment": f"案件 {case_id} 已指派给律师 {lawyer_id}"},
             )
@@ -248,7 +249,7 @@ class CaseAssignmentService(DjangoPermsMixin):
                 },
             )
             raise NotFoundError(
-                message="指派不存在",
+                message=_("指派不存在"),
                 code="ASSIGNMENT_NOT_FOUND",
                 errors={"assignment_id": f"ID 为 {assignment_id} 的指派不存在"},
             ) from None
@@ -260,7 +261,7 @@ class CaseAssignmentService(DjangoPermsMixin):
                 Case.objects.get(id=case_id)
             except Case.DoesNotExist:
                 raise NotFoundError(
-                    message="案件不存在", code="CASE_NOT_FOUND", errors={"case_id": f"ID 为 {case_id} 的案件不存在"}
+                    message=_("案件不存在"), code="CASE_NOT_FOUND", errors={"case_id": f"ID 为 {case_id} 的案件不存在"}
                 ) from None
 
         # 检查重复指派(如果更新了 case_id 或 lawyer_id)
@@ -273,7 +274,7 @@ class CaseAssignmentService(DjangoPermsMixin):
             .exists()
         ):
             raise ConflictError(
-                message="指派已存在",
+                message=_("指派已存在"),
                 code="ASSIGNMENT_ALREADY_EXISTS",
                 errors={"assignment": f"案件 {new_case_id} 已指派给律师 {new_lawyer_id}"},
             )
@@ -329,7 +330,7 @@ class CaseAssignmentService(DjangoPermsMixin):
                 },
             )
             raise NotFoundError(
-                message="指派不存在",
+                message=_("指派不存在"),
                 code="ASSIGNMENT_NOT_FOUND",
                 errors={"assignment_id": f"ID 为 {assignment_id} 的指派不存在"},
             ) from None
@@ -365,7 +366,7 @@ class CaseAssignmentService(DjangoPermsMixin):
             case = Case.objects.select_related("contract").get(id=case_id)
         except Case.DoesNotExist:
             raise NotFoundError(
-                message="案件不存在",
+                message=_("案件不存在"),
                 code="CASE_NOT_FOUND",
                 errors={"case_id": f"ID 为 {case_id} 的案件不存在"},
             ) from None

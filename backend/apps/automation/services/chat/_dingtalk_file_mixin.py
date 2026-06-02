@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 import httpx
+from django.utils.translation import gettext_lazy as _
 
 from apps.core.exceptions import ConfigurationException, MessageSendException
 
@@ -36,7 +37,7 @@ class DingtalkFileMixin:
         """发送文件到群聊（上传媒体文件 -> 发送文件到指定会话）"""
         if not self.is_available():
             raise ConfigurationException(
-                message="钉钉配置不完整，无法发送文件",
+                message=_("钉钉配置不完整，无法发送文件"),
                 platform="dingtalk",
                 missing_config="APP_KEY, APP_SECRET",
             )
@@ -96,7 +97,7 @@ class DingtalkFileMixin:
 
             if not media_id:
                 raise MessageSendException(
-                    message="API 响应中缺少 media_id",
+                    message=_("API 响应中缺少 media_id"),
                     platform="dingtalk",
                     errors={"api_response": resp_data},
                 )

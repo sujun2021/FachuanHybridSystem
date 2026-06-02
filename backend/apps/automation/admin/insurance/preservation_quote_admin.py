@@ -17,6 +17,7 @@ from django.urls import path
 from django.utils import timezone
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import SafeString, mark_safe
+from django.utils.translation import gettext_lazy as _
 
 from apps.automation.models import InsuranceQuote, PreservationQuote, QuoteItemStatus, QuoteStatus
 
@@ -53,7 +54,7 @@ class InsuranceQuoteInline(admin.TabularInline[InsuranceQuote, InsuranceQuote]):
         "error_message_display",
     ]
 
-    @admin.display(description="收费标准")
+    @admin.display(description=_("收费标准"))
     def prices_display(self, obj: InsuranceQuote) -> SafeString:
         """显示三个价格"""
         if obj.status != "success":
@@ -88,7 +89,7 @@ class InsuranceQuoteInline(admin.TabularInline[InsuranceQuote, InsuranceQuote]):
             return format_html_join(mark_safe("<br>"), "{}", ((p,) for p in parts))
         return format_html('<span style="color: #999;">{}</span>', "-")
 
-    @admin.display(description="费率")
+    @admin.display(description=_("费率"))
     def rates_display(self, obj: InsuranceQuote) -> SafeString:
         """显示两个费率"""
         if obj.status != "success":
@@ -104,7 +105,7 @@ class InsuranceQuoteInline(admin.TabularInline[InsuranceQuote, InsuranceQuote]):
             return format_html_join(mark_safe("<br>"), "{}", ((p,) for p in parts))
         return format_html('<span style="color: #999;">{}</span>', "-")
 
-    @admin.display(description="最高保全金额")
+    @admin.display(description=_("最高保全金额"))
     def max_apply_amount_display(self, obj: InsuranceQuote) -> SafeString:
         """显示最高保全金额"""
         if obj.status != "success" or not obj.max_apply_amount:
@@ -120,7 +121,7 @@ class InsuranceQuoteInline(admin.TabularInline[InsuranceQuote, InsuranceQuote]):
 
         return format_html('<span style="color: #007bff; font-weight: bold;">¥{}</span>', display)
 
-    @admin.display(description="状态")
+    @admin.display(description=_("状态"))
     def status_display(self, obj: InsuranceQuote) -> SafeString:
         """带颜色的状态显示"""
         if obj.status == "success":
@@ -128,7 +129,7 @@ class InsuranceQuoteInline(admin.TabularInline[InsuranceQuote, InsuranceQuote]):
         else:
             return format_html('<span style="color: #dc3545; font-weight: bold;">{}</span>', "❌ 失败")
 
-    @admin.display(description="请求/响应详情")
+    @admin.display(description=_("请求/响应详情"))
     def error_message_display(self, obj: InsuranceQuote) -> SafeString:
         """格式化显示错误信息"""
         if not obj.error_message:
@@ -148,7 +149,7 @@ class InsuranceQuoteInline(admin.TabularInline[InsuranceQuote, InsuranceQuote]):
                 "</details>",
                 formatted,
             )
-        except (json.JSONDecodeError, TypeError):
+        except Exception:
             return format_html(
                 '<pre style="max-height: 200px; overflow: auto; background: #f5f5f5;'
                 ' padding: 10px; border-radius: 4px; font-size: 12px;">{}</pre>',
@@ -215,7 +216,7 @@ class PreservationQuoteAdmin(admin.ModelAdmin):
 
     fieldsets: ClassVar[tuple[Any, ...]] = (
         (
-            "基本信息",
+            _("基本信息"),
             {
                 "fields": (
                     "id",
@@ -226,7 +227,7 @@ class PreservationQuoteAdmin(admin.ModelAdmin):
             },
         ),
         (
-            "任务状态",
+            _("任务状态"),
             {
                 "fields": (
                     "status",
@@ -239,7 +240,7 @@ class PreservationQuoteAdmin(admin.ModelAdmin):
             },
         ),
         (
-            "时间信息",
+            _("时间信息"),
             {
                 "fields": (
                     "created_at",
@@ -250,7 +251,7 @@ class PreservationQuoteAdmin(admin.ModelAdmin):
             },
         ),
         (
-            "报价汇总",
+            _("报价汇总"),
             {
                 "fields": ("quotes_summary",),
                 "classes": ("wide",),
@@ -266,13 +267,13 @@ class PreservationQuoteAdmin(admin.ModelAdmin):
 
     actions = ["execute_quotes", "retry_failed_quotes"]
 
-    @admin.display(description="保全金额")
+    @admin.display(description=_("保全金额"))
     def preserve_amount_display(self, obj: PreservationQuote) -> SafeString:
         """格式化显示保全金额"""
         amount_str = f"{obj.preserve_amount:,.2f}"
         return format_html('<span style="font-weight: bold; font-size: 14px;">¥{}</span>', amount_str)
 
-    @admin.display(description="状态")
+    @admin.display(description=_("状态"))
     def status_display(self, obj: PreservationQuote) -> SafeString:
         """带颜色的状态显示"""
         colors = {
@@ -296,7 +297,7 @@ class PreservationQuoteAdmin(admin.ModelAdmin):
             '<span style="color: {}; font-weight: bold;">{} {}</span>', color, icon, obj.get_status_display()
         )
 
-    @admin.display(description="成功/失败/总数")
+    @admin.display(description=_("成功/失败/总数"))
     def statistics_display(self, obj: PreservationQuote) -> SafeString:
         """显示统计信息"""
         if obj.total_companies == 0:
@@ -311,7 +312,7 @@ class PreservationQuoteAdmin(admin.ModelAdmin):
             obj.total_companies,
         )
 
-    @admin.display(description="成功率")
+    @admin.display(description=_("成功率"))
     def success_rate_display(self, obj: PreservationQuote) -> SafeString:
         """显示成功率"""
         if obj.total_companies == 0:
@@ -329,7 +330,7 @@ class PreservationQuoteAdmin(admin.ModelAdmin):
 
         return format_html('<span style="color: {}; font-weight: bold;">{}</span>', color, rate_str)
 
-    @admin.display(description="执行时长")
+    @admin.display(description=_("执行时长"))
     def duration_display(self, obj: PreservationQuote) -> SafeString:
         """显示执行时长"""
         if obj.started_at and obj.finished_at:
@@ -351,7 +352,7 @@ class PreservationQuoteAdmin(admin.ModelAdmin):
 
         return format_html('<span style="color: #999;">{}</span>', "-")
 
-    @admin.display(description="操作")
+    @admin.display(description=_("操作"))
     def run_button(self, obj: PreservationQuote) -> SafeString:
         """立即运行按钮"""
         if obj.status in [QuoteStatus.PENDING, QuoteStatus.FAILED]:
@@ -367,16 +368,16 @@ class PreservationQuoteAdmin(admin.ModelAdmin):
         else:
             return format_html('<span style="color: #999;">{}</span>', "已完成")
 
-    @admin.display(description="报价汇总")
+    @admin.display(description=_("报价汇总"))
     def quotes_summary(self, obj: PreservationQuote) -> SafeString:
         """报价汇总表格"""
         if obj.total_companies == 0:
-            return format_html('<p style="color: #999;">{}</p>', "暂无报价数据")
+            return format_html('<p style="color: #999;">{}</p>', _("暂无报价数据"))
 
         quotes = list(obj.quotes.all())
 
         if not quotes:
-            return format_html('<p style="color: #999;">{}</p>', "暂无报价数据")
+            return format_html('<p style="color: #999;">{}</p>', _("暂无报价数据"))
 
         successful_for_display = sorted(
             [q for q in quotes if q.status == QuoteItemStatus.SUCCESS and q.min_amount is not None],
@@ -396,10 +397,10 @@ class PreservationQuoteAdmin(admin.ModelAdmin):
             "</tr>"
             "</thead>"
             "<tbody>",
-            "排名",
-            "保险公司",
-            "报价金额",
-            "状态",
+            _("排名"),
+            _("保险公司"),
+            _("报价金额"),
+            _("状态"),
         )
 
         row_parts: list[SafeString] = []
@@ -428,12 +429,12 @@ class PreservationQuoteAdmin(admin.ModelAdmin):
                 '{}: <span style="color: #dc3545; font-weight: bold;">¥{}</span><br>'
                 '{}: <span style="color: #007bff; font-weight: bold;">¥{}</span>'
                 "</div>",
-                "统计信息",
-                "最低报价",
+                _("统计信息"),
+                _("最低报价"),
                 f"{min_premium:,.2f}",
-                "最高报价",
+                _("最高报价"),
                 f"{max_premium:,.2f}",
-                "平均报价",
+                _("平均报价"),
                 f"{avg_premium:,.2f}",
             )
             return format_html("{}{}{}{}", table_header, rows_html, table_close, stats_html)
@@ -443,9 +444,9 @@ class PreservationQuoteAdmin(admin.ModelAdmin):
     def _render_quote_row(self, quote: Any, rank: int) -> SafeString:
         """渲染单行报价。"""
         if quote.status == "success":
-            status_cell = format_html('<span style="color: #28a745;">✅ {}</span>', "成功")
+            status_cell = format_html('<span style="color: #28a745;">✅ {}</span>', _("成功"))
         else:
-            status_cell = format_html('<span style="color: #dc3545;">❌ {}</span>', "失败")
+            status_cell = format_html('<span style="color: #dc3545;">❌ {}</span>', _("失败"))
 
         amount_val = quote.min_amount
         if amount_val is not None:

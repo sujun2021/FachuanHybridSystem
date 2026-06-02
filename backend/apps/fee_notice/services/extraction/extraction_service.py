@@ -370,7 +370,7 @@ class FeeNoticeExtractionService:
             validator = FolderPathValidator()
             try:
                 original_name: str = validator.sanitize_file_name(uploaded_file.name)
-            except (OSError, ValueError):
+            except Exception:
                 logger.exception("文件名不合法")
                 file_errors.append(
                     {"file": str(uploaded_file.name or ""), "error": "文件名不合法", "code": "INVALID_FILE_NAME"}
@@ -401,5 +401,5 @@ class FeeNoticeExtractionService:
             try:
                 if temp_path.exists():
                     temp_path.unlink()
-            except (OSError, ValueError):
+            except Exception:
                 logger.warning("清理临时文件失败", extra={"file_path": str(temp_path)})

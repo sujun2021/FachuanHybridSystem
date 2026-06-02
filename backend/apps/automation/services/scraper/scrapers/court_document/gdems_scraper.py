@@ -309,7 +309,7 @@ class GdemsCourtScraper(BaseCourtDocumentScraper):
             with zipfile.ZipFile(zip_filepath, "r") as zip_ref:
                 for member in zip_ref.infolist():
                     target = (extract_dir / member.filename).resolve()
-                    if not target.is_relative_to(extract_dir.resolve()):
+                    if not str(target).startswith(str(extract_dir.resolve())):
                         logger.warning(f"跳过不安全的 ZIP 条目: {member.filename}")
                         continue
                     zip_ref.extract(member, extract_dir)
@@ -317,7 +317,7 @@ class GdemsCourtScraper(BaseCourtDocumentScraper):
                         extracted_files.append(str(target))
             logger.info(f"ZIP 文件已解压,共 {len(extracted_files)} 个文件")
 
-        except (OSError, ValueError) as e:
+        except Exception as e:
             logger.error(f"解压失败: {e}")
             # 解压失败不影响主流程,返回空列表
             extracted_files: list[Any] = []  # type: ignore

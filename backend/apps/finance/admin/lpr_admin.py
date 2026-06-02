@@ -16,6 +16,7 @@ from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.template.response import TemplateResponse
 from django.urls import URLPattern, path
+from django.utils.translation import gettext_lazy as _
 
 from apps.cases.admin.base_admin import BaseModelAdmin
 from apps.finance.models.lpr_rate import LPRRate
@@ -85,7 +86,7 @@ class LPRRateAdmin(BaseModelAdmin):
             },
         ),
         (
-            "元数据",
+            _("元数据"),
             {
                 "fields": (
                     "source",
@@ -148,7 +149,7 @@ class LPRRateAdmin(BaseModelAdmin):
 
             self.message_user(
                 request,
-                "LPR数据同步成功：新增 %(created)s 条，更新 %(updated)s 条，跳过 %(skipped)s 条" % result,
+                _("LPR数据同步成功：新增 %(created)s 条，更新 %(updated)s 条，跳过 %(skipped)s 条") % result,
             )
         except BusinessException as e:
             logger.error(f"[LPRAdmin] Sync failed: {e}")
@@ -173,7 +174,7 @@ class LPRRateAdmin(BaseModelAdmin):
 
         context = {
             **self.admin_site.each_context(request),
-            "title": "LPR利息计算器",
+            "title": _("LPR利息计算器"),
             "opts": self.model._meta,
             "recent_rates": LPRRate.objects.all()[:10],
             "latest_rate": latest_rate,

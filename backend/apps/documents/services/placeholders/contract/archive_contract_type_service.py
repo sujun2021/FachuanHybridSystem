@@ -64,7 +64,8 @@ class ArchiveContractTypeService(BasePlaceholderService):
 
         return result
 
-    def _map_archive_type(self, case_type: str) -> str:
+    @staticmethod
+    def _map_archive_type(case_type: str) -> str:
         """
         将合同类型映射为归档合同类型
 

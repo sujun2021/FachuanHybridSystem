@@ -13,6 +13,7 @@ from apps.message_hub.models import MessageSource, SyncStatus
 
 router = Router()
 
+
 # ── Schemas ──────────────────────────────────────────────
 
 
@@ -83,21 +84,12 @@ class MessageSourceUpdateIn(Schema):
 
 @router.get("/sources", response=list[MessageSourceOut])
 def list_sources(request: Any) -> list[MessageSource]:
-    from ..services.inbox_query import list_sources as _list_sources
-
-    return _list_sources()
+    return list(MessageSource.objects.select_related("credential").all())
 
 
 @router.get("/sources/{source_id}", response=MessageSourceOut)
 def get_source(request: Any, source_id: int) -> MessageSource:
-    from ..services.inbox_query import get_source_or_none
-
-    source = get_source_or_none(source_id)
-    if source is None:
-        from django.http import Http404
-
-        raise Http404("消息来源不存在")
-    return source
+    return get_object_or_404(MessageSource.objects.select_related("credential"), pk=source_id)
 
 
 @router.post("/sources", response={201: MessageSourceOut})
@@ -118,10 +110,7 @@ def create_source(request: Any, payload: MessageSourceCreateIn) -> tuple[int, Me
     }
     if payload.sync_since is not None:
         kwargs["sync_since"] = payload.sync_since
-
-    from ..services.inbox_query import create_source
-
-    source = create_source(**kwargs)
+    source = MessageSource.objects.create(**kwargs)
     return 201, source
 
 
@@ -150,9 +139,7 @@ def sync_source(request: Any, source_id: int) -> dict[str, Any]:
 
 @router.post("/sources/sync-all")
 def sync_all_sources(request: Any) -> dict[str, Any]:
-    from ..services.inbox_query import get_enabled_sources
-
-    sources = get_enabled_sources()
+    sources = MessageSource.objects.filter(is_enabled=True)
     for source in sources:
         submit_task("apps.message_hub.tasks.sync_source_by_id", source.pk)
     return {"success": True, "message": f"已提交 {sources.count()} 个同步任务"}

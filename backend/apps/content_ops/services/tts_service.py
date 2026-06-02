@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import httpx
 
@@ -16,7 +17,7 @@ TTS_VOICES: dict[str, str] = {
 }
 
 DEFAULT_VOICE = "冰糖"
-DEFAULT_STYLE_PROMPT = "一个中年女性邻居，说话亲切自然，语速稍慢，像在街坊聊天一样娓娓道来，带有生活气息和故事感"
+DEFAULT_MODEL = "mimo-v2.5-tts"
 
 # Single request text length limit (characters)
 _CHUNK_SIZE = 500
@@ -26,17 +27,16 @@ class TTSService:
     """MiMo TTS service using the chat/completions endpoint."""
 
     def __init__(self) -> None:
-        from apps.content_ops.constants import TTS_MODEL
         from apps.core.services.system_config_service import SystemConfigService
 
         svc = SystemConfigService()
         self._api_key = svc.get_value("OPENAI_COMPATIBLE_API_KEY", "")
         self._base_url = (
-            svc.get_value("OPENAI_COMPATIBLE_BASE_URL", "").rstrip("/") or "https://token-plan-sgp.xiaomimimo.com/v1"
+            svc.get_value("OPENAI_COMPATIBLE_BASE_URL", "").rstrip("/")
+            or "https://token-plan-sgp.xiaomimimo.com/v1"
         )
-        self._model = svc.get_value("MIMO_TTS_MODEL", "") or TTS_MODEL
+        self._model = svc.get_value("MIMO_TTS_MODEL", "") or DEFAULT_MODEL
         self._default_voice = svc.get_value("MIMO_TTS_VOICE", "") or DEFAULT_VOICE
-        self._default_style_prompt = svc.get_value("MIMO_TTS_STYLE_PROMPT", "") or DEFAULT_STYLE_PROMPT
 
     def synthesize(
         self,
@@ -49,11 +49,8 @@ class TTSService:
 
         Args:
             text: Text to synthesize.
-            voice: Voice name for builtin mode (冰糖/茉莉/苏打/白桦). Ignored in VoiceDesign mode.
+            voice: Voice name (冰糖/茉莉/苏打/白桦). Uses default if None.
             audio_format: Output format (mp3/wav/pcm/pcm16).
-            style_prompt: Natural language voice description for VoiceDesign mode.
-                If provided, uses mimo-v2.5-tts-voicedesign model.
-                If None, falls back to builtin voice mode.
 
         Returns:
             Raw audio bytes.
@@ -67,32 +64,24 @@ class TTSService:
         if not self._api_key:
             raise ValueError("OPENAI_COMPATIBLE_API_KEY is not configured")
 
-        from apps.content_ops.constants import TTS_MODEL_VOICEDESIGN
-
-        # Determine mode: VoiceDesign if style_prompt is provided, otherwise builtin
-        use_voicedesign = bool(style_prompt)
-        model = TTS_MODEL_VOICEDESIGN if use_voicedesign else self._model
         voice = voice or self._default_voice
-        if not style_prompt:
-            style_prompt = self._default_style_prompt
 
-        # Split long text into chunks
         chunks = self._split_text(text)
         logger.info(
-            "TTS synthesis: %d chars -> %d chunks, mode=%s, model=%s",
+            "TTS synthesis: %d chars -> %d chunks, voice=%s, model=%s, voicedesign=%s",
             len(text),
             len(chunks),
-            "voicedesign" if use_voicedesign else "builtin",
-            model,
+            voice,
+            self._model,
+            bool(style_prompt),
         )
 
         audio_parts: list[bytes] = []
-        # Reuse httpx client across chunks to avoid repeated TLS handshakes
         transport = httpx.HTTPTransport(verify=False)
         with httpx.Client(transport=transport, timeout=120) as client:
             for i, chunk in enumerate(chunks):
                 logger.info("Synthesizing chunk %d/%d (%d chars)", i + 1, len(chunks), len(chunk))
-                if use_voicedesign:
+                if style_prompt:
                     part = self._call_api_voicedesign(chunk, style_prompt, audio_format, client)
                 else:
                     part = self._call_api(chunk, voice, audio_format, client)
@@ -105,41 +94,26 @@ class TTSService:
         turns: list[dict[str, str]],
         audio_format: str = "mp3",
     ) -> bytes:
-        """Synthesize multi-person discussion audio.
-
-        Each turn uses its own VoiceDesign style_prompt for a distinct voice.
-        Turns are synthesized in parallel for better performance.
-
-        Args:
-            turns: List of {"text": "...", "style_prompt": "..."} dicts.
-            audio_format: Output format (mp3/wav).
-
-        Returns:
-            Concatenated audio bytes with short silence between turns.
-        """
+        """Synthesize multi-person discussion audio in parallel."""
         if not turns:
             raise ValueError("turns cannot be empty")
         if not self._api_key:
             raise ValueError("OPENAI_COMPATIBLE_API_KEY is not configured")
 
-        # MP3 silence frame (approx 0.4s at 128kbps)
-        _SILENCE_FRAME = bytes(
-            [
-                0xFF,
-                0xFB,
-                0x90,
-                0x00,  # MP3 sync word + header
-                *([0x00] * 154),  # zeroed data
-            ]
-        )
-        silence_gap = _SILENCE_FRAME * 3  # ~0.4s of silence
+        silence_frame = bytes([
+            0xFF,
+            0xFB,
+            0x90,
+            0x00,
+            *([0x00] * 154),
+        ])
+        silence_gap = silence_frame * 3
 
         logger.info("Discussion TTS: %d turns (parallel)", len(turns))
 
-        def _synthesize_turn(idx: int, turn: dict) -> tuple[int, bytes]:
-            """Synthesize a single turn, returns (index, audio_bytes)."""
+        def _synthesize_turn(idx: int, turn: dict[str, str]) -> tuple[int, bytes]:
             text = turn["text"]
-            style_prompt = turn.get("style_prompt") or self._default_style_prompt
+            style_prompt = turn.get("style_prompt") or ""
             speaker = turn.get("speaker", f"Speaker {idx + 1}")
 
             chunks = self._split_text(text)
@@ -154,24 +128,23 @@ class TTSService:
 
             transport = httpx.HTTPTransport(verify=False)
             with httpx.Client(transport=transport, timeout=120) as client:
-                parts = []
+                parts: list[bytes] = []
                 for chunk in chunks:
                     parts.append(self._call_api_voicedesign(chunk, style_prompt, audio_format, client))
 
             return idx, b"".join(parts)
 
-        from concurrent.futures import ThreadPoolExecutor, as_completed
-
         max_workers = min(8, len(turns))
         results: dict[int, bytes] = {}
-
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            futures = {executor.submit(_synthesize_turn, i, turn): i for i, turn in enumerate(turns)}
+            futures = {
+                executor.submit(_synthesize_turn, i, turn): i
+                for i, turn in enumerate(turns)
+            }
             for future in as_completed(futures):
                 idx, audio = future.result()
                 results[idx] = audio
 
-        # Assemble in original order
         audio_parts: list[bytes] = []
         for i in range(len(turns)):
             if i > 0:
@@ -180,7 +153,13 @@ class TTSService:
 
         return b"".join(audio_parts)
 
-    def _call_api_voicedesign(self, text: str, style_prompt: str, audio_format: str, client: httpx.Client) -> bytes:
+    def _call_api_voicedesign(
+        self,
+        text: str,
+        style_prompt: str,
+        audio_format: str,
+        client: httpx.Client,
+    ) -> bytes:
         """Call MiMo TTS API in VoiceDesign mode."""
         from apps.content_ops.constants import TTS_MODEL_VOICEDESIGN
 
@@ -200,8 +179,14 @@ class TTSService:
         }
         return self._do_request(url, headers, payload, client)
 
-    def _call_api(self, text: str, voice: str, audio_format: str, client: httpx.Client) -> bytes:
-        """Call the MiMo TTS API for a single text chunk (builtin voice mode)."""
+    def _call_api(
+        self,
+        text: str,
+        voice: str,
+        audio_format: str,
+        client: httpx.Client,
+    ) -> bytes:
+        """Call the MiMo TTS API for a single text chunk in builtin voice mode."""
         url = f"{self._base_url}/chat/completions"
         headers = {
             "Authorization": f"Bearer {self._api_key}",
@@ -215,18 +200,22 @@ class TTSService:
         }
         return self._do_request(url, headers, payload, client)
 
-    @staticmethod
-    def _do_request(url: str, headers: dict, payload: dict, client: httpx.Client) -> bytes:
-        """Execute TTS API request and return audio bytes."""
+    def _do_request(
+        self,
+        url: str,
+        headers: dict[str, str],
+        payload: dict[str, object],
+        client: httpx.Client,
+    ) -> bytes:
         try:
             resp = client.post(url, json=payload, headers=headers)
             resp.raise_for_status()
         except httpx.HTTPStatusError as e:
             logger.error("TTS API HTTP error: %s %s", e.response.status_code, e.response.text[:500])
-            raise RuntimeError(f"TTS API error {e.response.status_code}") from e
+            raise RuntimeError(f"TTS API error {e.response.status_code}: {e.response.text[:200]}") from e
         except httpx.RequestError as e:
             logger.error("TTS API request failed: %s", e)
-            raise RuntimeError(f"TTS API request failed: {type(e).__name__}") from e
+            raise RuntimeError(f"TTS API request failed: {e}") from e
 
         data = resp.json()
         try:
@@ -246,7 +235,6 @@ class TTSService:
         chunks: list[str] = []
         current = ""
 
-        # Split on Chinese sentence-ending punctuation
         for char in text:
             current += char
             if char in ("。", "！", "？", "；", "\n") and len(current) >= 50:
@@ -254,9 +242,7 @@ class TTSService:
                 current = ""
 
         if current.strip():
-            # If the remaining text is too long, force split
             while len(current) > _CHUNK_SIZE:
-                # Try to find a natural break point
                 split_at = current.rfind("，", 0, _CHUNK_SIZE)
                 if split_at < _CHUNK_SIZE // 2:
                     split_at = _CHUNK_SIZE

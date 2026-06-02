@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from django.db.models import QuerySet
+from django.utils.translation import gettext_lazy as _
 
 from apps.cases.models import Case
 from apps.core.exceptions import NotFoundError
@@ -73,7 +74,7 @@ class CaseQueryService(PermissionMixin):
         try:
             case = get_case_queryset().get(id=case_id)
         except Case.DoesNotExist:
-            raise NotFoundError("案件 %(id)s 不存在" % {"id": case_id}) from None
+            raise NotFoundError(_("案件 %(id)s 不存在") % {"id": case_id}) from None
 
         self._access_policy.ensure_access(
             case_id=case.id,
@@ -89,7 +90,7 @@ class CaseQueryService(PermissionMixin):
         try:
             case = get_case_queryset().get(id=case_id)
         except Case.DoesNotExist:
-            raise NotFoundError("案件 %(id)s 不存在" % {"id": case_id}) from None
+            raise NotFoundError(_("案件 %(id)s 不存在") % {"id": case_id}) from None
 
         self._access_policy.ensure_access_ctx(case_id=case.id, ctx=ctx, case=case)
         return case

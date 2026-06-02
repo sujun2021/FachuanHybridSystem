@@ -305,7 +305,7 @@
       });
   });
 
-  // ========== 删除材料功能 ==========
+  // ========== 解除材料绑定功能 ==========
 
   var deleteState = {
     materialId: null,
@@ -344,21 +344,21 @@
       headers: { 'X-CSRFToken': getCsrfToken() },
     })
       .then(function (resp) {
-        if (!resp.ok) return resp.json().then(function (data) { throw new Error(data.detail || '删除失败'); });
+        if (!resp.ok) return resp.json().then(function (data) { throw new Error(data.detail || '解除失败'); });
         return resp.json();
       })
       .then(function () {
-        toast('材料已删除，正在刷新...', 'success');
+        toast('材料绑定已解除，正在刷新...', 'success');
         window.closeDeleteModal();
         setTimeout(function () { window.location.reload(); }, 600);
       })
       .catch(function (err) {
-        toast(err.message || '删除失败', 'error');
+        toast(err.message || '解除失败', 'error');
         if (confirmBtn) confirmBtn.disabled = false;
       });
   };
 
-  // ========== 删除全部材料功能 ==========
+  // ========== 批量解除材料绑定功能 ==========
 
   var deleteAllState = {
     caseId: null,
@@ -372,7 +372,7 @@
     var descEl = document.getElementById('deleteAllModalDesc');
     var categoryLabel = deleteAllState.category === 'party' ? '当事人材料' : '非当事人材料';
     if (descEl) {
-      descEl.textContent = '确定要删除当前案件下所有「' + categoryLabel + '」吗？删除后分类绑定和附件文件都将被移除，此操作不可恢复。';
+      descEl.textContent = '确定要解除当前案件下所有「' + categoryLabel + '」的绑定吗？解除后只会移除分类绑定，附件文件会保留，此操作不可恢复。';
     }
 
     var modal = document.getElementById('materialDeleteAllModal');
@@ -404,16 +404,16 @@
       body: JSON.stringify({ category: deleteAllState.category }),
     })
       .then(function (resp) {
-        if (!resp.ok) return resp.json().then(function (data) { throw new Error(data.detail || '删除失败'); });
+        if (!resp.ok) return resp.json().then(function (data) { throw new Error(data.detail || '解除失败'); });
         return resp.json();
       })
       .then(function (data) {
-        toast('已删除 ' + data.deleted_count + ' 条材料，正在刷新...', 'success');
+        toast('已解除 ' + data.deleted_count + ' 条材料绑定，正在刷新...', 'success');
         window.closeDeleteAllModal();
         setTimeout(function () { window.location.reload(); }, 600);
       })
       .catch(function (err) {
-        toast(err.message || '删除失败', 'error');
+        toast(err.message || '解除失败', 'error');
         if (confirmBtn) confirmBtn.disabled = false;
       });
   };

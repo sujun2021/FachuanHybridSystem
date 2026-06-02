@@ -10,6 +10,7 @@ from ninja import Router, Schema
 
 router = Router(tags=["仪表盘"])
 
+
 # ─── Schemas ────────────────────────────────────────────────────────────────────
 
 

@@ -9,6 +9,7 @@ from typing import Any, ClassVar
 import cv2
 import numpy as np
 from django.core.files.uploadedfile import UploadedFile
+from django.utils.translation import gettext_lazy as _
 from numpy.typing import NDArray
 
 from apps.core.exceptions import ValidationException
@@ -43,13 +44,13 @@ class IdCardMergeService:
             return {
                 "success": False,
                 "error": "INVALID_IMAGE_FORMAT",
-                "message": "无法读取正面图片，请确保图片格式正确",
+                "message": _("无法读取正面图片，请确保图片格式正确"),
             }
         if back_cv_image is None:
             return {
                 "success": False,
                 "error": "INVALID_IMAGE_FORMAT",
-                "message": "无法读取反面图片，请确保图片格式正确",
+                "message": _("无法读取反面图片，请确保图片格式正确"),
             }
         for cv_image, name in [(front_cv_image, "正面"), (back_cv_image, "反面")]:
             size_error = self._validate_image_size(cv_image, name)
@@ -86,7 +87,7 @@ class IdCardMergeService:
             return {
                 "success": False,
                 "error": "AUTO_DETECT_FAILED",
-                "message": "无法自动检测身份证边缘，请手动选取四角",
+                "message": _("无法自动检测身份证边缘，请手动选取四角"),
                 "front_image_url": f"/media/{front_temp_path}",
                 "back_image_url": f"/media/{back_temp_path}",
             }
@@ -105,7 +106,7 @@ class IdCardMergeService:
                 return {
                     "success": False,
                     "error": "INVALID_CORNERS",
-                    "message": "%(label)s四角坐标无效: %(reason)s" % {"label": label, "reason": validation},
+                    "message": _("%(label)s四角坐标无效: %(reason)s") % {"label": label, "reason": validation},
                 }
         media_root = get_media_root()
         front_full_path, front_rel_path = self._resolve_image_path(front_image_path, media_root)
@@ -116,7 +117,7 @@ class IdCardMergeService:
                 return {
                     "success": False,
                     "error": "INVALID_CORNERS",
-                    "message": "%(label)s图片不存在，请重新上传" % {"label": label},
+                    "message": _("%(label)s图片不存在，请重新上传") % {"label": label},
                 }
         front_cv_image = cv2.imread(str(front_full_path))
         back_cv_image = cv2.imread(str(back_full_path))
@@ -125,7 +126,7 @@ class IdCardMergeService:
                 return {
                     "success": False,
                     "error": "INVALID_CORNERS",
-                    "message": "无法读取%(label)s图片，请确保图片格式正确" % {"label": label},
+                    "message": _("无法读取%(label)s图片，请确保图片格式正确") % {"label": label},
                 }
         front_corners_ordered = self._order_corners(np.array(front_corners, dtype=np.float32))
         back_corners_ordered = self._order_corners(np.array(back_corners, dtype=np.float32))
@@ -146,9 +147,9 @@ class IdCardMergeService:
             full_path.relative_to(media_root.resolve())
         except ValueError:
             raise ValidationException(
-                message="非法的文件路径",
+                message=_("非法的文件路径"),
                 code="INVALID_FILE_PATH",
-                errors={"path": "文件路径不在允许的范围内"},
+                errors={"path": _("文件路径不在允许的范围内")},
             ) from None
         return (full_path, rel_path)
 

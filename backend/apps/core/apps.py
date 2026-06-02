@@ -3,6 +3,7 @@
 import logging
 
 from django.apps import AppConfig
+from django.utils.translation import gettext_lazy as _
 
 logger = logging.getLogger(__name__)
 
@@ -10,7 +11,7 @@ logger = logging.getLogger(__name__)
 class CoreConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "apps.core"
-    verbose_name = "核心系统"
+    verbose_name = _("核心系统")
 
     def ready(self) -> None:
         from . import admin

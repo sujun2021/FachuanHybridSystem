@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from django.core.files.uploadedfile import UploadedFile
+from django.utils.translation import gettext_lazy as _
 
 from apps.cases.models import CaseLogAttachment
 from apps.cases.utils import validate_case_log_attachment
@@ -35,13 +36,19 @@ class CaseLogAttachmentService:
                 org_access=org_access,
                 perm_open_access=perm_open_access,
                 case=log.case,
-                message="无权限上传附件",
+                message=_("无权限上传附件"),
             )
 
         created = []
         for f in files:
             self._validate_attachment(f)
-            created.append(CaseLogAttachment.objects.create(log=log, file=f))
+            created.append(
+                CaseLogAttachment.objects.create(
+                    log=log,
+                    file=f,
+                    original_filename=getattr(f, "name", "") or "",
+                )
+            )
 
         return created
 
@@ -56,7 +63,7 @@ class CaseLogAttachmentService:
         try:
             attachment = CaseLogAttachment.objects.select_related("log__case").get(id=attachment_id)
         except CaseLogAttachment.DoesNotExist:
-            raise NotFoundError("附件 %(attachment_id)s 不存在" % {"attachment_id": attachment_id}) from None
+            raise NotFoundError(_("附件 %(attachment_id)s 不存在") % {"attachment_id": attachment_id}) from None
 
         if not perm_open_access:
             self.query_service.access_policy.ensure_access(
@@ -65,7 +72,7 @@ class CaseLogAttachmentService:
                 org_access=org_access,
                 perm_open_access=perm_open_access,
                 case=attachment.log.case,
-                message="无权限删除此附件",
+                message=_("无权限删除此附件"),
             )
 
         if attachment.file:
@@ -79,4 +86,4 @@ class CaseLogAttachmentService:
         size = getattr(file, "size", 0)
         ok, error = validate_case_log_attachment(name, size)
         if not ok:
-            raise ValidationException("附件校验失败", errors={"file": error or "附件校验失败"})
+            raise ValidationException(_("附件校验失败"), errors={"file": error or _("附件校验失败")})

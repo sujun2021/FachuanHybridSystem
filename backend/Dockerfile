@@ -26,8 +26,7 @@ RUN pip install --no-cache-dir uv -i https://pypi.org/simple/
 
 # 安装 Python 依赖（利用 layer 缓存）
 COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-dev \
-    && uv pip install gunicorn==26.0.0
+RUN uv sync --frozen --no-dev
 
 # 安装 Playwright chromium 及其系统依赖（用 install-deps 自动补全，避免手动维护依赖列表）
 RUN uv run playwright install chromium \

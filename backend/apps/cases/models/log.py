@@ -1,4 +1,4 @@
-"""Module for log."""
+﻿"""Module for log."""
 
 from __future__ import annotations
 
@@ -36,10 +36,10 @@ def validate_log_attachment(file: UploadedFile) -> None:
         from django.core.exceptions import ValidationError
 
         raise ValidationError(_("不支持的文件类型"))
-    if CASE_LOG_MAX_FILE_SIZE > 0 and size and size > CASE_LOG_MAX_FILE_SIZE:
+    if size and size > CASE_LOG_MAX_FILE_SIZE:
         from django.core.exceptions import ValidationError
 
-        raise ValidationError(_("文件大小超过%(limit)sMB限制") % {"limit": CASE_LOG_MAX_FILE_SIZE // 1024 // 1024})
+        raise ValidationError(_("文件大小超过50MB限制"))
 
 
 class CaseLog(models.Model):
@@ -88,7 +88,7 @@ class CaseLog(models.Model):
 
             reminder_service = ServiceLocator.get_reminder_service()
             reminders = reminder_service.export_case_log_reminders_internal(case_log_id=int(self.id))
-        except (TypeError, ValueError):
+        except Exception:
             logger.exception("case_log_export_reminders_failed", extra={"case_log_id": int(self.id)})
             reminders = []
         self._cached_exported_reminders = reminders
@@ -122,7 +122,7 @@ class CaseLog(models.Model):
 
             reminder_service = ServiceLocator.get_reminder_service()
             reminder = reminder_service.get_latest_case_log_reminder_internal(case_log_id=int(self.id))
-        except (TypeError, ValueError):
+        except Exception:
             logger.exception("case_log_latest_reminder_failed", extra={"case_log_id": int(self.id)})
             reminders = self._exported_reminders()
             reminder = reminders[-1] if reminders else None

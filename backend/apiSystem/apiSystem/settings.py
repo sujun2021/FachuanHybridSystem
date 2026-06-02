@@ -5,6 +5,8 @@ Django settings for apiSystem project.
 import os
 from pathlib import Path
 
+from django.utils.translation import gettext_lazy as _
+
 try:
     import django_stubs_ext
 
@@ -33,6 +35,7 @@ try:
 except ImportError:
     pass
 
+
 # ============================================================
 # 核心配置
 # ============================================================
@@ -43,12 +46,7 @@ _DEV_SECRET_KEY = "django-insecure-dev-only-do-not-use-in-production"
 _security = resolve_security_config(
     dev_secret_key=_DEV_SECRET_KEY,
     default_allowed_hosts_dev=["*"],
-    default_allowed_hosts_prod=[
-        "fachuan.com",
-        "www.fachuan.com",
-        "127.0.0.1",
-        "localhost",
-    ],
+    default_allowed_hosts_prod=["*"],
 )
 
 _is_production = _security.is_production
@@ -58,6 +56,7 @@ DEBUG = _security.debug
 ALLOWED_HOSTS = _security.allowed_hosts
 CREDENTIAL_ENCRYPTION_KEY = _security.credential_encryption_key
 SCRAPER_ENCRYPTION_KEY = _security.scraper_encryption_key
+
 
 # Application definition
 
@@ -110,7 +109,6 @@ INSTALLED_APPS = [
     "apps.doc_converter",  # 6.71 DOC 批量转 DOCX
     "apps.workbench",  # 6.8 工作台（AI 对话式操作中心）
     "apps.wechat_mp",  # 6.9 公众号发布
-    "apps.content_ops",  # 6.91 内容运营（案例故事 + 播客）
     "apps.core",  # 7. 核心系统
     "django_q",  # 8. DJANGO Q
 ]
@@ -168,6 +166,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "apiSystem.wsgi.application"
 
+
 # ============================================================
 # 数据库配置
 # ============================================================
@@ -209,7 +208,7 @@ elif DB_ENGINE in ("", "postgres", "postgresql", "django.db.backends.postgresql"
             "PASSWORD": _get_env_str("DB_PASSWORD", "postgres", allow_empty=True),
             "HOST": _get_env_str("DB_HOST", "127.0.0.1"),
             "PORT": int(os.environ.get("DB_PORT", "5432") or "5432"),
-            "CONN_MAX_AGE": 1800,
+            "CONN_MAX_AGE": 600,
             "CONN_HEALTH_CHECKS": True,
             "OPTIONS": {
                 "connect_timeout": 10,
@@ -249,6 +248,7 @@ def activate_foreign_keys(sender: Any, connection: Any, **kwargs: Any) -> None:
 
 connection_created.connect(activate_foreign_keys)
 
+
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
@@ -262,13 +262,15 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
 }
 
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
 LANGUAGE_CODE = "zh-hans"
 
 LANGUAGES = [
-    ("zh-hans", "简体中文"),
+    ("zh-hans", _("简体中文")),
+    ("en", _("English")),
 ]
 
 LOCALE_PATHS = [
@@ -280,6 +282,7 @@ TIME_ZONE = "Asia/Shanghai"
 USE_I18N = True
 
 USE_TZ = True
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
@@ -398,6 +401,7 @@ LEGAL_RESEARCH_ADMIN_FEATURE_ENABLED = (
 # ============================================================
 
 Q_CLUSTER = resolve_q_cluster()
+
 
 # ============================================================
 # 基础配置（保留少量必要配置）
@@ -619,6 +623,7 @@ if not DEBUG:
         CROSS_ORIGIN_RESOURCE_POLICY = "same-origin"
     if not CROSS_ORIGIN_EMBEDDER_POLICY:
         CROSS_ORIGIN_EMBEDDER_POLICY = "unsafe-none"
+
 
 # ============================================================
 # 诉讼文书生成 Agent 配置

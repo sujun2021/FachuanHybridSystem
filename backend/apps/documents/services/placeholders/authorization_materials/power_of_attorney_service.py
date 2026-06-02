@@ -211,7 +211,7 @@ class PowerOfAttorneyPlaceholderService(BasePlaceholderService):
         statuses: set[str] = set()
         try:
             parties = list(case.parties.select_related("client").all())
-        except (TypeError, ValueError):
+        except Exception:
             logger.exception("操作失败")
             parties = []
         for party in parties:

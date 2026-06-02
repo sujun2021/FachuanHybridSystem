@@ -14,6 +14,7 @@ from django.db.models import QuerySet
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 
 from apps.automation.models import CourtSMS, CourtSMSStatus
 
@@ -40,7 +41,21 @@ class CourtSMSAdminActions:
     # 自定义操作
     actions: list[str] = []
 
-    @admin.action(description="🔄 重新处理选中的短信")
+    @staticmethod
+    def _should_continue_sms_flow(
+        previous_status: str | None,
+        previous_case_id: int | None,
+        new_case_id: int | None,
+    ) -> bool:
+        """判断手动绑定案件后是否应继续后续流程。"""
+        return (
+            previous_status in {CourtSMSStatus.PENDING_MANUAL, CourtSMSStatus.MATCHING}
+            and not previous_case_id
+            and bool(new_case_id)
+            and previous_case_id != new_case_id
+        )
+
+    @admin.action(description=_("🔄 重新处理选中的短信"))
     def retry_processing_action(self, request: HttpRequest, queryset: QuerySet[CourtSMS]) -> None:
         """重新处理操作"""
         service = _get_court_sms_service()
@@ -163,7 +178,7 @@ class CourtSMSAdminActions:
                     messages.success(request, "案件指定成功!已触发文书重命名和推送通知流程")
                     logger.info(f"管理员手动指定案件: SMS ID={sms_id}, Case ID={case_id}, User={request.user}")
                     return HttpResponseRedirect(reverse("admin:automation_courtsms_change", args=[sms_id]))
-                except (TypeError, ValueError) as e:
+                except Exception as e:
                     messages.error(request, f"指定案件失败: {e!s}")
                     logger.error(f"管理员手动指定案件失败: SMS ID={sms_id}, Case ID={case_id}, 错误: {e!s}")
 
@@ -304,11 +319,10 @@ class CourtSMSAdminActions:
 
             super().save_model(request, obj, form, change)  # type: ignore[misc]
 
-            should_continue_sms_flow = (
-                previous_status == CourtSMSStatus.PENDING_MANUAL
-                and not previous_case_id
-                and bool(new_case_id)
-                and previous_case_id != new_case_id
+            should_continue_sms_flow = self._should_continue_sms_flow(
+                previous_status=previous_status,
+                previous_case_id=previous_case_id,
+                new_case_id=new_case_id,
             )
             if should_continue_sms_flow:
                 try:

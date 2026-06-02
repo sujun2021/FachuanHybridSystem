@@ -10,6 +10,7 @@ import logging
 from typing import Any
 
 from django.contrib import messages
+from django.utils.translation import gettext_lazy as _
 
 from apps.contracts.models import Contract, ContractStatus
 from apps.core.exceptions import BusinessException
@@ -72,7 +73,7 @@ class ContractSaveMixin:
                 extra={"contract_id": obj.id},
                 exc_info=True,
             )
-            messages.error(request, "处理建档编号失败: %(err)s" % {"err": e})
+            messages.error(request, _("处理建档编号失败: %(err)s") % {"err": e})
 
         # 合同状态变更联动：已归档 → 自动结案关联案件
         if change and old_status is not None:
@@ -99,7 +100,7 @@ class ContractSaveMixin:
                         )
                         messages.success(
                             request,
-                            "合同状态已变更，%(count)d 个关联案件已自动结案" % {"count": closed_count},
+                            _("合同状态已变更，%(count)d 个关联案件已自动结案") % {"count": closed_count},
                         )
                 except (BusinessException, RuntimeError, Exception) as e:
                     logger.error(
@@ -107,7 +108,7 @@ class ContractSaveMixin:
                         extra={"contract_id": obj.id},
                         exc_info=True,
                     )
-                    messages.warning(request, "关联案件自动结案失败: %(err)s" % {"err": e})
+                    messages.warning(request, _("关联案件自动结案失败: %(err)s") % {"err": e})
 
     def save_related(self, request: Any, form: Any, formsets: Any, change: bool) -> None:
         super().save_related(request, form, formsets, change)
@@ -125,7 +126,7 @@ class ContractSaveMixin:
                 extra={"contract_id": contract.id},
                 exc_info=True,
             )
-            messages.error(request, "同步关联案件律师指派失败: %(err)s" % {"err": e})
+            messages.error(request, _("同步关联案件律师指派失败: %(err)s") % {"err": e})
 
     def delete_model(self, request: Any, obj: Any) -> None:
         super().delete_model(request, obj)

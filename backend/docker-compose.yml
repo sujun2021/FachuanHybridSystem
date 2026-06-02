@@ -8,7 +8,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - ${HOST_DATA_ROOT}/database:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-fachuan_dev}"]
       interval: 10s
@@ -23,7 +23,7 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - redis-data:/data
+      - ${HOST_DATA_ROOT}/redis:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -37,7 +37,8 @@ services:
     ports:
       - "8002:8002"
     volumes:
-      - media-data:/app/apiSystem/media
+      - ${HOST_DATA_ROOT}/media:/app/apiSystem/media
+      - ${HOST_DATA_ROOT}/app-data:/app/apiSystem/data
     env_file:
       - .env
     environment:
@@ -47,6 +48,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
       DB_HOST: postgres
       DB_PORT: ${DB_PORT:-5432}
+      DATABASE_PATH: ${DATABASE_PATH:-/app/apiSystem/data/db.sqlite3}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
     depends_on:
       postgres:
@@ -65,7 +67,8 @@ services:
     build: .
     entrypoint: ["sh", "-c", "cd /app/apiSystem && uv run python manage.py qcluster"]
     volumes:
-      - media-data:/app/apiSystem/media
+      - ${HOST_DATA_ROOT}/media:/app/apiSystem/media
+      - ${HOST_DATA_ROOT}/app-data:/app/apiSystem/data
     env_file:
       - .env
     environment:
@@ -75,6 +78,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
       DB_HOST: postgres
       DB_PORT: ${DB_PORT:-5432}
+      DATABASE_PATH: ${DATABASE_PATH:-/app/apiSystem/data/db.sqlite3}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
     depends_on:
       postgres:
@@ -85,7 +89,3 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-volumes:
-  postgres-data:
-  redis-data:
-  media-data:

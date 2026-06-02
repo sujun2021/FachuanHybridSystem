@@ -323,7 +323,7 @@ def _add_table_striping(html: str, color: str) -> str:
         counter += 1
         if counter % 2 == 0:
             return f'<tr style="background:linear-gradient(90deg,{color}05,transparent);">'
-        return str(match.group(0))
+        return match.group(0)
 
     html = re.sub(r"<tr>", _replace_tr, html)
     return html

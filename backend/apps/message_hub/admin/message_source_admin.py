@@ -9,6 +9,7 @@ from django.http import HttpRequest, HttpResponse
 from django.urls import path
 from django.utils.html import format_html
 from django.utils.safestring import SafeString
+from django.utils.translation import gettext_lazy as _
 
 from apps.message_hub.models import MessageSource, SyncStatus
 
@@ -36,7 +37,7 @@ class MessageSourceAdmin(admin.ModelAdmin):
 
     fieldsets: ClassVar = (
         (
-            "基本配置",
+            _("基本配置"),
             {
                 "fields": (
                     "display_name",
@@ -49,15 +50,15 @@ class MessageSourceAdmin(admin.ModelAdmin):
             },
         ),
         (
-            "发件人过滤",
+            _("发件人过滤"),
             {
                 "fields": ("sender_whitelist", "sender_blacklist"),
-                "description": "可输入邮箱地址或发件人名称，每行一个，大小写不敏感。白名单优先于黑名单。",
+                "description": _("可输入邮箱地址或发件人名称，每行一个，大小写不敏感。白名单优先于黑名单。"),
             },
         ),
-        ("IMAP 配置", {"fields": ("imap_host", "imap_account"), "classes": ("collapse",)}),
+        (_("IMAP 配置"), {"fields": ("imap_host", "imap_account"), "classes": ("collapse",)}),
         (
-            "同步状态",
+            _("同步状态"),
             {"fields": ("last_sync_at", "last_sync_status", "last_sync_error", "last_synced_uid", "created_at")},
         ),
     )
@@ -75,10 +76,10 @@ class MessageSourceAdmin(admin.ModelAdmin):
         from apps.core.tasking import submit_task
 
         submit_task("apps.message_hub.tasks.sync_source_by_id", pk)
-        self.message_user(request, "同步任务已提交，稍后刷新查看结果", messages.SUCCESS)
+        self.message_user(request, _("同步任务已提交，稍后刷新查看结果"), messages.SUCCESS)
         return redirect("..")
 
-    @admin.display(description="来源类型")
+    @admin.display(description=_("来源类型"))
     def source_type_badge(self, obj: MessageSource) -> SafeString:
         colors = {"imap": "#007bff", "court_inbox": "#6f42c1", "court_schedule": "#e85d04"}
         color = colors.get(obj.source_type, "#6c757d")
@@ -88,7 +89,7 @@ class MessageSourceAdmin(admin.ModelAdmin):
             obj.get_source_type_display(),
         )
 
-    @admin.display(description="同步状态")
+    @admin.display(description=_("同步状态"))
     def sync_status_badge(self, obj: MessageSource) -> SafeString:
         colors = {SyncStatus.SUCCESS: "#28a745", SyncStatus.FAILED: "#dc3545", SyncStatus.PENDING: "#6c757d"}
         color = colors.get(obj.last_sync_status, "#6c757d")  # type: ignore[call-overload]
@@ -98,7 +99,7 @@ class MessageSourceAdmin(admin.ModelAdmin):
             obj.get_last_sync_status_display(),
         )
 
-    @admin.display(description="操作")
+    @admin.display(description=_("操作"))
     def refresh_button(self, obj: MessageSource) -> SafeString:
         from django.urls import reverse
 

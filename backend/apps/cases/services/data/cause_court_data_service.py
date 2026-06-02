@@ -7,6 +7,8 @@ import logging
 from functools import lru_cache
 from typing import TYPE_CHECKING, Any, ClassVar, cast
 
+from django.utils.translation import gettext_lazy as _
+
 from apps.core.exceptions import ValidationException
 from apps.core.utils.path import Path
 
@@ -31,7 +33,7 @@ class CauseCourtDataCache:
                     extra={"action": "load_json_file", "file_name": filename, "file_path": str(file_path)},
                 )
                 raise ValidationException(
-                    message="数据文件不存在: %(name)s" % {"name": filename},
+                    message=_("数据文件不存在: %(name)s") % {"name": filename},
                     code="FILE_NOT_FOUND",
                     errors={"filename": filename},
                 )
@@ -59,7 +61,7 @@ class CauseCourtDataCache:
                 extra={"action": "load_json_file", "file_name": filename, "error": str(e)},
             )
             raise ValidationException(
-                message="数据文件格式错误: %(name)s" % {"name": filename},
+                message=_("数据文件格式错误: %(name)s") % {"name": filename},
                 code="JSON_PARSE_ERROR",
                 errors={"filename": filename, "error": str(e)},
             ) from e
@@ -71,7 +73,7 @@ class CauseCourtDataCache:
                 extra={"action": "load_json_file", "file_name": filename, "error": str(e)},
             )
             raise ValidationException(
-                message="加载数据文件失败: %(name)s" % {"name": filename},
+                message=_("加载数据文件失败: %(name)s") % {"name": filename},
                 code="FILE_LOAD_ERROR",
                 errors={"filename": filename, "error": str(e)},
             ) from e
@@ -370,7 +372,7 @@ class CauseCourtDataService:
                 },
             )
             raise ValidationException(
-                message="无效的案件类型: %(type)s" % {"type": case_type},
+                message=_("无效的案件类型: %(type)s") % {"type": case_type},
                 code="INVALID_CASE_TYPE",
                 errors={"case_type": case_type, "valid_types": list(self.CASE_TYPE_FILE_MAP.keys())},
             )

@@ -92,7 +92,7 @@ class ContractGenerator(BaseGenerator):
                 duration_ms=duration_ms,
             )
 
-        except (TypeError, ValueError) as e:
+        except Exception as e:
             duration_ms = int((time.time() - start_time) * 1000)
             error_msg = f"生成文书失败: {e!s}"
             logger.error(error_msg, exc_info=True)

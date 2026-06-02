@@ -1,4 +1,4 @@
-"""案件编辑页的客户回款 Inline"""
+"""Case edit-page client payment inline."""
 
 from __future__ import annotations
 
@@ -41,7 +41,6 @@ class CaseClientPaymentInline(BaseTabularInline[ClientPaymentRecord, ClientPayme
                     instance.contract_id = parent_case.contract_id
                 if not instance.case_id:
                     instance.case_id = parent_case.pk
-            # 合同为必填项，没有合同则跳过
             if not instance.contract_id:
                 continue
             instance.save()

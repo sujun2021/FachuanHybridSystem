@@ -5,6 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from django.utils.translation import gettext_lazy as _
+
 from apps.core.exceptions import NotFoundError, ValidationException
 from apps.core.security.permissions import AccessContext, PermissionMixin
 
@@ -79,7 +81,7 @@ class WorkbenchMessageService(PermissionMixin):
         try:
             msg = WorkbenchMessage.objects.get(id=message_id, session_id=session_id)
         except WorkbenchMessage.DoesNotExist:
-            raise NotFoundError("消息不存在") from None
+            raise NotFoundError(_("消息不存在")) from None
         WorkbenchMessage.objects.filter(
             session_id=session_id,
             created_at__gte=msg.created_at,
@@ -104,14 +106,14 @@ class WorkbenchMessageService(PermissionMixin):
         """提交消息反馈（好评/差评）"""
         if rating not in ("good", "bad"):
             raise ValidationException(
-                "rating 必须是 good 或 bad",
+                _("rating 必须是 good 或 bad"),
                 errors={"rating": f"无效的 rating 值: {rating}"},
             )
 
         try:
             msg = WorkbenchMessage.objects.get(id=message_id)
         except WorkbenchMessage.DoesNotExist:
-            raise NotFoundError("消息不存在") from None
+            raise NotFoundError(_("消息不存在")) from None
 
         self._session_service.get_user_session(user, msg.session_id)
 

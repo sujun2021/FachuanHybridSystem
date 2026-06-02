@@ -6,6 +6,7 @@ from typing import Any
 
 from django.db import transaction
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from apps.core.dto import GenerationTaskDTO
 from apps.core.exceptions import NotFoundError, ValidationException
@@ -22,7 +23,7 @@ class DocumentGeneratorService:
         session = LitigationSession.objects.filter(session_id=session_id).select_related("case").first()
         if not session:
             raise NotFoundError(
-                message="会话不存在",
+                message=_("会话不存在"),
                 code="SESSION_NOT_FOUND",
                 errors={"session_id": f"会话 {session_id} 不存在"},
             )
@@ -37,7 +38,7 @@ class DocumentGeneratorService:
         last_message = last_messages[0] if last_messages else None
         if not last_message:
             raise ValidationException(
-                message="未找到生成的内容",
+                message=_("未找到生成的内容"),
                 code="NO_GENERATED_CONTENT",
                 errors={"session_id": "会话中没有生成的内容"},
             )
@@ -67,10 +68,10 @@ class DocumentGeneratorService:
                 result_file=relative_path,
                 metadata_updates=metadata_updates,
             )
-        except (TypeError, ValueError) as e:
+        except Exception as e:
             task_service.mark_task_failed_internal(task_id=task.id, error_message=str(e))
             raise ValidationException(
-                message="文档生成失败",
+                message=_("文档生成失败"),
                 code="DOCUMENT_GENERATION_FAILED",
                 errors={"error": str(e)},
             ) from e
@@ -83,13 +84,13 @@ class DocumentGeneratorService:
         task = get_generation_task_service().get_task_internal(task_id)
         if not task:
             raise NotFoundError(
-                message="任务不存在",
+                message=_("任务不存在"),
                 code="TASK_NOT_FOUND",
                 errors={"task_id": f"ID 为 {task_id} 的任务不存在"},
             )
 
         if user and task.created_by_id != user.id:
-            raise PermissionDenied(message="无权限访问此任务", code="PERMISSION_DENIED")
+            raise PermissionDenied(message=_("无权限访问此任务"), code="PERMISSION_DENIED")
 
         return task
 
@@ -126,7 +127,7 @@ class DocumentGeneratorService:
         case_service = get_case_service()
         case_dto = case_service.get_case_by_id_internal(case_id)
         if not case_dto:
-            raise NotFoundError(message="案件不存在", code="CASE_NOT_FOUND", errors={"case_id": case_id})
+            raise NotFoundError(message=_("案件不存在"), code="CASE_NOT_FOUND", errors={"case_id": case_id})
         return case_dto
 
     def _render(self, case_dto: Any, document_type: str, structured: dict[str, str]) -> tuple[str, bytes]:

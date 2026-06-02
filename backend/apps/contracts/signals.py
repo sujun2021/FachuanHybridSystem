@@ -31,7 +31,7 @@ def _cleanup_finalized_material_file(sender: Any, instance: Any, **kwargs: Any) 
                 "post_delete: 已清理归档材料文件",
                 extra={"material_id": instance.pk, "file_path": file_path},
             )
-    except (OSError, ValueError):
+    except Exception:
         logger.exception(
             "post_delete: 清理归档材料文件失败",
             extra={"material_id": instance.pk, "file_path": file_path},

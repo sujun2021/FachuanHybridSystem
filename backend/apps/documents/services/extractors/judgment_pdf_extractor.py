@@ -370,7 +370,8 @@ class JudgmentPdfExtractor:
 
         return None
 
-    def _map_normalized_to_original(self, original: str, normalized_index: int) -> int:
+    @staticmethod
+    def _map_normalized_to_original(original: str, normalized_index: int) -> int:
         """
         将归一化文本（去除空白后）的索引映射回原文索引。
 

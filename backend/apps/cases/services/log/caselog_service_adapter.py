@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any, cast
 
+from django.utils.translation import gettext_lazy as _
+
 from apps.core.interfaces import ICaseLogService
 
 
@@ -61,6 +63,8 @@ class CaseLogServiceAdapter(ICaseLogService):
         case_id: int,
         content: str,
         user: Any | None = None,
+        org_access: dict[str, Any] | None = None,
+        perm_open_access: bool = False,
         reminder_type: str | None = None,
         reminder_time: Any | None = None,
     ) -> Any:
@@ -69,9 +73,10 @@ class CaseLogServiceAdapter(ICaseLogService):
             case_id=case_id,
             content=content,
             user=user,
+            org_access=org_access,
+            perm_open_access=perm_open_access,
             reminder_type=reminder_type,
             reminder_time=reminder_time,
-            perm_open_access=True,  # 跨模块调用时使用开放权限
         )
 
     def update_log(
@@ -162,7 +167,7 @@ class CaseLogServiceAdapter(ICaseLogService):
         try:
             Case.objects.get(id=case_id)
         except Case.DoesNotExist:
-            raise NotFoundError("案件 %(case_id)s 不存在" % {"case_id": case_id}) from None
+            raise NotFoundError(_("案件 %(case_id)s 不存在") % {"case_id": case_id}) from None
 
         log = CaseLog.objects.create(
             case_id=case_id,

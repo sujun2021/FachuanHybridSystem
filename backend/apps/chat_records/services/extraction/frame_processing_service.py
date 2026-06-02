@@ -226,7 +226,7 @@ class FrameProcessingService:
                 continue
             try:
                 out_time_us = int(kv["out_time_ms"])
-            except (TypeError, ValueError):
+            except Exception:
                 logger.info(
                     "ffmpeg out_time_ms 解析失败",
                     extra={"raw_value": kv.get("out_time_ms")},

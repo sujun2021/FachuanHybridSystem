@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from django.http import HttpRequest
+from django.utils.translation import gettext_lazy as _
 from ninja import Router
 
 from apps.contracts.schemas import (
@@ -44,7 +45,7 @@ def _require_contract_access(request: HttpRequest, contract_id: int) -> None:
 def _require_admin(request: HttpRequest) -> None:
     user = getattr(request, "user", None)
     if not user or not getattr(user, "is_authenticated", False):
-        raise PermissionDenied("需要登录")
+        raise PermissionDenied(_("需要登录"))
 
 
 @router.post("/{contract_id}/folder-binding", response=FolderBindingResponseSchema)
@@ -158,7 +159,7 @@ def delete_folder_binding(request: HttpRequest, contract_id: int) -> Any:
         },
     )
 
-    return {"success": success, "message": "绑定已删除" if success else "绑定不存在"}
+    return {"success": success, "message": _("绑定已删除") if success else _("绑定不存在")}
 
 
 @router.get("/folder-browse", response=FolderBrowseResponseSchema)

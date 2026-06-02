@@ -85,7 +85,7 @@ class FinalizedMaterialInline(BaseTabularInline):
 
 class ContractPartyInline(BaseTabularInline):
     model = ContractParty
-    extra = 1
+    extra = 0
     fields = ("client", "role")
     autocomplete_fields: ClassVar = ["client"]
     show_change_link = True
@@ -96,7 +96,7 @@ class ContractPartyInline(BaseTabularInline):
 
 class ContractAssignmentInline(BaseTabularInline):
     model = ContractAssignment
-    extra = 1
+    extra = 0
     fields = ("lawyer", "is_primary", "order")
     autocomplete_fields: ClassVar = ["lawyer"]
 

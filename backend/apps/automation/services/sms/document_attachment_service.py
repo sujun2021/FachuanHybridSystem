@@ -257,7 +257,7 @@ class DocumentAttachmentService:
             logger.info(f"附件添加完成: 成功 {success_count}/{len(file_paths)} 个")
             return success_count > 0
 
-        except (OSError, ValueError) as e:
+        except Exception as e:
             logger.error(f"添加附件到案件日志失败: SMS ID={sms.id}, 错误: {e!s}")
             return False
 
@@ -302,7 +302,7 @@ class DocumentAttachmentService:
             logger.info(f"成功添加文书附件到案件日志: {renamed_filename}")
             return True
 
-        except (OSError, ValueError) as e:
+        except Exception as e:
             logger.warning(f"添加文书附件失败: {file_path}, 错误: {e!s}")
             return False
 

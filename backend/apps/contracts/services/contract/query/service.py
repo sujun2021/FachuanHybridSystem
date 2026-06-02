@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 from django.db.models import QuerySet
+from django.utils.translation import gettext_lazy as _
 
 from apps.contracts.models import Contract
 from apps.core.exceptions import NotFoundError
@@ -70,9 +71,7 @@ class ContractQueryService:
         perm_open_access: bool = False,
     ) -> QuerySet[Contract, Contract]:
         qs = self.get_contract_queryset().order_by("-id")
-        qs = self._apply_list_filters(
-            qs, case_type=case_type, status=status, search=search, fee_mode=fee_mode, is_filed=is_filed
-        )
+        qs = self._apply_list_filters(qs, case_type=case_type, status=status, search=search, fee_mode=fee_mode, is_filed=is_filed)
 
         qs = self.access_policy.filter_queryset(
             qs=qs,
@@ -93,9 +92,7 @@ class ContractQueryService:
         is_filed: bool | None = None,
     ) -> QuerySet[Contract, Contract]:
         qs = self.get_contract_queryset().order_by("-id")
-        qs = self._apply_list_filters(
-            qs, case_type=case_type, status=status, search=search, fee_mode=fee_mode, is_filed=is_filed
-        )
+        qs = self._apply_list_filters(qs, case_type=case_type, status=status, search=search, fee_mode=fee_mode, is_filed=is_filed)
 
         qs = self.access_policy.filter_queryset_ctx(qs=qs, ctx=ctx)
         return qs
@@ -104,7 +101,7 @@ class ContractQueryService:
         try:
             contract = self.get_contract_queryset().get(id=contract_id)
         except Contract.DoesNotExist:
-            raise NotFoundError("合同 %(id)s 不存在" % {"id": contract_id}) from None
+            raise NotFoundError(_("合同 %(id)s 不存在") % {"id": contract_id}) from None
         return contract
 
     def get_contract_with_details_model_internal(self, contract_id: int) -> Any:

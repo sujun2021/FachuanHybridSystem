@@ -6,6 +6,8 @@ import logging
 from dataclasses import dataclass
 from datetime import date, timedelta
 
+from django.utils.translation import gettext_lazy as _
+
 from apps.core.exceptions import ValidationException
 
 logger = logging.getLogger(__name__)
@@ -57,7 +59,7 @@ class CollectionReminderService:
             record = CollectionRecord.objects.get(id=record_id)
         except CollectionRecord.DoesNotExist:
             raise ValidationException(
-                message="催收记录不存在",
+                message=_("催收记录不存在"),
                 code="COLLECTION_NOT_FOUND",
             )
 

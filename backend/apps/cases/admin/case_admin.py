@@ -122,7 +122,7 @@ class SupervisingAuthorityInline(BaseTabularInline):
 
     model = SupervisingAuthority
     form = SupervisingAuthorityInlineForm
-    extra = 1
+    extra = 0
     fields = ("name", "authority_type")
 
 
@@ -133,7 +133,7 @@ class CaseLogAttachmentInline(BaseTabularInline):
 
 class CaseNumberInline(BaseStackedInline):
     model = CaseNumber
-    extra = 1
+    extra = 0
     fieldsets = (
         (
             None,

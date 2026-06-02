@@ -8,6 +8,7 @@ from typing import Any
 
 from django.contrib import admin
 from django.http import HttpRequest, JsonResponse
+from django.utils.translation import gettext_lazy as _
 
 from apps.contracts.models import ArchiveClassificationRule
 
@@ -43,9 +44,9 @@ class ArchiveClassificationRuleAdmin(admin.ModelAdmin):
     def learn_from_archived_view(self, request: HttpRequest) -> JsonResponse:
         """从已归档材料中学习分类规则。"""
         if request.method != "POST":
-            return JsonResponse({"success": False, "message": "Method not allowed"}, status=405)
+            return JsonResponse({"success": False, "message": _("Method not allowed")}, status=405)
         if not self.has_change_permission(request):
-            return JsonResponse({"success": False, "message": "Permission denied"}, status=403)
+            return JsonResponse({"success": False, "message": _("Permission denied")}, status=403)
 
         try:
             from apps.contracts.services.archive.learning_service import ArchiveLearningService
@@ -55,7 +56,7 @@ class ArchiveClassificationRuleAdmin(admin.ModelAdmin):
             return JsonResponse(
                 {
                     "success": True,
-                    "message": "学习完成：新增 %(learned)d 条，更新 %(updated)d 条，跳过 %(skipped)d 条" % result,
+                    "message": _("学习完成：新增 %(learned)d 条，更新 %(updated)d 条，跳过 %(skipped)d 条") % result,
                     **result,
                 }
             )
@@ -66,9 +67,9 @@ class ArchiveClassificationRuleAdmin(admin.ModelAdmin):
     def export_to_code_view(self, request: HttpRequest) -> JsonResponse:
         """将学习规则导出为代码文件。"""
         if request.method != "POST":
-            return JsonResponse({"success": False, "message": "Method not allowed"}, status=405)
+            return JsonResponse({"success": False, "message": _("Method not allowed")}, status=405)
         if not self.has_change_permission(request):
-            return JsonResponse({"success": False, "message": "Permission denied"}, status=403)
+            return JsonResponse({"success": False, "message": _("Permission denied")}, status=403)
 
         try:
             from apps.contracts.services.archive.learning_service import ArchiveLearningService
@@ -78,7 +79,7 @@ class ArchiveClassificationRuleAdmin(admin.ModelAdmin):
             return JsonResponse(
                 {
                     "success": True,
-                    "message": "导出完成：%(rule_count)d 条规则，%(category_count)d 个分类" % result,
+                    "message": _("导出完成：%(rule_count)d 条规则，%(category_count)d 个分类") % result,
                     **result,
                 }
             )
@@ -86,7 +87,7 @@ class ArchiveClassificationRuleAdmin(admin.ModelAdmin):
             logger.exception("archive_rules_export_failed")
             return JsonResponse({"success": False, "message": str(exc)}, status=400)
 
-    @admin.action(description="导出选中规则到代码文件")
+    @admin.action(description=_("导出选中规则到代码文件"))
     def export_selected_rules_to_code(self, request: HttpRequest, queryset: Any) -> None:
         """Admin action：导出选中规则到代码文件。"""
         from apps.contracts.services.archive.learning_service import ArchiveLearningService
@@ -95,5 +96,5 @@ class ArchiveClassificationRuleAdmin(admin.ModelAdmin):
         result = service.export_rules_to_code()
         self.message_user(
             request,
-            "导出完成：%(rule_count)d 条规则，%(category_count)d 个分类" % result,
+            _("导出完成：%(rule_count)d 条规则，%(category_count)d 个分类") % result,
         )

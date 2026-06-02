@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 import httpx
+from django.utils.translation import gettext_lazy as _
 
 from apps.core.exceptions import ChatProviderException, ConfigurationException
 
@@ -30,7 +31,7 @@ class WeChatWorkTokenMixin:
             key_mapping = {
                 "WECHAT_WORK_CORP_ID": "CORP_ID",
                 "WECHAT_WORK_AGENT_ID": "AGENT_ID",
-                "WECHAT_WORK_SECRET": "SECRET",  # pragma: allowlist secret
+                "WECHAT_WORK_SECRET": "SECRET",
                 "WECHAT_WORK_DEFAULT_OWNER_ID": "DEFAULT_OWNER_ID",
             }
             config = {internal: db_configs[db] for db, internal in key_mapping.items() if db_configs.get(db)}
@@ -61,7 +62,7 @@ class WeChatWorkTokenMixin:
             logger.debug(f"最终企业微信配置: {list(filtered_config.keys())}")
             return filtered_config
 
-        except (TypeError, ValueError) as e:
+        except Exception as e:
             logger.error(f"加载企业微信配置失败: {e!s}")
             raise ConfigurationException(
                 message=f"无法加载企业微信配置: {e!s}", platform="wechat_work", errors={"original_error": str(e)}
@@ -92,7 +93,7 @@ class WeChatWorkTokenMixin:
 
         if not corp_id or not secret:
             raise ConfigurationException(
-                message="企业微信 CORP_ID 或 SECRET 未配置",
+                message=_("企业微信 CORP_ID 或 SECRET 未配置"),
                 platform="wechat_work",
                 missing_config="CORP_ID, SECRET",
             )

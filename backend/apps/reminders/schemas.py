@@ -3,6 +3,7 @@
 from datetime import datetime
 from typing import Any
 
+from django.utils.translation import gettext_lazy as _
 from ninja import Schema
 from pydantic import Field, field_validator, model_validator
 
@@ -14,7 +15,7 @@ from .services.validators import _CONTENT_MAX_LENGTH
 
 def _validate_positive_id(value: int | None) -> int | None:
     if value is not None and (isinstance(value, bool) or value <= 0):
-        raise ValueError("ID 必须为正整数")
+        raise ValueError(_("ID 必须为正整数"))
     return value
 
 
@@ -23,7 +24,7 @@ def _validate_content_not_blank(value: str | None) -> str | None:
         return None
     normalized = value.strip()
     if not normalized:
-        raise ValueError("提醒事项不能为空")
+        raise ValueError(_("提醒事项不能为空"))
     return normalized
 
 
@@ -34,6 +35,7 @@ class ReminderIn(Schema):
     reminder_type: ReminderType
     content: str = Field(max_length=_CONTENT_MAX_LENGTH)
     due_at: datetime
+    include_in_important_time: bool = False
     metadata: dict[str, Any] | None = None
 
     _validate_ids = field_validator("contract_id", "case_id", "case_log_id")(_validate_positive_id)
@@ -43,7 +45,7 @@ class ReminderIn(Schema):
     def validate_binding_exclusivity(self) -> "ReminderIn":
         selected_count = sum(target_id is not None for target_id in (self.contract_id, self.case_id, self.case_log_id))
         if selected_count > 1:
-            raise ValueError("合同、案件、案件日志最多只能绑定一个")
+            raise ValueError(_("合同、案件、案件日志最多只能绑定一个"))
         return self
 
 
@@ -54,6 +56,7 @@ class ReminderUpdate(Schema):
     reminder_type: ReminderType | None = None
     content: str | None = Field(None, max_length=_CONTENT_MAX_LENGTH)
     due_at: datetime | None = None
+    include_in_important_time: bool | None = None
     metadata: dict[str, Any] | None = None
 
     _validate_ids = field_validator("contract_id", "case_id", "case_log_id")(_validate_positive_id)
@@ -70,6 +73,7 @@ class ReminderOut(SchemaMixin, Schema):
     content: str
     metadata: dict[str, Any] = Field(default_factory=dict)
     due_at: str
+    include_in_important_time: bool
     created_at: str
     updated_at: str
 
@@ -116,6 +120,14 @@ class ParseReminderIn(Schema):
     """解析提醒请求。"""
 
     text: str
+
+
+class CaseImportantTimeCreateIn(Schema):
+    reminder_type: ReminderType
+    content: str = Field(max_length=_CONTENT_MAX_LENGTH)
+    due_at: datetime
+
+    _validate_content = field_validator("content")(_validate_content_not_blank)
 
 
 class ReminderTypeItem(Schema):

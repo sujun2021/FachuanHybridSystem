@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any, TypeVar
 
+from django.utils.translation import gettext_lazy as _
 from pydantic import BaseModel, ValidationError
 
 from apps.core.exceptions import ValidationException
@@ -72,7 +73,7 @@ class LitigationLLMGenerator:
                 exc_info=True,
             )
             raise ValidationException(
-                message="起诉状结构验证失败:%(e)s" % {"e": e},
+                message=_("起诉状结构验证失败:%(e)s") % {"e": e},
                 code="COMPLAINT_VALIDATION_FAILED",
                 errors={"detail": str(e)},
             ) from e
@@ -81,7 +82,7 @@ class LitigationLLMGenerator:
             if isinstance(e, ValidationException):
                 raise
             raise ValidationException(
-                message="起诉状生成失败:%(e)s" % {"e": e},
+                message=_("起诉状生成失败:%(e)s") % {"e": e},
                 code="COMPLAINT_GENERATION_FAILED",
                 errors={"detail": str(e)},
             ) from e
@@ -100,7 +101,7 @@ class LitigationLLMGenerator:
                 exc_info=True,
             )
             raise ValidationException(
-                message="答辩状结构验证失败:%(e)s" % {"e": e},
+                message=_("答辩状结构验证失败:%(e)s") % {"e": e},
                 code="DEFENSE_VALIDATION_FAILED",
                 errors={"detail": str(e)},
             ) from e
@@ -109,7 +110,7 @@ class LitigationLLMGenerator:
             if isinstance(e, ValidationException):
                 raise
             raise ValidationException(
-                message="答辩状生成失败:%(e)s" % {"e": e},
+                message=_("答辩状生成失败:%(e)s") % {"e": e},
                 code="DEFENSE_GENERATION_FAILED",
                 errors={"detail": str(e)},
             ) from e

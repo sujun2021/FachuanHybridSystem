@@ -256,7 +256,7 @@ def _build_execution_request_text(*, case: Any) -> str:
             or generated.get("申请执行事项")
             or ""
         ).strip()
-    except (TypeError, ValueError):
+    except Exception:
         logger.exception("build_execution_request_text_failed", extra={"case_id": int(case.id)})
 
     if generated_text:
@@ -431,7 +431,7 @@ def _match_slot(*, material: Any, file_path: Path, filing_type: str) -> str:
     return default_slot
 
 
-def _build_materials_map(*, case: Any, filing_type: str) -> dict[str, list[tuple[str, str]]]:
+def _build_materials_map(*, case: Any, filing_type: str) -> dict[str, list[str]]:
     from django.db.models import Q
 
     from apps.cases.models import CaseMaterial, CaseMaterialCategory, CaseMaterialSide
@@ -450,7 +450,7 @@ def _build_materials_map(*, case: Any, filing_type: str) -> dict[str, list[tuple
             .order_by("id")
         )
 
-    materials_map: dict[str, list[tuple[str, str]]] = {}
+    materials_map: dict[str, list[str]] = {}
     dedup_keys: set[tuple[str, str]] = set()
 
     for material in case_materials:
@@ -479,11 +479,7 @@ def _build_materials_map(*, case: Any, filing_type: str) -> dict[str, list[tuple
         if dedup_key in dedup_keys:
             continue
         dedup_keys.add(dedup_key)
-
-        original_name = str(getattr(attachment, "original_filename", "") or "").strip()
-        if not original_name:
-            original_name = file_path.name
-        materials_map.setdefault(slot, []).append((normalized_path, original_name))
+        materials_map.setdefault(slot, []).append(normalized_path)
 
     return materials_map
 

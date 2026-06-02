@@ -117,7 +117,7 @@ class OwnerConfigManager:
             )
             return config
 
-        except (TypeError, ValueError) as e:
+        except Exception as e:
             logger.error(f"加载群主配置失败: {e!s}")
             raise ConfigurationException(
                 message=f"无法加载群主配置: {e!s}", platform="feishu", errors={"original_error": str(e)}

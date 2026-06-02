@@ -2,6 +2,7 @@
 
 from django.db import migrations, models
 
+
 def migrate_proxy_rule_case_types(apps, schema_editor):
     ProxyMatterRule = apps.get_model("documents", "ProxyMatterRule")
     for rule in ProxyMatterRule.objects.all().only("id", "case_type", "case_types"):
@@ -10,6 +11,7 @@ def migrate_proxy_rule_case_types(apps, schema_editor):
         if rule.case_type:
             rule.case_types = [rule.case_type]
             rule.save(update_fields=["case_types"])
+
 
 class Migration(migrations.Migration):
 
