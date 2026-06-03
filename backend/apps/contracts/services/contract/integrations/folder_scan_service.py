@@ -132,6 +132,27 @@ class ContractFolderScanService:
     def list_scan_subfolders(self, *, contract_id: int) -> dict[str, Any]:
         self._ensure_contract_exists(contract_id)
         binding = self._get_accessible_binding(contract_id)
+
+        # Cloud storage: use provider to list subdirectories
+        storage_type = getattr(binding, "storage_type", "local")
+        if storage_type != "local":
+            provider = self._make_provider_for_binding(binding)
+            root_path = binding.folder_path
+            try:
+                children = provider.list_directory(root_path)
+            except Exception:
+                children = []
+            subfolders = []
+            for child in children:
+                if not child.is_dir:
+                    continue
+                if child.name.startswith("."):
+                    continue
+                subfolders.append({"relative_path": child.name, "display_name": child.name})
+            subfolders.sort(key=lambda x: x["display_name"].lower())
+            return {"root_path": root_path, "subfolders": subfolders}
+
+        # Local filesystem
         root = Path(binding.folder_path).expanduser().resolve()
 
         subfolders: list[dict[str, str]] = []

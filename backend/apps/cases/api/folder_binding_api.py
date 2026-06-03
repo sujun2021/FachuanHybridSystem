@@ -54,6 +54,13 @@ def create_folder_binding(request: HttpRequest, case_id: int, data: CaseFolderBi
         storage_account = CloudStorageAccount.objects.filter(
             id=data.storage_account_id, storage_type=data.storage_type, is_active=True
         ).first()
+        if storage_account is None:
+            from apps.core.exceptions import ValidationException
+            raise ValidationException(
+                message="指定的云存储账号不存在或已禁用",
+                code="STORAGE_ACCOUNT_NOT_FOUND",
+                errors={"storage_account_id": data.storage_account_id},
+            )
 
     binding = service.create_binding_ctx(
         case_id=case_id,
@@ -176,7 +183,12 @@ def browse_folders(
         account = CSA.objects.filter(id=storage_account_id, storage_type=storage_type, is_active=True).first()
         if not account:
             return FolderBrowseResponseSchema(
-                browsable=False, message="云存储账号不存在", path=path, parent_path=None, entries=[], storage_type=storage_type
+                browsable=False,
+                message="云存储账号不存在",
+                path=path,
+                parent_path=None,
+                entries=[],
+                storage_type=storage_type,
             )
 
         provider = create_provider_from_account(account)
@@ -187,7 +199,12 @@ def browse_folders(
         except Exception:
             logger.exception("cloud_browse_failed", extra={"path": browse_path, "account_id": storage_account_id})
             return FolderBrowseResponseSchema(
-                browsable=False, message="云存储目录访问失败", path=browse_path, parent_path=None, entries=[], storage_type=storage_type
+                browsable=False,
+                message="云存储目录访问失败",
+                path=browse_path,
+                parent_path=None,
+                entries=[],
+                storage_type=storage_type,
             )
 
         entries = []
@@ -203,12 +220,18 @@ def browse_folders(
         parent_path: str | None = None
         if browse_path != "/":
             from pathlib import PurePosixPath
+
             parent_path = str(PurePosixPath(browse_path).parent)
             if parent_path == ".":
                 parent_path = "/"
 
         return FolderBrowseResponseSchema(
-            browsable=True, message=None, path=browse_path, parent_path=parent_path, entries=entries, storage_type=storage_type
+            browsable=True,
+            message=None,
+            path=browse_path,
+            parent_path=parent_path,
+            entries=entries,
+            storage_type=storage_type,
         )
 
     # ── Local filesystem browse (existing logic) ──
@@ -235,7 +258,12 @@ def browse_folders(
     browsable, browse_message = service.is_browsable_path(str(path))
     if not browsable:
         return FolderBrowseResponseSchema(
-            browsable=False, message=browse_message, path=str(path).strip(), parent_path=None, entries=[], storage_type="local"
+            browsable=False,
+            message=browse_message,
+            path=str(path).strip(),
+            parent_path=None,
+            entries=[],
+            storage_type="local",
         )
 
     resolved = service.resolve_under_allowed_roots(str(path))
