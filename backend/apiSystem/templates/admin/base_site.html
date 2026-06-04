@@ -5,10 +5,13 @@
 
 {% block extrahead %}
 {{ block.super }}
-<!-- 同步设置侧边栏可见性 + 导航遮罩 -->
+<!-- 同步设置侧边栏可见性 + 禁用首帧 transition -->
 <script>
 (function() {
-  // 1. 同步设置侧边栏可见性（替代 nav_sidebar.js 的 defer 行为）
+  // 1. 立即禁用所有 transition，消除导航闪烁
+  document.documentElement.classList.add('disable-transitions');
+
+  // 2. 同步设置侧边栏可见性（替代 nav_sidebar.js 的 defer 行为）
   var main = document.getElementById('main');
   if (main) {
     var v = localStorage.getItem('django.admin.navSidebarIsOpen');
@@ -16,28 +19,17 @@
     if (v === 'true') main.classList.add('shifted');
   }
 
-  // 2. 导航遮罩：侧边栏链接点击后立即覆盖全屏，消除页面切换闪烁
-  //    原理：全页面重载时，旧页面卸载 → 新页面渲染之间有空白窗口，
-  //    用户会看到旧 DOM 残影或空白。遮罩在点击瞬间覆盖，新页面加载后自动移除。
-  document.addEventListener('click', function(e) {
-    var link = e.target.closest('#nav-sidebar a[href]');
-    if (!link) return;
-    // 创建遮罩（使用当前页面背景色，避免白色闪烁）
-    var overlay = document.createElement('div');
-    overlay.id = 'nav-loading-overlay';
-    overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:var(--body-bg,#fff);';
-    document.body.appendChild(overlay);
-  });
-
-  // 3. 新页面加载后移除遮罩（处理 bfcache 返回的情况）
+  // 3. DOM 就绪后重新启用 transition（延迟一帧确保布局稳定）
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {
-      var old = document.getElementById('nav-loading-overlay');
-      if (old) old.remove();
+      requestAnimationFrame(function() {
+        document.documentElement.classList.remove('disable-transitions');
+      });
     });
   } else {
-    var old = document.getElementById('nav-loading-overlay');
-    if (old) old.remove();
+    requestAnimationFrame(function() {
+      document.documentElement.classList.remove('disable-transitions');
+    });
   }
 })();
 </script>
@@ -51,6 +43,18 @@
 {% block extrastyle %}
 {{ block.super }}
 <style>
+    /* === 页面加载时禁用所有 transition，消除导航闪烁 ===
+     * 原理：每次导航都是全页面重载，在 HTML 到达 → JS 执行完毕之间有空白窗口，
+     * 如果 CSS transition 在此期间触发，用户会看到元素的中间状态（残影）。
+     * 修复：首帧禁用所有 transition，DOM 执行完毕后重新启用。
+     * 这样空白窗口期间无过渡动画，用户要么看到旧页面要么看到新页面。 */
+    .disable-transitions *,
+    .disable-transitions *::before,
+    .disable-transitions *::after {
+        transition-duration: 0s !important;
+        animation-duration: 0s !important;
+    }
+
     /* Alpine.js x-cloak 防止闪烁 */
     [x-cloak] { display: none !important; }
 
