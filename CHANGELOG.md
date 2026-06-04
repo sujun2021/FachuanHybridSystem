@@ -15,10 +15,14 @@
 
 #### 修复
 
-- **Django Admin 侧边栏闪烁修复**：`base_site.html` 侧边栏虚拟模块改用 `content-visibility: hidden` CSS-first 过滤，JS 执行后才显示允许的行，消除页面加载时全部条目闪现的问题
+- **Django Admin 侧边栏闪烁彻底修复**：三管齐下解决 Windows 上严重的 UI 残影
+  - `content-visibility: hidden` CSS-first 过滤虚拟模块行
+  - 同步脚本首帧设置 `.shifted` 类，消除 `nav_sidebar.js` defer 加载延迟
+  - `tool_favorites` context processor 添加 request 缓存，减少每次页面加载的 DB 查询
 - **autocomplete 输入框闪烁修复**：`autocomplete.js` 中 `replaceChild` 改为 `insertBefore` + 隐藏原 input，消除 DOM 节点替换造成的中间空帧
 - **表单 inline 重复触发修复**：`admin_case_form.js` 多层 setTimeout(80/220/500ms) 改为 debounce(150ms)，避免同一事件触发 3 次 `handleInlineAdded` 导致 select 选项闪烁
 - **CaseLog 模板 N+1 查询修复**：`CaseAdmin.get_queryset` 添加 `select_related("contract")` + `prefetch_related("logs__attachments", "logs__reminders")`，消除 caselog_inline 模板中每条日志的额外查询
+- **侧边栏案件/合同链接闪烁修复**：虚拟菜单 URL 直接带 `?status__exact=active` 参数，避免 `changelist_view` 302 重定向导致的二次渲染闪烁
 - **ContractAdmin 批量操作优化**：归档/建档 action 从逐条 `obj.save()` 改为 `queryset.update()`，10 个合同从 10 条 UPDATE 降为 1 条
 - **assign_case 模板 N+1 修复**：`_format_case_for_template` 改用 `Case.objects.prefetch_related("case_numbers", "parties__client")`，推荐 10 个案件从 20 次查询降为 1 次
 - **数据库索引补全**：`Case.status`（list_filter 每次加载都过滤）、`ContractAssignment.lawyer`、`SupplementaryAgreementParty.client` 添加独立索引
