@@ -217,6 +217,19 @@ class CaseFolderScanService:
         candidates = payload.get("candidates") or []
         candidate_map = {str(item.get("source_path") or ""): item for item in candidates}
 
+        # 解析云存储 provider
+        storage_provider = None
+        try:
+            from apps.cases.models.material import CaseFolderBinding
+
+            binding = CaseFolderBinding.objects.filter(case_id=case_id).first()
+            if binding and getattr(binding, "storage_type", "local") != "local":
+                from apps.core.cloud_storage.factory import create_provider_for_binding
+
+                storage_provider = create_provider_for_binding(binding)
+        except Exception:
+            pass
+
         selected_items = [item for item in items if bool(item.get("selected", True))]
         if not selected_items:
             raise ValidationException(message="未找到可导入的 PDF")
@@ -237,14 +250,22 @@ class CaseFolderScanService:
             if not source_path or source_path not in candidate_map:
                 raise ValidationException(message="候选文件不存在", errors={"source_path": source_path})
 
-            file_path = Path(source_path)
-            if not file_path.exists() or not file_path.is_file():
-                raise ValidationException(message="源文件不存在", errors={"source_path": source_path})
+            if storage_provider is not None:
+                from pathlib import PurePosixPath
+
+                file_bytes = storage_provider.read_file(source_path)
+                file_name = PurePosixPath(source_path).name
+            else:
+                file_path = Path(source_path)
+                if not file_path.exists() or not file_path.is_file():
+                    raise ValidationException(message="源文件不存在", errors={"source_path": source_path})
+                file_bytes = file_path.read_bytes()
+                file_name = file_path.name
 
             uploads.append(
                 SimpleUploadedFile(
-                    name=file_path.name,
-                    content=file_path.read_bytes(),
+                    name=file_name,
+                    content=file_bytes,
                     content_type="application/pdf",
                 )
             )
