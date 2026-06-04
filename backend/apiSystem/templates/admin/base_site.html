@@ -5,17 +5,26 @@
 
 {% block extrahead %}
 {{ block.super }}
-<!-- 同步设置侧边栏可见性 -->
+<!-- 侧边栏布局同步：确保首帧即正确布局，消除 content-width 跳变闪烁 -->
+<style>
+  .js-sidebar-init #main {
+    visibility: hidden;
+  }
+</style>
 <script>
-(function() {
-  // 同步设置侧边栏可见性（替代 nav_sidebar.js 的 defer 行为）
+document.documentElement.classList.add('js-sidebar-init');
+document.addEventListener('DOMContentLoaded', function() {
   var main = document.getElementById('main');
   if (main) {
     var v = localStorage.getItem('django.admin.navSidebarIsOpen');
     if (v === null) v = 'true';
     if (v === 'true') main.classList.add('shifted');
   }
-})();
+  // 侧边栏状态已应用 → 下一帧安全展示内容
+  requestAnimationFrame(function() {
+    document.documentElement.classList.remove('js-sidebar-init');
+  });
+});
 </script>
 <!-- Alpine.js -->
 {% block alpine_script %}
