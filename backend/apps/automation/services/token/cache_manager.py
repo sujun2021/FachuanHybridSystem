@@ -396,7 +396,7 @@ class TokenCacheManager:
 
     def _clear_redis_namespace_cache(self, cache_conf: dict[str, Any], *, backend: str = "") -> None:
         """
-        清除 Redis 命名空间下的 Token 缓存键
+        清除 Valkey/Redis 命名空间下的 Token 缓存键
 
         Args:
             cache_conf: CACHES['default'] 配置字典
@@ -411,11 +411,18 @@ class TokenCacheManager:
             import valkey
 
             client = valkey.from_url(str(location))
-            pattern = f"{self.cache_prefix}:*"
+            # Django RedisCache 键格式: "{KEY_PREFIX}:{VERSION}:{key}"
+            # 默认 VERSION=1，所以实际键名为 "lawfirm:1:auto_token:..."
+            key_prefix = cache_conf.get("KEY_PREFIX", "")
+            version = cache_conf.get("VERSION", 1)
+            if key_prefix:
+                pattern = f"{key_prefix}:{version}:{self.cache_prefix}:*"
+            else:
+                pattern = f"{self.cache_prefix}:*"
             keys = client.keys(pattern)
             if keys:
                 client.delete(*keys)  # type: ignore[misc]
-            logger.info(f"Valkey 命名空间缓存已清除: {len(keys)} 个键")  # type: ignore[arg-type]
+            logger.info(f"Valkey 命名空间缓存已清除: {len(keys)} 个键，pattern={pattern}")  # type: ignore[arg-type]
         except ModuleNotFoundError:
             logger.warning("token_cache_clear_valkey_client_init_failed")
         except Exception as e:
