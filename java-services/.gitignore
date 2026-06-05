@@ -8,6 +8,7 @@ target/
 test_output/
 test_output_*.docx
 test_output_archive/
+**/test_output*/
 
 # IDE
 .idea/
