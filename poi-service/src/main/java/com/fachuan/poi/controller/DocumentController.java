@@ -1,8 +1,10 @@
 package com.fachuan.poi.controller;
 
+import com.fachuan.poi.model.ArchiveRequest;
 import com.fachuan.poi.model.ComplaintRequest;
 import com.fachuan.poi.model.DocumentRequest;
 import com.fachuan.poi.model.ReportRequest;
+import com.fachuan.poi.service.ArchiveDocService;
 import com.fachuan.poi.service.ComplaintService;
 import com.fachuan.poi.service.ReportService;
 import com.fachuan.poi.service.TemplateService;
@@ -22,14 +24,17 @@ public class DocumentController {
     private final ComplaintService complaintService;
     private final ReportService reportService;
     private final TemplateService templateService;
+    private final ArchiveDocService archiveDocService;
 
     public DocumentController(
             ComplaintService complaintService,
             ReportService reportService,
-            TemplateService templateService) {
+            TemplateService templateService,
+            ArchiveDocService archiveDocService) {
         this.complaintService = complaintService;
         this.reportService = reportService;
         this.templateService = templateService;
+        this.archiveDocService = archiveDocService;
     }
 
     /**
@@ -109,6 +114,55 @@ public class DocumentController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
                 .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // Archive document generation
+    // ══════════════════════════════════════════════════════════════════════
+
+    @PostMapping("/archive/case-cover")
+    public ResponseEntity<byte[]> generateCaseCover(@RequestBody ArchiveRequest request) {
+        try {
+            byte[] docx = archiveDocService.generateCaseCover(request);
+            return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"case_cover.docx\"")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(docx);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                .body(("{\"error\": \"" + e.getMessage() + "\"}").getBytes());
+        }
+    }
+
+    @PostMapping("/archive/closing-register")
+    public ResponseEntity<byte[]> generateClosingRegister(@RequestBody ArchiveRequest request) {
+        try {
+            byte[] docx = archiveDocService.generateClosingRegister(request);
+            return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"closing_register.docx\"")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(docx);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                .body(("{\"error\": \"" + e.getMessage() + "\"}").getBytes());
+        }
+    }
+
+    @PostMapping("/archive/catalog")
+    public ResponseEntity<byte[]> generateCatalog(@RequestBody ArchiveRequest request) {
+        try {
+            byte[] docx = archiveDocService.generateCatalog(request);
+            return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"catalog.docx\"")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(docx);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                .body(("{\"error\": \"" + e.getMessage() + "\"}").getBytes());
         }
     }
 }
