@@ -239,7 +239,8 @@ class GDriveProvider:
         if not file_id:
             return False
         resp = self._service.files().get(fileId=file_id, fields="mimeType").execute()
-        return resp["mimeType"] == GDRIVE_FOLDER_MIME
+        is_dir: bool = resp["mimeType"] == GDRIVE_FOLDER_MIME
+        return is_dir
 
     def delete_file(self, path: str) -> None:
         file_id = self._resolve(path)

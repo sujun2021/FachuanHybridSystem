@@ -164,9 +164,9 @@ def create_provider_from_account(account: Any) -> CloudStorageProvider:
     if storage_type == "dropbox":
         from .dropbox_provider import DropboxOAuthTokenManager, DropboxProvider
 
-        token_manager = DropboxOAuthTokenManager(account)
+        dbx_token_manager = DropboxOAuthTokenManager(account)
         return DropboxProvider(
-            access_token=token_manager.get_valid_token(),
+            access_token=dbx_token_manager.get_valid_token(),
             app_key=account.dropbox_app_key,
             app_secret=account.get_decrypted_dropbox_app_secret(),
             root_path=getattr(account, "dropbox_root_path", "/"),
