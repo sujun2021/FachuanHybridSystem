@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 
+from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_POST
 
@@ -11,6 +12,7 @@ from .models import CloudStorageAccount
 from .onedrive_provider import OAuthTokenManager
 
 
+@staff_member_required
 @require_POST
 def onedrive_start_auth(request: HttpRequest, account_id: int) -> JsonResponse:
     """Start OneDrive device code authorization flow."""
@@ -26,6 +28,7 @@ def onedrive_start_auth(request: HttpRequest, account_id: int) -> JsonResponse:
         return JsonResponse({"error": str(e)}, status=400)
 
 
+@staff_member_required
 @require_POST
 def onedrive_complete_auth(request: HttpRequest, account_id: int) -> JsonResponse:
     """Complete device code flow by polling for token."""
@@ -48,6 +51,7 @@ def onedrive_complete_auth(request: HttpRequest, account_id: int) -> JsonRespons
         return JsonResponse({"error": str(e)}, status=400)
 
 
+@staff_member_required
 @require_POST
 def dropbox_start_auth(request: HttpRequest, account_id: int) -> JsonResponse:
     """Start Dropbox device code authorization flow."""
@@ -65,6 +69,7 @@ def dropbox_start_auth(request: HttpRequest, account_id: int) -> JsonResponse:
         return JsonResponse({"error": str(e)}, status=400)
 
 
+@staff_member_required
 @require_POST
 def dropbox_complete_auth(request: HttpRequest, account_id: int) -> JsonResponse:
     """Complete Dropbox device code flow by polling for token."""
