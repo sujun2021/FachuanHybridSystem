@@ -208,9 +208,15 @@ class FormatNormalizeAdmin(admin.ModelAdmin):
 
             try:
                 # 保存上传的文件
+                import uuid as _uuid
+
                 from django.core.files.storage import default_storage
 
-                file_path = f"contract_review/uploads/{uploaded_file.name}"
+                # 防止文件名注入：只保留安全的文件名部分，加 UUID 前缀
+                from pathlib import Path as _Path
+
+                safe_name = _Path(uploaded_file.name).name
+                file_path = f"contract_review/uploads/{_uuid.uuid4().hex[:8]}_{safe_name}"
                 saved_path = default_storage.save(file_path, uploaded_file)
 
                 # 创建任务，并保存编号类型、AI辅助选项和模型选择
