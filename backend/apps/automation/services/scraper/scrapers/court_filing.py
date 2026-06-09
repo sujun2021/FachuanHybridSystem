@@ -17,7 +17,7 @@ class CourtFilingScraper(BaseScraper):  # pragma: no cover
     登录法院网站，自动填写立案信息并上传文件
     """
 
-    def _run(self) -> dict[str, Any]:
+    def _run(self) -> dict[str, Any]:  # pragma: no cover
         """
         执行自动立案任务
 
@@ -70,7 +70,7 @@ class CourtFilingScraper(BaseScraper):  # pragma: no cover
             "message": "立案提交成功（需根据实际网站完善逻辑）",
         }
 
-    def _login(self, username: str, password: str) -> None:
+    def _login(self, username: str, password: str) -> None:  # pragma: no cover
         """
         登录法院网站
 
@@ -89,7 +89,7 @@ class CourtFilingScraper(BaseScraper):  # pragma: no cover
 
         logger.info("登录成功")
 
-    def _fill_case_info(self) -> None:
+    def _fill_case_info(self) -> None:  # pragma: no cover
         """填写案件信息"""
         case = self.task.case
         logger.info(f"填写案件信息: {case.name if case else 'N/A'}")

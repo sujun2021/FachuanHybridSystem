@@ -26,14 +26,14 @@ class SsoLoginMixin:  # pragma: no cover
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _save_cookies(cookies: list[dict[str, Any]]) -> None:
+    def _save_cookies(cookies: list[dict[str, Any]]) -> None:  # pragma: no cover
         """保存 cookies 到磁盘。"""
         _COOKIE_PATH.parent.mkdir(parents=True, exist_ok=True)
         _COOKIE_PATH.write_text(json.dumps(cookies, indent=2, ensure_ascii=False))
         logger.info("已保存 %d 个 cookies 到 %s", len(cookies), _COOKIE_PATH)
 
     @staticmethod
-    def _load_cookies() -> list[dict[str, Any]] | None:
+    def _load_cookies() -> list[dict[str, Any]] | None:  # pragma: no cover
         """从磁盘加载 cookies，过滤已过期的。"""
         if not _COOKIE_PATH.exists():
             return None
@@ -60,7 +60,7 @@ class SsoLoginMixin:  # pragma: no cover
     # SSO 扫码登录（Playwright 有头模式）
     # ------------------------------------------------------------------
 
-    def _login_via_sso(self) -> list[dict[str, Any]]:
+    def _login_via_sso(self) -> list[dict[str, Any]]:  # pragma: no cover
         """完整的 SSO 扫码 + 凭证登录流程。
 
         打开有头浏览器 → 点击扫码图标 → 等待用户扫码 →
@@ -124,7 +124,7 @@ class SsoLoginMixin:  # pragma: no cover
             pw.stop()
 
     @staticmethod
-    def _click_qr_icon(page: Any) -> None:
+    def _click_qr_icon(page: Any) -> None:  # pragma: no cover
         """点击 SSO 页面右上角的扫码图标。"""
         all_els = page.query_selector_all("img, svg")
         for el in all_els:

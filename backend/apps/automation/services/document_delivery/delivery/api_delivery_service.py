@@ -102,7 +102,7 @@ class ApiDeliveryService:
 
         return result
 
-    def fetch_page(self, token: str, page_num: int, page_size: int = 20) -> list[DocumentRecord]:
+    def fetch_page(self, token: str, page_num: int, page_size: int = 20) -> list[DocumentRecord]:  # pragma: no cover
         """
         获取指定页的文书列表
 

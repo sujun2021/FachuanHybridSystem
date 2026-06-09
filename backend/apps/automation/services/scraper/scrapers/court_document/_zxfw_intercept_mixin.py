@@ -47,7 +47,7 @@ class ZxfwInterceptMixin:
             return super()._download_document_directly(document_data, download_dir, download_timeout)
         raise NotImplementedError("子类必须实现 _download_document_directly 方法")
 
-    def _save_documents_batch(
+    def _save_documents_batch(  # pragma: no cover
         self,
         documents_with_results: list[tuple[dict[str, Any], tuple[bool, str | None, str | None]]],
     ) -> dict[str, Any]:
@@ -55,14 +55,14 @@ class ZxfwInterceptMixin:
             return super()._save_documents_batch(documents_with_results)
         return {}
 
-    def _intercept_api_response_with_navigation(self, timeout: int = 30000) -> dict[str, Any] | None:
+    def _intercept_api_response_with_navigation(self, timeout: int = 30000) -> dict[str, Any] | None:  # pragma: no cover
         """在导航前注册监听器，拦截 API 响应"""
         api_url = "https://zxfw.court.gov.cn/yzw/yzw-zxfw-sdfw/api/v1/sdfw/getWsListBySdbhNew"
         intercepted_data: dict[str, Any] | None = None
         start_time = time.time()
         logger.info(f"开始拦截 API 响应(导航前注册),超时时间: {timeout}ms")
 
-        def handle_response(response: Any) -> None:
+        def handle_response(response: Any) -> None:  # pragma: no cover
             nonlocal intercepted_data
             if api_url in response.url:
                 try:

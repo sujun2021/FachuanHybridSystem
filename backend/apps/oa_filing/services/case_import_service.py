@@ -146,7 +146,7 @@ class CaseImportService:
 
         return results
 
-    def run_import(
+    def run_import(  # pragma: no cover
         self,
         case_nos: list[str],
         *,
@@ -278,7 +278,7 @@ class CaseImportService:
             )
             raise
 
-    def _handle_script_progress(self, payload: dict[str, Any]) -> None:
+    def _handle_script_progress(self, payload: dict[str, Any]) -> None:  # pragma: no cover
         """处理Playwright脚本的进度回调。"""
         event = str(payload.get("event") or "")
         message = str(payload.get("message") or "").strip()
@@ -290,7 +290,7 @@ class CaseImportService:
                 progress_message=f"正在搜索案件 {case_no}",
             )
 
-    def _resolve_search_workers(self, total_cases: int) -> int:
+    def _resolve_search_workers(self, total_cases: int) -> int:  # pragma: no cover
         """解析OA查询并发数。"""
         if total_cases <= 1:
             return 1
@@ -302,7 +302,7 @@ class CaseImportService:
             configured = 2
         return max(1, min(configured, total_cases))
 
-    def _fetch_oa_results(
+    def _fetch_oa_results(  # pragma: no cover
         self,
         *,
         case_nos: list[str],

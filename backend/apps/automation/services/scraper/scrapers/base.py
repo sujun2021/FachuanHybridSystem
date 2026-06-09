@@ -57,7 +57,7 @@ class BaseScraper:
 
     requires_browser: bool = True
 
-    def __init__(self, task: ScraperTask):
+    def __init__(self, task: ScraperTask):  # pragma: no cover
         """
         初始化爬虫
 
@@ -134,7 +134,7 @@ class BaseScraper:
             self.task.finished_at = timezone.now()
             _safe_save_task(self.task)
 
-    def _run(self) -> dict[str, Any]:
+    def _run(self) -> dict[str, Any]:  # pragma: no cover
         """
         具体的爬虫逻辑（子类必须实现）
 

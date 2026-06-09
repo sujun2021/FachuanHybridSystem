@@ -26,7 +26,7 @@ class DocumentDeliveryDownloadingMixin:  # pragma: no cover
     PAGE_LOAD_WAIT: int
 
     # 子类必须实现的方法（Protocol 声明）
-    def _process_sms_in_thread(
+    def _process_sms_in_thread(  # pragma: no cover
         self,
         record: DocumentDeliveryRecord,
         file_path: str,
@@ -35,10 +35,10 @@ class DocumentDeliveryDownloadingMixin:  # pragma: no cover
     ) -> dict[str, Any]:
         raise NotImplementedError
 
-    def _should_process(self, record: DocumentDeliveryRecord, cutoff_time: Any, credential_id: int) -> bool:
+    def _should_process(self, record: DocumentDeliveryRecord, cutoff_time: Any, credential_id: int) -> bool:  # pragma: no cover
         raise NotImplementedError
 
-    def _download_document(self, page: Page, entry: DocumentDeliveryRecord) -> str | None:
+    def _download_document(self, page: Page, entry: DocumentDeliveryRecord) -> str | None:  # pragma: no cover
         """点击下载按钮下载文书"""
         logger.info(f"开始下载文书: {entry.case_number}")
         try:

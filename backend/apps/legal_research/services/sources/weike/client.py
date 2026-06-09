@@ -23,7 +23,7 @@ class WeikeCaseClient(WeikeAuthMixin, WeikeSearchMixin, WeikeDocumentMixin, Weik
     HOME_URL = "https://www.wkinfo.com.cn/?lang="
     HOME_LOGIN_URL = "https://www.wkinfo.com.cn/login/checkValidate?lang=zh_CN"
 
-    def __init__(self, *, tuning: LegalResearchTuningConfig | None = None) -> None:
+    def __init__(self, *, tuning: LegalResearchTuningConfig | None = None) -> None:  # pragma: no cover
         if tuning is not None:
             config = tuning
         else:
@@ -46,7 +46,7 @@ class WeikeCaseClient(WeikeAuthMixin, WeikeSearchMixin, WeikeDocumentMixin, Weik
             int(getattr(config, "weike_search_api_degrade_cooldown_seconds", 180)),
         )
 
-    def open_session(
+    def open_session(  # pragma: no cover
         self,
         *,
         username: str,

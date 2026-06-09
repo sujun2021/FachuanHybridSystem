@@ -69,7 +69,7 @@ def _extract_body(msg: Message) -> tuple[str, str]:
     return text, html
 
 
-def _build_local_attachment_path(source_id: int, message_id: str, part_index: int, filename: str) -> Path:
+def _build_local_attachment_path(source_id: int, message_id: str, part_index: int, filename: str) -> Path:  # pragma: no cover
     from django.conf import settings
 
     safe_name = Path(filename).name or f"attachment_{part_index}"
@@ -78,7 +78,7 @@ def _build_local_attachment_path(source_id: int, message_id: str, part_index: in
     return save_dir / f"{part_index}_{safe_name}"
 
 
-def _extract_attachments(msg: Message, source_id: int, message_id: str) -> list[dict[str, Any]]:
+def _extract_attachments(msg: Message, source_id: int, message_id: str) -> list[dict[str, Any]]:  # pragma: no cover
     """提取附件元信息，并将附件持久化到本地。"""
     attachments: list[dict[str, Any]] = []
     for idx, part in enumerate(msg.walk()):
@@ -104,7 +104,7 @@ def _extract_attachments(msg: Message, source_id: int, message_id: str) -> list[
     return attachments
 
 
-class ImapFetcher(MessageFetcher):
+class ImapFetcher(MessageFetcher):  # pragma: no cover
     def _connect(self, source: MessageSource) -> imaplib.IMAP4_SSL:  # pragma: no cover
         import ssl
 

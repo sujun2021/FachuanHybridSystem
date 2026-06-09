@@ -584,7 +584,7 @@ class DocumentDeliveryService(  # pragma: no cover
             self._go_to_next_page(page)
             page_num += 1
 
-    def _process_document_entry(
+    def _process_document_entry(  # pragma: no cover
         self, page: Page, entry: DocumentDeliveryRecord, credential_id: int
     ) -> DocumentProcessResult:
         """处理单个文书条目（Playwright 上下文）"""
@@ -616,7 +616,7 @@ class DocumentDeliveryService(  # pragma: no cover
             result.error_message = error_msg
         return result
 
-    def _query_via_playwright(
+    def _query_via_playwright(  # pragma: no cover
         self, credential_id: int, cutoff_time: datetime, tab: str = "pending", debug_mode: bool = True
     ) -> DocumentQueryResult:
         """使用 Playwright 方式查询文书"""

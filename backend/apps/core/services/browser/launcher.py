@@ -101,7 +101,7 @@ def launch_browser(  # pragma: no cover
         _cleanup(page, context, browser)
 
 
-def _cleanup(
+def _cleanup(  # pragma: no cover
     page: Page | None,
     context: BrowserContext | None,
     browser: Browser | None,

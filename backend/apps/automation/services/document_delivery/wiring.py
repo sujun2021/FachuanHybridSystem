@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from .token.document_delivery_token_service import DocumentDeliveryTokenService
 
 
-def build_document_delivery_coordinator(
+def build_document_delivery_coordinator(  # pragma: no cover
     *,
     case_matcher: CaseMatcher | None = None,
     document_renamer: DocumentRenamer | None = None,

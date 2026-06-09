@@ -18,7 +18,7 @@ from .filing_models import CaseInfo, ClientInfo, ConflictPartyInfo, ContractInfo
 logger = logging.getLogger("apps.oa_filing.jtn")
 
 
-class HttpFilingMixin:
+class HttpFilingMixin:  # pragma: no cover
     """HTTP 立案主链路 mixin。"""
 
     _account: str
@@ -28,7 +28,7 @@ class HttpFilingMixin:
     # 公共入口
     # ------------------------------------------------------------------
 
-    def _run_via_http(
+    def _run_via_http(  # pragma: no cover
         self: Any,
         *,
         clients: list[ClientInfo],

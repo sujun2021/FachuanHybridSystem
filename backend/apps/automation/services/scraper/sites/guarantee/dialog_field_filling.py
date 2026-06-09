@@ -10,7 +10,7 @@ class GuaranteeDialogFieldFillingMixin:  # pragma: no cover
 
     page: Any
 
-    def _fill_dialog_select_fields(self, defaults: dict[str, str], target: str | None = None) -> list[str]:
+    def _fill_dialog_select_fields(self, defaults: dict[str, str], target: str | None = None) -> list[str]:  # pragma: no cover
         updates = self.page.evaluate(
             r"""(args) => {
                 const defaults = args.defaults || {};
@@ -116,7 +116,7 @@ class GuaranteeDialogFieldFillingMixin:  # pragma: no cover
         self._close_popovers()  # type: ignore[attr-defined]
         return [str(item) for item in updates]
 
-    def _fill_dialog_date_fields(self) -> list[str]:
+    def _fill_dialog_date_fields(self) -> list[str]:  # pragma: no cover
         updates = self.page.evaluate(
             r"""() => {
                 const result = [];
@@ -156,7 +156,7 @@ class GuaranteeDialogFieldFillingMixin:  # pragma: no cover
         )
         return [str(item) for item in updates]
 
-    def _fill_dialog_required_fields(self, defaults: dict[str, str]) -> list[str]:
+    def _fill_dialog_required_fields(self, defaults: dict[str, str]) -> list[str]:  # pragma: no cover
         updates = self.page.evaluate(
             r"""(defaults) => {
                 const result = [];

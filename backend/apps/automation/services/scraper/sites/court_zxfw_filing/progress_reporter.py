@@ -36,13 +36,13 @@ class ProgressReporterMixin(FormUtilsMixin):  # pragma: no cover
         return "playwright"
 
     @staticmethod
-    def _allow_playwright_fallback(case_data: dict[str, Any]) -> bool:
+    def _allow_playwright_fallback(case_data: dict[str, Any]) -> bool:  # pragma: no cover
         value = case_data.get("playwright_fallback", True)
         if isinstance(value, str):
             return value.strip().lower() not in {"0", "false", "no", "off"}
         return bool(value)
 
-    def _report_progress(
+    def _report_progress(  # pragma: no cover
         self,
         case_data: dict[str, Any],
         *,
@@ -68,7 +68,7 @@ class ProgressReporterMixin(FormUtilsMixin):  # pragma: no cover
         except Exception:
             logger.debug("court_filing_progress_report_failed", exc_info=True)
 
-    def _save_screenshot(self, name: str) -> str:
+    def _save_screenshot(self, name: str) -> str:  # pragma: no cover
         """保存调试截图"""
         from datetime import datetime
 

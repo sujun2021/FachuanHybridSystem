@@ -31,12 +31,12 @@ class CourtZxfwGuaranteeService(  # pragma: no cover
     DEFAULT_NATURAL_ID_NUMBER = "110101" + "19900307" + "7715"
     DEFAULT_LEGAL_ID_NUMBER = "91440101MA59TEST8X"
 
-    def __init__(self, page: Page, *, save_debug: bool = False) -> None:
+    def __init__(self, page: Page, *, save_debug: bool = False) -> None:  # pragma: no cover
         self.page = page
         self.save_debug = save_debug
         self._api_error_log: list[dict[str, Any]] = []
 
-        def _on_response(response: Any) -> None:
+        def _on_response(response: Any) -> None:  # pragma: no cover
             url = response.url
             if "baoquan" not in url and "ssbq" not in url:
                 return
@@ -50,7 +50,7 @@ class CourtZxfwGuaranteeService(  # pragma: no cover
 
         page.on("response", _on_response)
 
-    def apply_guarantee(self, case_data: dict[str, Any]) -> dict[str, Any]:
+    def apply_guarantee(self, case_data: dict[str, Any]) -> dict[str, Any]:  # pragma: no cover
         self.page.goto(self.GUARANTEE_URL, timeout=60000, wait_until="domcontentloaded")
         self._random_wait(4, 6)
         raw_paths = case_data.get("material_paths") or []

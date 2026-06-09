@@ -30,7 +30,7 @@ class GuaranteeUploadMixin:  # pragma: no cover
 
         used: set[str] = set()
 
-        def _pick_path(
+        def _pick_path(  # pragma: no cover
             keyword_groups: list[list[str]],
             *,
             type_name_groups: list[list[str]] | None = None,
@@ -61,7 +61,7 @@ class GuaranteeUploadMixin:  # pragma: no cover
                     return entry["path"]
             return None
 
-        def _pick_evidence() -> list[str]:
+        def _pick_evidence() -> list[str]:  # pragma: no cover
             evidence: list[str] = []
             for entry in items:
                 if entry["path"] in used:
@@ -430,8 +430,8 @@ class GuaranteeUploadMixin:  # pragma: no cover
 
         return result
 
-    def _retry_identity_material_upload_in_g_three(self) -> bool:
-        def _pick_path(keyword_groups: list[list[str]]) -> str | None:
+    def _retry_identity_material_upload_in_g_three(self) -> bool:  # pragma: no cover
+        def _pick_path(keyword_groups: list[list[str]]) -> str | None:  # pragma: no cover
             for keywords in keyword_groups:
                 for entry in self._material_items:
                     filename = entry["path"].rsplit("/", 1)[-1]
@@ -493,7 +493,7 @@ class GuaranteeUploadMixin:  # pragma: no cover
 
         return uploaded
 
-    def _retry_evidence_material_upload_in_g_three(self) -> bool:
+    def _retry_evidence_material_upload_in_g_three(self) -> bool:  # pragma: no cover
         evidence_files: list[str] = []
         for entry in self._material_items:
             if any(kw in entry["type_name"] for kw in ["证据", "明细", "清单"]):
