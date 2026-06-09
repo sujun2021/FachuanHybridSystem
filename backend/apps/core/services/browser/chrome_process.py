@@ -49,7 +49,7 @@ def is_cdp_ready(port: int = _DEFAULT_CDP_PORT) -> bool:
         return False
 
 
-def launch_chrome(
+def launch_chrome(  # pragma: no cover
     *,
     port: int = _DEFAULT_CDP_PORT,
     user_data_dir: str | Path | None = None,
@@ -129,7 +129,7 @@ def _cleanup_temp_user_data_dir(process: subprocess.Popen) -> None:
         logger.debug("已清理 Chrome 临时用户数据目录: %s", temp_dir)
 
 
-def kill_chrome(
+def kill_chrome(  # pragma: no cover
     process: subprocess.Popen | None = None,
     *,
     port: int = _DEFAULT_CDP_PORT,

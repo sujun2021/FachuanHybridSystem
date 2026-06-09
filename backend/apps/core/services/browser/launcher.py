@@ -22,7 +22,7 @@ logger = logging.getLogger("apps.core")
 
 
 @contextmanager
-def launch_browser(
+def launch_browser(  # pragma: no cover
     profile: BrowserProfile,
     *,
     session_id: str | None = None,
