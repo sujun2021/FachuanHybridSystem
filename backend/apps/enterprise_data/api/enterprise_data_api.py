@@ -7,6 +7,7 @@ from typing import Any, Literal
 
 from ninja import Router
 
+from apps.core.infrastructure.throttling import rate_limit_from_settings
 from apps.core.security.auth import JWTOrSessionAuth
 from apps.enterprise_data.schemas import EnterpriseProvidersOut, EnterpriseQueryOut
 from apps.enterprise_data.services import EnterpriseDataService
@@ -26,6 +27,7 @@ def list_providers(request: Any, include_tools: bool = False) -> EnterpriseProvi
 
 
 @router.get("/companies/search", response=EnterpriseQueryOut)
+@rate_limit_from_settings("EXPORT", by_user=True)
 def search_companies(
     request: Any,
     keyword: str,
@@ -38,6 +40,7 @@ def search_companies(
 
 
 @router.get("/companies/{company_id}", response=EnterpriseQueryOut)
+@rate_limit_from_settings("EXPORT", by_user=True)
 def get_company_profile(
     request: Any,
     company_id: str,
@@ -50,6 +53,7 @@ def get_company_profile(
 
 
 @router.get("/companies/{company_id}/risks", response=EnterpriseQueryOut)
+@rate_limit_from_settings("EXPORT", by_user=True)
 def get_company_risks(
     request: Any,
     company_id: str,
@@ -68,6 +72,7 @@ def get_company_risks(
 
 
 @router.get("/companies/{company_id}/shareholders", response=EnterpriseQueryOut)
+@rate_limit_from_settings("EXPORT", by_user=True)
 def get_company_shareholders(
     request: Any,
     company_id: str,
@@ -80,6 +85,7 @@ def get_company_shareholders(
 
 
 @router.get("/companies/{company_id}/personnel", response=EnterpriseQueryOut)
+@rate_limit_from_settings("EXPORT", by_user=True)
 def get_company_personnel(
     request: Any,
     company_id: str,
@@ -92,6 +98,7 @@ def get_company_personnel(
 
 
 @router.get("/personnel/{hcgid}", response=EnterpriseQueryOut)
+@rate_limit_from_settings("EXPORT", by_user=True)
 def get_person_profile(
     request: Any,
     hcgid: str,
@@ -102,6 +109,7 @@ def get_person_profile(
 
 
 @router.get("/biddings/search", response=EnterpriseQueryOut)
+@rate_limit_from_settings("EXPORT", by_user=True)
 def search_bidding_info(
     request: Any,
     keyword: str,
