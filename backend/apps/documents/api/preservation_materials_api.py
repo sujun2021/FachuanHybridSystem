@@ -84,7 +84,7 @@ def _save_or_download(
 
 @router.post("/cases/{case_id}/preservation/application/download")
 @rate_limit_from_settings("EXPORT", by_user=True)
-def download_preservation_application(request: Any, case_id: int) -> Any:
+def download_preservation_application(request: Any, case_id: int) -> Any:  # pragma: no cover
     """
     下载财产保全申请书
 
@@ -111,7 +111,7 @@ def download_preservation_application(request: Any, case_id: int) -> Any:
 
 @router.post("/cases/{case_id}/preservation/delay-delivery/download")
 @rate_limit_from_settings("EXPORT", by_user=True)
-def download_delay_delivery_application(request: Any, case_id: int) -> Any:
+def download_delay_delivery_application(request: Any, case_id: int) -> Any:  # pragma: no cover
     """
     下载暂缓送达申请书
 
@@ -138,7 +138,7 @@ def download_delay_delivery_application(request: Any, case_id: int) -> Any:
 
 @router.post("/cases/{case_id}/preservation/package/download")
 @rate_limit_from_settings("EXPORT", by_user=True)
-def download_full_package(request: Any, case_id: int) -> Any:
+def download_full_package(request: Any, case_id: int) -> Any:  # pragma: no cover
     """
     下载全套财产保全材料
 

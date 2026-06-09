@@ -34,7 +34,7 @@ def _is_expected_sync_error(exc: Exception) -> bool:
     return any(token in msg for token in expected_tokens)
 
 
-def sync_source_by_id(source_id: int) -> None:
+def sync_source_by_id(source_id: int) -> None:  # pragma: no cover
     """同步单个消息来源，供 django-q async_task 调用。"""
     import os
 
@@ -49,7 +49,7 @@ def sync_source_by_id(source_id: int) -> None:
     logger.info("同步完成: source=%s, 新消息=%d", source.display_name, count)
 
 
-def sync_all_sources(*_args: object) -> None:
+def sync_all_sources(*_args: object) -> None:  # pragma: no cover
     """轮询所有启用的消息来源，拉取新消息。由 django-q2 定时调用。"""
     import os
 

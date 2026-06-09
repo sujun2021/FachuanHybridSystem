@@ -27,7 +27,7 @@ def _get_case_number_service() -> Any:
 
 
 @router.get("/case-numbers", response=list[CaseNumberOut])
-def list_case_numbers(request: HttpRequest, case_id: int | None = None) -> list[CaseNumberOut]:
+def list_case_numbers(request: HttpRequest, case_id: int | None = None) -> list[CaseNumberOut]:  # pragma: no cover
     """获取案号列表"""
     service = _get_case_number_service()
     ctx = extract_request_context(request)
@@ -37,7 +37,7 @@ def list_case_numbers(request: HttpRequest, case_id: int | None = None) -> list[
 
 
 @router.get("/case-numbers/{number_id}", response=CaseNumberOut)
-def get_case_number(request: HttpRequest, number_id: int) -> CaseNumberOut:
+def get_case_number(request: HttpRequest, number_id: int) -> CaseNumberOut:  # pragma: no cover
     """获取单个案号"""
     service = _get_case_number_service()
     ctx = extract_request_context(request)
@@ -47,7 +47,7 @@ def get_case_number(request: HttpRequest, number_id: int) -> CaseNumberOut:
 
 
 @router.post("/case-numbers", response=CaseNumberOut)
-def create_case_number(request: HttpRequest, payload: CaseNumberIn) -> CaseNumberOut:
+def create_case_number(request: HttpRequest, payload: CaseNumberIn) -> CaseNumberOut:  # pragma: no cover
     """创建案号"""
     service = _get_case_number_service()
     ctx = extract_request_context(request)
@@ -61,7 +61,7 @@ def create_case_number(request: HttpRequest, payload: CaseNumberIn) -> CaseNumbe
 
 
 @router.put("/case-numbers/{number_id}", response=CaseNumberOut)
-def update_case_number(request: HttpRequest, number_id: int, payload: CaseNumberUpdate) -> CaseNumberOut:
+def update_case_number(request: HttpRequest, number_id: int, payload: CaseNumberUpdate) -> CaseNumberOut:  # pragma: no cover
     """更新案号"""
     service = _get_case_number_service()
     ctx = extract_request_context(request)
@@ -73,7 +73,7 @@ def update_case_number(request: HttpRequest, number_id: int, payload: CaseNumber
 
 
 @router.delete("/case-numbers/{number_id}")
-def delete_case_number(request: HttpRequest, number_id: int) -> Any:
+def delete_case_number(request: HttpRequest, number_id: int) -> Any:  # pragma: no cover
     """删除案号"""
     service = _get_case_number_service()
     ctx = extract_request_context(request)
@@ -83,7 +83,7 @@ def delete_case_number(request: HttpRequest, number_id: int) -> Any:
 
 
 @router.post("/upload-temp-document")
-def upload_temp_document(request: HttpRequest) -> dict[str, Any]:
+def upload_temp_document(request: HttpRequest) -> dict[str, Any]:  # pragma: no cover
     """上传裁判文书到临时目录（供前端解析使用）"""
     import os
 

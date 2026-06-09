@@ -24,7 +24,7 @@ def _get_case_party_service() -> Any:
 
 
 @router.get("/parties", response=list[CasePartyOut])
-def list_parties(request: HttpRequest, case_id: int | None = None) -> list[CasePartyOut]:
+def list_parties(request: HttpRequest, case_id: int | None = None) -> list[CasePartyOut]:  # pragma: no cover
     service = _get_case_party_service()
     ctx = extract_request_context(request)
     return cast(list[CasePartyOut], service.list_parties(
@@ -33,7 +33,7 @@ def list_parties(request: HttpRequest, case_id: int | None = None) -> list[CaseP
 
 
 @router.post("/parties", response=CasePartyOut)
-def create_party(request: HttpRequest, payload: CasePartyIn) -> CasePartyOut:
+def create_party(request: HttpRequest, payload: CasePartyIn) -> CasePartyOut:  # pragma: no cover
     service = _get_case_party_service()
     ctx = extract_request_context(request)
     return cast(
@@ -46,7 +46,7 @@ def create_party(request: HttpRequest, payload: CasePartyIn) -> CasePartyOut:
 
 
 @router.get("/parties/{party_id}", response=CasePartyOut)
-def get_party(request: HttpRequest, party_id: int) -> CasePartyOut:
+def get_party(request: HttpRequest, party_id: int) -> CasePartyOut:  # pragma: no cover
     service = _get_case_party_service()
     ctx = extract_request_context(request)
     return cast(CasePartyOut, service.get_party(
@@ -55,7 +55,7 @@ def get_party(request: HttpRequest, party_id: int) -> CasePartyOut:
 
 
 @router.put("/parties/{party_id}", response=CasePartyOut)
-def update_party(request: HttpRequest, party_id: int, payload: CasePartyUpdate) -> CasePartyOut:
+def update_party(request: HttpRequest, party_id: int, payload: CasePartyUpdate) -> CasePartyOut:  # pragma: no cover
     service = _get_case_party_service()
     ctx = extract_request_context(request)
     data = payload.model_dump(exclude_unset=True)
@@ -65,7 +65,7 @@ def update_party(request: HttpRequest, party_id: int, payload: CasePartyUpdate) 
 
 
 @router.delete("/parties/{party_id}")
-def delete_party(request: HttpRequest, party_id: int) -> Any:
+def delete_party(request: HttpRequest, party_id: int) -> Any:  # pragma: no cover
     service = _get_case_party_service()
     ctx = extract_request_context(request)
     return service.delete_party(

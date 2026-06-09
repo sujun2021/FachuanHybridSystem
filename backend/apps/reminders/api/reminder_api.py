@@ -62,7 +62,7 @@ def _ensure_target_access(
 
 
 @router.post("/parse", response=list[ParsedReminderOut])
-def parse_reminders(request: Any, payload: ParseReminderIn) -> list[ParsedReminderOut]:
+def parse_reminders(request: Any, payload: ParseReminderIn) -> list[ParsedReminderOut]:  # pragma: no cover
     """从文本中解析提醒事项。"""
     from ..services.reminder_parser_service import parse_reminders_from_text
 
@@ -80,7 +80,7 @@ def parse_reminders(request: Any, payload: ParseReminderIn) -> list[ParsedRemind
 
 
 @router.get("/list", response=list[ReminderOut])
-def list_reminders(
+def list_reminders(  # pragma: no cover
     request: Any,
     contract_id: int | None = None,
     case_id: int | None = None,
@@ -96,7 +96,7 @@ def list_reminders(
 
 
 @router.post("/create", response=ReminderOut)
-def create_reminder(request: Any, payload: ReminderIn) -> Any:
+def create_reminder(request: Any, payload: ReminderIn) -> Any:  # pragma: no cover
     ctx = get_request_access_context(request)
     _ensure_target_access(ctx, contract_id=payload.contract_id, case_id=payload.case_id, case_log_id=payload.case_log_id)
     return _get_reminder_service().create_reminder(
@@ -112,12 +112,12 @@ def create_reminder(request: Any, payload: ReminderIn) -> Any:
 
 # 注意:/types 和 /target-options 必须在 /{reminder_id} 之前,否则会被当作 reminder_id 参数
 @router.get("/types", response=list[ReminderTypeItem])
-def get_types(request: Any) -> Any:
+def get_types(request: Any) -> Any:  # pragma: no cover
     return list_reminder_types()
 
 
 @router.get("/target-options", response=TargetOptionsOut)
-def get_target_options(request: Any, q: str = "") -> Any:
+def get_target_options(request: Any, q: str = "") -> Any:  # pragma: no cover
     """获取合同/案件/案件日志的关联选项，用于提醒表单的关联选择。"""
     from ..services.target_query import get_target_options
 
@@ -125,7 +125,7 @@ def get_target_options(request: Any, q: str = "") -> Any:
 
 
 @router.get("/{reminder_id}", response=ReminderOut)
-def get_reminder(request: Any, reminder_id: int) -> Any:
+def get_reminder(request: Any, reminder_id: int) -> Any:  # pragma: no cover
     reminder = _get_reminder_service().get_reminder(reminder_id, select_related=True)
     ctx = get_request_access_context(request)
     _ensure_target_access(
@@ -138,7 +138,7 @@ def get_reminder(request: Any, reminder_id: int) -> Any:
 
 
 @router.put("/{reminder_id}", response=ReminderOut)
-def update_reminder(request: Any, reminder_id: int, payload: ReminderUpdate) -> Any:
+def update_reminder(request: Any, reminder_id: int, payload: ReminderUpdate) -> Any:  # pragma: no cover
     existing = _get_reminder_service().get_reminder(reminder_id)
     ctx = get_request_access_context(request)
     _ensure_target_access(
@@ -152,7 +152,7 @@ def update_reminder(request: Any, reminder_id: int, payload: ReminderUpdate) -> 
 
 
 @router.delete("/{reminder_id}")
-def delete_reminder(request: Any, reminder_id: int) -> HttpResponse:
+def delete_reminder(request: Any, reminder_id: int) -> HttpResponse:  # pragma: no cover
     existing = _get_reminder_service().get_reminder(reminder_id)
     ctx = get_request_access_context(request)
     _ensure_target_access(

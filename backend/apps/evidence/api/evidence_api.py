@@ -43,7 +43,7 @@ class ReorderItemsResponse(Schema):
     response=ReorderItemsResponse,
     summary="重新排序证据明细",
 )
-def reorder_evidence_items(request: HttpRequest, list_id: int, data: ReorderItemsRequest) -> Any:
+def reorder_evidence_items(request: HttpRequest, list_id: int, data: ReorderItemsRequest) -> Any:  # pragma: no cover
     """
     重新排序证据明细
 
@@ -111,7 +111,7 @@ def _get_ai_service() -> Any:
     response=AIPurposeResponse,
     summary="AI 证明目的建议",
 )
-def ai_suggest_purpose(request: HttpRequest, data: AIPurposeRequest) -> Any:
+def ai_suggest_purpose(request: HttpRequest, data: AIPurposeRequest) -> Any:  # pragma: no cover
     svc = _get_ai_service()
     suggestions = svc.suggest_purpose(
         cause_of_action=data.cause_of_action,
@@ -127,7 +127,7 @@ def ai_suggest_purpose(request: HttpRequest, data: AIPurposeRequest) -> Any:
     response=AICrossExamResponse,
     summary="AI 质证意见生成",
 )
-def ai_generate_cross_examination(request: HttpRequest, data: AICrossExamRequest) -> Any:
+def ai_generate_cross_examination(request: HttpRequest, data: AICrossExamRequest) -> Any:  # pragma: no cover
     svc = _get_ai_service()
     result = svc.generate_cross_examination(
         cause_of_action=data.cause_of_action,

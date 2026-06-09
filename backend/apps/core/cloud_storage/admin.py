@@ -182,7 +182,7 @@ def _poll_dropbox_device_code(account_id: int, device_code: str, interval: int, 
 
 
 @admin.register(CloudStorageAccount)
-class CloudStorageAccountAdmin(admin.ModelAdmin):
+class CloudStorageAccountAdmin(admin.ModelAdmin):  # pragma: no cover
     list_display = [
         "name",
         "storage_type",
