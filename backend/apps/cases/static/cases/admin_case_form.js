@@ -16,6 +16,17 @@
   function selectsByNameSuffix(suffix){return document.querySelectorAll('select[name$="' + suffix + '"]')}
   function inputsByNameSuffix(suffix){return document.querySelectorAll('input[name$="' + suffix + '"]')}
 
+  /**
+   * 销毁并重建 Select2 实例，使其重新读取 <select> 的 option 并刷新显示。
+   * 用于在直接操作 DOM 修改 option 后同步 Select2 的内部状态。
+   */
+  function refreshSelect2(el) {
+    if (typeof jQuery === 'undefined' || typeof jQuery.fn.select2 === 'undefined') return;
+    var $el = jQuery(el);
+    try { $el.select2('destroy'); } catch (_e) { /* 尚未初始化 */ }
+    $el.select2();
+  }
+
   // ============================================================
   // 案件类型相关字段显示/隐藏逻辑
   // ============================================================
@@ -198,10 +209,8 @@
           select.value = currentValue;
         }
       }
-      // 触发 Select2 (admin-autocomplete) 刷新，使其重新读取 option 并更新显示
-      if (typeof jQuery !== 'undefined') {
-        jQuery(select).trigger('change');
-      }
+      // 重建 Select2 实例，使其重新读取更新后的 option
+      refreshSelect2(select);
     });
 
     console.log('[updateOptions] 更新完成');
@@ -234,10 +243,8 @@
       if (currentValue) {
         select.value = currentValue;
       }
-      // 触发 Select2 刷新
-      if (typeof jQuery !== 'undefined') {
-        jQuery(select).trigger('change');
-      }
+      // 重建 Select2 实例
+      refreshSelect2(select);
     });
   }
 
@@ -385,10 +392,8 @@
       select.value = partyIdStr;
       filledSelectNames[select.name] = true;
       console.log('[autoFill]   已填充:', party.name, '(ID:', party.id, '), select.name:', select.name);
-      // 触发 Select2 刷新
-      if (typeof jQuery !== 'undefined') {
-        jQuery(select).trigger('change');
-      }
+      // 重建 Select2 实例
+      refreshSelect2(select);
       return true;
     }
 
