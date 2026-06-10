@@ -19,12 +19,13 @@
   /**
    * 销毁并重建 Select2 实例，使其重新读取 <select> 的 option 并刷新显示。
    * 用于在直接操作 DOM 修改 option 后同步 Select2 的内部状态。
+   * 注意：Django admin 将 jQuery 放在 django.jQuery 命名空间（noConflict）。
    */
   function refreshSelect2(el) {
-    if (typeof jQuery === 'undefined' || typeof jQuery.fn.select2 === 'undefined') return;
-    var $el = jQuery(el);
-    try { $el.select2('destroy'); } catch (_e) { /* 尚未初始化 */ }
-    $el.select2();
+    var jq = window.django && window.django.jQuery;
+    if (!jq || typeof jq.fn.select2 === 'undefined') return;
+    try { jq(el).select2('destroy'); } catch (_e) { /* 尚未初始化 */ }
+    jq(el).select2();
   }
 
   // ============================================================
