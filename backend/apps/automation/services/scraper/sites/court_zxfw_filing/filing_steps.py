@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import mimetypes
 import re
 from pathlib import Path
 from typing import Any
@@ -358,11 +359,24 @@ class FilingStepsMixin(FormUtilsMixin):  # pragma: no cover
                 # 记录上传前文件数
                 files_before = self.page.locator(".fd-file-name").count()
 
+                # 构造带原始文件名的上传载荷，避免浏览器发送 UUID 存储名
+                upload_payload: str | dict[str, Any] = file_path
+                if original_name:
+                    try:
+                        mime, _ = mimetypes.guess_type(original_name)
+                        upload_payload = {
+                            "name": original_name,
+                            "mimeType": mime or "application/octet-stream",
+                            "buffer": Path(file_path).read_bytes(),
+                        }
+                    except OSError:
+                        logger.warning("读取文件失败，回退到路径上传: %s", file_path)
+
                 uploaded = False
                 for attempt in range(3):
                     with self.page.expect_file_chooser() as fc_info:
                         btn.click()
-                    fc_info.value.set_files(file_path)
+                    fc_info.value.set_files(upload_payload)
                     self.page.wait_for_timeout(2000)
 
                     # 验证上传成功（文件数增加）

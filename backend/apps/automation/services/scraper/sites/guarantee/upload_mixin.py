@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import mimetypes
 import re
+from pathlib import Path
 from typing import Any
 
 
@@ -12,6 +14,33 @@ class GuaranteeUploadMixin:  # pragma: no cover
     page: Any
     _material_items: list[dict[str, str]]
 
+    def _build_file_payload(self, file_path: str) -> str | dict[str, Any]:
+        """构造 Playwright set_input_files 载荷，使用原始文件名而非 UUID 存储名。"""
+        for entry in self._material_items:
+            if entry["path"] == file_path:
+                original_name = entry.get("original_name", "")
+                if original_name:
+                    try:
+                        mime, _ = mimetypes.guess_type(original_name)
+                        return {
+                            "name": original_name,
+                            "mimeType": mime or "application/octet-stream",
+                            "buffer": Path(file_path).read_bytes(),
+                        }
+                    except OSError:
+                        pass
+                break
+        return file_path
+
+    def _build_file_payloads(self, file_paths: list[str]) -> str | list[str] | dict[str, Any] | list[dict[str, Any]]:
+        """为多个文件构造带原始文件名的 Playwright 载荷。"""
+        payloads: list[str | dict[str, Any]] = []
+        for fp in file_paths:
+            payloads.append(self._build_file_payload(fp))
+        if len(payloads) == 1:
+            return payloads[0]
+        return payloads
+
     def _complete_g_three(self, case_data: dict[str, Any]) -> dict[str, Any]:  # pragma: no cover
         result: dict[str, Any] = {"uploaded": 0, "next_clicked": None, "uploads": []}
         raw_paths = case_data.get("material_paths") or []
@@ -20,11 +49,15 @@ class GuaranteeUploadMixin:  # pragma: no cover
             if isinstance(item, dict):
                 p = str(item.get("path") or "")
                 if p:
-                    items.append({"path": p, "type_name": str(item.get("type_name") or "")})
+                    items.append({
+                        "path": p,
+                        "type_name": str(item.get("type_name") or ""),
+                        "original_name": str(item.get("original_name") or ""),
+                    })
             else:
                 p = str(item)
                 if p:
-                    items.append({"path": p, "type_name": ""})
+                    items.append({"path": p, "type_name": "", "original_name": ""})
         if not items:
             return result
 
@@ -202,7 +235,7 @@ class GuaranteeUploadMixin:  # pragma: no cover
             if not chosen_files:
                 continue
 
-            upload_payload: str | list[str] = chosen_files if len(chosen_files) > 1 else chosen_files[0]
+            upload_payload = self._build_file_payloads(chosen_files)
             try:
                 current.set_input_files(upload_payload)
                 used.update(chosen_files)
@@ -269,7 +302,7 @@ class GuaranteeUploadMixin:  # pragma: no cover
                     if "起诉" not in label_text:
                         continue
                     try:
-                        candidate.set_input_files(complaint_path)
+                        candidate.set_input_files(self._build_file_payload(complaint_path))
                         result["uploads"].append(
                             {
                                 "index": j,
@@ -326,7 +359,7 @@ class GuaranteeUploadMixin:  # pragma: no cover
                         if target_hints and not any(hint in label_text for hint in target_hints):
                             continue
                         try:
-                            candidate.set_input_files(identity_paths)
+                            candidate.set_input_files(self._build_file_payloads(identity_paths))
                             result["uploads"].append(
                                 {
                                     "index": j,
@@ -340,7 +373,7 @@ class GuaranteeUploadMixin:  # pragma: no cover
                         except Exception:
                             for single_path in identity_paths:
                                 try:
-                                    candidate.set_input_files(single_path)
+                                    candidate.set_input_files(self._build_file_payload(single_path))
                                     result["uploads"].append(
                                         {
                                             "index": j,
@@ -395,7 +428,7 @@ class GuaranteeUploadMixin:  # pragma: no cover
                         continue
 
                     try:
-                        candidate.set_input_files(retry_files)
+                        candidate.set_input_files(self._build_file_payloads(retry_files))
                         result["uploads"].append(
                             {
                                 "index": j,
@@ -408,7 +441,7 @@ class GuaranteeUploadMixin:  # pragma: no cover
                     except Exception:
                         for single_path in retry_files:
                             try:
-                                candidate.set_input_files(single_path)
+                                candidate.set_input_files(self._build_file_payload(single_path))
                                 result["uploads"].append(
                                     {
                                         "index": j,
@@ -476,14 +509,14 @@ class GuaranteeUploadMixin:  # pragma: no cover
                 continue
 
             try:
-                candidate.set_input_files(retry_files)
+                candidate.set_input_files(self._build_file_payloads(retry_files))
                 uploaded = True
                 self._wait_upload_idle(timeout_ms=90000)  # type: ignore[attr-defined]
                 self._random_wait(2.0, 2.8)  # type: ignore[attr-defined]
             except Exception:
                 for single_path in retry_files:
                     try:
-                        candidate.set_input_files(single_path)
+                        candidate.set_input_files(self._build_file_payload(single_path))
                         uploaded = True
                         self._wait_upload_idle(timeout_ms=90000)  # type: ignore[attr-defined]
                         self._random_wait(1.8, 2.4)  # type: ignore[attr-defined]
@@ -540,14 +573,14 @@ class GuaranteeUploadMixin:  # pragma: no cover
                 continue
 
             try:
-                candidate.set_input_files(evidence_files)
+                candidate.set_input_files(self._build_file_payloads(evidence_files))
                 uploaded = True
                 self._wait_upload_idle(timeout_ms=90000)  # type: ignore[attr-defined]
                 self._random_wait(2.0, 2.8)  # type: ignore[attr-defined]
             except Exception:
                 for single_path in evidence_files:
                     try:
-                        candidate.set_input_files(single_path)
+                        candidate.set_input_files(self._build_file_payload(single_path))
                         uploaded = True
                         self._wait_upload_idle(timeout_ms=90000)  # type: ignore[attr-defined]
                         self._random_wait(1.8, 2.4)  # type: ignore[attr-defined]
