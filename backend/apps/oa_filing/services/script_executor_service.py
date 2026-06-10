@@ -79,6 +79,13 @@ class ScriptExecutorService:
         # 在后台线程中绕过此检查是安全的，因为该线程由 ThreadPoolExecutor 管理。
         os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
         connection.close()
+
+        # Django Ninja (ASGI) 在进程中留下事件循环，Playwright Sync API
+        # 检测到后会拒绝启动。nest_asyncio 允许在已有 loop 中嵌套调用。
+        import nest_asyncio
+
+        nest_asyncio.apply()
+
         try:
             self._dispatch(site_name, credential, contract_id, case_id)
             FilingSession.objects.filter(pk=session_id).update(status=SessionStatus.COMPLETED)

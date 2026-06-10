@@ -1,6 +1,29 @@
 {% load i18n %}
 <div x-data="contractBatchFolderSelectorApp()" x-show="showBrowser" x-cloak class="folder-browser-modal" @click.self="closeBrowser()">
-    <div class="folder-browser-content batch-folder-selector">
+    <div class="folder-browser-content batch-folder-selector" x-ref="browserContent">
+        <div class="folder-browser-resize-handle"
+             @mousedown.prevent="
+                const el = $refs.browserContent;
+                const startX = $event.clientX;
+                const startW = el.offsetWidth;
+                const minW = 400, maxW = window.innerWidth * 0.95;
+                const handle = $el;
+                handle.classList.add('active');
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none';
+                const onMove = (ev) => {
+                    el.style.width = Math.min(maxW, Math.max(minW, startW + ev.clientX - startX)) + 'px';
+                };
+                const onUp = () => {
+                    handle.classList.remove('active');
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+                    document.removeEventListener('mousemove', onMove);
+                    document.removeEventListener('mouseup', onUp);
+                };
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('mouseup', onUp);
+             "></div>
         <div class="folder-browser-header">
             <h2>{% trans "选择根目录" %}</h2>
             <button type="button" class="folder-browser-close" @click="closeBrowser()">×</button>
