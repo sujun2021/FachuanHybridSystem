@@ -840,3 +840,23 @@
 .folder-browser-resize-handle.active {
     background: rgba(59, 130, 246, 0.3);
 }
+
+/* 分栏拖拽 */
+.finder-column {
+    position: relative;
+}
+
+.column-resize-handle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 4px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 10;
+}
+
+.column-resize-handle:hover,
+.column-resize-handle.active {
+    background: rgba(59, 130, 246, 0.35);
+}
