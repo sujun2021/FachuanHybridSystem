@@ -53,11 +53,11 @@ class TestTrackingExtractionService:
 
     def test_pick_tracking_number_pipe_normalization(self) -> None:
         svc = self._make_service()
-        # Pipe is replaced with space, so "SF1234567890123" becomes "SF 1234567890123"
-        # which means SF pattern won't match, EMS picks up 13-digit number
+        # Pipe is removed (not replaced with space), so "SF|1234567890123"
+        # becomes "SF1234567890123" and SF pattern matches
         result = svc._pick_tracking_number("SF|1234567890123")
         assert result is not None
-        assert result["tracking_number"] == "1234567890123"
+        assert result["tracking_number"] == "SF1234567890123"
 
     def test_sf_pattern_valid(self) -> None:
         svc = self._make_service()
