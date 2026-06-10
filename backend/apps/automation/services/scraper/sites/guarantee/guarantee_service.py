@@ -59,11 +59,15 @@ class CourtZxfwGuaranteeService(  # pragma: no cover
             if isinstance(item, dict):
                 p = str(item.get("path") or "")
                 if p:
-                    self._material_items.append({"path": p, "type_name": str(item.get("type_name") or "")})
+                    self._material_items.append({
+                        "path": p,
+                        "type_name": str(item.get("type_name") or ""),
+                        "original_name": str(item.get("original_name") or ""),
+                    })
             else:
                 p = str(item)
                 if p:
-                    self._material_items.append({"path": p, "type_name": ""})
+                    self._material_items.append({"path": p, "type_name": "", "original_name": ""})
 
         insurance_company_name = str(case_data.get("insurance_company_name") or "").strip()
         consultant_code = str(case_data.get("consultant_code") or "").strip()
