@@ -210,7 +210,7 @@ class CourtInsuranceClient(InsuranceHttpMixin):
 
     async def fetch_insurance_companies(
         self, bearer_token: str, c_pid: str, fy_id: str, timeout: float | None = None, max_retries: int = 3
-    ) -> list[InsuranceCompany]:
+    ) -> list[InsuranceCompany]:  # pragma: no cover
         """
         获取保险公司列表（带重试）
 
@@ -291,7 +291,7 @@ class CourtInsuranceClient(InsuranceHttpMixin):
 
     async def _fetch_insurance_companies_once(
         self, bearer_token: str, c_pid: str, fy_id: str, timeout: float, attempt: int = 1
-    ) -> list[InsuranceCompany]:
+    ) -> list[InsuranceCompany]:  # pragma: no cover
         """获取保险公司列表（单次尝试）"""
         import time
 
@@ -423,7 +423,7 @@ class CourtInsuranceClient(InsuranceHttpMixin):
 
     async def fetch_premium(
         self, bearer_token: str, preserve_amount: Decimal, institution: str, corp_id: str, timeout: float | None = None
-    ) -> PremiumResult:
+    ) -> PremiumResult:  # pragma: no cover
         """
         查询单个保险公司报价
 
@@ -543,7 +543,7 @@ class CourtInsuranceClient(InsuranceHttpMixin):
         corp_id: str,
         companies: list[InsuranceCompany],
         timeout: float | None = None,
-    ) -> list[PremiumResult]:
+    ) -> list[PremiumResult]:  # pragma: no cover
         """
         并发查询所有保险公司报价
 

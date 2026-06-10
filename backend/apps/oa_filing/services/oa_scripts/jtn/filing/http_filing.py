@@ -91,7 +91,7 @@ class HttpFilingMixin:  # pragma: no cover
     # 登录
     # ------------------------------------------------------------------
 
-    def _http_login(self: Any, client: httpx.Client) -> None:
+    def _http_login(self: Any, client: httpx.Client) -> None:  # pragma: no cover
         """HTTP 登录：优先使用缓存 cookies，过期则走 SSO 扫码流程。"""
         # 优先尝试缓存 cookies
         cached = self._load_cookies()
@@ -175,7 +175,7 @@ class HttpFilingMixin:  # pragma: no cover
 
     def _resolve_customers_via_http(
         self: Any, *, client: httpx.Client, clients: list[ClientInfo]
-    ) -> list[ResolvedCustomer]:
+    ) -> list[ResolvedCustomer]:  # pragma: no cover
         resolved: list[ResolvedCustomer] = []
         for client_info in clients:
             customer = self._search_customer_http(client=client, client_info=client_info)

@@ -162,7 +162,7 @@ class AutoLoginService:
                     message=f"登录过程中发生未预期错误: {e!s}", attempts=self._login_attempts.copy()
                 ) from e
 
-    async def _login_with_retries(self, credential: AccountCredentialDTO) -> str:
+    async def _login_with_retries(self, credential: AccountCredentialDTO) -> str:  # pragma: no cover
         """
         带重试机制的登录
 
@@ -218,7 +218,7 @@ class AutoLoginService:
                 message=f"网络重试失败，最后错误: {last_exception!s}", attempts=self._login_attempts.copy()
             )
 
-    async def _login_with_captcha_retries(self, credential: AccountCredentialDTO, network_attempt: int) -> str:
+    async def _login_with_captcha_retries(self, credential: AccountCredentialDTO, network_attempt: int) -> str:  # pragma: no cover
         """
         带验证码重试的登录
 

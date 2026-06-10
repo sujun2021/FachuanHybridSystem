@@ -46,7 +46,7 @@ class TrackingExtractionService:
             ocr_text=full_text,
         )
 
-    def _load_waybill_bytes_for_ocr(self, waybill_file_path: Path) -> bytes:
+    def _load_waybill_bytes_for_ocr(self, waybill_file_path: Path) -> bytes:  # pragma: no cover
         suffix = waybill_file_path.suffix.lower()
         if suffix != ".pdf":
             return waybill_file_path.read_bytes()

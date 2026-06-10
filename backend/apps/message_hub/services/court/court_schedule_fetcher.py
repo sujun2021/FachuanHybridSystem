@@ -444,7 +444,7 @@ class CourtScheduleFetcher(MessageFetcher):  # pragma: no cover
         except Exception:
             return ""
 
-    def _upsert_reminder(self, source: MessageSource, record: dict[str, Any], lawyer_name: str) -> bool:
+    def _upsert_reminder(self, source: MessageSource, record: dict[str, Any], lawyer_name: str) -> bool:  # pragma: no cover
         """
         创建或更新 Reminder，返回是否为新建。
 

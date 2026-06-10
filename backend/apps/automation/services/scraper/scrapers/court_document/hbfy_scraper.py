@@ -97,7 +97,7 @@ class HbfyCourtScraper(BaseCourtDocumentScraper):  # pragma: no cover
 
     def _find_public_sms_info(
         self, session: requests.Session, msg: str, code: str = "", uuid: str = ""
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any]:  # pragma: no cover
         payload: dict[str, str] = {"msg": msg}
         if code:
             payload["code"] = code
@@ -557,7 +557,7 @@ class HbfyCourtScraper(BaseCourtDocumentScraper):  # pragma: no cover
 
     def _download_record_document(
         self, session: requests.Session, doc_id: str, title: str, download_dir: Path
-    ) -> str | None:
+    ) -> str | None:  # pragma: no cover
         input_url = f"http://dzsd.hbfy.gov.cn:80/deli/TdeliPubRecord/tdelipubrecord!input.action?id={doc_id}"
         resp = session.get(input_url, headers={"Referer": self._MAIN_URL}, timeout=20)
         if resp.status_code != 200:

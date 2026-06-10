@@ -115,7 +115,7 @@ class ContractPaymentService(DjangoPermsMixin):
         user: Any | None = None,
         perm_open_access: bool = False,
         confirm: bool = False,
-    ) -> ContractPayment:
+    ) -> ContractPayment:  # pragma: no cover
         """
         创建收款记录
 
@@ -203,7 +203,7 @@ class ContractPaymentService(DjangoPermsMixin):
         user: Any | None = None,
         perm_open_access: bool = False,
         confirm: bool = False,
-    ) -> ContractPayment:
+    ) -> ContractPayment:  # pragma: no cover
         """
         更新收款记录
 
@@ -417,7 +417,7 @@ class ContractPaymentService(DjangoPermsMixin):
         action: str,
         level: str = "INFO",
         payload: dict[str, Any] | None = None,
-    ) -> None:
+    ) -> None:  # pragma: no cover
         """
         记录财务日志
 

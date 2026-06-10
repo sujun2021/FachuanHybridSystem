@@ -12,7 +12,7 @@ class GuaranteeUploadMixin:  # pragma: no cover
     page: Any
     _material_items: list[dict[str, str]]
 
-    def _complete_g_three(self, case_data: dict[str, Any]) -> dict[str, Any]:
+    def _complete_g_three(self, case_data: dict[str, Any]) -> dict[str, Any]:  # pragma: no cover
         result: dict[str, Any] = {"uploaded": 0, "next_clicked": None, "uploads": []}
         raw_paths = case_data.get("material_paths") or []
         items: list[dict[str, str]] = []

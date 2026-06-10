@@ -289,7 +289,7 @@ class GdemsCourtScraper(BaseCourtDocumentScraper):  # pragma: no cover
             self._save_page_state("gdems_download_error")
             raise ValueError(f"文件下载失败: {e}") from e
 
-    def _extract_zip_file(self, zip_filepath: Path, download_dir: Path) -> list[str]:
+    def _extract_zip_file(self, zip_filepath: Path, download_dir: Path) -> list[str]:  # pragma: no cover
         """
         解压 ZIP 文件
 

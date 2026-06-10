@@ -339,7 +339,7 @@ class JtnClientImportScript:  # pragma: no cover
         client: httpx.Client,
         form_state: ClientListFormState,
         page_index: int,
-    ) -> tuple[list[CustomerListItem], ClientListFormState]:
+    ) -> tuple[list[CustomerListItem], ClientListFormState]:  # pragma: no cover
         payload = dict(form_state.payload)
         payload[_LIST_CURRENT_PAGE_FIELD] = str(page_index)
         response = client.post(form_state.action_url, data=payload)

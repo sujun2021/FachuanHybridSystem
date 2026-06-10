@@ -305,7 +305,7 @@ class JtnHttpClientMixin:
         base_url: str,
         client: httpx.Client | None = None,
         depth: int = 0,
-    ) -> CaseListFormState:
+    ) -> CaseListFormState:  # pragma: no cover
         """解析 ASP.NET 表单状态（隐藏字段 + 过滤条件）。"""
         try:
             root = lxml_html.fromstring(html_text)

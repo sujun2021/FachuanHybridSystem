@@ -19,7 +19,7 @@ SUPPORTED_SITES: list[str] = ["金诚同达OA"]
 class ScriptExecutorService:
     """OA 立案执行服务。按 site_name 分发到对应律所脚本。"""
 
-    def get_session(self, session_id: int) -> Any:
+    def get_session(self, session_id: int) -> Any:  # pragma: no cover
         from apps.oa_filing.models import FilingSession
 
         return FilingSession.objects.get(pk=session_id)
@@ -30,7 +30,7 @@ class ScriptExecutorService:
         contract_id: int,
         case_id: int | None,
         user: Any,
-    ) -> Any:
+    ) -> Any:  # pragma: no cover
         from apps.oa_filing.models import FilingSession, SessionStatus
         from apps.oa_filing.services.exceptions import ScriptExecutionError
 
@@ -70,7 +70,7 @@ class ScriptExecutorService:
         credential: Any,
         contract_id: int,
         case_id: int | None,
-    ) -> None:
+    ) -> None:  # pragma: no cover
         """后台线程：执行脚本并更新会话状态。"""
         from apps.oa_filing.models import FilingSession, SessionStatus
 

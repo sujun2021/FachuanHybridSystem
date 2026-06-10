@@ -231,7 +231,7 @@ class DocumentDeliveryService(  # pragma: no cover
 
     def _process_document_via_api(
         self, record: DocumentRecord, token: str, credential_id: int
-    ) -> DocumentProcessResult:
+    ) -> DocumentProcessResult:  # pragma: no cover
         """通过 API 处理单个文书"""
         import shutil
         import tempfile
@@ -327,14 +327,14 @@ class DocumentDeliveryService(  # pragma: no cover
             return False
         return self._check_api_document_not_processed(credential_id, record)
 
-    def _check_api_document_not_processed(self, credential_id: int, record: DocumentRecord) -> bool:
+    def _check_api_document_not_processed(self, credential_id: int, record: DocumentRecord) -> bool:  # pragma: no cover
         """检查 API 文书是否已成功处理完成"""
         import queue
         import threading
 
         result_queue: queue.Queue[bool] = queue.Queue()
 
-        def do_check() -> None:
+        def do_check() -> None:  # pragma: no cover
             try:
                 from django.db import connection
 

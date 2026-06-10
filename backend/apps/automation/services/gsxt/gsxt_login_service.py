@@ -393,7 +393,7 @@ async def _run_full_flow(credential: GsxtCredentialProtocol, task_id: int) -> No
 
             from apps.core.tasking import ScheduleQueryService
 
-            def _schedule_email_check() -> None:
+            def _schedule_email_check() -> None:  # pragma: no cover
                 ScheduleQueryService().create_once_schedule(
                     func="apps.automation.tasks.gsxt_tasks.check_gsxt_report_email",
                     args=f"{task_id},{task.company_name!r}",

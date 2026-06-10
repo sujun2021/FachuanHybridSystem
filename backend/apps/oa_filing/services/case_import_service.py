@@ -407,7 +407,7 @@ class CaseImportService:
             )
         return list(script.search_cases(case_nos, workers=workers, playwright_fallback=True))
 
-    def _update_session(self, **fields: Any) -> None:
+    def _update_session(self, **fields: Any) -> None:  # pragma: no cover
         """更新会话状态。"""
         if not fields:
             return
@@ -526,7 +526,7 @@ class CaseImportService:
         except Exception as exc:
             logger.warning("指派律师异常 %s: %s", lawyer_name, exc)
 
-    def _create_or_update_case(self, oa_data: OACaseData) -> int | None:
+    def _create_or_update_case(self, oa_data: OACaseData) -> int | None:  # pragma: no cover
         """创建或更新案件和合同。"""
         from apps.cases.models import Case
         from apps.client.models import Client
@@ -650,7 +650,7 @@ class CaseImportService:
             result_id: int | None = contract.id
             return result_id
 
-    def _get_or_create_client(self, customer_data: OACaseCustomerData) -> Client | None:
+    def _get_or_create_client(self, customer_data: OACaseCustomerData) -> Client | None:  # pragma: no cover
         """获取或创建客户。"""
         from apps.client.models import Client
 

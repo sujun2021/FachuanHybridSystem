@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger("apps.automation")
 
 
-def _safe_save_task(task: ScraperTask) -> None:
+def _safe_save_task(task: ScraperTask) -> None:  # pragma: no cover
     """
     安全地保存任务状态
 

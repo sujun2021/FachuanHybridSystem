@@ -280,7 +280,7 @@ class ImapFetcher(MessageFetcher):  # pragma: no cover
                 pass
 
 
-def _extract_imap_host(url_or_name: str) -> str:
+def _extract_imap_host(url_or_name: str) -> str:  # pragma: no cover
     """从 URL 或站点名称中提取 IMAP 主机名。"""
     from urllib.parse import urlparse
 

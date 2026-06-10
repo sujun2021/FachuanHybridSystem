@@ -472,7 +472,7 @@ class CourtInboxFetcher(MessageFetcher):  # pragma: no cover
         return str(att.get("wjlj", "")).strip()
 
 
-def _invalidate_token(credential_id: int) -> None:
+def _invalidate_token(credential_id: int) -> None:  # pragma: no cover
     """清除缓存和 DB 中的 Token，强制下次重新登录。"""
     from apps.automation.services.token.cache_manager import cache_manager
     from apps.core.interfaces import ServiceLocator

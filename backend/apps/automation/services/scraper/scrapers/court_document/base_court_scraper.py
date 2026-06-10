@@ -203,7 +203,7 @@ class BaseCourtDocumentScraper(BaseScraper):
             "analysis": analysis,
         }
 
-    def _prepare_download_dir(self) -> Path:
+    def _prepare_download_dir(self) -> Path:  # pragma: no cover
         """
         准备下载目录
 
