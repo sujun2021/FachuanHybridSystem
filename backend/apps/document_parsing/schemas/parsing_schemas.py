@@ -27,19 +27,19 @@ class ParseDocumentResponse(Schema):
     success: bool
     """是否成功"""
 
-    text: Optional[str] = None
+    text: str | None = None
     """纯文本内容"""
 
-    markdown: Optional[str] = None
+    markdown: str | None = None
     """Markdown 格式"""
 
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: dict[str, Any] | None = None
     """元数据"""
 
-    parse_method: Optional[str] = None
+    parse_method: str | None = None
     """解析方法"""
 
-    error: Optional[str] = None
+    error: str | None = None
     """错误信息（如果失败）"""
 
 
@@ -49,7 +49,7 @@ class ExtractTextRequest(Schema):
     backend: str = "auto"
     """后端类型"""
 
-    max_length: Optional[int] = None
+    max_length: int | None = None
     """最大文本长度"""
 
 
@@ -62,11 +62,11 @@ class ExtractTextResponse(Schema):
     text: str
     """提取的文本"""
 
-    method: Optional[str] = None
+    method: str | None = None
     """使用的方法"""
 
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: dict[str, Any] | None = None
     """元数据"""
 
-    error: Optional[str] = None
+    error: str | None = None
     """错误信息（如果失败）"""

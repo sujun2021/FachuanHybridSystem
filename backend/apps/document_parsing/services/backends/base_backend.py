@@ -29,7 +29,7 @@ class BaseDocumentParser(ABC):
     def extract_text(
         self,
         file_path: str,
-        max_length: Optional[int] = None,
+        max_length: int | None = None,
         **kwargs: Any,
     ) -> TextExtractionResult:
         """提取纯文本"""

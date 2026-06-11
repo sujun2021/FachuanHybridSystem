@@ -100,9 +100,7 @@ class DocumentParsingToolAdmin(admin.ModelAdmin):  # pragma: no cover
             messages.error(request, f"解析失败：{e}")
 
         # 跳转到任务详情
-        return HttpResponseRedirect(
-            reverse("admin:document_parsing_documentparsingtask_change", args=[task.id])
-        )
+        return HttpResponseRedirect(reverse("admin:document_parsing_documentparsingtask_change", args=[task.id]))
 
     def has_add_permission(self, request: HttpRequest) -> bool:  # pragma: no cover
         return False
@@ -152,20 +150,32 @@ class DocumentParsingTaskAdmin(admin.ModelAdmin):  # pragma: no cover
     ]
 
     fieldsets = (
-        ("基本信息", {
-            "fields": ("id", "file_name", "file_path", "file_size", "status", "backend_used"),
-        }),
-        ("解析结果", {
-            "fields": ("text", "markdown"),
-        }),
-        ("元数据", {
-            "fields": ("metadata", "error_message"),
-            "classes": ("collapse",),
-        }),
-        ("时间", {
-            "fields": ("created_at", "completed_at"),
-            "classes": ("collapse",),
-        }),
+        (
+            "基本信息",
+            {
+                "fields": ("id", "file_name", "file_path", "file_size", "status", "backend_used"),
+            },
+        ),
+        (
+            "解析结果",
+            {
+                "fields": ("text", "markdown"),
+            },
+        ),
+        (
+            "元数据",
+            {
+                "fields": ("metadata", "error_message"),
+                "classes": ("collapse",),
+            },
+        ),
+        (
+            "时间",
+            {
+                "fields": ("created_at", "completed_at"),
+                "classes": ("collapse",),
+            },
+        ),
     )
 
     change_form_template = "admin/document_parsing/documentparsingtask/change_form.html"

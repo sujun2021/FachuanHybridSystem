@@ -14,7 +14,7 @@ class DocumentParsingError(ExternalServiceError):
 class MineruAPIError(DocumentParsingError):
     """MinerU API 调用异常"""
 
-    def __init__(self, message: str, status_code: Optional[int] = None):
+    def __init__(self, message: str, status_code: int | None = None):
         super().__init__(message)
         self.status_code = status_code
 

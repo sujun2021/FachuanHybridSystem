@@ -87,7 +87,7 @@ result = parser.parse_document("/path/to/document.pdf")
 ```bash
 # 解析文档
 curl -X POST http://localhost:8002/api/v1/document-parsing/parse \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Authorization: Bearer <your-token>" \
   -F "file=@document.pdf" \
   -d '{
     "backend": "auto",

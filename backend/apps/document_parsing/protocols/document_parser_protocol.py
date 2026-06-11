@@ -11,22 +11,22 @@ class ParsedDocument:
     text: str
     """纯文本内容"""
 
-    markdown: Optional[str] = None
+    markdown: str | None = None
     """Markdown 格式（MinerU 支持）"""
 
-    tables: Optional[List[dict]] = None
+    tables: list[dict] | None = None
     """表格数据列表"""
 
-    metadata: Optional[dict] = None
+    metadata: dict | None = None
     """元数据（页数、创建时间等）"""
 
-    images: Optional[List[str]] = None
+    images: list[str] | None = None
     """提取的图片文件路径列表"""
 
     parse_method: str = ""
     """使用的解析方法（mineru、pymupdf、paddleocr 等）"""
 
-    layout: Optional[dict] = None
+    layout: dict | None = None
     """文档布局信息（标题、段落、列表等结构）"""
 
 
@@ -43,10 +43,10 @@ class TextExtractionResult:
     method: str = ""
     """使用的方法"""
 
-    page_count: Optional[int] = None
+    page_count: int | None = None
     """文档页数"""
 
-    metadata: Optional[dict] = None
+    metadata: dict | None = None
     """附加元数据"""
 
 
@@ -88,7 +88,7 @@ class IDocumentParserProtocol(Protocol):
     def extract_text(
         self,
         file_path: str,
-        max_length: Optional[int] = None,
+        max_length: int | None = None,
         **kwargs: Any,
     ) -> TextExtractionResult:
         """提取文档纯文本
@@ -106,7 +106,7 @@ class IDocumentParserProtocol(Protocol):
         """
         ...
 
-    def get_supported_formats(self) -> List[str]:
+    def get_supported_formats(self) -> list[str]:
         """获取支持的文件格式列表
 
         Returns:

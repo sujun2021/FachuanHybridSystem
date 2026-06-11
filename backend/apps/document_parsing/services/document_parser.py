@@ -28,7 +28,7 @@ class DocumentParserService:
         """
         self._backend_name = backend
         self._kwargs = kwargs
-        self._parser: Optional[IDocumentParserProtocol] = None
+        self._parser: IDocumentParserProtocol | None = None
 
     def _get_parser(self) -> IDocumentParserProtocol:
         """获取解析器实例（延迟加载）"""
@@ -73,7 +73,7 @@ class DocumentParserService:
     def extract_text(
         self,
         file_path: str,
-        max_length: Optional[int] = None,
+        max_length: int | None = None,
         **kwargs,
     ) -> TextExtractionResult:
         """提取文档纯文本
@@ -92,7 +92,7 @@ class DocumentParserService:
             **kwargs,
         )
 
-    def get_supported_formats(self) -> List[str]:
+    def get_supported_formats(self) -> list[str]:
         """获取支持的文件格式"""
         parser = self._get_parser()
         return parser.get_supported_formats()
