@@ -3,6 +3,8 @@
 本文档包含法穿系统的安装、初始化、启动与常见运维命令。
 
 > **最快的安装方式**：把本仓库地址和这份 INSTALL.md 丢给 AI Agent（WorkBuddy、Claude Code、Cursor 等），让它帮你执行安装。遇到报错也直接贴给它——AI Agent 处理环境问题比人快得多。
+>
+> 示例：帮我安装https://github.com/Lawyer-ray/FachuanHybridSystem# 并设置初始管理员的账号和密码（法穿，1234qwer）
 
 ## 1. Docker 部署（推荐）
 
