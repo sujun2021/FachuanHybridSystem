@@ -4,15 +4,12 @@ import json
 import tempfile
 import zipfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
 from apps.document_parsing.exceptions import MineruAPIError, ParsingTimeoutError
-from apps.document_parsing.protocols.document_parser_protocol import (
-    ParsedDocument,
-    TextExtractionResult,
-)
+from apps.document_parsing.protocols.document_parser_protocol import ParsedDocument, TextExtractionResult
 from apps.document_parsing.services.backends.mineru_backend import MineruBackend
 
 _PATCH_PREFIX = "apps.document_parsing.services.backends.mineru_backend"
@@ -53,16 +50,16 @@ def _make_zip_bytes(files: dict[str, str]) -> bytes:
 class TestInit:
     def test_api_key_from_param(self) -> None:
         with patch(f"{_PATCH_PREFIX}.get_sync_http_client"):
-            backend = MineruBackend(api_key="my-key")
-        assert backend.api_key == "my-key"
+            backend = MineruBackend(api_key="my-key")  # pragma: allowlist secret
+        assert backend.api_key == "my-key"  # pragma: allowlist secret
 
     def test_api_key_from_config(self) -> None:
         with patch(f"{_PATCH_PREFIX}.get_sync_http_client"), patch(
             f"{_PATCH_PREFIX}._config_service"
         ) as mock_cfg:
-            mock_cfg.get_value_internal.return_value = "cfg-key"
+            mock_cfg.get_value_internal.return_value = "cfg-key"  # pragma: allowlist secret
             backend = MineruBackend()
-        assert backend.api_key == "cfg-key"
+        assert backend.api_key == "cfg-key"  # pragma: allowlist secret
 
     def test_no_api_key_raises(self) -> None:
         with patch(f"{_PATCH_PREFIX}.get_sync_http_client"), patch(

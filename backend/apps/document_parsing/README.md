@@ -47,7 +47,7 @@ parser = ParserFactory.create_parser(backend="auto")
 # 方式 2：指定 MinerU
 parser = ParserFactory.create_parser(
     backend="mineru",
-    api_key="your_api_key",
+    api_key="your_api_key",  # pragma: allowlist secret
     model_version="vlm",
 )
 
@@ -90,7 +90,7 @@ curl -X POST http://localhost:8002/api/v1/document-parsing/extract-text \
 DOCUMENT_PARSING_BACKEND = "mineru"  # mineru | local | auto
 
 # MinerU API 配置
-MINERU_API_KEY = "your_api_key_here"
+MINERU_API_KEY = "your_api_key_here"  # pragma: allowlist secret
 MINERU_API_URL = "https://mineru.net/api/v4/extract/task"
 MINERU_MODEL_VERSION = "vlm"  # vlm | MinerU-HTML
 ```

@@ -34,7 +34,7 @@ class TestMcpToolClientInit:
 
     def test_init_with_api_keys(self):
         client = _make_client(api_keys=["key1", "key2", "key3"])
-        assert client._api_key == "key1"
+        assert client._api_key == "key1"  # pragma: allowlist secret
 
     def test_init_empty_api_key_fallback(self):
         client = McpToolClient(

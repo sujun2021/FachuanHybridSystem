@@ -66,7 +66,7 @@ class TestLegalResearchExecutorRun:
         mock_task.advanced_query = None
         mock_task.credential = MagicMock()
         mock_task.credential.account = "test"
-        mock_task.credential.password = "pass"
+        mock_task.credential.password = "pass"  # pragma: allowlist secret
         mock_task.credential.url = None
 
         mock_client = MagicMock()

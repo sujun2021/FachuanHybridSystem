@@ -35,7 +35,7 @@ def get_document_parsing_configs() -> list[dict[str, Any]]:
             # In production, replace with your real MinerU API key from https://mineru.net
             # DO NOT commit real API keys to version control.
             "description": "MinerU API Key（Bearer Token）。注意：这是测试/示例 key，生产环境请替换为你的真实 key",
-            "value": "eyJ0eXBlIjoiSldUIiwiYWxnIjoiSFM1MTIifQ.eyJqdGkiOiI4MTIwMDIxNCIsInJvbCI6IlJPTEVfUkVHSVNURVIiLCJpc3MiOiJPcGVuWExhYiIsImlhdCI6MTc4MTE0MjM0MywiY2xpZW50SWQiOiJsa3pkeDU3bnZ5MjJqa3BxOXgydyIsInBob25lIjoiMTM3NjgxODU3MDIiLCJvcGVuSWQiOm51bGwsInV1aWQiOiIwZjY2M2ZlZi1iODQxLTRkN2YtYTc4Zi02MzA3NjkwN2Y3NDkiLCJlbWFpbCI6IiIsImV4cCI6MTc4ODkxODM0M30.hIhRedMLijyBvvNXP29sgWwIqVxACKjRw-2irYDnonhEarsZhlFusR_QQnYZaqBrSB2jV1mDn6O7wWRdXvyEfx",
+            "value": "eyJ0eXBlIjoiSldUIiwiYWxnIjoiSFM1MTIifQ.eyJqdGkiOiI4MTIwMDIxNCIsInJvbCI6IlJPTEVfUkVHSVNURVIiLCJpc3MiOiJPcGVuWExhYiIsImlhdCI6MTc4MTE0MjM0MywiY2xpZW50SWQiOiJsa3pkeDU3bnZ5MjJqa3BxOXgydyIsInBob25lIjoiMTM3NjgxODU3MDIiLCJvcGVuSWQiOm51bGwsInV1aWQiOiIwZjY2M2ZlZi1iODQxLTRkN2YtYTc4Zi02MzA3NjkwN2Y3NDkiLCJlbWFpbCI6IiIsImV4cCI6MTc4ODkxODM0M30.hIhRedMLijyBvvNXP29sgWwIqVxACKjRw-2irYDnonhEarsZhlFusR_QQnYZaqBrSB2jV1mDn6O7wWRdXvyEfx",  # pragma: allowlist secret
             "is_secret": True,
         },
     ]

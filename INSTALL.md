@@ -103,7 +103,7 @@ valkey-cli ping
 
 ```bash
 # 先通过本地 socket（peer 认证，无需密码）设置密码
-sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"  # pragma: allowlist secret
 
 # 再创建数据库
 sudo -u postgres psql -c "CREATE DATABASE fachuan_dev OWNER postgres;"
@@ -215,7 +215,7 @@ valkey-cli ping
 
 ```bash
 # 先通过本地 socket（peer 认证，无需密码）设置密码
-sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"  # pragma: allowlist secret
 
 # 再创建数据库
 sudo -u postgres psql -c "CREATE DATABASE fachuan_dev OWNER postgres;"
@@ -316,7 +316,7 @@ wsl valkey-cli ping
 
 ```powershell
 # 通过 psql 连接（输入安装时设置的密码）
-psql -U postgres -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+psql -U postgres -c "ALTER USER postgres WITH PASSWORD 'postgres';"  # pragma: allowlist secret
 psql -U postgres -c "CREATE DATABASE fachuan_dev OWNER postgres;"
 ```
 

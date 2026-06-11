@@ -75,7 +75,7 @@ from apps.document_parsing.services import get_document_parser
 # 手动指定配置（覆盖 SystemConfig）
 parser = get_document_parser(
     backend="mineru",
-    api_key="your_api_key",  # 可选，会覆盖 SystemConfig
+    api_key="your_api_key",  # pragma: allowlist secret  # 可选，会覆盖 SystemConfig
     model_version="vlm",     # 可选，会覆盖 SystemConfig
 )
 
