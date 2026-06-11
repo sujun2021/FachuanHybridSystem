@@ -19,7 +19,7 @@ class TestMcpToolClientInit:
             transport="streamable_http",
             base_url="http://example.com",
             sse_url="",
-            api_key="key1",  # allowlist secret
+            api_key="key1",  # pragma: allowlist secret
             api_keys=["key1", "key2"],
         )
         assert client._api_key == "key1"
@@ -31,7 +31,7 @@ class TestMcpToolClientInit:
             transport="streamable_http",
             base_url="http://example.com",
             sse_url="",
-            api_key="single_key",  # allowlist secret
+            api_key="single_key",  # pragma: allowlist secret
         )
         assert client._api_key == "single_key"
 
@@ -45,9 +45,9 @@ class TestMcpToolClientHeaders:
             transport="streamable_http",
             base_url="http://example.com",
             sse_url="",
-            api_key="key123",  # allowlist secret
+            api_key="key123",  # pragma: allowlist secret
         )
-        headers = client._headers(transport="streamable_http", api_key="key123")  # allowlist secret
+        headers = client._headers(transport="streamable_http", api_key="key123")  # pragma: allowlist secret
         assert headers["Authorization"] == "bearer key123"
 
     def test_sse_uses_capital_bearer(self):
@@ -57,9 +57,9 @@ class TestMcpToolClientHeaders:
             transport="sse",
             base_url="",
             sse_url="http://example.com/sse",
-            api_key="key123",  # allowlist secret
+            api_key="key123",  # pragma: allowlist secret
         )
-        headers = client._headers(transport="sse", api_key="key123")  # allowlist secret
+        headers = client._headers(transport="sse", api_key="key123")  # pragma: allowlist secret
         assert headers["Authorization"] == "Bearer key123"
 
 
@@ -127,17 +127,19 @@ class TestMcpToolClientIsAuthLikeHttpError:
 class TestMcpToolClientShouldRetry:
 
     def test_timeout_is_retryable(self):
-        from apps.enterprise_data.services.clients.mcp_tool_client import McpToolClient
         import httpx
+
+        from apps.enterprise_data.services.clients.mcp_tool_client import McpToolClient
         client = McpToolClient(
             provider_name="test", transport="streamable_http",
-            base_url="http://example.com", sse_url="", api_key="key",
+            base_url="http://example.com", sse_url="", api_key="key",  # pragma: allowlist secret
         )
         assert client._should_retry(httpx.TimeoutException("timeout")) is True
 
     def test_connect_error_is_retryable(self):
-        from apps.enterprise_data.services.clients.mcp_tool_client import McpToolClient
         import httpx
+
+        from apps.enterprise_data.services.clients.mcp_tool_client import McpToolClient
         client = McpToolClient(
             provider_name="test", transport="streamable_http",
             base_url="http://example.com", sse_url="", api_key="key",
@@ -174,8 +176,9 @@ class TestMcpToolClientShouldSwitchApiKey:
         ) is True
 
     def test_connect_error_does_not_switch(self):
-        from apps.enterprise_data.services.clients.mcp_tool_client import McpToolClient
         import httpx
+
+        from apps.enterprise_data.services.clients.mcp_tool_client import McpToolClient
         client = McpToolClient(
             provider_name="test", transport="streamable_http",
             base_url="http://example.com", sse_url="", api_key="key",

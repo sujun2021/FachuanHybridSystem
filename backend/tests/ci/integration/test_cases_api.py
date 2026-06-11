@@ -550,6 +550,9 @@ def test_get_courts_no_search(authenticated_client):
 
 @pytest.mark.django_db
 def test_get_courts_with_search(authenticated_client):
+    from apps.core.models import Court
+
+    Court.objects.create(code="100", name="北京市高级人民法院", level=2, province="北京市", is_active=True)
     resp = authenticated_client.get("/api/v1/cases/courts-data", {"search": "北京", "limit": 10})
     assert resp.status_code == 200
     assert isinstance(resp.json(), list)

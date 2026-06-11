@@ -10,7 +10,6 @@ from apps.organization.models.law_firm import LawFirm
 from apps.organization.models.lawyer import Lawyer
 from apps.organization.models.team import Team, TeamType
 
-
 # ============================================================
 # LawFirm
 # ============================================================

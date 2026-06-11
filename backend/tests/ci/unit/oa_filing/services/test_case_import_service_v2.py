@@ -9,12 +9,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from apps.core.models.enums import CaseType
-from apps.oa_filing.services.case_import_service import (
-    CaseImportResult,
-    CaseImportService,
-    CasePreviewResult,
-)
-
+from apps.oa_filing.services.case_import_service import CaseImportResult, CaseImportService, CasePreviewResult
 
 # ---------------------------------------------------------------------------
 # Helpers

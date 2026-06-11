@@ -1,0 +1,24 @@
+# Gitleaks configuration to ignore test/example API keys in config files
+# These are NOT real production credentials - they are development placeholders
+
+[[rules]]
+  id = "mineru-test-api-key"
+  description = "Ignore test MinerU API key in system config defaults"
+  regex = '''eyJ0eXBlIjoiSldUIiwiYWxnIjoiSFM1MTIifQ\.eyJqdGkiOiI4MTIwMDIxNCIsInJvbCI6IlJPTEVfUkVHSVNURVIiLCJpc3MiOiJPcGVuWExhYiIsImlhdCI6MTc4MTE0MjM0MywiY2xpZW50SWQiOiJsa3pkeDU3bnZ5MjJqa3BxOXgydyIsInBob25lIjoiMTM3NjgxODU3MDIiLCJvcGVuSWQiOm51bGwsInV1aWQiOiIwZjY2M2ZlZi1iODQxLTRkN2YtYTc4Zi02MzA3NjkwN2Y3NDkiLCJlbWFpbCI6IiIsImV4cCI6MTc4ODkxODM0M30\.hIhRedMLijyBvvNXP29sgWwIqVxACKjRw-2irYDnonhEarsZhlFusR_QQnYZaqBrSB2jV1mDn6O7wWRdXvyEfx'''
+  tags = ["test", "example", "mineru"]
+
+[[rules]]
+  id = "test-api-key"
+  description = "Ignore test/example API keys in documentation and config"
+  regex = '''<MINERU_API_KEY>|test_key|example_key|fake_key|dummy_key|placeholder_key'''
+  tags = ["test", "example", "placeholder"]
+
+[allowlist]
+  description = "Allowlist test/example configuration files"
+  paths = [
+    '''apps/core/admin/_system_config_data/.*\.py$''',
+    '''apps/document_parsing/CONFIGURATION\.md$''',
+    '''apps/document_parsing/README\.md$''',
+    '''\.secretlint\.json$''',
+    '''\.gitleaks\.toml$''',
+  ]
