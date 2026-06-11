@@ -8,6 +8,7 @@ import json
 import logging
 import re
 from dataclasses import dataclass
+from difflib import SequenceMatcher
 from typing import TYPE_CHECKING, Any, Optional, cast
 from urllib.parse import parse_qs, urlparse
 
@@ -345,6 +346,11 @@ class SMSParserService:
 
         优先在现有客户中精确查找；未命中时回退到候选提取 + 匹配服务。
 
+        返回前会规范化名称（去除空格/连字符）并与短信原文交叉验证：
+        - 清理后的名称在清理后的原文中完整出现 → 保留
+        - 或有 >=80% 的最长公共子串匹配 → 保留
+        - 去重后最多保留 10 个
+
         Args:
             content: 短信内容
 
@@ -355,6 +361,8 @@ class SMSParserService:
         existing_parties = self._find_existing_clients_in_sms(content)
 
         if existing_parties:
+            # 去重并限制最多10个
+            existing_parties = list(dict.fromkeys(existing_parties))[:10]
             logger.info(f"在短信中找到现有客户: {existing_parties}")
             return existing_parties
 
@@ -393,11 +401,48 @@ class SMSParserService:
             names.append(name)
 
         if names:
+            # 过滤：规范化后与短信原文交叉验证（含80%模糊匹配）
+            names = [n for n in names if self._name_matches_content(n, content)]
+            # 去重并限制最多10个
+            names = list(dict.fromkeys(names))[:10]
             logger.info(f"通过候选匹配找到当事人: {names}")
             return names
 
         logger.info("候选匹配未找到当事人，返回空列表")
         return []
+
+    @staticmethod
+    def _normalize_for_match(text: str) -> str:
+        """规范化文本：去除空格、连字符、间隔号等干扰字符"""
+        return re.sub(r"[\s\-\u00b7·\u3000\uff0d]", "", text)
+
+    @classmethod
+    def _name_matches_content(cls, name: str, content: str) -> bool:
+        """
+        检查当事人名称是否与短信内容匹配。
+
+        支持两种情况：
+        1. 规范化后完整子串匹配（忽略空格/连字符差异）
+        2. 80% 最长公共子串匹配（如"宏立城集团有限公司"可匹配"贵州宏立城集团"）
+        """
+        name_clean = cls._normalize_for_match(name)
+        content_clean = cls._normalize_for_match(content)
+
+        if not name_clean or len(name_clean) < 2:
+            return False
+
+        # 精确子串匹配（清理后）
+        if name_clean in content_clean:
+            return True
+
+        # 80% 模糊匹配：找最长公共子串
+        sm = SequenceMatcher(None, name_clean, content_clean)
+        match = sm.find_longest_match(0, len(name_clean), 0, len(content_clean))
+        if match.size == 0:
+            return False
+
+        ratio = match.size / len(name_clean)
+        return ratio >= 0.8
 
     def _find_existing_clients_in_sms(self, content: str) -> list[str]:
         """
