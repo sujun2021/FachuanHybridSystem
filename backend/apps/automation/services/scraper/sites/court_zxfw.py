@@ -66,7 +66,7 @@ class CourtZxfwService:  # pragma: no cover
         Args:
             page: Playwright Page 对象
             context: Playwright BrowserContext 对象
-            captcha_recognizer: 验证码识别器，None 则使用默认的 DdddocrRecognizer
+            captcha_recognizer: 验证码识别器，None 则使用默认验证码识别器
             token_service: Token 服务，None 则使用默认的 TokenService
             site_name: 网站名称，用于 Token 管理，默认 "court_zxfw"
             cookie_service: Cookie 服务，None 则不使用 Cookie 管理
