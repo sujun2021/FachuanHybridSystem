@@ -68,7 +68,7 @@ uv run python manage.py collectstatic --noinput
 echo "Starting server..."
 if [ "$DJANGO_DEBUG" = "False" ]; then
     echo "Production mode: starting gunicorn..."
-    exec uv run gunicorn --config ../gunicorn_config.py apiSystem.wsgi:application
+    exec uv run gunicorn --config /app/gunicorn_config.py apiSystem.wsgi:application
 else
     echo "Development mode: starting runserver..."
     exec uv run python manage.py runserver --insecure 0.0.0.0:8002
