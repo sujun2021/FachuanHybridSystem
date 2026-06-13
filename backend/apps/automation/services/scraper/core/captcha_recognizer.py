@@ -8,7 +8,7 @@ import logging
 import time
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 logger = logging.getLogger("apps.automation")
 
@@ -171,13 +171,13 @@ def get_captcha_recognizer(task: Any = None) -> CaptchaRecognizer:
         RuntimeError: 插件未安装且无 task 参数
     """
     try:
-        from plugins import has_captcha_ocr_plugin
+        from plugins import has_captcha_ocr_plugin  # type: ignore[attr-defined]
 
         if has_captcha_ocr_plugin():
-            from plugins.captcha_ocr import DdddocrRecognizer
+            from plugins.captcha_ocr import DdddocrRecognizer  # type: ignore[attr-defined]
 
             logger.info("captcha_ocr 插件已安装，使用 DdddocrRecognizer")
-            return DdddocrRecognizer(show_ad=False)
+            return cast(CaptchaRecognizer, DdddocrRecognizer(show_ad=False))
     except ImportError:
         pass  # plugins 子模块未安装，静默降级
 

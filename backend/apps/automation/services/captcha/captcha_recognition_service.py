@@ -22,7 +22,7 @@ logger = logging.getLogger("apps.automation")
 def _is_auto_recognize_enabled() -> bool:
     """检查自动验证码识别是否可用（需 captcha_ocr 插件 + 配置开启）"""
     try:
-        from plugins import has_captcha_ocr_plugin
+        from plugins import has_captcha_ocr_plugin  # type: ignore[attr-defined]
 
         if not has_captcha_ocr_plugin():
             return False
@@ -89,10 +89,10 @@ class CaptchaRecognitionService:
         if self._recognizer is not None:
             return self._recognizer
 
-        from plugins import has_captcha_ocr_plugin
+        from plugins import has_captcha_ocr_plugin  # type: ignore[attr-defined]
 
         if has_captcha_ocr_plugin():
-            from plugins.captcha_ocr import DdddocrRecognizer
+            from plugins.captcha_ocr import DdddocrRecognizer  # type: ignore[attr-defined]
 
             self._recognizer = DdddocrRecognizer(show_ad=self._config.get("show_ad", False))
             return self._recognizer
