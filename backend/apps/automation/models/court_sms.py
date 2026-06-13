@@ -70,6 +70,22 @@ class CourtSMS(models.Model):
         db_index=True,
         verbose_name="送达事件去重键",
     )
+    # 内容去重
+    content_hash = models.CharField(
+        max_length=64,
+        null=True,
+        blank=True,
+        db_index=True,
+        verbose_name="内容哈希（MD5，用于去重）",
+    )
+    duplicate_of = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="duplicates",
+        verbose_name="重复自",
+    )
 
     # 处理状态
     status = models.CharField(
@@ -124,6 +140,7 @@ class CourtSMS(models.Model):
             models.Index(fields=["status", "-received_at"]),
             models.Index(fields=["sms_type"]),
             models.Index(fields=["case"]),
+            models.Index(fields=["content_hash", "-received_at"]),
         ]
         constraints: ClassVar = [
             models.UniqueConstraint(

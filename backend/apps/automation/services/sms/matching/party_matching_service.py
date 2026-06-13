@@ -73,7 +73,14 @@ class PartyMatchingService:
         lawyer_names = self.get_lawyer_names()
 
         logger.info(f"开始在 {len(all_clients)} 个现有客户中查找匹配")
-        logger.info(f"将排除 {len(lawyer_names)} 个律师姓名: {lawyer_names}")
+        if lawyer_names:
+            logger.debug(f"将排除 {len(lawyer_names)} 个律师姓名: {lawyer_names}")
+
+        # 提前过滤：排除律师姓名的当事人
+        filtered_party_names = [p.strip() for p in party_names if p.strip() not in lawyer_names]
+        skipped = [p.strip() for p in party_names if p.strip() in lawyer_names]
+        if skipped:
+            logger.debug(f"跳过律师当事人: {skipped}")
 
         # 遍历每个客户，检查其名称是否在短信提取的当事人中
         for client in all_clients:
@@ -81,22 +88,16 @@ class PartyMatchingService:
 
             # 排除律师：如果客户姓名与律师姓名匹配，跳过
             if client_name in lawyer_names:
-                logger.info(f"跳过律师: {client_name}")
+                logger.debug(f"跳过律师: {client_name}")
                 continue
 
             # 检查客户名称是否与短信中提取的当事人名称匹配
-            for party_name in party_names:
-                party_name = party_name.strip()
-
-                # 排除律师：如果当事人姓名是律师，跳过
-                if party_name in lawyer_names:
-                    logger.info(f"跳过律师当事人: {party_name}")
-                    continue
+            for party_name in filtered_party_names:
 
                 # 精确匹配
                 if client_name == party_name:
                     matched_clients.append(client)
-                    logger.info(f"精确匹配找到客户: {client_name}")
+                    logger.debug(f"精确匹配找到客户: {client_name}")
                     break
 
                 # 包含匹配（客户名称包含在当事人名称中，或反之）
@@ -104,7 +105,7 @@ class PartyMatchingService:
                     len(party_name) >= 2 and party_name in client_name
                 ):
                     matched_clients.append(client)
-                    logger.info(f"包含匹配找到客户: {client_name} <-> {party_name}")
+                    logger.debug(f"包含匹配找到客户: {client_name} <-> {party_name}")
                     break
 
         # 去重（基于客户ID）
@@ -141,7 +142,7 @@ class PartyMatchingService:
 
             # 排除律师姓名
             if party_name in lawyer_names:
-                logger.info(f"跳过律师当事人: {party_name}")
+                logger.debug(f"跳过律师当事人: {party_name}")
                 continue
 
             if len(party_name) >= 2:  # 至少2个字符才进行匹配
@@ -153,7 +154,7 @@ class PartyMatchingService:
                     if client.name.strip() not in lawyer_names:
                         filtered_clients.append(client)
                     else:
-                        logger.info(f"过滤掉律师客户记录: {client.name}")
+                        logger.debug(f"过滤掉律师客户记录: {client.name}")
 
                 matched_clients.extend(filtered_clients)
                 if filtered_clients:

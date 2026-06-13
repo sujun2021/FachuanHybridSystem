@@ -199,7 +199,7 @@ class SMSMatchingStage(BaseSMSStage):
             return False
 
     def _extract_and_update_sms_from_documents(self, sms: CourtSMS) -> None:  # pragma: no cover
-        """从文书中提取案号和当事人并回写"""
+        """从文书中提取案号和当事人并回写。若案号匹配到现有案件，直接用该案件的当事人列表。"""
         if not sms.scraper_task:
             return
 
@@ -217,6 +217,21 @@ class SMSMatchingStage(BaseSMSStage):
                 updated = True
             if case_numbers and party_names:
                 break
+
+        # 优化：从文档提取到的案号若能匹配到现有案件，直接拉取该案件的当事人
+        if updated and case_numbers:
+            existing_case = self.matcher.match_by_case_number(case_numbers)
+            if existing_case:
+                try:
+                    case_parties = self.case_service.get_case_party_names_internal(existing_case.id)
+                    if case_parties:
+                        party_names = list(dict.fromkeys(case_parties))
+                        logger.info(
+                            f"案号匹配到案件 {existing_case.name}(ID={existing_case.id})，"
+                            f"直接使用该案件的 {len(party_names)} 个当事人"
+                        )
+                except Exception as e:
+                    logger.debug(f"获取案件当事人失败: {e}")
 
         if updated:
             sms.case_numbers = list(dict.fromkeys(case_numbers))

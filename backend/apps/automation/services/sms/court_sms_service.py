@@ -4,8 +4,9 @@
 负责协调整个短信处理流程，包括短信提交、异步处理、状态管理等。
 """
 
+import hashlib
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 from django.db import transaction
@@ -173,7 +174,7 @@ class CourtSMSService(SMSCaseBindingMixin, SMSDocumentMixin, SMSDownloadMixin):
         return qs
 
     def submit_sms(self, content: str, received_at: datetime | None = None) -> CourtSMS:  # pragma: no cover
-        """提交短信，创建记录并触发异步处理"""
+        """提交短信，创建记录并触发异步处理。30天内相同内容自动去重。"""
         if not content or not content.strip():
             raise ValidationException(
                 message="短信内容不能为空", code="EMPTY_SMS_CONTENT", errors={"content": "短信内容不能为空"}
@@ -182,12 +183,75 @@ class CourtSMSService(SMSCaseBindingMixin, SMSDocumentMixin, SMSDownloadMixin):
         if received_at is None:
             received_at = timezone.now()
 
+        content_stripped = content.strip()
+        content_hash = hashlib.md5(content_stripped.encode("utf-8")).hexdigest()
+
         try:
+            # 30天内去重
+            dedup_before = received_at - timedelta(days=30)
+            original = (
+                CourtSMS.objects.filter(
+                    content_hash=content_hash,
+                    received_at__gte=dedup_before,
+                    duplicate_of__isnull=True,  # 只匹配"原始"短信，不匹配已被标记为重复的
+                )
+                .order_by("received_at")
+                .first()
+            )
+
+            if original and original.id:
+                processing_statuses = {
+                    CourtSMSStatus.PENDING,
+                    CourtSMSStatus.PARSING,
+                    CourtSMSStatus.DOWNLOADING,
+                    CourtSMSStatus.MATCHING,
+                }
+                if original.status in processing_statuses:
+                    # 原短信还在处理中 → 创建重复记录，不启动异步任务
+                    sms = CourtSMS.objects.create(
+                        content=content_stripped,
+                        received_at=received_at,
+                        status=CourtSMSStatus.PENDING,
+                        document_file_paths=[],
+                        content_hash=content_hash,
+                        duplicate_of=original,
+                    )
+                    logger.info(
+                        f"短信去重（等待原短信）: 新ID={sms.id} → 原ID={original.id}，跳过处理"
+                    )
+                    # 待原短信处理完后同步结果
+                    self._sync_duplicate_on_completion(original, sms)
+                    return sms
+
+                elif original.status in (CourtSMSStatus.COMPLETED, CourtSMSStatus.PENDING_MANUAL):
+                    # 原短信已处理完 → 直接复制结果
+                    sms = CourtSMS.objects.create(
+                        content=content_stripped,
+                        received_at=received_at,
+                        status=original.status,
+                        sms_type=original.sms_type,
+                        download_links=original.download_links or [],
+                        case_numbers=original.case_numbers or [],
+                        party_names=original.party_names or [],
+                        document_file_paths=original.document_file_paths or [],
+                        case=original.case,
+                        case_log=original.case_log,
+                        error_message=original.error_message,
+                        content_hash=content_hash,
+                        duplicate_of=original,
+                    )
+                    logger.info(
+                        f"短信去重（复制结果）: 新ID={sms.id} → 原ID={original.id}，状态={original.status}"
+                    )
+                    return sms
+
+            # 无重复 → 正常流程
             sms = CourtSMS.objects.create(
-                content=content.strip(),
+                content=content_stripped,
                 received_at=received_at,
                 status=CourtSMSStatus.PENDING,
                 document_file_paths=[],
+                content_hash=content_hash,
             )
 
             logger.info(f"创建短信记录成功: ID={sms.id}, 长度={len(content)}")
@@ -207,6 +271,63 @@ class CourtSMSService(SMSCaseBindingMixin, SMSDocumentMixin, SMSDownloadMixin):
             raise ValidationException(
                 message=f"提交短信处理失败: {e!s}", code=SMS_SUBMIT_FAILED, errors={"error": str(e)}
             ) from e
+
+    def _sync_duplicate_on_completion(self, original: CourtSMS, duplicate: CourtSMS) -> None:
+        """当原短信处理完成后，同步结果到重复短信"""
+        try:
+            # 提交一个任务：等待原短信完成后再同步
+            sync_task_id = submit_task(
+                "apps.automation.services.sms.court_sms_service._sync_duplicate_result",
+                original.id,
+                duplicate.id,
+                task_name=f"court_sms_sync_dup_{duplicate.id}_from_{original.id}",
+            )
+            logger.debug(f"提交去重同步任务: Dup={duplicate.id}, Task={sync_task_id}")
+        except Exception as e:
+            logger.warning(f"提交去重同步任务失败: {e}")
+
+    @staticmethod
+    def _sync_duplicate_result(original_id: int, duplicate_id: int) -> None:
+        """异步同步：等待原短信完成，将结果复制到重复短信"""
+        import time as _time
+
+        from django.db import transaction as _transaction
+
+        max_wait = 600  # 最多等 10 分钟
+        waited = 0
+        while waited < max_wait:
+            try:
+                with _transaction.atomic():
+                    original = CourtSMS.objects.select_for_update().get(id=original_id)
+                    duplicate = CourtSMS.objects.select_for_update().get(id=duplicate_id)
+
+                    if original.status in (
+                        CourtSMSStatus.COMPLETED,
+                        CourtSMSStatus.PENDING_MANUAL,
+                        CourtSMSStatus.FAILED,
+                    ):
+                        duplicate.status = original.status
+                        duplicate.sms_type = original.sms_type
+                        duplicate.download_links = original.download_links or []
+                        duplicate.case_numbers = original.case_numbers or []
+                        duplicate.party_names = original.party_names or []
+                        duplicate.document_file_paths = original.document_file_paths or []
+                        duplicate.case = original.case
+                        duplicate.case_log = original.case_log
+                        duplicate.error_message = original.error_message
+                        duplicate.save()
+                        logger.info(
+                            f"去重同步完成: Dup={duplicate_id} ← Orig={original_id}, 状态={original.status}"
+                        )
+                        return
+            except CourtSMS.DoesNotExist:
+                logger.warning(f"去重同步失败—记录不存在: Orig={original_id}, Dup={duplicate_id}")
+                return
+
+            _time.sleep(5)
+            waited += 5
+
+        logger.warning(f"去重同步超时: Dup={duplicate_id} 等待 Orig={original_id} 超过 {max_wait}s")
 
     @transaction.atomic
     def assign_case(self, sms_id: int, case_id: int) -> CourtSMS:  # pragma: no cover
