@@ -1,13 +1,13 @@
 """
 PaddleOCR API 云端引擎
 
-调用百度 AI 开放平台的 PaddleOCR API，支持：
-- PP-OCRv5：纯文字 OCR，适合证件/快递单号/简单文字提取
-- PP-StructureV3：文档结构化分析，适合表格/版面分析
-- PaddleOCR-VL：版面分析 + OCR（输出 Markdown），适合复杂文档/合同
-- PaddleOCR-VL-1.5：VL 升级版，更高精度版面分析，适合法律文书/密集排版文档
+调用百度 PaddleOCR API (v2)，支持：
+- PaddleOCR-VL-1.6：高精度版面分析 + OCR（输出 Markdown），适合法律文书/合同
+- PP-OCRv6：纯文字 OCR，适合证件/快递单号/简单文字提取
+- 向后兼容 v1 旧模型名称
 
-API_URL / Token 通过 SystemConfig 管理。
+v2 统一端点通过 PADDLEOCR_JOB_API_URL 配置，Token 通过 PADDLEOCR_API_TOKEN 配置。
+全部通过 SystemConfig 管理。
 """
 
 from __future__ import annotations
@@ -26,16 +26,21 @@ from apps.core.services.system_config_service import SystemConfigService
 logger = logging.getLogger(__name__)
 
 # 模型 → API 端点类型映射
-_OCR_ENDPOINT_MODELS = {"pp_ocrv5", "pp_structure_v3"}
-_LAYOUT_ENDPOINT_MODELS = {"paddleocr_vl", "paddleocr_vl_1_5"}
+_OCR_ENDPOINT_MODELS = {"pp_ocrv5", "pp_structure_v3", "pp_ocrv6"}
+_LAYOUT_ENDPOINT_MODELS = {"paddleocr_vl", "paddleocr_vl_1_5", "paddleocr_vl_1_6"}
 
-# 模型 → 对应的 SystemConfig URL Key 映射
+# 模型 → 对应的 SystemConfig URL Key 映射（v1 旧端点，向后兼容）
 _MODEL_URL_KEY_MAP: dict[str, str] = {
     "pp_ocrv5": "PADDLEOCR_OCR_API_URL",
     "pp_structure_v3": "PADDLEOCR_OCR_API_URL",
+    "pp_ocrv6": "PADDLEOCR_OCR_API_URL",
     "paddleocr_vl": "PADDLEOCR_VL_API_URL",
     "paddleocr_vl_1_5": "PADDLEOCR_VL15_API_URL",
+    "paddleocr_vl_1_6": "PADDLEOCR_VL15_API_URL",
 }
+
+# v2 统一端点（优先使用）
+_V2_JOB_API_URL_KEY = "PADDLEOCR_JOB_API_URL"
 
 # 文件类型：0=PDF, 1=图片
 _FILE_TYPE_PDF = 0
@@ -89,14 +94,30 @@ class PaddleOCRApiEngine:
 
     @property
     def model(self) -> str:
-        """获取当前使用的模型名称"""
+        """获取当前使用的模型名称（已规范化）"""
+        if self._model:
+            raw = self._model
+        else:
+            raw = str(self._config_service.get_value("PADDLEOCR_API_MODEL", "paddleocr_vl_1_6") or "paddleocr_vl_1_6")
+        # 规范化：PaddleOCR-VL-1.6 → paddleocr_vl_1_6
+        return raw.strip().lower().replace("-", "_")
+
+    @property
+    def api_model_name(self) -> str:
+        """获取发送给 API 的模型名称（PaddleOCR-VL-1.6 / PP-OCRv6 原始格式）"""
         if self._model:
             return self._model
-        return str(self._config_service.get_value("PADDLEOCR_API_MODEL", "pp_ocrv5") or "pp_ocrv5")
+        raw = str(self._config_service.get_value("PADDLEOCR_API_MODEL", "PaddleOCR-VL-1.6") or "PaddleOCR-VL-1.6")
+        return raw.strip()
 
     @property
     def api_url(self) -> str:
-        """获取当前模型对应的 API URL"""
+        """获取当前模型对应的 API URL（优先 v2 统一端点）"""
+        # v2 统一端点（PaddleOCR-VL-1.6 / PP-OCRv6 共用）
+        v2_url = str(self._config_service.get_value(_V2_JOB_API_URL_KEY, "") or "")
+        if v2_url:
+            return v2_url
+        # 回退 v1 旧端点
         url_key = _MODEL_URL_KEY_MAP.get(self.model, "PADDLEOCR_OCR_API_URL")
         return str(self._config_service.get_value(url_key, "") or "")
 
@@ -128,6 +149,7 @@ class PaddleOCRApiEngine:
             raise RuntimeError("PaddleOCR API 未配置：请先在系统配置中设置 API URL 和 Token")
 
         model = self.model
+        api_model = self.api_model_name
         file_type = _FILE_TYPE_PDF if is_pdf else _FILE_TYPE_IMAGE
 
         # 构建可选参数
@@ -153,7 +175,7 @@ class PaddleOCRApiEngine:
 
         # multipart/form-data 上传
         data = {
-            "model": model,
+            "model": api_model,
             "optionalPayload": json.dumps(optional_payload),
         }
         files = {
