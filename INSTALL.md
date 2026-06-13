@@ -240,7 +240,7 @@ cd FachuanHybridSystem/backend
 # 2) 安装 uv（若未安装）
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# 3) 安装系统依赖（ddddocr / OpenCV 需要，Docker 部署已内置）
+# 3) 安装系统依赖（OpenCV 需要，Docker 部署已内置）
 # Ubuntu 22.04 用 libglib2.0-0，24.04+ 用 libglib2.0-0t64
 sudo apt-get install -y libgl1 libglib2.0-0t64 || sudo apt-get install -y libgl1 libglib2.0-0
 

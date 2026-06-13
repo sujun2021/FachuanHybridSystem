@@ -8,7 +8,7 @@ import logging
 import time
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 logger = logging.getLogger("apps.automation")
 
@@ -66,96 +66,6 @@ class CaptchaRecognizer(ABC):
         pass
 
 
-class DdddocrRecognizer(CaptchaRecognizer):
-    """
-    使用 ddddocr 库实现的验证码识别器
-
-    ddddocr 是一个开源的 OCR 库，专门用于识别验证码。
-    这个实现提供了基本的验证码识别功能，适用于大多数简单验证码。
-
-    Attributes:
-        ocr: ddddocr.DdddOcr 实例，用于执行实际的识别工作
-
-    Example:
-        >>> recognizer = DdddocrRecognizer()
-        >>> with open('captcha.png', 'rb') as f:
-        ...     image_bytes = f.read()
-        >>> result = recognizer.recognize(image_bytes)
-        >>> logger.info(result)  # '1234'
-    """
-
-    def __init__(self, show_ad: bool = False):  # pragma: no cover
-        """
-        初始化 ddddocr 识别器
-
-        Args:
-            show_ad: 是否显示 ddddocr 的广告信息，默认 False
-
-        Raises:
-            ImportError: 如果 ddddocr 库未安装
-        """
-        try:
-            import ddddocr
-
-            self.ocr = ddddocr.DdddOcr(show_ad=show_ad)
-            logger.info("✅ DdddocrRecognizer 初始化成功")
-        except ImportError as e:
-            logger.error("❌ ddddocr 未安装，请运行: uv add ddddocr")
-            raise ImportError("ddddocr 库未安装。请运行: uv add ddddocr") from e
-
-    def recognize(self, image_bytes: bytes) -> str | None:  # pragma: no cover
-        """
-        从图片字节流识别验证码
-
-        Args:
-            image_bytes: 图片的字节数据
-
-        Returns:
-            识别出的验证码文本（已去除空格），识别失败返回 None
-        """
-        if not image_bytes:
-            logger.warning("⚠️ 图片字节流为空")
-            return None
-
-        try:
-            result = self.ocr.classification(image_bytes)
-            # 清理结果：去除空格
-            cleaned_result = result.strip().replace(" ", "")
-            logger.info(f"✅ 验证码识别成功: {cleaned_result}")
-            return cast(str | None, cleaned_result)
-        except Exception as e:
-            logger.error(f"❌ 验证码识别失败: {e}", exc_info=True)
-            return None
-
-    def recognize_from_element(self, page: Any, selector: str) -> str | None:  # pragma: no cover
-        """
-        从页面元素识别验证码
-
-        Args:
-            page: Playwright Page 对象
-            selector: 验证码图片元素的 CSS 选择器
-
-        Returns:
-            识别出的验证码文本，识别失败返回 None
-        """
-        try:
-            # 定位元素
-            element = page.locator(selector)
-
-            # 等待元素可见
-            element.wait_for(state="visible", timeout=5000)
-
-            # 截取元素截图
-            image_bytes = element.screenshot()
-
-            # 使用 recognize 方法识别
-            return self.recognize(image_bytes)
-
-        except Exception as e:
-            logger.error(f"❌ 从页面元素获取验证码失败 (selector: {selector}): {e}", exc_info=True)
-            return None
-
-
 class ManualCaptchaRecognizer(CaptchaRecognizer):
     """
     手动验证码识别器
@@ -163,7 +73,7 @@ class ManualCaptchaRecognizer(CaptchaRecognizer):
     将验证码图片保存到磁盘，将任务置为 WAITING_FOR_CAPTCHA 状态，
     然后轮询等待用户通过 API 提交验证码答案。
 
-    适用场景：ddddocr 识别率不足时，由人工介入完成验证码输入。
+    适用场景：由人工介入完成验证码输入，适用于所有验证码场景。
 
     Attributes:
         task: ScraperTask 实例，用于状态协调
@@ -244,28 +154,35 @@ class ManualCaptchaRecognizer(CaptchaRecognizer):
 
 def get_captcha_recognizer(task: Any = None) -> CaptchaRecognizer:
     """
-    根据 CAPTCHA_AUTO_RECOGNIZE 全局配置返回合适的验证码识别器。
+    根据插件可用性和 task 参数返回合适的验证码识别器。
 
-    - 配置为 true → DdddocrRecognizer（自动识别）
-    - 配为 false 且有 task → ManualCaptchaRecognizer（手动输入）
-    - 配为 false 但无 task → DdddocrRecognizer（兜底自动，因为手动模式需要 task 协调）
+    优先级：
+    1. captcha_ocr 插件已安装 → DdddocrRecognizer（自动识别）
+    2. 有 task 参数 → ManualCaptchaRecognizer（手动输入）
+    3. 都不满足 → 抛出 RuntimeError
 
     Args:
         task: ScraperTask 实例（可选）。有 task 时可启用手动模式。
 
     Returns:
         CaptchaRecognizer 实例
-    """
-    from apps.core.services.system_config_service import SystemConfigService
 
-    auto = SystemConfigService().get_value("CAPTCHA_AUTO_RECOGNIZE", "false").lower()
-    if auto in ("true", "1", "yes"):
-        logger.info("🔑 CAPTCHA_AUTO_RECOGNIZE=true，使用 DdddocrRecognizer")
-        return DdddocrRecognizer(show_ad=False)
+    Raises:
+        RuntimeError: 插件未安装且无 task 参数
+    """
+    try:
+        from plugins import has_captcha_ocr_plugin
+
+        if has_captcha_ocr_plugin():
+            from plugins.captcha_ocr import DdddocrRecognizer
+
+            logger.info("captcha_ocr 插件已安装，使用 DdddocrRecognizer")
+            return DdddocrRecognizer(show_ad=False)
+    except ImportError:
+        pass  # plugins 子模块未安装，静默降级
 
     if task is not None:
-        logger.info("🔑 CAPTCHA_AUTO_RECOGNIZE=false，使用 ManualCaptchaRecognizer (task=%s)", getattr(task, "id", "?"))
+        logger.info("使用 ManualCaptchaRecognizer (task=%s)", getattr(task, "id", "?"))
         return ManualCaptchaRecognizer(task=task)
 
-    logger.info("🔑 CAPTCHA_AUTO_RECOGNIZE=false 但无 task，兜底使用 DdddocrRecognizer")
-    return DdddocrRecognizer(show_ad=False)
+    raise RuntimeError("验证码识别需要 task 参数（captcha_ocr 插件未安装，请使用手动模式）")
