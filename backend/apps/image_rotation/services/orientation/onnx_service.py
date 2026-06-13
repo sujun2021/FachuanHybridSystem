@@ -1,12 +1,13 @@
 """基于 ConvNeXtV2-Atto 的图片方向检测服务
 
 使用 Fachuan 微调的 ConvNeXtV2-Atto 方向分类 ONNX 模型：
-- 模型来源: ml-training/train_model.py 微调导出
-- 输入: float32 [1, 3, 224, 224] (ImageNet 归一化)
+- 模型来源: ml-training/train_model.py 微调导出，HuggingFace Hub 分发
+- 输入: float32 [1, 3, 384, 384] (ImageNet 归一化)
 - 输出: float32 [1, 4] → 0°/90°/180°/270°
 
 推理流程: EXIF 转正 → ONNX 分类 → 返回旋转角度
 模型在 EXIF 转正后的像素上训练，推理时需保持一致。
+本地无模型时自动从 HuggingFace Hub 下载。
 """
 
 import io
@@ -58,15 +59,18 @@ class ONNXOrientationService:
 
     @property
     def session(self):
-        """懒加载 ONNX 推理会话"""
+        """懒加载 ONNX 推理会话，本地无模型时自动从 HuggingFace Hub 下载"""
         if self._session is None:
             try:
                 import onnxruntime as ort
 
                 if not Path(self._model_path).exists():
+                    self._download_from_hub()
+
+                if not Path(self._model_path).exists():
                     logger.error(
                         f"ONNX 微调模型不存在: {self._model_path}，"
-                        "请运行 ml-training/train_model.py 训练或从 HuggingFace Hub 下载"
+                        "请运行 ml-training/train_model.py 训练或检查网络连接"
                     )
                     return None
 
@@ -83,13 +87,31 @@ class ONNXOrientationService:
                 return None
         return self._session
 
+    def _download_from_hub(self):
+        """从 HuggingFace Hub 下载模型"""
+        try:
+            from huggingface_hub import hf_hub_download
+
+            MODEL_DIR.mkdir(parents=True, exist_ok=True)
+            logger.info("本地无模型，正在从 HuggingFace Hub 下载...")
+            hf_hub_download(
+                repo_id="Fachuan/orientation-classifier",
+                filename="fachuan-orientation-classifier.onnx",
+                local_dir=str(MODEL_DIR),
+            )
+            logger.info("模型下载完成")
+        except ImportError:
+            logger.error("huggingface_hub 未安装，无法自动下载模型")
+        except Exception as e:
+            logger.error(f"模型下载失败: {e}")
+
     def preprocess_image(self, image_data: bytes) -> np.ndarray:
         """预处理图片为模型输入格式
 
         先应用 EXIF 转正，使像素排列与训练时一致，再缩放和归一化。
 
         ConvNeXtV2 模型要求:
-        - 输入: float32 [1, 3, 224, 224]
+        - 输入: float32 [1, 3, 384, 384]
         - 归一化: ImageNet 标准 (mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         """
         img = Image.open(io.BytesIO(image_data))
@@ -101,8 +123,8 @@ class ONNXOrientationService:
         if img.mode != "RGB":
             img = img.convert("RGB")
 
-        # 调整大小到 224x224（ConvNeXtV2 模型要求）
-        img = img.resize((224, 224), Image.Resampling.LANCZOS)
+        # 调整大小到 384x384（ConvNeXtV2 模型要求）
+        img = img.resize((384, 384), Image.Resampling.LANCZOS)
 
         # 转换为 numpy 数组
         img_array = np.array(img, dtype=np.float32)
