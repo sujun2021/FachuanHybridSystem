@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import json
 import logging
+import time
 from types import SimpleNamespace
 from typing import Any, cast
 
@@ -92,7 +93,10 @@ def detect_page_orientation(request: HttpRequest) -> dict[str, Any]:  # pragma: 
     if not data:
         return {"rotation": 0, "confidence": 0}
     try:
-        return cast(dict[str, Any], _get_pdf_service().detect_single_page_orientation(data))
+        t0 = time.perf_counter()
+        result = cast(dict[str, Any], _get_pdf_service().detect_single_page_orientation(data))
+        result["elapsed_ms"] = round((time.perf_counter() - t0) * 1000, 1)
+        return result
     except Exception as exc:
         logger.error("detect_page_orientation 失败: %s", exc, exc_info=True)
         return {"rotation": 0, "confidence": 0}
@@ -106,9 +110,11 @@ def detect_orientation(request: HttpRequest) -> dict[str, Any]:  # pragma: no co
     if not images:
         return {"success": False, "results": []}
     results = []
+    total_start = time.perf_counter()
     for img in images:
         try:
             image_bytes = _decode_image_data(img.get("data", ""))
+            t0 = time.perf_counter()
             if method == "ocr_voting":
                 from apps.image_rotation.services.orientation.service import OrientationDetectionService
 
@@ -119,12 +125,14 @@ def detect_orientation(request: HttpRequest) -> dict[str, Any]:  # pragma: no co
 
                 svc = get_onnx_orientation_service()
                 result = svc.detect_orientation(image_bytes)
+            result["elapsed_ms"] = round((time.perf_counter() - t0) * 1000, 1)
             result["filename"] = img.get("filename", "")
             results.append(result)
         except Exception as exc:
             logger.error("detect_orientation 失败: %s", exc, exc_info=True)
-            results.append({"filename": img.get("filename", ""), "rotation": 0, "confidence": 0, "ocr_text": ""})
-    return {"success": True, "results": results}
+            results.append({"filename": img.get("filename", ""), "rotation": 0, "confidence": 0, "ocr_text": "", "elapsed_ms": 0})
+    total_elapsed_ms = round((time.perf_counter() - total_start) * 1000, 1)
+    return {"success": True, "results": results, "total_elapsed_ms": total_elapsed_ms}
 
 
 @router.post("/extract-text")
