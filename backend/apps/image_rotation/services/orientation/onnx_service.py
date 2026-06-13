@@ -4,7 +4,9 @@
 - 模型来源: poutche/beit-image-orientation-onnx
 - 输入: float32 [1, 3, 384, 384] (归一化: (x/255 - 0.5) / 0.5)
 - 输出: float32 [1, 4] → 0°/90°/180°/270°
-- 置信度阈值: ≥0.99 时可自动旋转
+
+旋转公式: additional_rotation = (onnx_prediction - exif_rotation) % 360
+前端 canvas 已通过 EXIF 显示正确方向，后端返回额外需要的旋转量。
 """
 
 import io
@@ -13,7 +15,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-from PIL import Image, ImageOps
+from PIL import Image
 
 logger = logging.getLogger("apps.image_rotation")
 
@@ -45,11 +47,12 @@ class ONNXOrientationService:
     """基于 ONNX 模型的方向检测服务
 
     使用 HuggingFace 预训练的 BEiT 模型检测图片方向。
-    置信度阈值: ≥0.99 时可自动旋转。
+    模型在原始像素上运行，结合 EXIF 方向标签计算前端所需的旋转角度。
+    置信度阈值: ≥0.85 时可自动旋转。
     """
 
     # 自动旋转的置信度阈值
-    AUTO_ROTATE_THRESHOLD = 0.99
+    AUTO_ROTATE_THRESHOLD = 0.85
 
     def __init__(self, model_path: str | None = None, auto_download: bool = True):
         self._session = None
@@ -101,15 +104,15 @@ class ONNXOrientationService:
     def preprocess_image(self, image_data: bytes) -> np.ndarray:
         """预处理图片为模型输入格式
 
+        在原始像素上运行（不做 EXIF 转正），让模型直接检测
+        存储像素的旋转状态，便于与 EXIF 方向标签组合计算。
+
         BEiT 模型要求:
         - 输入: float32 [1, 3, 384, 384]
         - 归一化: (x/255 - 0.5) / 0.5
         """
-        # 打开图片
+        # 打开图片（不做 EXIF 转正，让模型在原始像素上检测方向）
         img = Image.open(io.BytesIO(image_data))
-
-        # 应用 EXIF 方向转正，让模型看到视觉正确的图片
-        img = ImageOps.exif_transpose(img) or img
 
         # 转换为 RGB
         if img.mode != "RGB":
@@ -135,6 +138,13 @@ class ONNXOrientationService:
     def detect_orientation(self, image_data: bytes) -> dict[str, Any]:
         """检测图片方向
 
+        在原始像素上运行 ONNX 方向分类器，并结合 EXIF 方向标签
+        计算前端需要额外应用的旋转角度。
+
+        前端 canvas 已通过 EXIF 显示正确方向。后端返回的旋转角度
+        是在此基础上还需额外应用的旋转量：
+          additional_rotation = (onnx_prediction - exif_rotation) % 360
+
         Args:
             image_data: 图片的字节数据
 
@@ -150,12 +160,15 @@ class ONNXOrientationService:
             }
 
         try:
-            # 获取原始图片尺寸（用于宽高比启发式判断）
+            # 获取原始图片尺寸和 EXIF 方向标签
             original_img = Image.open(io.BytesIO(image_data))
-            original_img = ImageOps.exif_transpose(original_img) or original_img
-            is_landscape = original_img.width > original_img.height
+            stored_width, stored_height = original_img.size
+            is_stored_landscape = stored_width > stored_height
 
-            # 预处理图片
+            # 提取 EXIF 方向旋转角度（0/90/180/270）
+            exif_rotation = self._get_exif_rotation(original_img)
+
+            # 预处理图片（不做 EXIF 转正，让模型在原始像素上检测方向）
             input_data = self.preprocess_image(image_data)
 
             # 运行推理（BEiT 模型输入名为 "pixel_values"）
@@ -173,23 +186,27 @@ class ONNXOrientationService:
             predicted_class = int(np.argmax(probabilities, axis=1)[0])
             confidence = float(probabilities[0][predicted_class])
 
-            # 获取对应的旋转角度
-            rotation = ORIENTATION_TO_ROTATION[predicted_class]
+            # ONNX 在原始像素上预测的旋转角度
+            onnx_rotation = ORIENTATION_TO_ROTATION[predicted_class]
             label = ORIENTATION_LABELS[predicted_class]
 
+            # 计算前端需要额外应用的旋转量
+            # canvas 已通过 EXIF 显示正确方向，只需应用 ONNX 相对于 EXIF 的增量
+            rotation = (onnx_rotation - exif_rotation) % 360
+
             logger.info(
-                f"ONNX 方向检测: {label}, 置信度: {confidence:.4f}, landscape={is_landscape}",
+                f"ONNX 方向检测: {label}, 置信度: {confidence:.4f}, "
+                f"EXIF={exif_rotation}°, onnx={onnx_rotation}°, additional={rotation}°",
             )
 
             # 判断是否可以自动旋转
-            # 1. 180° 旋转不改变宽高比，阈值 0.70 即可
-            # 2. 90°/270° 旋转会改变宽高比，横向图片不应旋转为纵向，阈值 0.85
-            if rotation == 180:
-                high_confidence = confidence >= 0.70
-                dimension_safe = True
-            else:
-                high_confidence = confidence >= 0.85
-                dimension_safe = not (is_landscape and rotation in (90, 270))
+            # 置信度阈值
+            high_confidence = confidence >= 0.85
+
+            # 宽高比安全：存储为横向的图片不应被旋转为纵向（ONNX 可能将
+            # EXIF 已修正的纵向图误判为需要 90°/270° 旋转）
+            dimension_safe = not (is_stored_landscape and rotation in (90, 270))
+
             can_auto_rotate = high_confidence and dimension_safe and rotation != 0
 
             return {
@@ -198,6 +215,7 @@ class ONNXOrientationService:
                 "method": "onnx_classifier",
                 "label": label,
                 "can_auto_rotate": can_auto_rotate,
+                "exif_orientation": exif_rotation,
                 "probabilities": {
                     ORIENTATION_LABELS[i]: round(float(probabilities[0][i]), 4)
                     for i in range(4)
@@ -212,6 +230,19 @@ class ONNXOrientationService:
                 "method": "onnx_error",
                 "error": str(e),
             }
+
+    @staticmethod
+    def _get_exif_rotation(img: Image.Image) -> int:
+        """从 EXIF 方向标签提取旋转角度（0/90/180/270）"""
+        try:
+            exif_data = img.getexif()
+        except Exception:
+            return 0
+
+        # EXIF Orientation tag = 274 (0x0112)
+        orientation = exif_data.get(274, 1)
+        exif_map = {1: 0, 3: 180, 6: 90, 8: 270}
+        return exif_map.get(orientation, 0)
 
     def detect_orientation_from_file(self, image_path: str) -> dict[str, Any]:
         """从文件检测图片方向"""
