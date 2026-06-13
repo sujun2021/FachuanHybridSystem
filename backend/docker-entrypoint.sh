@@ -66,4 +66,10 @@ echo "Collecting static files..."
 uv run python manage.py collectstatic --noinput
 
 echo "Starting server..."
-exec uv run python manage.py runserver --insecure 0.0.0.0:8002
+if [ "$DJANGO_ENV" = "production" ]; then
+    echo "Production mode: starting gunicorn..."
+    exec uv run gunicorn --config gunicorn_config.py apiSystem.wsgi:application
+else
+    echo "Development mode: starting runserver..."
+    exec uv run python manage.py runserver --insecure 0.0.0.0:8002
+fi

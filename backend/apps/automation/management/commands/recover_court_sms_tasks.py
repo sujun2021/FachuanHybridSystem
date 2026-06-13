@@ -39,6 +39,11 @@ class Command(BaseCommand):
             default=24,
             help="只恢复指定小时内的任务（默认24小时）",
         )
+        parser.add_argument(
+            "--single",
+            action="store_true",
+            help="每次只恢复1条卡死任务（用于定时守护，避免VPS内存压力）",
+        )
 
     def handle(self, *args: Any, **options: Any) -> None:  # pragma: no cover
 
@@ -67,14 +72,18 @@ class Command(BaseCommand):
         recovered_count = 0
         reset_count = 0
 
-        # 重置卡住的任务
-        if options["reset"]:
-            reset_count = self._reset_stuck_tasks(max_age, verbose)
-            if verbose and reset_count > 0:
-                self.stdout.write(self.style.SUCCESS(f"已重置 {reset_count} 个卡住的任务"))
+        # 单任务模式：每次只处理1条，适配VPS低配环境
+        if options["single"]:
+            reset_count, recovered_count = self._single_recovery(max_age, verbose)
+        else:
+            # 重置卡住的任务
+            if options["reset"]:
+                reset_count = self._reset_stuck_tasks(max_age, verbose)
+                if verbose and reset_count > 0:
+                    self.stdout.write(self.style.SUCCESS(f"已重置 {reset_count} 个卡住的任务"))
 
-        # 恢复未完成的任务
-        recovered_count = self._recover_incomplete_tasks(max_age, verbose)
+            # 恢复未完成的任务
+            recovered_count = self._recover_incomplete_tasks(max_age, verbose)
 
         if verbose:
             self.stdout.write("=" * 60)
@@ -190,6 +199,79 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.ERROR(f"重置任务 {sms.id} 失败: {e!s}"))
 
         return reset_count
+
+    def _single_recovery(self, max_age: Any, verbose: bool = True) -> tuple[int, int]:
+        """单任务守护模式：每次只重置并恢复1条卡死任务（>30分钟未更新）。
+
+        排除 COMPLETED（已完成）和 PENDING_MANUAL（待人工处理）。
+
+        Returns:
+            (reset_count, recovered_count)
+        """
+        from apps.automation.models import CourtSMS, CourtSMSStatus
+        from apps.core.tasking import submit_task
+
+        # 需要检查的状态：排除已完成和待人工处理
+        check_statuses = [
+            CourtSMSStatus.PENDING,
+            CourtSMSStatus.PARSING,
+            CourtSMSStatus.DOWNLOADING,
+            CourtSMSStatus.DOWNLOAD_FAILED,
+            CourtSMSStatus.MATCHING,
+            CourtSMSStatus.RENAMING,
+            CourtSMSStatus.NOTIFYING,
+            CourtSMSStatus.FAILED,
+        ]
+
+        stuck_cutoff = timezone.now() - timedelta(minutes=30)
+
+        # 只取最老的一条
+        sms = (
+            CourtSMS.objects.filter(
+                status__in=check_statuses,
+                updated_at__lt=stuck_cutoff,
+                created_at__gte=max_age,
+                duplicate_of__isnull=True,  # 跳过被标记为重复的短信
+            )
+            .order_by("updated_at")
+            .first()
+        )
+
+        if not sms:
+            logger.debug("守护检查：无卡死任务")
+            if verbose:
+                self.stdout.write("守护检查：无卡死任务需要处理")
+            return 0, 0
+
+        try:
+            old_status = sms.status
+            # 重置为待处理
+            sms.status = CourtSMSStatus.PENDING
+            sms.error_message = f"系统守护：任务卡在{old_status}超过30分钟，已自动重置"
+            sms.save()
+
+            # 重新提交处理
+            submit_task(
+                "apps.automation.services.sms.court_sms_service.process_sms_async",
+                sms.id,
+                task_name=f"court_sms_guard_recovery_{sms.id}",
+            )
+
+            logger.info(f"守护恢复: SMS ID={sms.id}, 原状态={old_status} → PENDING")
+            if verbose:
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f"守护恢复: [{sms.id}] {old_status} → PENDING "
+                        f"（卡住 {int((timezone.now() - sms.updated_at).total_seconds() / 60)} 分钟）"
+                    )
+                )
+            return 1, 1
+
+        except Exception as e:
+            logger.error(f"守护恢复失败: SMS ID={sms.id}, 错误: {e!s}")
+            if verbose:
+                self.stdout.write(self.style.ERROR(f"守护恢复失败: {sms.id} — {e!s}"))
+            return 0, 0
 
     def _recover_single_downloading(self, sms: Any, submit_fn: Any) -> bool:
         """处理 DOWNLOADING 状态的恢复，返回是否继续"""
