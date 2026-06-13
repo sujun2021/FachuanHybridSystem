@@ -1,12 +1,11 @@
 """Gunicorn 生产环境配置。
 
+当 .env 中 DJANGO_DEBUG=False 时自动启用（docker-entrypoint.sh 判断后调用）。
+
 通过环境变量控制：
 - GUNICORN_WORKERS: worker 进程数（默认 1，适配单核 VPS）
 - GUNICORN_THREADS: 每个 worker 的线程数（默认 2）
 - GUNICORN_PORT: 监听端口（默认 8002）
-
-启动方式：
-    DJANGO_ENV=production gunicorn --config gunicorn_config.py apiSystem.wsgi:application
 """
 
 import os

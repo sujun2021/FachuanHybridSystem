@@ -66,7 +66,7 @@ echo "Collecting static files..."
 uv run python manage.py collectstatic --noinput
 
 echo "Starting server..."
-if [ "$DJANGO_ENV" = "production" ]; then
+if [ "$DJANGO_DEBUG" = "False" ]; then
     echo "Production mode: starting gunicorn..."
     exec uv run gunicorn --config gunicorn_config.py apiSystem.wsgi:application
 else
