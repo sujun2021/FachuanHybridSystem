@@ -117,31 +117,42 @@ class TestManualCaptchaRecognizer:
 # ======================================================================
 
 class TestGetCaptchaRecognizer:
-    def test_auto_enabled_returns_ddddocr(self):
-        from apps.automation.services.scraper.core.captcha_recognizer import (
-            get_captcha_recognizer, DdddocrRecognizer,
-        )
-        with patch("apps.core.services.system_config_service.SystemConfigService") as MockSvc:
-            MockSvc.return_value.get_value.return_value = "true"
-            result = get_captcha_recognizer()
-        assert isinstance(result, DdddocrRecognizer)
+    def test_plugin_installed_returns_ddddocr(self):
+        """captcha_ocr 插件已安装时，应返回 DdddocrRecognizer"""
+        from apps.automation.services.scraper.core.captcha_recognizer import get_captcha_recognizer
 
-    def test_auto_disabled_with_task_returns_manual(self):
+        mock_plugins = MagicMock()
+        mock_plugins.has_captcha_ocr_plugin.return_value = True
+        mock_ocr = MagicMock()
+        mock_plugins.captcha_ocr.DdddocrRecognizer = mock_ocr
+
+        with patch.dict("sys.modules", {"plugins": mock_plugins, "plugins.captcha_ocr": mock_plugins.captcha_ocr}):
+            result = get_captcha_recognizer()
+        mock_ocr.assert_called_once_with(show_ad=False)
+
+    def test_with_task_returns_manual(self):
+        """有 task 参数且插件未安装时，应返回 ManualCaptchaRecognizer"""
         from apps.automation.services.scraper.core.captcha_recognizer import (
-            get_captcha_recognizer, ManualCaptchaRecognizer,
+            get_captcha_recognizer,
+            ManualCaptchaRecognizer,
         )
+
         task = SimpleNamespace(id=1)
-        with patch("apps.core.services.system_config_service.SystemConfigService") as MockSvc:
-            MockSvc.return_value.get_value.return_value = "false"
+        mock_plugins = MagicMock()
+        mock_plugins.has_captcha_ocr_plugin.return_value = False
+
+        with patch.dict("sys.modules", {"plugins": mock_plugins}):
             result = get_captcha_recognizer(task=task)
         assert isinstance(result, ManualCaptchaRecognizer)
         assert result.task is task
 
-    def test_auto_disabled_no_task_returns_ddddocr(self):
-        from apps.automation.services.scraper.core.captcha_recognizer import (
-            get_captcha_recognizer, DdddocrRecognizer,
-        )
-        with patch("apps.core.services.system_config_service.SystemConfigService") as MockSvc:
-            MockSvc.return_value.get_value.return_value = "false"
-            result = get_captcha_recognizer()
-        assert isinstance(result, DdddocrRecognizer)
+    def test_no_plugin_no_task_raises(self):
+        """插件未安装且无 task 时，应抛出 RuntimeError"""
+        from apps.automation.services.scraper.core.captcha_recognizer import get_captcha_recognizer
+
+        mock_plugins = MagicMock()
+        mock_plugins.has_captcha_ocr_plugin.return_value = False
+
+        with patch.dict("sys.modules", {"plugins": mock_plugins}):
+            with pytest.raises(RuntimeError, match="需要 task 参数"):
+                get_captcha_recognizer()

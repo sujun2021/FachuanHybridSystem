@@ -106,10 +106,10 @@ service = CourtZxfwService(page, context)
 
 **之后：**
 ```python
-from apps.automation.services.scraper.core.captcha_recognizer import DdddocrRecognizer
+from apps.automation.services.scraper.core.captcha_recognizer import ManualCaptchaRecognizer
 
 # 可选：注入自定义识别器
-recognizer = DdddocrRecognizer()
+recognizer = ManualCaptchaRecognizer(task=task)
 service = CourtZxfwService(
     page,
     context,
@@ -258,7 +258,7 @@ asyncio.run(execute())
 
 ### 功能概述
 
-提供验证码识别服务的 RESTful API，支持前端 JavaScript 直接调用。基于 ddddocr 库实现，支持多种图片格式，提供统一的 JSON 响应格式。
+提供验证码识别服务的 RESTful API，支持前端 JavaScript 直接调用。支持多种图片格式，提供统一的 JSON 响应格式。
 
 ### 核心特性
 
@@ -774,7 +774,7 @@ python -m pytest apps/automation/tests/test_captcha_recognition_api.py -v
 
 ### 技术栈
 
-- **识别引擎**: ddddocr 1.4.0+
+- **识别引擎**: 手动输入模式（captcha_ocr 插件可选）
 - **图片处理**: Pillow 9.0.0+
 - **API 框架**: django-ninja 1.3+
 - **数据验证**: Pydantic 2.0+
@@ -789,7 +789,7 @@ API Layer (captcha_recognition_api.py)
     ↓ 请求验证
 Service Layer (CaptchaRecognitionService)
     ↓ Base64 解码、图片验证
-Core Component (DdddocrRecognizer)
+Core Component (ManualCaptchaRecognizer)
     ↓ 验证码识别
 Response (JSON)
 ```
