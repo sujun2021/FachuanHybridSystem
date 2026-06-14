@@ -1,4 +1,0 @@
-[submodule "backend/plugins"]
-	path = backend/plugins
-	url = https://github.com/Lawyer-ray/FachuanPlugins.git
-	branch = fix/agent-filing

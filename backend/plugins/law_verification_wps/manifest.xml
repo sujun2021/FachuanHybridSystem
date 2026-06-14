@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OfficeApp
+  xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:type="TaskPaneApp">
+  <Id>a1b2c3d4-e5f6-7890-abcd-ef1234567890</Id>
+  <Version>1.0.0</Version>
+  <ProviderName>法穿AI</ProviderName>
+  <DefaultLocale>zh-CN</DefaultLocale>
+  <DisplayName DefaultValue="法规引用核查"/>
+  <Description DefaultValue="扫描文档中的法律法规引用，通过威科先行核查条文有效性及内容一致性"/>
+  <Hosts>
+    <Host Name="Document"/>
+  </Hosts>
+  <DefaultSettings>
+    <SourceLocation DefaultValue="taskpane.html"/>
+  </DefaultSettings>
+  <Permissions>ReadWriteDocument</Permissions>
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <Hosts>
+      <Host xsi:type="Document">
+        <DesktopFormFactor>
+          <ExtensionPoint xsi:type="PrimaryCommandSurface">
+            <OfficeTab id="TabHome">
+              <Group id="LawVerificationGroup">
+                <Label DefaultValue="法规核查"/>
+                <Icon>
+                  <bt:Image size="16" resid="icon16"/>
+                  <bt:Image size="32" resid="icon32"/>
+                  <bt:Image size="80" resid="icon80"/>
+                </Icon>
+                <Control xsi:type="Button" id="LawVerifyButton">
+                  <Label DefaultValue="核查引用"/>
+                  <Supertip>
+                    <Title DefaultValue="法规引用核查"/>
+                    <Description DefaultValue="扫描文档中的法律法规引用，核查条文有效性和内容一致性"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="icon16"/>
+                    <bt:Image size="32" resid="icon32"/>
+                    <bt:Image size="80" resid="icon80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>LawVerificationTaskpane</TaskpaneId>
+                    <SourceLocation DefaultValue="taskpane.html"/>
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+    <Resources>
+      <bt:Images>
+        <bt:Image id="icon16" DefaultValue="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTMuNSAyLjVIMlYxMy41SDEzLjVWMi41WiIgc3Ryb2tlPSIjMkI1Q0FGIiBzdHJva2Utd2lkdGg9IjEuNSIvPjxwYXRoIGQ9Ik01IDUuNUgxMSIgc3Ryb2tlPSIjMkI1Q0FGIiBzdHJva2Utd2lkdGg9IjEuNSIvPjxwYXRoIGQ9Ik01IDhIMTEiIHN0cm9rZT0iIzJCNUNBRiIgc3Ryb2tlLXdpZHRoPSIxLjUiLz48cGF0aCBkPSJNNSAxMC41SDgiIHN0cm9rZT0iIzJCNUNBRiIgc3Ryb2tlLXdpZHRoPSIxLjUiLz48L3N2Zz4="/>
+        <bt:Image id="icon32" DefaultValue="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB4PSI0IiB5PSI0IiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHJ4PSIyIiBzdHJva2U9IiMyQjVDQUYiIHN0cm9rZS13aWR0aD0iMiIvPjxwYXRoIGQ9Ik05IDExSDIzIiBzdHJva2U9IiMyQjVDQUYiIHN0cm9rZS13aWR0aD0iMiIvPjxwYXRoIGQ9Ik05IDE2SDIzIiBzdHJva2U9IiMyQjVDQUYiIHN0cm9rZS13aWR0aD0iMiIvPjxwYXRoIGQ9Ik05IDIxSDE2IiBzdHJva2U9IiMyQjVDQUYiIHN0cm9rZS13aWR0aD0iMiIvPjwvc3ZnPg=="/>
+        <bt:Image id="icon80" DefaultValue="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB4PSIxMCIgeT0iMTAiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcng9IjQiIHN0cm9rZT0iIzJCNUNBRiIgc3Ryb2tlLXdpZHRoPSIzIi8+PHBhdGggZD0iTTIyIDI4SDU4IiBzdHJva2U9IiMyQjVDQUYiIHN0cm9rZS13aWR0aD0iMyIvPjxwYXRoIGQ9Ik0yMiA0MEg1OCIgc3Ryb2tlPSIjMkI1Q0FGIiBzdHJva2Utd2lkdGg9IjMiLz48cGF0aCBkPSJNMjIgNTJINDIiIHN0cm9rZT0iIzJCNUNBRiIgc3Ryb2tlLXdpZHRoPSIzIi8+PC9zdmc+"/>
+      </bt:Images>
+    </Resources>
+  </VersionOverrides>
+</OfficeApp>
