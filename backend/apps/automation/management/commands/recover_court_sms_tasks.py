@@ -40,9 +40,14 @@ class Command(BaseCommand):
             help="只恢复指定小时内的任务（默认24小时）",
         )
         parser.add_argument(
+            "--all",
+            action="store_true",
+            help="全量恢复模式（一次恢复所有卡死任务，仅手动调试时使用）",
+        )
+        parser.add_argument(
             "--single",
             action="store_true",
-            help="每次只恢复1条卡死任务（用于定时守护，避免VPS内存压力）",
+            help="【已弃用】默认即为单条守护模式，请使用 --all 切换全量模式",
         )
 
     def handle(self, *args: Any, **options: Any) -> None:  # pragma: no cover
@@ -72,18 +77,15 @@ class Command(BaseCommand):
         recovered_count = 0
         reset_count = 0
 
-        # 单任务模式：每次只处理1条，适配VPS低配环境
-        if options["single"]:
-            reset_count, recovered_count = self._single_recovery(max_age, verbose)
-        else:
-            # 重置卡住的任务
-            if options["reset"]:
+        # 默认使用单条守护模式（适配 VPS）
+        if options.get("all"):
+            if options.get("reset"):
                 reset_count = self._reset_stuck_tasks(max_age, verbose)
                 if verbose and reset_count > 0:
                     self.stdout.write(self.style.SUCCESS(f"已重置 {reset_count} 个卡住的任务"))
-
-            # 恢复未完成的任务
             recovered_count = self._recover_incomplete_tasks(max_age, verbose)
+        else:
+            reset_count, recovered_count = self._single_recovery(max_age, verbose)
 
         if verbose:
             self.stdout.write("=" * 60)
@@ -224,15 +226,18 @@ class Command(BaseCommand):
         ]
 
         stuck_cutoff = timezone.now() - timedelta(minutes=30)
+        # 冷却窗口：5分钟内被恢复过的 SMS 不再重复恢复
+        cooldown_cutoff = timezone.now() - timedelta(minutes=5)
 
-        # 只取最老的一条
+        # 只取最老的一条（排除5分钟内更新过的，防止冷却期内重复恢复）
         sms = (
             CourtSMS.objects.filter(
                 status__in=check_statuses,
                 updated_at__lt=stuck_cutoff,
                 created_at__gte=max_age,
-                duplicate_of__isnull=True,  # 跳过被标记为重复的短信
+                duplicate_of__isnull=True,
             )
+            .exclude(updated_at__gt=cooldown_cutoff)
             .order_by("updated_at")
             .first()
         )
