@@ -35,6 +35,9 @@ from .material import (
 # party.py - 当事人相关模型
 from .party import CaseAccessGrant, CaseAssignment, CaseParty
 
+# payment_record.py - 案件收支记录
+from .payment_record import CasePaymentRecord, PaymentDirection, PaymentMethod, PaymentPurpose
+
 # template_binding.py - 模板绑定相关模型和枚举
 from .template_binding import BindingSource, CaseTemplateBinding
 
@@ -75,4 +78,9 @@ __all__ = [
     # template_binding.py
     "BindingSource",
     "CaseTemplateBinding",
+    # payment_record.py
+    "CasePaymentRecord",
+    "PaymentDirection",
+    "PaymentMethod",
+    "PaymentPurpose",
 ]
