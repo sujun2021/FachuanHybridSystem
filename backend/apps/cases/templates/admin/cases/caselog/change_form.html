@@ -76,6 +76,51 @@
     vertical-align: top;
     margin-top: 4px;
 }
+/* payment quick-entry */
+.payment-quick-entry {
+    margin: 10px 0 0 0;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+.payment-quick-entry input {
+    flex: 1;
+    height: 28px;
+    padding: 2px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 12px;
+}
+.payment-quick-entry .parse-payment-btn {
+    all: unset;
+    box-sizing: border-box;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    height: 28px;
+    min-width: 80px;
+    padding: 0 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    color: #fff;
+    background: #417690;
+}
+.payment-quick-entry .parse-payment-btn:hover {
+    background: #2e5266;
+}
+.payment-quick-entry .parse-payment-btn:disabled {
+    background: #d9dee7;
+    color: #8a97a8;
+    cursor: not-allowed;
+}
+.payment-hint {
+    font-size: 11px;
+    color: #666;
+    margin-top: 2px;
+}
 </style>
 {% endblock %}
 
@@ -317,8 +362,145 @@ function _caselogSetFieldValue(row, fieldName, value) {
     }
 }
 
+function _caselogAddPaymentQuickEntry() {
+    var inlineGroup = document.querySelector('.inline-group[id$="casepaymentrecord"]') ||
+                      document.querySelector('.inline-group:has(.inline_label:has-text("收支记录"))');
+    // Fallback: find by header text
+    var headers = document.querySelectorAll('.inline-group h2');
+    for (var h = 0; h < headers.length; h++) {
+        if (headers[h].textContent.indexOf('收支记录') !== -1) {
+            inlineGroup = headers[h].closest('.inline-group');
+            break;
+        }
+    }
+    if (!inlineGroup) return;
+    if (inlineGroup.querySelector('.payment-quick-entry')) return;
+
+    var container = document.createElement('div');
+    container.className = 'payment-quick-entry';
+
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = '快速录入：支付诉讼费5000、保全费600';
+    container.appendChild(input);
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'parse-payment-btn';
+    btn.textContent = '智能解析';
+    btn.onclick = function() { _caselogParsePayments(inlineGroup, input, btn); };
+    container.appendChild(btn);
+
+    var hint = document.createElement('div');
+    hint.className = 'payment-hint';
+    hint.textContent = '格式：用途+金额，多条用中文逗号分隔。例：支付诉讼费5000、财产保全费600、收入执行回款10000';
+    container.appendChild(hint);
+
+    var table = inlineGroup.querySelector('table');
+    if (table) {
+        table.parentNode.insertBefore(container, table);
+    }
+}
+
+function _caselogParsePayments(inlineGroup, inputEl, btn) {
+    var text = inputEl.value.trim();
+    if (!text) {
+        _caselogShowToast('请先输入收支内容', 'error');
+        return;
+    }
+    btn.disabled = true;
+
+    var PURPOSE_MAP = {
+        '诉讼费':'court_fee','保全费':'preservation_fee','诉讼保全费':'preservation_fee',
+        '财产保全费':'property_preservation_fee','公告费':'announcement_fee',
+        '执行费':'execution_fee','鉴定费':'appraisal_fee','律师费':'attorney_fee',
+        '差旅费':'travel_fee','调查费':'investigation_fee','财产保险费':'property_insurance_fee',
+        '保函费':'guarantee_fee','公证费':'notary_fee','评估费':'assessment_fee',
+        '快递费':'express_fee','其他费用':'other_expense',
+        '执行回款':'enforcement_recovery','相对方支付':'counterparty_payment',
+        '相对方主动支付':'counterparty_payment','法院退还诉讼费':'court_fee_refund','和解款':'settlement',
+        '收入':'','支付':'','支出':''
+    };
+
+    var parts = text.split(/[、，；;]/);
+    var results = [];
+    for (var pi = 0; pi < parts.length; pi++) {
+        var s = parts[pi].trim();
+        if (!s) continue;
+        var am = s.match(/(\d+(?:\.\d{1,2})?)\s*元?$/);
+        if (!am) continue;
+        var amount = am[1];
+        var namePart = s.slice(0, am.index).trim();
+
+        var direction = 'expense';
+        if (/收入|回款|退还|和解/.test(namePart)) direction = 'income';
+        var purposeKey = 'other_expense';
+        var purposeName = namePart.replace(/^(支付|支出|收入)/, '').trim();
+        if (PURPOSE_MAP[purposeName]) {
+            purposeKey = PURPOSE_MAP[purposeName];
+        } else if (direction === 'income') {
+            if (/回款/.test(purposeName)) purposeKey = 'enforcement_recovery';
+            else purposeKey = 'counterparty_payment';
+        }
+
+        var today = new Date().toISOString().slice(0, 10);
+        results.push({ direction: direction, amount: amount, purpose: purposeKey, payment_method: 'bank_transfer', date: today });
+    }
+
+    if (results.length === 0) {
+        _caselogShowToast('未能解析任何收支记录，格式示例：支付诉讼费5000、保全费600', 'error');
+        btn.disabled = false;
+        return;
+    }
+
+    _fillPaymentInlineRows(inlineGroup, results);
+    btn.disabled = false;
+    inputEl.value = '';
+    _caselogShowToast('已解析 ' + results.length + ' 条收支记录，保存后生效', 'success');
+    inlineGroup.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function _fillPaymentInlineRows(inlineGroup, results) {
+    var totalFormsInput = inlineGroup.querySelector('input[name$="-TOTAL_FORMS"]');
+    if (!totalFormsInput) return;
+    var currentTotal = parseInt(totalFormsInput.value, 10) || 0;
+    var prefix = totalFormsInput.name.replace('-TOTAL_FORMS', '');
+
+    var emptyTbody = inlineGroup.querySelector('.empty-form');
+    var emptyRow = null;
+    if (emptyTbody && emptyTbody.tagName === 'TBODY') {
+        emptyRow = emptyTbody.querySelector('tr');
+    } else if (emptyTbody) {
+        emptyRow = emptyTbody;
+    }
+    if (!emptyRow) return;
+
+    for (var i = 0; i < results.length; i++) {
+        var r = results[i];
+        var formIndex = currentTotal + i;
+        var newRow = emptyRow.cloneNode(true);
+        newRow.classList.remove('empty-form', 'djn-empty-form', 'djn-item-dno', 'row1', 'row2');
+        newRow.style.display = '';
+        newRow.id = '';
+        _caselogUpdateRowFieldNames(newRow, prefix, formIndex);
+        _caselogSetFieldValue(newRow, 'direction', r.direction);
+        _caselogSetFieldValue(newRow, 'amount', r.amount);
+        _caselogSetFieldValue(newRow, 'purpose', r.purpose);
+        _caselogSetFieldValue(newRow, 'payment_method', r.payment_method || 'bank_transfer');
+        _caselogSetFieldValue(newRow, 'date', r.date);
+
+        var newTbody = document.createElement('tbody');
+        newTbody.className = 'djn-tbody djn-inline-form';
+        newTbody.appendChild(newRow);
+        emptyTbody.parentNode.insertBefore(newTbody, emptyTbody);
+    }
+
+    totalFormsInput.value = currentTotal + results.length;
+}
+
 function _caselogInit() {
     _caselogAddParseButton();
+    _caselogAddPaymentQuickEntry();
 }
 
 if (document.readyState === 'loading') {

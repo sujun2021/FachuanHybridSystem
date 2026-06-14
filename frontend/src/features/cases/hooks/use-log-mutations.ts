@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { caseApi } from '../api'
-import type { CaseLog, CaseLogAttachment, PaymentRecordInput } from '../types'
+import type { CaseLog, CaseLogAttachment } from '../types'
 import { caseQueryKey } from './use-case'
 
 interface CreateLogParams {
@@ -9,7 +9,6 @@ interface CreateLogParams {
   content: string
   reminder_type?: string
   reminder_time?: string
-  payment_records?: PaymentRecordInput[]
 }
 
 interface UpdateLogParams {

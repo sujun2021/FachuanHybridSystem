@@ -14,7 +14,7 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
 from apps.cases.admin.base_admin import BaseModelAdmin, BaseTabularInline
-from apps.cases.models import CaseLog, CaseLogAttachment
+from apps.cases.models import CaseLog, CaseLogAttachment, CasePaymentRecord
 
 
 class CaseLogAttachmentInline(BaseTabularInline):  # pragma: no cover
@@ -34,6 +34,16 @@ class ReminderInline(BaseTabularInline):  # pragma: no cover
     ordering = ("due_at",)
 
 
+class CasePaymentRecordInline(BaseTabularInline):  # pragma: no cover
+    model = CasePaymentRecord
+    extra = 2
+    fields = ("direction", "purpose", "amount", "payment_method", "date", "note")
+    verbose_name = "收支记录"
+    verbose_name_plural = "收支记录"
+    ordering = ("-date",)
+    fk_name = "case_log"
+
+
 @admin.register(CaseLog)
 class CaseLogAdmin(BaseModelAdmin):  # pragma: no cover
     list_display = ("id", "case_link", "actor", "reminder_type", "reminder_time", "created_at", "updated_at")
@@ -44,7 +54,7 @@ class CaseLogAdmin(BaseModelAdmin):  # pragma: no cover
     ordering = ("-created_at",)
     autocomplete_fields = ("case", "actor")
     exclude = ("actor", "source_subfolder")
-    inlines = (ReminderInline, CaseLogAttachmentInline)
+    inlines = (CasePaymentRecordInline, ReminderInline, CaseLogAttachmentInline)
     change_list_template = "admin/cases/caselog/change_list.html"
     change_form_template = "admin/cases/caselog/change_form.html"
 
@@ -92,6 +102,15 @@ class CaseLogAdmin(BaseModelAdmin):  # pragma: no cover
             if user_id is not None:
                 obj.actor_id = user_id
         super().save_model(request, obj, form, change)
+
+    def save_formset(self, request: HttpRequest, form: Any, formset: Any, change: bool) -> None:  # pragma: no cover
+        """保存 inline 时自动填充 case 字段"""
+        instances = formset.save(commit=False)
+        for instance in instances:
+            if isinstance(instance, CasePaymentRecord) and not instance.case_id:
+                instance.case_id = form.instance.case_id
+            instance.save()
+        formset.save_m2m()
 
     # ── 批量添加日志 ──────────────────────────────────────────
 
