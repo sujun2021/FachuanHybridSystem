@@ -4,13 +4,14 @@ ddddocr 验证码识别插件
 从上游开源代码迁移至此的 ddddocr 验证码识别实现。
 当 plugins.captcha_ocr 模块存在时，captcha_recognizer.py 会自动加载。
 
+调用方通过 cast(CaptchaRecognizer, ...) 做类型适配，因此无需显式继承基类，
+避免引入 Django 模型依赖导致 IMproprlyConfigured。
+
 依赖：ddddocr（需自行安装：uv add ddddocr）
 """
 
 import logging
 from typing import Any, cast
-
-from apps.automation.services.scraper.core.captcha_recognizer import CaptchaRecognizer
 
 logger = logging.getLogger("apps.automation")
 
@@ -19,22 +20,9 @@ PLUGIN_VERSION = "1.0.0"
 PLUGIN_DESCRIPTION = "ddddocr 验证码自动识别插件"
 
 
-class DdddocrRecognizer(CaptchaRecognizer):
+class DdddocrRecognizer:
     """
-    使用 ddddocr 库实现的验证码识别器
-
-    ddddocr 是一个开源的 OCR 库，专门用于识别验证码。
-    这个实现提供了基本的验证码识别功能，适用于大多数简单验证码。
-
-    Attributes:
-        ocr: ddddocr.DdddOcr 实例，用于执行实际的识别工作
-
-    Example:
-        >>> recognizer = DdddocrRecognizer()
-        >>> with open('captcha.png', 'rb') as f:
-        ...     image_bytes = f.read()
-        >>> result = recognizer.recognize(image_bytes)
-        >>> logger.info(result)  # '1234'
+    使用 ddddocr 库实现的验证码识别器（鸭子类型，匹配 CaptchaRecognizer 接口）。
     """
 
     def __init__(self, show_ad: bool = False):  # pragma: no cover
