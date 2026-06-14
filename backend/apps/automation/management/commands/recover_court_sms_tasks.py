@@ -245,7 +245,49 @@ class Command(BaseCommand):
 
         try:
             old_status = sms.status
-            # 重置为待处理
+
+            # 全量去重：查找全库是否有同 content_hash 且已处理完成的 SMS
+            if sms.content_hash:
+                completed_dup = (
+                    CourtSMS.objects.filter(
+                        content_hash=sms.content_hash,
+                        status__in=(CourtSMSStatus.COMPLETED, CourtSMSStatus.PENDING_MANUAL),
+                    )
+                    .exclude(id=sms.id)
+                    .order_by("-received_at")
+                    .first()
+                )
+                if completed_dup:
+                    # 直接复制已完成短信的结果，跳过重新处理
+                    sms.status = completed_dup.status
+                    sms.sms_type = completed_dup.sms_type
+                    sms.download_links = completed_dup.download_links or []
+                    sms.case_numbers = completed_dup.case_numbers or []
+                    sms.party_names = completed_dup.party_names or []
+                    sms.document_file_paths = completed_dup.document_file_paths or []
+                    sms.case = completed_dup.case
+                    sms.case_log = completed_dup.case_log
+                    sms.error_message = (
+                        f"系统守护：全量去重，复制自 SMS={completed_dup.id}，"
+                        f"卡在 {old_status} 超过30分钟"
+                    )
+                    sms.duplicate_of = completed_dup
+                    sms.save()
+
+                    logger.info(
+                        f"守护去重复制: SMS={sms.id} ← Dup={completed_dup.id}, "
+                        f"原状态={old_status} → {completed_dup.status}"
+                    )
+                    if verbose:
+                        self.stdout.write(
+                            self.style.SUCCESS(
+                                f"守护去重复制: [{sms.id}] {old_status} → {completed_dup.status} "
+                                f"（复制自 [{completed_dup.id}]，跳过重新处理）"
+                            )
+                        )
+                    return 1, 1
+
+            # 没有可复制的已完成记录 → 重置并重新提交
             sms.status = CourtSMSStatus.PENDING
             sms.error_message = f"系统守护：任务卡在{old_status}超过30分钟，已自动重置"
             sms.save()
