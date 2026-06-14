@@ -1,6 +1,6 @@
 import { memo, useCallback, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronLeft, ChevronRight, MapPin, User, Clock, Pencil, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, MapPin, User, Clock, Pencil, Trash2, ExternalLink } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -131,10 +131,22 @@ function EventDetailDialog({
             {event.location && <div className="flex items-center gap-2 text-muted-foreground"><MapPin className="size-3.5" /><span>地点: <span className="text-foreground">{event.location}</span></span></div>}
           </div>
           {(event.contract || event.case || event.case_log) && (
-            <div className="border-t pt-3 text-xs text-muted-foreground">
-              {event.contract && <div>关联合同 ID: {event.contract}</div>}
-              {event.case && <div>关联案件 ID: {event.case}</div>}
-              {event.case_log && <div>关联案件日志 ID: {event.case_log}</div>}
+            <div className="border-t pt-3 text-xs space-y-1">
+              {event.case && (
+                <a href={`/admin/cases/case/${event.case}/detail/`} className="flex items-center gap-1 text-primary hover:underline">
+                  <ExternalLink className="size-3" />查看关联案件
+                </a>
+              )}
+              {event.contract && (
+                <a href={`/admin/contracts/contract/${event.contract}/change/`} className="flex items-center gap-1 text-primary hover:underline">
+                  <ExternalLink className="size-3" />查看关联合同
+                </a>
+              )}
+              {event.case_log && (
+                <a href={`/admin/cases/caselog/${event.case_log}/change/`} className="flex items-center gap-1 text-primary hover:underline">
+                  <ExternalLink className="size-3" />查看关联日志
+                </a>
+              )}
             </div>
           )}
         </div>

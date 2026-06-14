@@ -43,6 +43,13 @@ class CasePaymentRecordInline(BaseTabularInline):  # pragma: no cover
     ordering = ("-date",)
     fk_name = "case_log"
 
+    def formfield_for_dbfield(self, db_field: Any, **kwargs: Any) -> Any:  # pragma: no cover
+        if db_field.name == "note":
+            from django import forms
+
+            kwargs["widget"] = forms.TextInput(attrs={"placeholder": "选填", "size": "20"})
+        return super().formfield_for_dbfield(db_field, **kwargs)
+
 
 @admin.register(CaseLog)
 class CaseLogAdmin(BaseModelAdmin):  # pragma: no cover

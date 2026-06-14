@@ -196,6 +196,11 @@ class ClientAdmin(SimpleHistoryAdmin, AdminImportExportMixin, admin.ModelAdmin):
     list_filter = ("client_type", "is_our_client")  # type: ignore[assignment]
     ordering = ("-pk",)  # type: ignore[assignment]
     form = ClientAdminForm
+    fieldsets = [
+        ("主体信息", {"fields": ("client_type", "name", "is_our_client")}),
+        ("联系方式", {"fields": ("phone", "address")}),
+        ("证件信息", {"fields": ("id_number", "legal_representative", "legal_representative_id_number")}),
+    ]
     inlines: list[type[Any]] = []  # type: ignore[assignment,misc]
     export_model_name = "client"
     import_required_fields = ("name",)
