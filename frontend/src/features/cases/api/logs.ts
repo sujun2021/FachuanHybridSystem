@@ -1,5 +1,5 @@
 import { createFeatureApiClient } from '@/lib/api'
-import type { CaseLog, CaseLogAttachment, CaseNumber } from '../types'
+import type { CaseLog, CaseLogAttachment, CaseNumber, PaymentRecordInput } from '../types'
 
 type CreateCaseNumberInput = Pick<CaseNumber, 'number'> & Partial<Omit<CaseNumber, 'id' | 'created_at'>>
 type UpdateCaseNumberInput = Partial<Omit<CaseNumber, 'id' | 'created_at'>>
@@ -13,7 +13,7 @@ export const logsApi = {
   listAll: async (): Promise<CaseLog[]> =>
     client.get('logs').json<CaseLog[]>(),
 
-  create: async (data: { case_id: number; content: string; reminder_type?: string; reminder_time?: string }): Promise<CaseLog> =>
+  create: async (data: { case_id: number; content: string; reminder_type?: string; reminder_time?: string; payment_records?: PaymentRecordInput[] }): Promise<CaseLog> =>
     client.post('logs', { json: data }).json<CaseLog>(),
 
   update: async (id: number | string, data: { case_id?: number; content?: string }): Promise<CaseLog> =>

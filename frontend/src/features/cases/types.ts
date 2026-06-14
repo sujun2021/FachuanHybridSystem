@@ -261,8 +261,70 @@ export interface CaseLog {
   actor_detail: LawyerDetail
   attachments: CaseLogAttachment[]
   reminders: CaseLogReminder[]
+  payment_records: CasePaymentRecord[]
   created_at: string
   updated_at: string
+}
+
+export interface CasePaymentRecord {
+  id: number
+  case_id: number
+  case_log_id: number | null
+  direction: 'income' | 'expense'
+  direction_label: string
+  amount: string
+  purpose: string
+  purpose_label: string
+  payment_method: string
+  payment_method_label: string
+  date: string
+  note: string
+  created_at: string
+}
+
+export interface PaymentRecordInput {
+  direction: 'income' | 'expense'
+  amount: string
+  purpose: string
+  payment_method?: string
+  date?: string
+  note?: string
+}
+
+export const PAYMENT_DIRECTION = {
+  income: '收入',
+  expense: '支出',
+} as const
+
+export const PAYMENT_PURPOSE_LABELS: Record<string, string> = {
+  counterparty_payment: '相对方主动支付',
+  enforcement_recovery: '执行回款',
+  court_fee_refund: '法院退还诉讼费',
+  settlement: '和解款',
+  court_fee: '诉讼费',
+  preservation_fee: '诉讼保全费',
+  property_preservation_fee: '财产保全费',
+  announcement_fee: '公告费',
+  execution_fee: '执行费',
+  appraisal_fee: '鉴定费',
+  attorney_fee: '律师费',
+  travel_fee: '差旅费',
+  investigation_fee: '调查费',
+  property_insurance_fee: '财产保险费',
+  guarantee_fee: '保函费',
+  notary_fee: '公证费',
+  assessment_fee: '评估费',
+  express_fee: '快递费',
+  other_expense: '其他费用',
+}
+
+export const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  bank_transfer: '银行转账',
+  court_enforcement: '法院执行',
+  cash: '现金',
+  online_payment: '在线支付',
+  check: '支票',
+  other: '其他',
 }
 
 export interface CaseNumber {

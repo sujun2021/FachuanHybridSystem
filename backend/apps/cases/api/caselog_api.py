@@ -53,6 +53,9 @@ def create_log(request: HttpRequest, payload: CaseLogIn) -> CaseLogOut:  # pragm
             user=ctx.user,
             reminder_type=payload.reminder_type,
             reminder_time=payload.reminder_time,
+            payment_records=[
+                r.model_dump() for r in payload.payment_records
+            ] if payload.payment_records else None,
         ),
     )
 

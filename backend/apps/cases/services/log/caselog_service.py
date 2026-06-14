@@ -144,6 +144,7 @@ class CaseLogService:
         perm_open_access: bool = False,
         reminder_type: str | None = None,
         reminder_time: datetime | None = None,
+        payment_records: list[dict[str, Any]] | None = None,
     ) -> CaseLog:
         """
         创建案件日志
@@ -153,6 +154,7 @@ class CaseLogService:
             user: 当前用户
             reminder_type: 提醒类型
             reminder_time: 提醒时间
+            payment_records: 收支记录列表
 
             创建的日志对象
 
@@ -166,6 +168,7 @@ class CaseLogService:
             perm_open_access=perm_open_access,
             reminder_type=reminder_type,
             reminder_time=reminder_time,
+            payment_records=payment_records,
         )
 
     def update_log(

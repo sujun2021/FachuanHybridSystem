@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from typing import ClassVar, Protocol
+from datetime import date, datetime
+from decimal import Decimal
+from typing import ClassVar, Optional, Protocol
 
 from pydantic import model_validator
 
@@ -54,6 +55,60 @@ class _CaseLogReminderMixin(Schema):
 class CaseLogIn(_CaseLogReminderMixin):
     case_id: int
     content: str
+    payment_records: list[PaymentRecordIn] = []
+
+
+class PaymentRecordIn(Schema):
+    """创建收支记录的输入"""
+
+    direction: str
+    amount: Decimal
+    purpose: str
+    payment_method: str = "bank_transfer"
+    date: Optional[date] = None
+    note: str = ""
+
+
+class PaymentRecordOut(Schema):
+    """收支记录的 API 输出"""
+
+    id: int
+    case_id: int
+    case_log_id: int | None = None
+    direction: str
+    direction_label: str
+    amount: str
+    purpose: str
+    purpose_label: str
+    payment_method: str
+    payment_method_label: str
+    date: str
+    note: str
+    created_at: str
+
+    @classmethod
+    def from_model(cls, record) -> PaymentRecordOut:
+        return cls(
+            id=record.id,
+            case_id=record.case_id,
+            case_log_id=record.case_log_id,
+            direction=record.direction,
+            direction_label=record.get_direction_display(),
+            amount=str(record.amount),
+            purpose=record.purpose,
+            purpose_label=record.get_purpose_display(),
+            payment_method=record.payment_method,
+            payment_method_label=record.get_payment_method_display(),
+            date=record.date.isoformat() if record.date else "",
+            note=record.note or "",
+            created_at=record.created_at.isoformat(),
+        )
+
+
+class CaseLogIn(_CaseLogReminderMixin):
+    case_id: int
+    content: str
+    payment_records: list[PaymentRecordIn] = []
 
 
 class CaseLogUpdate(_CaseLogReminderMixin):
@@ -102,6 +157,7 @@ class CaseLogOut(ModelSchema, SchemaMixin):
     attachments: list[CaseLogAttachmentOut]
     reminders: list[ReminderOut]
     actor_detail: CaseLogActorOut
+    payment_records: list[PaymentRecordOut] = []
     reminder_type: str | None = None
     reminder_time: str | None = None
 
@@ -168,6 +224,13 @@ class CaseLogOut(ModelSchema, SchemaMixin):
     def resolve_updated_at(obj: CaseLog) -> datetime | None:
         return SchemaMixin._resolve_datetime(getattr(obj, "updated_at", None))
 
+    @staticmethod
+    def resolve_payment_records(obj: CaseLog) -> list[PaymentRecordOut]:
+        records = getattr(obj, "payment_records", None)
+        if records is None:
+            return []
+        return [PaymentRecordOut.from_model(r) for r in records.all()]
+
 
 class CaseLogAttachmentIn(Schema):
     log_id: int
@@ -203,4 +266,6 @@ __all__: list[str] = [
     "CaseLogOut",
     "CaseLogUpdate",
     "CaseLogVersionOut",
+    "PaymentRecordIn",
+    "PaymentRecordOut",
 ]

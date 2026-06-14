@@ -7,7 +7,7 @@ from typing import Any, cast
 
 from django.db import transaction
 
-from apps.cases.models import Case, CaseLog, CaseLogVersion
+from apps.cases.models import Case, CaseLog, CaseLogVersion, CasePaymentRecord
 from apps.core.exceptions import ForbiddenError, NotFoundError, ValidationException
 
 from .case_log_query_service import CaseLogQueryService
@@ -28,6 +28,7 @@ class CaseLogMutationService:
         perm_open_access: bool = False,
         reminder_type: str | None = None,
         reminder_time: datetime | None = None,
+        payment_records: list[dict[str, Any]] | None = None,
     ) -> CaseLog:  # pragma: no cover
         try:
             case = Case.objects.get(id=case_id)
@@ -51,6 +52,8 @@ class CaseLogMutationService:
             raise ValidationException("操作人不能为空", errors={"actor": "缺少有效的操作人"})
 
         log = CaseLog.objects.create(case_id=case_id, content=content, actor_id=actor_id)
+
+        self._create_payment_records(case_id=case_id, log=log, records=payment_records or [])
 
         self._sync_case_log_reminder(
             log=log,
@@ -112,6 +115,29 @@ class CaseLogMutationService:
         )
 
         return cast(CaseLog, log)
+
+    def _create_payment_records(
+        self, *, case_id: int, log: CaseLog, records: list[dict[str, Any]]
+    ) -> None:
+        """创建日志关联的收支记录"""
+        if not records:
+            return
+        from datetime import date as date_type
+
+        for rec in records:
+            payment_date = rec.get("date") or date_type.today()
+            if isinstance(payment_date, str):
+                payment_date = date_type.fromisoformat(payment_date)
+            CasePaymentRecord.objects.create(
+                case_id=case_id,
+                case_log=log,
+                direction=rec["direction"],
+                amount=rec["amount"],
+                purpose=rec["purpose"],
+                payment_method=rec.get("payment_method", "bank_transfer"),
+                date=payment_date,
+                note=rec.get("note", ""),
+            )
 
     def delete_log(
         self,
