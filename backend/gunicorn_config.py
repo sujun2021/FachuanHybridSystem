@@ -27,5 +27,9 @@ access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"
 timeout = 300
 graceful_timeout = 30
 
+# 内存保护：处理满 200 个请求后自动重启 worker（±50 随机偏移），防止累积内存泄漏
+max_requests = 200
+max_requests_jitter = 50
+
 # 进程命名（方便 ps 查看）
 proc_name = "fachuan-gunicorn"
