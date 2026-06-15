@@ -48,13 +48,25 @@ def sujun_cases_view(request: HttpRequest) -> HttpResponse:
     if year:
         qs = qs.filter(start_date__year=int(year))
     if case_name:
-        qs = qs.filter(
-            Q(name__icontains=case_name) | Q(case_numbers__number__icontains=case_name)
-        ).distinct()
+        # 子查询避免 distinct() + select_related 在 PostgreSQL 下的行坍塌问题
+        matching_ids = (
+            Case.objects.filter(
+                Q(name__icontains=case_name) | Q(case_numbers__number__icontains=case_name)
+            )
+            .values_list("id", flat=True)
+            .distinct()
+        )
+        qs = qs.filter(id__in=matching_ids)
     if case_id:
         qs = qs.filter(id=int(case_id))
     if party_name:
-        qs = qs.filter(parties__client__name__icontains=party_name).distinct()
+        # 子查询避免 distinct() + select_related 在 PostgreSQL 下的行坍塌问题
+        matching_ids = (
+            Case.objects.filter(parties__client__name__icontains=party_name)
+            .values_list("id", flat=True)
+            .distinct()
+        )
+        qs = qs.filter(id__in=matching_ids)
     if start_date:
         qs = qs.filter(start_date__gte=date_type.fromisoformat(start_date))
     if end_date:
@@ -132,9 +144,17 @@ def sujun_cases_export(request: HttpRequest) -> HttpResponse:
     if status: qs = qs.filter(status=status)
     if case_type: qs = qs.filter(case_type=case_type)
     if year: qs = qs.filter(start_date__year=int(year))
-    if case_name: qs = qs.filter(Q(name__icontains=case_name) | Q(case_numbers__number__icontains=case_name)).distinct()
+    if case_name:
+        matching_ids = Case.objects.filter(
+            Q(name__icontains=case_name) | Q(case_numbers__number__icontains=case_name)
+        ).values_list("id", flat=True).distinct()
+        qs = qs.filter(id__in=matching_ids)
     if case_id: qs = qs.filter(id=int(case_id))
-    if party_name: qs = qs.filter(parties__client__name__icontains=party_name).distinct()
+    if party_name:
+        matching_ids = Case.objects.filter(
+            parties__client__name__icontains=party_name
+        ).values_list("id", flat=True).distinct()
+        qs = qs.filter(id__in=matching_ids)
     if start_date: qs = qs.filter(start_date__gte=date_type.fromisoformat(start_date))
     if end_date: qs = qs.filter(start_date__lte=date_type.fromisoformat(end_date))
 
