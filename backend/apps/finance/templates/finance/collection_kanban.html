@@ -1,0 +1,180 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}客户收款看板{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+.kb-container { padding: 20px 24px; max-width: 1400px; }
+.kb-header { margin-bottom: 20px; }
+.kb-header h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
+.kb-header p { color: #666; font-size: 13px; margin: 0; }
+.kb-cards { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+.kb-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; }
+.kb-card-label { font-size: 12px; color: #888; margin-bottom: 4px; }
+.kb-card-value { font-size: 22px; font-weight: 600; }
+.kb-card-value.info { color: #2563eb; }
+.kb-card-value.success { color: #16a34a; }
+.kb-card-value.danger { color: #dc2626; }
+.kb-card-value.purple { color: #7c3aed; }
+.kb-filters { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+.kb-filters label { display: block; font-size: 12px; color: #666; margin-bottom: 4px; }
+.kb-filters input,.kb-filters select { padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; min-width: 160px; }
+.kb-filters button { padding: 7px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+.kb-btn-filter { background: #2563eb; color: #fff; border: none; }
+.kb-btn-reset { background: #fff; color: #374151; border: 1px solid #d1d5db; }
+.kb-btn-export { background: #059669; color: #fff; border: none; }
+.kb-table-wrap { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
+.kb-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.kb-table th { background: #f9fafb; padding: 10px 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
+.kb-table td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; }
+.kb-table tr:hover { background: #f9fafb; }
+.kb-table .num { text-align: right; }
+.kb-table .expand-link { color: #2563eb; cursor: pointer; text-decoration: none; }
+.kb-table .expand-link:hover { text-decoration: underline; }
+.kb-sub-table { margin: 8px 0; }
+.kb-sub-table table { width: 100%; font-size: 12px; border-collapse: collapse; }
+.kb-sub-table th { background: #f0f9ff; padding: 6px 10px; font-size: 12px; }
+.kb-sub-table td { padding: 6px 10px; font-size: 12px; }
+.kb-sub-row { background: #f8fafc; }
+.kb-detail-row { background: #fefce8; }
+.kb-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+.kb-badge.risk { background: #fef3c7; color: #92400e; }
+.kb-badge.fixed { background: #dbeafe; color: #1e40af; }
+@media (max-width: 768px) { .kb-cards { grid-template-columns: repeat(2,1fr); } .kb-filters { flex-direction: column; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="kb-container">
+  <div class="kb-header">
+    <h1>客户收款看板</h1>
+    <p>合同收款汇总 / 案件收款明细 / 收款记录查询</p>
+  </div>
+
+  <div class="kb-cards">
+    <div class="kb-card">
+      <div class="kb-card-label">合同应收</div>
+      <div class="kb-card-value info">¥{{ agg.total_expected|floatformat:2 }}</div>
+    </div>
+    <div class="kb-card">
+      <div class="kb-card-label">已收总额</div>
+      <div class="kb-card-value success">¥{{ agg.total_received|floatformat:2 }}</div>
+    </div>
+    <div class="kb-card">
+      <div class="kb-card-label">未收余额</div>
+      <div class="kb-card-value danger">¥{{ agg.total_balance|floatformat:2 }}</div>
+    </div>
+    <div class="kb-card">
+      <div class="kb-card-label">回款率</div>
+      <div class="kb-card-value purple">
+        {% widthratio agg.overall_rate 1 100 as rate_pct %}
+        {{ rate_pct }}%
+      </div>
+    </div>
+  </div>
+
+  <form method="get" class="kb-filters">
+    <div>
+      <label>案件名称</label>
+      <input name="case_name" value="{{ filters.case_name }}" placeholder="输入案件名称...">
+    </div>
+    <div>
+      <label>收费模式</label>
+      <select name="fee_mode">
+        <option value="">全部</option>
+        <option value="FIXED" {% if filters.fee_mode == "FIXED" %}selected{% endif %}>固定收费</option>
+        <option value="SEMI_RISK" {% if filters.fee_mode == "SEMI_RISK" %}selected{% endif %}>半风险</option>
+        <option value="FULL_RISK" {% if filters.fee_mode == "FULL_RISK" %}selected{% endif %}>全风险</option>
+        <option value="CUSTOM" {% if filters.fee_mode == "CUSTOM" %}selected{% endif %}>自定义</option>
+      </select>
+    </div>
+    <div>
+      <label>开始日期</label>
+      <input name="start_date" type="date" value="{{ filters.start_date }}">
+    </div>
+    <div>
+      <label>结束日期</label>
+      <input name="end_date" type="date" value="{{ filters.end_date }}">
+    </div>
+    <div style="display:flex;gap:8px;align-items:flex-end">
+      <button type="submit" class="kb-btn-filter">筛选</button>
+      <a href="?" class="kb-btn-reset" style="text-decoration:none;display:inline-flex;align-items:center;padding:7px 16px">重置</a>
+    </div>
+  </form>
+
+  <div class="kb-table-wrap">
+    <table class="kb-table">
+      <thead>
+        <tr>
+          <th>合同名称</th>
+          <th>客户</th>
+          <th>收费模式</th>
+          <th class="num">合同应收</th>
+          <th class="num">已收金额</th>
+          <th class="num">未收余额</th>
+          <th class="num">回款率</th>
+          <th class="num">案件数</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in contracts %}
+        <tr>
+          <td><strong>{{ c.contract_name }}</strong></td>
+          <td>{{ c.client_name }}</td>
+          <td>
+            {% if c.fee_mode == "FULL_RISK" or c.fee_mode == "CUSTOM" %}
+              <span class="kb-badge risk">{{ c.fee_mode_display }}</span>
+            {% else %}
+              <span class="kb-badge fixed">{{ c.fee_mode_display }}</span>
+            {% endif %}
+          </td>
+          <td class="num">{% if c.fixed_amount is not None %}¥{{ c.fixed_amount|floatformat:2 }}{% else %}<span style="color:#888">风险收费</span>{% endif %}</td>
+          <td class="num" style="color:#16a34a">¥{{ c.total_received|floatformat:2 }}</td>
+          <td class="num" style="color:#dc2626">¥{{ c.balance|floatformat:2 }}</td>
+          <td class="num">{% widthratio c.received_rate 1 100 as rp %}{{ rp }}%</td>
+          <td class="num">{{ c.case_count }}</td>
+          <td>
+            <a class="expand-link" href="?expand_contract={{ c.contract_id }}{% for k,v in filters.items %}{% if v %}&{{ k }}={{ v }}{% endif %}{% endfor %}">
+              {% if expanded_contract_id == c.contract_id %}收起{% else %}展开案件{% endif %}
+            </a>
+          </td>
+        </tr>
+        {% if expanded_contract_id == c.contract_id and case_details %}
+        <tr class="kb-sub-row">
+          <td colspan="9" style="padding:0">
+            <div class="kb-sub-table">
+              <table>
+                <thead><tr>
+                  <th>案件名称</th><th>状态</th>
+                  <th class="num">已收律师费</th><th class="num">总收入</th>
+                  <th class="num">总支出</th><th class="num">净收入</th>
+                  <th class="num">收款笔数</th><th></th>
+                </tr></thead>
+                <tbody>
+                {% for cs in case_details %}
+                <tr>
+                  <td>{{ cs.case_name }}</td>
+                  <td>{{ cs.case_status }}</td>
+                  <td class="num">¥{{ cs.attorney_fee_received|floatformat:2 }}</td>
+                  <td class="num" style="color:#16a34a">¥{{ cs.case_income|floatformat:2 }}</td>
+                  <td class="num" style="color:#dc2626">¥{{ cs.case_expense|floatformat:2 }}</td>
+                  <td class="num"><strong>¥{{ cs.net_income|floatformat:2 }}</strong></td>
+                  <td class="num">{{ cs.payment_count }}</td>
+                  <td>-</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -14,6 +14,7 @@ from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import include, path
 
+from apps.finance.views import collection_kanban_view
 from apps.organization.views import register
 from apps.social_auth.views import SocialCallbackView, SocialLoginView
 
@@ -65,6 +66,7 @@ def root_redirect(request: HttpRequest) -> HttpResponseRedirect:
 urlpatterns = [
     path("admin/register/", register, name="admin_register"),
     path("admin/cloud-storage/", include("apps.core.cloud_storage.urls")),
+    path("admin/finance/collection/", collection_kanban_view, name="admin_finance_collection"),
     path("admin/", admin.site.urls),
     path("i18n/", include("django.conf.urls.i18n")),
     # 社交登录（放在 api/v1/ 之前，避免被 Ninja 路由匹配）
