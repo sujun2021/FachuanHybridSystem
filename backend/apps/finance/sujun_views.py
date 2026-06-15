@@ -31,6 +31,7 @@ def sujun_cases_view(request: HttpRequest) -> HttpResponse:
     year = request.GET.get("year", "")
     party_name = request.GET.get("party_name", "")
     case_name = request.GET.get("case_name", "")
+    case_id = request.GET.get("case_id", "")
     start_date = request.GET.get("start_date", "")
     end_date = request.GET.get("end_date", "")
 
@@ -50,6 +51,8 @@ def sujun_cases_view(request: HttpRequest) -> HttpResponse:
         qs = qs.filter(
             Q(name__icontains=case_name) | Q(case_numbers__number__icontains=case_name)
         ).distinct()
+    if case_id:
+        qs = qs.filter(id=int(case_id))
     if party_name:
         qs = qs.filter(parties__client__name__icontains=party_name).distinct()
     if start_date:
@@ -117,6 +120,7 @@ def sujun_cases_export(request: HttpRequest) -> HttpResponse:
     year = request.GET.get("year", "")
     party_name = request.GET.get("party_name", "")
     case_name = request.GET.get("case_name", "")
+    case_id = request.GET.get("case_id", "")
     start_date = request.GET.get("start_date", "")
     end_date = request.GET.get("end_date", "")
 
@@ -129,6 +133,7 @@ def sujun_cases_export(request: HttpRequest) -> HttpResponse:
     if case_type: qs = qs.filter(case_type=case_type)
     if year: qs = qs.filter(start_date__year=int(year))
     if case_name: qs = qs.filter(Q(name__icontains=case_name) | Q(case_numbers__number__icontains=case_name)).distinct()
+    if case_id: qs = qs.filter(id=int(case_id))
     if party_name: qs = qs.filter(parties__client__name__icontains=party_name).distinct()
     if start_date: qs = qs.filter(start_date__gte=date_type.fromisoformat(start_date))
     if end_date: qs = qs.filter(start_date__lte=date_type.fromisoformat(end_date))

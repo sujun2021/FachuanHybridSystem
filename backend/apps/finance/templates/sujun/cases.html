@@ -38,6 +38,13 @@
 .sc-status.closed { background: #f3f4f6; color: #6b7280; }
 .sc-status.archived { background: #fef3c7; color: #92400e; }
 
+.sc-autocomplete { position: relative; }
+.sc-autocomplete input { width: 100%; box-sizing: border-box; }
+.sc-autocomplete-dropdown { position: absolute; top: 100%; left: 0; right: 0; max-height: 200px; overflow-y: auto; background: #fff; border: 1px solid #d1d5db; border-top: none; border-radius: 0 0 6px 6px; z-index: 1000; display: none; }
+.sc-autocomplete-dropdown .item { padding: 8px 12px; cursor: pointer; font-size: 13px; }
+.sc-autocomplete-dropdown .item:hover,.sc-autocomplete-dropdown .item.active { background: #eff6ff; }
+.sc-autocomplete-dropdown .item.loading { color: #888; cursor: default; }
+
 @media (max-width: 768px) { .sc-filters { flex-direction: column; } .sc-table { overflow-x: auto; } }
 </style>
 {% endblock %}
@@ -52,7 +59,11 @@
   <form method="get" class="sc-filters">
     <div>
       <label>案件名称/案号</label>
-      <input name="case_name" value="{{ filters.case_name }}" placeholder="模糊搜索...">
+      <div class="sc-autocomplete">
+        <input id="case-autocomplete" name="case_name" value="{{ filters.case_name }}" placeholder="输入案件名称或案号搜索..." autocomplete="off">
+        <input id="case-id-input" type="hidden" name="case_id">
+        <div id="case-autocomplete-dropdown" class="sc-autocomplete-dropdown"></div>
+      </div>
     </div>
     <div>
       <label>当事人名称</label>
@@ -157,4 +168,60 @@
     {% endif %}
   </div>
 </div>
+
+<script>
+(function() {
+  var input = document.getElementById('case-autocomplete');
+  var hidden = document.getElementById('case-id-input');
+  var dropdown = document.getElementById('case-autocomplete-dropdown');
+  var timer = null;
+  var activeIndex = -1;
+
+  input.addEventListener('input', function() {
+    clearTimeout(timer);
+    var q = input.value.trim();
+    if (!q) { hideDropdown(); return; }
+    timer = setTimeout(function() { fetchCases(q); }, 250);
+  });
+
+  input.addEventListener('keydown', function(e) {
+    var items = dropdown.querySelectorAll('.item:not(.loading)');
+    if (e.key === 'ArrowDown') { e.preventDefault(); activeIndex = Math.min(activeIndex + 1, items.length - 1); highlightItem(items); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); activeIndex = Math.max(activeIndex - 1, 0); highlightItem(items); }
+    else if (e.key === 'Enter') { e.preventDefault(); if (activeIndex >= 0 && items[activeIndex]) items[activeIndex].click(); }
+    else if (e.key === 'Escape') { hideDropdown(); }
+  });
+
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.sc-autocomplete')) hideDropdown();
+  });
+
+  function fetchCases(q) {
+    dropdown.innerHTML = '<div class="item loading">搜索中...</div>';
+    dropdown.style.display = 'block';
+    fetch('/admin/finance/case-autocomplete/?q=' + encodeURIComponent(q))
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var results = data.results || [];
+        if (!results.length) { dropdown.innerHTML = '<div class="item" style="color:#888">未找到匹配案件</div>'; }
+        else { dropdown.innerHTML = results.map(function(c,i) { return '<div class="item" data-id="'+c.id+'">'+escHtml(c.text)+'</div>'; }).join(''); bindClicks(); }
+        activeIndex = -1;
+      });
+  }
+
+  function bindClicks() {
+    dropdown.querySelectorAll('.item').forEach(function(item) {
+      item.addEventListener('click', function() {
+        input.value = item.textContent;
+        hidden.value = item.getAttribute('data-id');
+        hideDropdown();
+      });
+    });
+  }
+
+  function highlightItem(items) { items.forEach(function(it,i) { it.classList.toggle('active', i === activeIndex); }); }
+  function hideDropdown() { dropdown.style.display = 'none'; activeIndex = -1; }
+  function escHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+})();
+</script>
 {% endblock %}
