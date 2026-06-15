@@ -7,13 +7,17 @@
 
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
-from django.db.models.signals import post_delete
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
 logger = logging.getLogger("apps.automation")
 
+
+# ───────────────────────────────────────────────
+# 文件清理信号
+# ───────────────────────────────────────────────
 
 @receiver(post_delete, dispatch_uid="cleanup_court_document_local_file")
 def cleanup_court_document_local_file(sender: type, **kwargs: Any) -> None:  # pragma: no cover
@@ -63,3 +67,106 @@ def cleanup_gsxt_report_task_file(sender: type, **kwargs: Any) -> None:  # pragm
             logger.info("已清理企业信用报告文件", extra={"file_path": str(instance.report_file)})
         except Exception:
             logger.exception("清理企业信用报告失败")
+
+
+# ───────────────────────────────────────────────
+# 案件目录绑定 → 自动补归档 SMS
+# ───────────────────────────────────────────────
+
+@receiver(post_save, sender="cases.CaseFolderBinding")
+def auto_archive_sms_on_folder_binding(  # pragma: no cover
+    sender: Any,
+    instance: Any,
+    created: bool,
+    **kwargs: Any,
+) -> None:
+    """当 CaseFolderBinding 创建或更新时，自动补归档该案件的所有已完成但未归档的 SMS。
+
+    只处理满足以下条件的 SMS：
+    - 状态为 COMPLETED（已完成）
+    - archived_to_case_folder=False（尚未归档）
+    - 有关联的 scraper_task（有下载文书）
+    - resolved_folder_path 可用（案件文件夹绑定有效）
+    """
+    try:
+        from apps.automation.models import CourtSMS, CourtSMSStatus
+
+        binding = instance
+        if not binding.resolved_folder_path:
+            return
+
+        case_id = binding.case_id
+        unarchived_sms_qs = CourtSMS.objects.filter(
+            case_id=case_id,
+            status=CourtSMSStatus.COMPLETED,
+            archived_to_case_folder=False,
+            scraper_task__isnull=False,
+        )
+
+        unarchived_sms_list = list(unarchived_sms_qs)
+        if not unarchived_sms_list:
+            return
+
+        from apps.automation.services.sms.case_folder_archive_service import CaseFolderArchiveService
+
+        archive_service = CaseFolderArchiveService()
+        archived_count = 0
+
+        for sms in unarchived_sms_list:
+            try:
+                renamed_paths = _resolve_renamed_paths(sms)
+                if not renamed_paths:
+                    continue
+                success = archive_service.archive_sms_documents(
+                    cast(Any, sms), renamed_paths
+                )
+                if success:
+                    archived_count += 1
+            except Exception as e:
+                logger.warning(
+                    f"信号补归档失败: SMS ID={sms.id}, 错误: {e!s}"
+                )
+
+        if archived_count > 0:
+            logger.info(
+                f"信号补归档完成: case_id={case_id}, "
+                f"已归档/总数={archived_count}/{len(unarchived_sms_list)}"
+            )
+    except Exception as e:
+        logger.warning(f"信号 auto_archive_sms_on_folder_binding 执行异常: {e!s}")
+
+
+def _resolve_renamed_paths(sms: Any) -> list[str]:
+    """解析 SMS 的 renamed 文件路径列表，用于补归档。"""
+    from pathlib import Path as _Path
+
+    paths: list[str] = []
+
+    task = sms.scraper_task
+    if not task:
+        return paths
+
+    # 来源 1：renamed_files
+    result = task.result
+    if isinstance(result, dict):
+        renamed = result.get("renamed_files", [])
+        if renamed and isinstance(renamed, list):
+            for p in renamed:
+                if p and _Path(p).exists():
+                    paths.append(p)
+
+    # 来源 2：documents.local_file_path
+    if not paths and hasattr(task, "documents"):
+        for doc in task.documents.filter(download_status="success"):
+            if doc.local_file_path and _Path(doc.local_file_path).exists():
+                paths.append(doc.local_file_path)
+
+    # 来源 3：result["files"]
+    if not paths and isinstance(result, dict):
+        files = result.get("files", [])
+        if files and isinstance(files, list):
+            for p in files:
+                if p and _Path(p).exists():
+                    paths.append(p)
+
+    return list(dict.fromkeys(paths))  # 去重保序

@@ -37,7 +37,7 @@ class CourtSMSAdmin(CourtSMSAdminActions, CourtSMSAdminBase):  # pragma: no cove
     """法院短信管理（组合 Base + Actions）"""
 
     ordering = ("-received_at",)
-    actions = ["retry_processing_action"]
+    actions = ["retry_processing_action", "rearchive_to_case_folder_action"]
 
     def get_urls(self) -> list[Any]:  # pragma: no cover
         """添加自定义 URL"""

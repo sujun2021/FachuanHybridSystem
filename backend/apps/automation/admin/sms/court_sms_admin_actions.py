@@ -27,6 +27,38 @@ def _get_court_sms_service() -> Any:
     return ServiceLocator.get_court_sms_service()
 
 
+def _resolve_admin_archive_paths(sms: CourtSMS) -> list[str]:
+    """解析 SMS 中可用于归档的文书路径列表（供 admin 操作使用）。"""
+    from pathlib import Path as _Path
+
+    paths: list[str] = []
+    task = sms.scraper_task
+    if not task:
+        return paths
+
+    result = task.result
+    if isinstance(result, dict):
+        renamed = result.get("renamed_files", [])
+        if renamed and isinstance(renamed, list):
+            for p in renamed:
+                if p and _Path(p).exists():
+                    paths.append(p)
+
+    if not paths and hasattr(task, "documents"):
+        for doc in task.documents.filter(download_status="success"):
+            if doc.local_file_path and _Path(doc.local_file_path).exists():
+                paths.append(doc.local_file_path)
+
+    if not paths and isinstance(result, dict):
+        files = result.get("files", [])
+        if files and isinstance(files, list):
+            for p in files:
+                if p and _Path(p).exists():
+                    paths.append(p)
+
+    return list(dict.fromkeys(paths))
+
+
 def _get_case_service() -> Any:
     """获取案件服务实例(工厂函数)"""
     from apps.core.interfaces import ServiceLocator
@@ -60,6 +92,45 @@ class CourtSMSAdminActions:  # pragma: no cover
             messages.success(request, f"成功重新处理 {success_count} 条短信")
         if error_count > 0:
             messages.error(request, f"重新处理失败 {error_count} 条短信")
+
+    @admin.action(description="📁 重新归档到案件目录")
+    def rearchive_to_case_folder_action(
+        self, request: HttpRequest, queryset: QuerySet[CourtSMS]
+    ) -> None:  # pragma: no cover
+        """将选中的已完成短信的文档重新归档到案件绑定目录"""
+        from apps.automation.services.sms.case_folder_archive_service import CaseFolderArchiveService
+
+        archive_service = CaseFolderArchiveService()
+        success_count = 0
+        skip_count = 0
+        error_count = 0
+
+        for sms in queryset:
+            try:
+                if not sms.case_id:
+                    skip_count += 1
+                    continue
+                if not sms.scraper_task:
+                    skip_count += 1
+                    continue
+
+                renamed_paths = _resolve_admin_archive_paths(sms)
+                if not renamed_paths:
+                    skip_count += 1
+                    continue
+
+                archive_service.archive_sms_documents(sms, renamed_paths)
+                success_count += 1
+            except Exception as e:
+                error_count += 1
+                logger.error(f"管理员重新归档失败: SMS ID={sms.id}, 错误: {e!s}")
+
+        if success_count > 0:
+            messages.success(request, f"成功归档 {success_count} 条短信的文档到案件目录")
+        if skip_count > 0:
+            messages.info(request, f"跳过 {skip_count} 条（无案件/无文档/无文件夹）")
+        if error_count > 0:
+            messages.error(request, f"归档失败 {error_count} 条短信")
 
     def submit_sms_view(self, request: HttpRequest) -> HttpResponse:  # pragma: no cover
         """短信提交页面"""
