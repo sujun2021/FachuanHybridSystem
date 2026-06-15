@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import json
 import logging
+import time
 from types import SimpleNamespace
 from typing import Any, cast
 
@@ -43,6 +44,13 @@ def _validate_image_file(file_obj: UploadedFile) -> None:
 
 def _body(request: HttpRequest) -> dict[str, Any]:
     return cast(dict[str, Any], json.loads(request.body or b"{}"))
+
+
+def _decode_image_data(data: str) -> bytes:
+    """从 Base64 字符串（可带 data URL 前缀）解码为字节数据。"""
+    if "," in data:
+        data = data.split(",", 1)[1]
+    return base64.b64decode(data)
 
 
 def _get_pdf_service() -> Any:
@@ -85,7 +93,10 @@ def detect_page_orientation(request: HttpRequest) -> dict[str, Any]:  # pragma: 
     if not data:
         return {"rotation": 0, "confidence": 0}
     try:
-        return cast(dict[str, Any], _get_pdf_service().detect_single_page_orientation(data))
+        t0 = time.perf_counter()
+        result = cast(dict[str, Any], _get_pdf_service().detect_single_page_orientation(data))
+        result["elapsed_ms"] = round((time.perf_counter() - t0) * 1000, 1)
+        return result
     except Exception as exc:
         logger.error("detect_page_orientation 失败: %s", exc, exc_info=True)
         return {"rotation": 0, "confidence": 0}
@@ -95,24 +106,57 @@ def detect_page_orientation(request: HttpRequest) -> dict[str, Any]:  # pragma: 
 def detect_orientation(request: HttpRequest) -> dict[str, Any]:  # pragma: no cover
     payload = _body(request)
     images: list[dict[str, Any]] = payload.get("images", [])
+    method: str = payload.get("method", "onnx")  # "onnx" | "ocr_voting"
     if not images:
         return {"success": False, "results": []}
-    pdf_service = _get_pdf_service()
     results = []
+    total_start = time.perf_counter()
     for img in images:
         try:
-            data: str = img.get("data", "")
-            if "," in data:
-                data = data.split(",", 1)[1]
-            import base64 as _b64
+            image_bytes = _decode_image_data(img.get("data", ""))
+            t0 = time.perf_counter()
+            if method == "ocr_voting":
+                from apps.image_rotation.services.orientation.service import OrientationDetectionService
 
-            image_bytes = _b64.b64decode(data)
-            result: dict[str, Any] = pdf_service.orientation_service.detect_orientation_with_text(image_bytes)
+                result = OrientationDetectionService().detect_orientation_with_text(image_bytes)
+            else:
+                from apps.image_rotation.services.orientation.onnx_service import get_onnx_orientation_service
+
+                result = get_onnx_orientation_service().detect_orientation(image_bytes)
+            result["elapsed_ms"] = round((time.perf_counter() - t0) * 1000, 1)
             result["filename"] = img.get("filename", "")
             results.append(result)
         except Exception as exc:
             logger.error("detect_orientation 失败: %s", exc, exc_info=True)
-            results.append({"filename": img.get("filename", ""), "rotation": 0, "confidence": 0, "ocr_text": ""})
+            results.append({"filename": img.get("filename", ""), "rotation": 0, "confidence": 0, "ocr_text": "", "elapsed_ms": 0})
+    total_elapsed_ms = round((time.perf_counter() - total_start) * 1000, 1)
+    return {"success": True, "results": results, "total_elapsed_ms": total_elapsed_ms}
+
+
+@router.post("/extract-text")
+def extract_text(request: HttpRequest) -> dict[str, Any]:  # pragma: no cover
+    """提取图片文字（不检测方向），用于 OCR 重命名。"""
+    payload = _body(request)
+    images: list[dict[str, Any]] = payload.get("images", [])
+    provider: str = payload.get("provider", "local")  # "local" | "paddleocr_api"
+    if not images:
+        return {"success": True, "results": []}
+    from apps.automation.services.ocr.ocr_service import OCRService
+
+    ocr = OCRService(use_v5=True, provider=provider)
+    results = []
+    for img in images:
+        try:
+            image_bytes = _decode_image_data(img.get("data", ""))
+            text_result = ocr.extract_text(image_bytes)
+            results.append({
+                "filename": img.get("filename", ""),
+                "ocr_text": text_result.text,
+                "raw_texts": text_result.raw_texts,
+            })
+        except Exception as exc:
+            logger.error("extract_text 失败: %s", exc, exc_info=True)
+            results.append({"filename": img.get("filename", ""), "ocr_text": "", "raw_texts": []})
     return {"success": True, "results": results}
 
 
@@ -193,11 +237,12 @@ def _handle_multipart_export_pdf(request: HttpRequest) -> dict[str, Any]:
                 filename = request.POST.get(f"filename_{idx}", file_obj.name)
 
                 image_data = base64.b64encode(file_obj.read()).decode("utf-8")
+                rotation = int(request.POST.get(f"rotation_{idx}", "0") or "0")
                 pages.append(
                     {
                         "filename": filename,
                         "data": image_data,
-                        "rotation": 0,
+                        "rotation": rotation,
                     }
                 )
 
@@ -248,11 +293,13 @@ def _handle_multipart_export(request: HttpRequest) -> dict[str, Any]:
                 format_type = request.POST.get(f"format_{idx}", "jpeg")
 
                 image_data = base64.b64encode(file_obj.read()).decode("utf-8")
+                rotation = int(request.POST.get(f"rotation_{idx}", "0") or "0")
                 images.append(
                     {
                         "filename": filename,
                         "data": image_data,
                         "format": format_type,
+                        "rotation": rotation,
                     }
                 )
 
@@ -263,3 +310,243 @@ def _handle_multipart_export(request: HttpRequest) -> dict[str, Any]:
     except Exception as exc:
         logger.error("multipart 导出失败: %s", exc, exc_info=True)
         return {"success": False, "message": str(exc)}
+
+
+# ---------------------------------------------------------------------------
+# 历史任务端点
+# ---------------------------------------------------------------------------
+
+
+def _get_job_service() -> Any:
+    from apps.image_rotation.services.job_service import ImageRotationJobService
+
+    return ImageRotationJobService()
+
+
+def _serialize_job(job: Any) -> dict[str, Any]:
+    return {
+        "id": str(job.id),
+        "name": job.name,
+        "display_name": job.name or "未命名任务",
+        "status": job.status,
+        "total_pages": job.total_pages,
+        "has_export_zip": bool(job.export_zip_url),
+        "has_export_pdf": bool(job.export_pdf_url),
+        "created_at": job.created_at.isoformat() if job.created_at else "",
+    }
+
+
+def _serialize_page(page: Any) -> dict[str, Any]:
+    return {
+        "id": str(page.id),
+        "original_filename": page.original_filename,
+        "source_image_url": page.source_image.url if page.source_image else "",
+        "page_number": page.page_number,
+        "detected_rotation": page.detected_rotation,
+        "onnx_rotation": getattr(page, "onnx_rotation", 0),
+        "detection_confidence": round(page.detection_confidence, 4),
+        "ocr_text": page.ocr_text,
+        "suggested_filename": page.suggested_filename,
+        "source_type": page.source_type,
+    }
+
+
+@router.post("/jobs")
+def create_job(request: HttpRequest) -> dict[str, Any]:  # pragma: no cover
+    """创建历史任务（multipart: name + pages JSON + source_N 文件）"""
+    try:
+        name = request.POST.get("name", "").strip()
+        pages_json = request.POST.get("pages", "[]")
+        pages_meta: list[dict[str, Any]] = json.loads(pages_json)
+
+        if not pages_meta:
+            return {"success": False, "message": "没有页面数据"}
+
+        source_files = []
+        for idx in range(len(pages_meta)):
+            key = f"source_{idx}"
+            if key in request.FILES:
+                source_files.append(request.FILES[key])
+            else:
+                return {"success": False, "message": f"缺少 {key} 文件"}
+
+        service = _get_job_service()
+        job = service.create_job(
+            name=name,
+            pages_meta=pages_meta,
+            source_files=source_files,
+            created_by=request.user if request.user.is_authenticated else None,
+        )
+        page_ids = [str(p.id) for p in job.pages.all()]
+        return {"success": True, "job_id": str(job.id), "display_name": job.name or "未命名任务", "page_ids": page_ids}
+    except Exception as exc:
+        logger.error("create_job 失败: %s", exc, exc_info=True)
+        return {"success": False, "message": str(exc)}
+
+
+@router.get("/jobs")
+def list_jobs(request: HttpRequest) -> dict[str, Any]:  # pragma: no cover
+    """分页列出历史任务"""
+    try:
+        page = int(request.GET.get("page", 1))
+        page_size = int(request.GET.get("page_size", 20))
+        result = _get_job_service().list_jobs(page=page, page_size=page_size)
+        return {
+            "success": True,
+            "jobs": [_serialize_job(j) for j in result["jobs"]],
+            "total_count": result["total_count"],
+            "page": result["page"],
+            "page_size": result["page_size"],
+        }
+    except Exception as exc:
+        logger.error("list_jobs 失败: %s", exc, exc_info=True)
+        return {"success": False, "message": str(exc)}
+
+
+@router.get("/jobs/{job_id}")
+def get_job_detail(request: HttpRequest, job_id: str) -> dict[str, Any]:  # pragma: no cover
+    """获取任务详情"""
+    try:
+        service = _get_job_service()
+        job, pages = service.get_job_detail(job_id)
+        job_data = _serialize_job(job)
+        job_data["export_zip_url"] = job.export_zip_url
+        job_data["export_pdf_url"] = job.export_pdf_url
+        return {
+            "success": True,
+            "job": job_data,
+            "pages": [_serialize_page(p) for p in pages],
+        }
+    except Exception as exc:
+        logger.error("get_job_detail 失败: %s", exc, exc_info=True)
+        return {"success": False, "message": str(exc)}
+
+
+@router.post("/jobs/{job_id}/ocr")
+def run_job_ocr(request: HttpRequest, job_id: str) -> dict[str, Any]:  # pragma: no cover
+    """对任务所有页面重跑 OCR"""
+    try:
+        payload = _body(request)
+        provider: str = payload.get("provider", "local")
+        service = _get_job_service()
+        pages = service.run_ocr(job_id, provider=provider)
+        return {
+            "success": True,
+            "pages": [_serialize_page(p) for p in pages],
+        }
+    except Exception as exc:
+        logger.error("run_job_ocr 失败: %s", exc, exc_info=True)
+        return {"success": False, "message": str(exc)}
+
+
+@router.patch("/jobs/{job_id}/pages")
+def update_job_pages(request: HttpRequest, job_id: str) -> dict[str, Any]:  # pragma: no cover
+    """批量更新页面旋转角度和文件名"""
+    try:
+        payload = _body(request)
+        updates: list[dict[str, Any]] = payload.get("pages", [])
+        if not updates:
+            return {"success": True}
+
+        job = _get_job_service().get_job(job_id)
+        pages_map = {str(p.id): p for p in job.pages.all()}
+
+        for upd in updates:
+            page = pages_map.get(upd.get("page_id", ""))
+            if not page:
+                continue
+            changed = False
+            if "detected_rotation" in upd:
+                page.detected_rotation = upd["detected_rotation"]
+                changed = True
+            if "suggested_filename" in upd:
+                page.suggested_filename = upd["suggested_filename"]
+                changed = True
+            if "ocr_text" in upd:
+                page.ocr_text = upd["ocr_text"]
+                changed = True
+            if changed:
+                page.save(update_fields=["detected_rotation", "suggested_filename", "ocr_text", "updated_at"])
+
+        return {"success": True}
+    except Exception as exc:
+        logger.error("update_job_pages 失败: %s", exc, exc_info=True)
+        return {"success": False, "message": str(exc)}
+
+
+@router.post("/jobs/{job_id}/save-export-url")
+def save_export_url(request: HttpRequest, job_id: str) -> dict[str, Any]:  # pragma: no cover
+    """保存导出文件 URL 到任务"""
+    try:
+        payload = _body(request)
+        file_type: str = payload.get("file_type", "")
+        media_url: str = payload.get("media_url", "")
+        if not file_type or not media_url:
+            return {"success": False, "message": "缺少 file_type 或 media_url"}
+        job = _get_job_service().get_job(job_id)
+        if file_type == "zip":
+            job.export_zip_url = media_url
+            job.save(update_fields=["export_zip_url", "updated_at"])
+        elif file_type == "pdf":
+            job.export_pdf_url = media_url
+            job.save(update_fields=["export_pdf_url", "updated_at"])
+        return {"success": True}
+    except Exception as exc:
+        logger.error("save_export_url 失败: %s", exc, exc_info=True)
+        return {"success": False, "message": str(exc)}
+
+
+@router.get("/jobs/{job_id}/download/{file_type}")
+def download_job_export(request: HttpRequest, job_id: str, file_type: str) -> Any:  # pragma: no cover
+    """下载任务导出文件"""
+    from pathlib import Path
+
+    from django.conf import settings
+    from django.http import FileResponse
+
+    job = _get_job_service().get_job(job_id)
+    media_url = job.export_zip_url if file_type == "zip" else job.export_pdf_url if file_type == "pdf" else ""
+
+    if not media_url:
+        from apps.core.exceptions import NotFoundError
+
+        raise NotFoundError(message="导出文件不存在", code="EXPORT_NOT_FOUND", errors={})
+
+    # 从 flat 路径直接读取文件
+    rel = media_url.removeprefix("/media/")
+    file_path = Path(str(settings.MEDIA_ROOT)) / rel
+
+    if not file_path.exists():
+        from apps.core.exceptions import NotFoundError
+
+        raise NotFoundError(message="导出文件已被删除", code="EXPORT_FILE_GONE", errors={})
+
+    content_type = "application/zip" if file_type == "zip" else "application/pdf"
+    return FileResponse(
+        open(file_path, "rb"),
+        as_attachment=True,
+        filename=f"image_rotation_{job_id}.{file_type}",
+        content_type=content_type,
+    )
+
+
+@router.patch("/jobs/{job_id}")
+def update_job_name(request: HttpRequest, job_id: str) -> dict[str, Any]:  # pragma: no cover
+    """更新任务名称"""
+    try:
+        payload = _body(request)
+        new_name: str = payload.get("name", "").strip()
+        job = _get_job_service().get_job(job_id)
+        job.name = new_name
+        job.save(update_fields=["name", "updated_at"])
+        return {"success": True, "display_name": job.name or "未命名任务"}
+    except Exception as exc:
+        logger.error("update_job_name 失败: %s", exc, exc_info=True)
+        return {"success": False, "message": str(exc)}
+
+
+@router.delete("/jobs/{job_id}")
+def delete_job(request: HttpRequest, job_id: str) -> dict[str, str]:  # pragma: no cover
+    """删除任务"""
+    _get_job_service().delete_job(job_id)
+    return {"status": "deleted"}

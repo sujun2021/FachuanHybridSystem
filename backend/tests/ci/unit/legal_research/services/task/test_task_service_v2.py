@@ -40,7 +40,7 @@ def _make_payload(*, keyword: str = "合同纠纷", credential_id: int = 1, case
         credential_id=credential_id,
         case_summary=case_summary,
         search_url=kwargs.get("search_url", ""),
-        search_mode=kwargs.get("search_mode", None),
+        search_mode=kwargs.get("search_mode"),
         target_count=kwargs.get("target_count", 5),
         max_candidates=kwargs.get("max_candidates", 100),
         min_similarity_score=kwargs.get("min_similarity_score", 0.6),
@@ -285,7 +285,7 @@ class TestResetTask:
     def test_resets_fields(self, mock_llm) -> None:
         from apps.legal_research.services.task.service import LegalResearchTaskService
 
-        mock_llm.get_default_backend.return_value = "siliconflow"
+        mock_llm.get_default_backend.return_value = "openai_compatible"
         mock_llm.get_default_model.return_value = "default-model"
 
         svc = LegalResearchTaskService()

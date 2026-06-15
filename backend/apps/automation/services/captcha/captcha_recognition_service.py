@@ -13,14 +13,22 @@ from typing import Any
 
 from PIL import Image
 
-from apps.automation.services.scraper.core.captcha_recognizer import DdddocrRecognizer
+from apps.automation.services.scraper.core.captcha_recognizer import CaptchaRecognizer
 from apps.core.interfaces import ICaptchaService
 
 logger = logging.getLogger("apps.automation")
 
 
 def _is_auto_recognize_enabled() -> bool:
-    """检查 CAPTCHA_AUTO_RECOGNIZE 全局配置"""
+    """检查自动验证码识别是否可用（需 captcha_ocr 插件 + 配置开启）"""
+    try:
+        from plugins import has_captcha_ocr_plugin  # type: ignore[attr-defined]
+
+        if not has_captcha_ocr_plugin():
+            return False
+    except ImportError:
+        return False
+
     from apps.core.services.system_config_service import SystemConfigService
 
     return SystemConfigService().get_value("CAPTCHA_AUTO_RECOGNIZE", "false").lower() in ("true", "1", "yes")
@@ -49,7 +57,7 @@ class CaptchaRecognitionService:
     支持依赖注入，所有依赖通过构造函数传递或延迟加载。
     """
 
-    def __init__(self, recognizer: DdddocrRecognizer | None = None, config: dict[str, Any] | None = None):
+    def __init__(self, recognizer: CaptchaRecognizer | None = None, config: dict[str, Any] | None = None):
         """
         初始化服务（支持依赖注入）
 
@@ -66,24 +74,30 @@ class CaptchaRecognitionService:
         self.TIMEOUT_WARNING_SECONDS = self._config.get("timeout_warning_seconds", 5.0)
 
     @property
-    def recognizer(self) -> DdddocrRecognizer:
+    def recognizer(self) -> CaptchaRecognizer:
         """
         获取识别器实例（延迟加载）
 
-        使用延迟加载避免重复初始化 ddddocr（初始化耗时约 1-2 秒）
+        从 captcha_ocr 插件加载识别器。插件未安装时抛出 RuntimeError。
 
         Returns:
-            DdddocrRecognizer: 识别器实例
-        """
-        if self._recognizer is None:
-            from apps.automation.utils.logging import AutomationLogger
+            CaptchaRecognizer: 识别器实例
 
-            AutomationLogger.log_business_operation(
-                operation="initialize_recognizer", resource_type="ddddocr_recognizer", success=True
-            )
-            show_ad = self._config.get("show_ad", False)
-            self._recognizer = DdddocrRecognizer(show_ad=show_ad)
-        return self._recognizer
+        Raises:
+            RuntimeError: captcha_ocr 插件未安装
+        """
+        if self._recognizer is not None:
+            return self._recognizer
+
+        from plugins import has_captcha_ocr_plugin  # type: ignore[attr-defined]
+
+        if has_captcha_ocr_plugin():
+            from plugins.captcha_ocr import DdddocrRecognizer
+
+            self._recognizer = DdddocrRecognizer(show_ad=self._config.get("show_ad", False))
+            return self._recognizer
+
+        raise RuntimeError("自动验证码识别不可用（captcha_ocr 插件未安装）")
 
     def _decode_base64_image(self, image_base64: str) -> bytes:
         """
