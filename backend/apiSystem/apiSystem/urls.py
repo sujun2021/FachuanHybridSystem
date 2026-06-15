@@ -14,7 +14,7 @@ from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import include, path
 
-from apps.finance.sujun_views import case_autocomplete_api, sujun_dashboard, sujun_payments
+from apps.finance.sujun_views import case_autocomplete_api, sujun_cases_export, sujun_cases_view, sujun_dashboard, sujun_payments
 from apps.finance.views import collection_kanban_view
 from apps.organization.views import register
 from apps.social_auth.views import SocialCallbackView, SocialLoginView
@@ -71,6 +71,8 @@ urlpatterns = [
     path("admin/sujun/", sujun_dashboard, name="sujun_dashboard"),
     path("admin/sujun/collection/", collection_kanban_view, name="sujun_collection"),
     path("admin/sujun/payments/", sujun_payments, name="sujun_payments"),
+    path("admin/sujun/cases/", sujun_cases_view, name="sujun_cases"),
+    path("admin/sujun/cases/export/", sujun_cases_export, name="sujun_cases_export"),
     path("admin/finance/case-autocomplete/", case_autocomplete_api, name="admin_finance_case_autocomplete"),
     # 保留旧路径兼容
     path("admin/finance/collection/", collection_kanban_view, name="admin_finance_collection"),

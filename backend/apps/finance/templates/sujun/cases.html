@@ -1,0 +1,160 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}案件全景一览{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+.sc-container { padding: 20px 24px; max-width: 1600px; }
+.sc-header h1 { font-size: 20px; font-weight: 600; margin: 0; }
+.sc-header p { color: #666; font-size: 13px; margin: 4px 0 20px; }
+
+.sc-filters { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+.sc-filters label { display: block; font-size: 12px; color: #666; margin-bottom: 4px; }
+.sc-filters input,.sc-filters select { padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+.sc-filters button,.sc-filters a.btn { padding: 7px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; }
+.sc-btn-filter { background: #2563eb; color: #fff; border: none; }
+.sc-btn-reset { background: #fff; color: #374151; border: 1px solid #d1d5db; }
+.sc-btn-export { background: #059669; color: #fff; border: none; }
+
+.sc-summary { font-size: 13px; color: #666; margin-bottom: 12px; }
+
+.sc-table { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; }
+.sc-table table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.sc-table th { background: #f9fafb; padding: 10px 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
+.sc-table td { padding: 9px 12px; border-bottom: 1px solid #f3f4f6; vertical-align: top; }
+.sc-table tr:hover { background: #f9fafb; }
+.sc-table .num { text-align: right; }
+.sc-table .muted { color: #9ca3af; font-size: 12px; }
+.sc-table .name-col { max-width: 280px; overflow: hidden; text-overflow: ellipsis; }
+
+.sc-paginator { display: flex; gap: 6px; padding: 14px 16px; justify-content: center; align-items: center; }
+.sc-paginator a { padding: 6px 12px; border: 1px solid #d1d5db; border-radius: 6px; text-decoration: none; color: #374151; font-size: 13px; }
+.sc-paginator a:hover { background: #f3f4f6; }
+.sc-paginator .current { padding: 6px 12px; background: #2563eb; color: #fff; border-radius: 6px; font-size: 13px; font-weight: 500; }
+
+.sc-status { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+.sc-status.active { background: #dbeafe; color: #1e40af; }
+.sc-status.closed { background: #f3f4f6; color: #6b7280; }
+.sc-status.archived { background: #fef3c7; color: #92400e; }
+
+@media (max-width: 768px) { .sc-filters { flex-direction: column; } .sc-table { overflow-x: auto; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sc-container">
+  <div class="sc-header">
+    <h1>案件全景一览</h1>
+    <p>套案管理 &middot; 同原告/同被告筛选 &middot; 多维度过滤 &middot; <a href="/admin/sujun/" style="color:#2563eb;">返回工作台</a></p>
+  </div>
+
+  <form method="get" class="sc-filters">
+    <div>
+      <label>案件名称/案号</label>
+      <input name="case_name" value="{{ filters.case_name }}" placeholder="模糊搜索...">
+    </div>
+    <div>
+      <label>当事人名称</label>
+      <input name="party_name" value="{{ filters.party_name }}" placeholder="原告或被告名称...">
+    </div>
+    <div>
+      <label>案件状态</label>
+      <select name="status">
+        <option value="">全部</option>
+        <option value="active" {% if filters.status == "active" %}selected{% endif %}>在办</option>
+        <option value="resolved" {% if filters.status == "resolved" %}selected{% endif %}>已结案</option>
+        <option value="archived" {% if filters.status == "archived" %}selected{% endif %}>已归档</option>
+      </select>
+    </div>
+    <div>
+      <label>案件类型</label>
+      <select name="case_type">
+        <option value="">全部</option>
+        <option value="civil" {% if filters.case_type == "civil" %}selected{% endif %}>民事</option>
+        <option value="commercial" {% if filters.case_type == "commercial" %}selected{% endif %}>商事</option>
+        <option value="criminal" {% if filters.case_type == "criminal" %}selected{% endif %}>刑事</option>
+        <option value="administrative" {% if filters.case_type == "administrative" %}selected{% endif %}>行政</option>
+        <option value="enforcement" {% if filters.case_type == "enforcement" %}selected{% endif %}>执行</option>
+      </select>
+    </div>
+    <div>
+      <label>年份</label>
+      <select name="year">
+        <option value="">全部</option>
+        {% for y in years %}
+        <option value="{{ y }}" {% if filters.year == y %}selected{% endif %}>{{ y }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label>开始日期</label>
+      <input name="start_date" type="date" value="{{ filters.start_date }}">
+    </div>
+    <div>
+      <label>结束日期</label>
+      <input name="end_date" type="date" value="{{ filters.end_date }}">
+    </div>
+    <div style="display:flex;gap:8px;align-items:flex-end">
+      <button type="submit" class="sc-btn-filter">筛选</button>
+      <a href="?" class="btn sc-btn-reset">重置</a>
+      <a href="/admin/sujun/cases/export/?{% for k,v in filters.items %}{% if v %}{{ k }}={{ v }}&{% endif %}{% endfor %}" class="btn sc-btn-export">导出 Excel</a>
+    </div>
+  </form>
+
+  <div class="sc-summary">共 {{ total }} 个案件</div>
+
+  <div class="sc-table">
+    <table>
+      <thead>
+        <tr>
+          <th>案件名称</th>
+          <th>案号</th>
+          <th>状态</th>
+          <th>收案日期</th>
+          <th>类型</th>
+          <th>阶段</th>
+          <th>原告</th>
+          <th>被告</th>
+          <th class="num">标的额</th>
+          <th>合同</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td><div class="name-col">{{ r.name }}</div></td>
+          <td class="muted">{{ r.case_numbers|default:"-" }}</td>
+          <td>
+            {% if r.status == "在办" %}<span class="sc-status active">在办</span>
+            {% elif r.status == "已结案" %}<span class="sc-status closed">已结案</span>
+            {% else %}<span class="sc-status archived">{{ r.status }}</span>{% endif %}
+          </td>
+          <td class="muted">{{ r.start_date }}</td>
+          <td class="muted">{{ r.case_type }}</td>
+          <td class="muted">{{ r.current_stage|default:"-" }}</td>
+          <td>{{ r.plaintiff|default:"-" }}</td>
+          <td>{{ r.defendant|default:"-" }}</td>
+          <td class="num">{% if r.target_amount %}¥{{ r.target_amount|floatformat:2 }}{% else %}-{% endif %}</td>
+          <td class="muted">{{ r.contract_name|default:"-" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="10" class="muted" style="text-align:center;padding:32px">暂无匹配案件</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="sc-paginator">
+      {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}{% for k,v in filters.items %}{% if v %}&{{ k }}={{ v }}{% endif %}{% endfor %}">上一页</a>
+      {% endif %}
+      <span class="current">第 {{ page_obj.number }} / {{ page_obj.paginator.num_pages }} 页</span>
+      {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}{% for k,v in filters.items %}{% if v %}&{{ k }}={{ v }}{% endif %}{% endfor %}">下一页</a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
