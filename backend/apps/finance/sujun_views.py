@@ -38,7 +38,7 @@ def sujun_cases_view(request: HttpRequest) -> HttpResponse:
     qs = (
         Case.objects.select_related("contract")
         .prefetch_related("case_numbers", "parties__client", "assignments__lawyer")
-        .order_by("-start_date", "-created_at")
+        .order_by("-start_date")
     )
 
     if status:
