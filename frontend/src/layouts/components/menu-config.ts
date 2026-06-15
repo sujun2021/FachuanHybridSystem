@@ -6,6 +6,8 @@
 import {
   LayoutDashboard,
   Briefcase,
+  DollarSign,
+  TrendingUp,
   FileText,
   Users,
   Zap,
@@ -129,6 +131,21 @@ export const menuConfig: MenuConfig = [
         icon: Calculator,
         label: 'LPR 计算器',
         path: PATHS.ADMIN_TOOLS_LPR,
+      },
+    ],
+  },
+
+  // 财务管理 - 菜单组
+  {
+    id: 'finance',
+    label: '财务管理',
+    icon: DollarSign,
+    items: [
+      {
+        id: 'collection',
+        icon: TrendingUp,
+        label: '客户收款看板',
+        path: PATHS.ADMIN_FINANCE_COLLECTION,
       },
     ],
   },

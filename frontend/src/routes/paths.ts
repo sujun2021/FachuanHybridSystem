@@ -93,6 +93,9 @@ export const PATHS = {
 
   // 外部链接
   GITHUB: 'https://github.com/huangsong/fachuanai',
+
+  // 财务管理
+  ADMIN_FINANCE_COLLECTION: '/admin/finance/collection',
 } as const
 
 /**
