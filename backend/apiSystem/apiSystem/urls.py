@@ -14,7 +14,8 @@ from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import include, path
 
-from apps.finance.views import case_autocomplete_api, collection_kanban_view
+from apps.finance.sujun_views import case_autocomplete_api, sujun_dashboard, sujun_payments
+from apps.finance.views import collection_kanban_view
 from apps.organization.views import register
 from apps.social_auth.views import SocialCallbackView, SocialLoginView
 
@@ -66,8 +67,13 @@ def root_redirect(request: HttpRequest) -> HttpResponseRedirect:
 urlpatterns = [
     path("admin/register/", register, name="admin_register"),
     path("admin/cloud-storage/", include("apps.core.cloud_storage.urls")),
-    path("admin/finance/collection/", collection_kanban_view, name="admin_finance_collection"),
+    # sujun 自定义功能
+    path("admin/sujun/", sujun_dashboard, name="sujun_dashboard"),
+    path("admin/sujun/collection/", collection_kanban_view, name="sujun_collection"),
+    path("admin/sujun/payments/", sujun_payments, name="sujun_payments"),
     path("admin/finance/case-autocomplete/", case_autocomplete_api, name="admin_finance_case_autocomplete"),
+    # 保留旧路径兼容
+    path("admin/finance/collection/", collection_kanban_view, name="admin_finance_collection"),
     path("admin/", admin.site.urls),
     path("i18n/", include("django.conf.urls.i18n")),
     # 社交登录（放在 api/v1/ 之前，避免被 Ninja 路由匹配）

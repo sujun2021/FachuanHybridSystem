@@ -1,0 +1,149 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}案件收支记录{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+.sp-container { padding: 20px 24px; max-width: 1400px; }
+.sp-header h1 { font-size: 20px; font-weight: 600; margin: 0; }
+.sp-header p { color: #666; font-size: 13px; margin: 4px 0 20px; }
+
+.sp-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 20px; }
+.sp-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; }
+.sp-card .lbl { font-size: 12px; color: #888; }
+.sp-card .val { font-size: 22px; font-weight: 600; margin-top: 4px; }
+.sp-c1 { color: #16a34a; }
+.sp-c2 { color: #dc2626; }
+.sp-c3 { color: #2563eb; }
+
+.sp-filters { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+.sp-filters label { display: block; font-size: 12px; color: #666; margin-bottom: 4px; }
+.sp-filters input,.sp-filters select { padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+.sp-filters button { padding: 7px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+.sp-btn-filter { background: #2563eb; color: #fff; border: none; }
+.sp-btn-reset { background: #fff; color: #374151; border: 1px solid #d1d5db; text-decoration: none; display: inline-flex; align-items: center; padding: 7px 16px; border-radius: 6px; }
+
+.sp-table { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; }
+.sp-table table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.sp-table th { background: #f9fafb; padding: 10px 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
+.sp-table td { padding: 9px 12px; border-bottom: 1px solid #f3f4f6; }
+.sp-table tr:hover { background: #f9fafb; }
+.sp-table .num { text-align: right; }
+.sp-table .income { color: #16a34a; font-weight: 500; }
+.sp-table .expense { color: #dc2626; font-weight: 500; }
+.sp-table .muted { color: #9ca3af; font-size: 12px; }
+.sp-paginator { display: flex; gap: 6px; padding: 12px 16px; justify-content: center; align-items: center; }
+.sp-paginator a { padding: 6px 12px; border: 1px solid #d1d5db; border-radius: 6px; text-decoration: none; color: #374151; font-size: 13px; }
+.sp-paginator a:hover { background: #f3f4f6; }
+.sp-paginator .current { padding: 6px 12px; background: #2563eb; color: #fff; border-radius: 6px; font-size: 13px; font-weight: 500; }
+
+@media (max-width: 768px) { .sp-cards { grid-template-columns: repeat(2,1fr); } .sp-filters { flex-direction: column; } .sp-table { overflow-x: auto; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sp-container">
+  <div class="sp-header">
+    <h1>案件收支记录</h1>
+    <p>所有案件的收入/支出明细 &middot; <a href="/admin/sujun/" style="color:#2563eb;">返回工作台</a></p>
+  </div>
+
+  <div class="sp-cards">
+    <div class="sp-card">
+      <div class="lbl">收入总额</div>
+      <div class="val sp-c1">¥{{ income_total|floatformat:2 }}</div>
+    </div>
+    <div class="sp-card">
+      <div class="lbl">支出总额</div>
+      <div class="val sp-c2">¥{{ expense_total|floatformat:2 }}</div>
+    </div>
+    <div class="sp-card">
+      <div class="lbl">收支差额</div>
+      <div class="val sp-c3">¥{{ net_balance|floatformat:2 }}</div>
+    </div>
+  </div>
+
+  <form method="get" class="sp-filters">
+    <div>
+      <label>收支方向</label>
+      <select name="direction">
+        <option value="">全部</option>
+        <option value="income" {% if filters.direction == "income" %}selected{% endif %}>收入</option>
+        <option value="expense" {% if filters.direction == "expense" %}selected{% endif %}>支出</option>
+      </select>
+    </div>
+    <div>
+      <label>款项用途</label>
+      <select name="purpose">
+        <option value="">全部</option>
+        <option value="attorney_fee" {% if filters.purpose == "attorney_fee" %}selected{% endif %}>律师费</option>
+        <option value="court_fee" {% if filters.purpose == "court_fee" %}selected{% endif %}>诉讼费</option>
+        <option value="enforcement_recovery" {% if filters.purpose == "enforcement_recovery" %}selected{% endif %}>执行回款</option>
+        <option value="preservation_fee" {% if filters.purpose == "preservation_fee" %}selected{% endif %}>保全费</option>
+        <option value="travel_fee" {% if filters.purpose == "travel_fee" %}selected{% endif %}>差旅费</option>
+        <option value="notary_fee" {% if filters.purpose == "notary_fee" %}selected{% endif %}>公证费</option>
+      </select>
+    </div>
+    <div>
+      <label>案件名称</label>
+      <input name="case_name" value="{{ filters.case_name }}" placeholder="输入案件名称...">
+    </div>
+    <div>
+      <label>开始日期</label>
+      <input name="start_date" type="date" value="{{ filters.start_date }}">
+    </div>
+    <div>
+      <label>结束日期</label>
+      <input name="end_date" type="date" value="{{ filters.end_date }}">
+    </div>
+    <div style="display:flex;gap:8px;align-items:flex-end">
+      <button type="submit" class="sp-btn-filter">筛选</button>
+      <a href="?" class="sp-btn-reset">重置</a>
+    </div>
+  </form>
+
+  <div class="sp-table">
+    <table>
+      <thead>
+        <tr>
+          <th>日期</th>
+          <th>案件</th>
+          <th>方向</th>
+          <th class="num">金额</th>
+          <th>用途</th>
+          <th>支付方式</th>
+          <th>备注</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in page_obj %}
+        <tr>
+          <td>{{ r.date|date:"Y-m-d" }}</td>
+          <td>{{ r.case.name|default:"-" }}</td>
+          <td><span class="{% if r.direction == 'income' %}income{% else %}expense{% endif %}">{% if r.direction == 'income' %}收入{% else %}支出{% endif %}</span></td>
+          <td class="num {% if r.direction == 'income' %}income{% else %}expense{% endif %}">¥{{ r.amount|default:0|floatformat:2 }}</td>
+          <td>{{ r.get_purpose_display|default:"-" }}</td>
+          <td class="muted">{{ r.get_payment_method_display|default:"-" }}</td>
+          <td class="muted">{{ r.note|default:"-"|truncatechars:30 }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" class="muted" style="text-align:center;padding:32px">暂无记录</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="sp-paginator">
+      {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}{% for k,v in filters.items %}{% if v %}&{{ k }}={{ v }}{% endif %}{% endfor %}">上一页</a>
+      {% endif %}
+      <span class="current">第 {{ page_obj.number }} / {{ page_obj.paginator.num_pages }} 页</span>
+      {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}{% for k,v in filters.items %}{% if v %}&{{ k }}={{ v }}{% endif %}{% endfor %}">下一页</a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

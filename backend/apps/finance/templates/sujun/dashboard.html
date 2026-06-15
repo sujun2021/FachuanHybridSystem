@@ -1,0 +1,169 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}sujun 工作台{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+.su-container { padding: 20px 24px; max-width: 1400px; }
+.su-header h1 { font-size: 20px; font-weight: 600; margin: 0; }
+.su-header p { color: #666; font-size: 13px; margin: 4px 0 20px; }
+
+.su-cards { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+.su-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 18px 16px; }
+.su-card .lbl { font-size: 12px; color: #888; margin-bottom: 6px; }
+.su-card .val { font-size: 24px; font-weight: 600; }
+.su-card .sub { font-size: 12px; color: #999; margin-top: 4px; }
+.su-c1 { color: #2563eb; }
+.su-c2 { color: #16a34a; }
+.su-c3 { color: #dc2626; }
+.su-c4 { color: #7c3aed; }
+
+.su-links { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
+.su-link { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; text-decoration: none; color: #374151; font-size: 14px; font-weight: 500; transition: border-color .15s; }
+.su-link:hover { border-color: #2563eb; color: #2563eb; }
+.su-link .icon { font-size: 16px; }
+
+.su-section { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+.su-section h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; color: #1f2937; }
+
+.su-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.su-table th { background: #f9fafb; padding: 10px 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
+.su-table td { padding: 9px 12px; border-bottom: 1px solid #f3f4f6; }
+.su-table tr:hover { background: #f9fafb; }
+.su-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.su-table .income { color: #16a34a; }
+.su-table .expense { color: #dc2626; }
+.su-table .muted { color: #9ca3af; font-size: 12px; }
+
+@media (max-width: 768px) {
+  .su-cards { grid-template-columns: repeat(2,1fr); }
+  .su-links { flex-direction: column; }
+  .su-table-wrap { overflow-x: auto; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="su-container">
+  <div class="su-header">
+    <h1>sujun 工作台</h1>
+    <p>收支记录 / 收款看板 / 快捷入口</p>
+  </div>
+
+  <!-- 汇总卡片 -->
+  <div class="su-cards">
+    <div class="su-card">
+      <div class="lbl">合同应收总额</div>
+      <div class="val su-c1">¥{{ agg.total_expected|floatformat:2 }}</div>
+      <div class="sub">{{ contracts|length }} 份合同</div>
+    </div>
+    <div class="su-card">
+      <div class="lbl">已收总额</div>
+      <div class="val su-c2">¥{{ agg.total_received|floatformat:2 }}</div>
+      <div class="sub">回款率 {% widthratio agg.overall_rate 1 100 %}%</div>
+    </div>
+    <div class="su-card">
+      <div class="lbl">未收余额</div>
+      <div class="val su-c3">¥{{ agg.total_balance|floatformat:2 }}</div>
+      <div class="sub">待催收</div>
+    </div>
+    <div class="su-card">
+      <div class="lbl">收支记录</div>
+      <div class="val su-c4">{{ recent_records|length }}</div>
+      <div class="sub">最近录入</div>
+    </div>
+  </div>
+
+  <!-- 快捷入口 -->
+  <div class="su-links">
+    <a href="/admin/sujun/collection/" class="su-link">
+      <span class="icon">📊</span> 客户收款看板
+    </a>
+    <a href="/admin/sujun/payments/" class="su-link">
+      <span class="icon">💰</span> 案件收支记录
+    </a>
+    <a href="/admin/cases/caselog/add/" class="su-link">
+      <span class="icon">📝</span> 新增日志（含收支）
+    </a>
+    <a href="/admin/automation/courtsms/" class="su-link">
+      <span class="icon">📨</span> 法院短信
+    </a>
+    <a href="/admin/" class="su-link">
+      <span class="icon">⚙️</span> Django Admin
+    </a>
+  </div>
+
+  <!-- 合同欠款提醒 -->
+  <div class="su-section">
+    <h2>合同欠款提醒</h2>
+    <div class="su-table-wrap">
+      <table class="su-table">
+        <thead>
+          <tr>
+            <th>合同名称</th>
+            <th>客户</th>
+            <th>收费模式</th>
+            <th class="num">合同应收</th>
+            <th class="num">已收</th>
+            <th class="num">未收</th>
+            <th class="num">回款率</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in contracts %}
+          {% if c.balance > 0 %}
+          <tr>
+            <td>{{ c.contract_name }}</td>
+            <td class="muted">{{ c.client_name|default:"-" }}</td>
+            <td class="muted">{{ c.fee_mode_display }}</td>
+            <td class="num">¥{{ c.fixed_amount|default:0|floatformat:2 }}</td>
+            <td class="num">¥{{ c.total_received|floatformat:2 }}</td>
+            <td class="num expense">¥{{ c.balance|floatformat:2 }}</td>
+            <td class="num">{% widthratio c.received_rate 1 100 %}%</td>
+          </tr>
+          {% endif %}
+          {% empty %}
+          <tr><td colspan="7" class="muted" style="text-align:center;padding:24px">暂无欠款合同</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 最近收支记录 -->
+  <div class="su-section">
+    <h2>最近收支记录 <a href="/admin/sujun/payments/" style="font-size:13px;font-weight:400;color:#2563eb;margin-left:8px;">查看全部</a></h2>
+    <div class="su-table-wrap">
+      <table class="su-table">
+        <thead>
+          <tr>
+            <th>日期</th>
+            <th>案件</th>
+            <th>方向</th>
+            <th class="num">金额</th>
+            <th>用途</th>
+            <th>方式</th>
+            <th>备注</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in recent_records %}
+          <tr>
+            <td>{{ r.date }}</td>
+            <td>{{ r.case_name }}</td>
+            <td><span class="{% if r.direction == 'income' %}income{% else %}expense{% endif %}">{{ r.direction_label }}</span></td>
+            <td class="num {% if r.direction == 'income' %}income{% else %}expense{% endif %}">¥{{ r.amount|floatformat:2 }}</td>
+            <td>{{ r.purpose }}</td>
+            <td class="muted">{{ r.payment_method }}</td>
+            <td class="muted">{{ r.note|truncatechars:20 }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" class="muted" style="text-align:center;padding:24px">暂无收支记录。在<a href="/admin/cases/caselog/add/">新增日志</a>时录入。</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
