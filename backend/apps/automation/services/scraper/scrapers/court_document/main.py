@@ -260,7 +260,7 @@ class CourtDocumentScraper(BaseCourtDocumentScraper):  # pragma: no cover
         return self._create_daolv_scraper_class(host)
 
     @staticmethod
-    def _create_daolv_scraper_class(host: str) -> type[DaolvSifaSongdaScraper]:  # pragma: no cover
+    def _create_daolv_scraper_class(host: str) -> type[BaseCourtDocumentScraper]:  # pragma: no cover
         """为未知道律域名动态创建爬虫子类。
 
         道律平台的 URL 结构完全一致，仅域名不同：
@@ -292,8 +292,9 @@ class CourtDocumentScraper(BaseCourtDocumentScraper):  # pragma: no cover
         def _run(self_inner: Any) -> dict[str, Any]:
             url = self_inner.task.url
             if f"{host}/sfsddz" in url:
-                return self_inner._run_account_mode(source_domain=host)
+                result: dict[str, Any] = self_inner._run_account_mode(source_domain=host)
+                return result
             raise ValueError(f"不支持的道律平台链接: {url}")
 
-        cls.run = _run  # type: ignore[method-assign]
+        cls.run = _run  # type: ignore[attr-defined]
         return cls
