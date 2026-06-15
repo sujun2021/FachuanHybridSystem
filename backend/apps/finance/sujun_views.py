@@ -60,9 +60,12 @@ def sujun_cases_view(request: HttpRequest) -> HttpResponse:
     if case_id:
         qs = qs.filter(id=int(case_id))
     if party_name:
-        # 子查询避免 distinct() + select_related 在 PostgreSQL 下的行坍塌问题
+        # 同时搜 CaseParty.Client 和 Case.name — 兜底 API 导入时 CaseParty 未完整关联的情况
         matching_ids = (
-            Case.objects.filter(parties__client__name__icontains=party_name)
+            Case.objects.filter(
+                Q(parties__client__name__icontains=party_name) |
+                Q(name__icontains=party_name)
+            )
             .values_list("id", flat=True)
             .distinct()
         )
@@ -152,7 +155,8 @@ def sujun_cases_export(request: HttpRequest) -> HttpResponse:
     if case_id: qs = qs.filter(id=int(case_id))
     if party_name:
         matching_ids = Case.objects.filter(
-            parties__client__name__icontains=party_name
+            Q(parties__client__name__icontains=party_name) |
+            Q(name__icontains=party_name)
         ).values_list("id", flat=True).distinct()
         qs = qs.filter(id__in=matching_ids)
     if start_date: qs = qs.filter(start_date__gte=date_type.fromisoformat(start_date))
