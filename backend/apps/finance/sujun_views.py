@@ -71,8 +71,8 @@ def sujun_cases_view(request: HttpRequest) -> HttpResponse:
         plaintiff = ""
         defendant = ""
         for p in parties:
-            name_val = getattr(p.client, "name", "") if p.client else getattr(p, "name", "")
-            ls = getattr(p, "legal_status", "") or getattr(p, "role", "")
+            name_val = getattr(p.client, "name", "") if p.client else ""
+            ls = (p.legal_status or "") if hasattr(p, "legal_status") else ""
             if ls in ("plaintiff",):
                 plaintiff = str(name_val or "")
             elif ls in ("defendant",):
@@ -147,8 +147,8 @@ def sujun_cases_export(request: HttpRequest) -> HttpResponse:
         parties = list(case.parties.all())
         pl = ""; df = ""
         for p in parties:
-            nm = str(getattr(p.client, "name", "") if p.client else getattr(p, "name", ""))
-            ls = getattr(p, "legal_status", "") or getattr(p, "role", "")
+            nm = str(getattr(p.client, "name", "") if p.client else "")
+            ls = (p.legal_status or "") if hasattr(p, "legal_status") else ""
             if ls == "plaintiff": pl = nm
             elif ls == "defendant": df = nm
         cns = ", ".join(n.number for n in case.case_numbers.all() if n.number)
