@@ -127,6 +127,9 @@ class CourtSMS(models.Model):
     # 多平台通知结果
     notification_results = models.JSONField(null=True, blank=True, default=None, verbose_name="多平台通知结果")
 
+    # 案件目录归档标记
+    archived_to_case_folder = models.BooleanField(default=False, verbose_name="已归档到案件目录")
+
     # 时间戳
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

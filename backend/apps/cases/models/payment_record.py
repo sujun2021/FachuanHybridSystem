@@ -86,16 +86,22 @@ class CasePaymentRecord(models.Model):
     direction: str = models.CharField(
         max_length=16,
         choices=PaymentDirection.choices,
+        blank=True,
+        default="",
         verbose_name=_("收支方向"),
     )
-    amount: Decimal = models.DecimalField(
+    amount: Decimal | None = models.DecimalField(
         max_digits=14,
         decimal_places=2,
+        null=True,
+        blank=True,
         verbose_name=_("金额"),
     )
     purpose: str = models.CharField(
         max_length=64,
         choices=PaymentPurpose.choices,
+        blank=True,
+        default="",
         verbose_name=_("款项用途"),
     )
     payment_method: str = models.CharField(

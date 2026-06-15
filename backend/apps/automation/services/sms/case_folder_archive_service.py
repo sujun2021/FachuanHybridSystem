@@ -54,6 +54,9 @@ class CaseFolderArchiveService:
         markdown_path = self._write_sms_markdown(archive_folder, sms, renamed_paths)
         copied_count = self._copy_documents(archive_folder, renamed_paths)
 
+        sms.archived_to_case_folder = True
+        sms.save(update_fields=["archived_to_case_folder"])
+
         logger.info(
             f"短信 {sms.id} 案件目录归档完成: 目录={archive_folder}, 文书={copied_count}, md={markdown_path.name}"
         )
