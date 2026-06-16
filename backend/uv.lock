@@ -1013,6 +1013,22 @@ wheels = [
 ]
 
 [[package]]
+name = "ddddocr"
+version = "1.6.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "onnxruntime" },
+    { name = "opencv-python", marker = "sys_platform == 'darwin' or sys_platform == 'win32'" },
+    { name = "opencv-python-headless", marker = "sys_platform == 'linux'" },
+    { name = "pillow" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/07/5f/7c06bbb594b77062e6d0d43f06dc88668aaeb699c8737c84542aaa39da8c/ddddocr-1.6.1.tar.gz", hash = "sha256:1c59d84d63d8703c6c486465a32389c9e41dd92852c794c5e4c0181a5f82d43a", size = 75943309, upload-time = "2026-03-11T10:48:41.681Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0e/48/cbaed3981b8d8d51141b9b4779b811f4728e65d952a1e3e2e5e929539183/ddddocr-1.6.1-py3-none-any.whl", hash = "sha256:c7c70f4ae2d0335440ae8b272eea48c9f6888ecef46785fe2311f0c97a133935", size = 75983593, upload-time = "2026-03-11T10:48:23.702Z" },
+]
+
+[[package]]
 name = "defusedxml"
 version = "0.7.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1354,6 +1370,7 @@ dependencies = [
     { name = "concurrent-log-handler" },
     { name = "cryptography" },
     { name = "daphne" },
+    { name = "ddddocr" },
     { name = "django" },
     { name = "django-cors-headers" },
     { name = "django-lifecycle" },
@@ -1447,6 +1464,7 @@ requires-dist = [
     { name = "concurrent-log-handler", specifier = ">=0.9.25" },
     { name = "cryptography", specifier = "==48.0.1" },
     { name = "daphne", specifier = ">=4.2.1" },
+    { name = "ddddocr", specifier = ">=1.6.0" },
     { name = "django", specifier = "==6.0.6" },
     { name = "django-cors-headers", specifier = "==4.9.0" },
     { name = "django-lifecycle", specifier = "==1.2.7" },
