@@ -216,6 +216,9 @@
         <section class="cm-card">
             <div class="cm-card-header">
                 <div class="cm-card-title">{% trans "上传" %}</div>
+                <div class="cm-card-subtitle">
+                    {% trans "文件将保存至案件日志附件，可在下方列表进行材料绑定" %}
+                </div>
             </div>
 
             <div class="cm-upload-controls">
@@ -378,6 +381,7 @@
                     <th style="width: 220px;">{% trans "方向/主管机关" %}</th>
                     <th style="width: 240px;">{% trans "当事人（可选）" %}</th>
                     <th>{% trans "类型名称" %}</th>
+                    <th style="width: 48px;"></th>
                 </tr>
             </thead>
             <tbody>
@@ -437,6 +441,15 @@
                                 </select>
                                 <input x-show="row.typeSelect === '__custom__'" type="text" placeholder="{% trans "输入类型名称" %}" x-model="row.customTypeName" @input="onCustomTypeNameChange(row)" />
                             </div>
+                        </td>
+                        <td style="text-align: center;">
+                            <button type="button"
+                                    class="cm-row-delete-btn"
+                                    :disabled="isSaving"
+                                    @click="deleteFileRow($event, row)"
+                                    title="{% trans "删除此文件" %}">
+                                ×
+                            </button>
                         </td>
                     </tr>
                 </template>

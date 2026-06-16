@@ -64,6 +64,15 @@ from .material_schemas import (
 from .number_schemas import CaseNumberIn, CaseNumberOut, CaseNumberUpdate
 from .party_schemas import CasePartyCreate, CasePartyIn, CasePartyOut, CasePartyUpdate
 from .supervising_authority_schemas import SupervisingAuthorityIn, SupervisingAuthorityOut, SupervisingAuthorityUpdate
+from .dedup_schemas import (
+    DedupActionResult,
+    DedupExecuteIn,
+    DedupFileInfo,
+    DedupGroupOut,
+    DedupScanIn,
+    DedupScanOut,
+    DedupSummaryOut,
+)
 from .template_binding_schemas import (
     AvailableTemplateSchema,
     BindingsResponseSchema,
@@ -133,6 +142,13 @@ __all__ = [
     "CaseUpdate",
     "ClientIdentityDocOut",
     "ClientOut",
+    "DedupActionResult",
+    "DedupExecuteIn",
+    "DedupFileInfo",
+    "DedupGroupOut",
+    "DedupScanIn",
+    "DedupScanOut",
+    "DedupSummaryOut",
     "FeeCalculationRequest",
     "FeeCalculationResponse",
     "FolderBrowseEntrySchema",

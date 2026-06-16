@@ -703,3 +703,39 @@
   font-size: 12px;
   color: var(--cm-muted);
 }
+
+/* 行内删除按钮 */
+.cm-row-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--cm-muted);
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  line-height: 1;
+  padding: 0;
+}
+
+.cm-row-delete-btn:hover {
+  background: var(--cm-danger);
+  color: #fff;
+}
+
+.cm-row-delete-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* 上传区域存储路径提示 */
+.cm-card-subtitle {
+  font-size: 12px;
+  color: var(--cm-muted);
+  margin-top: 2px;
+}

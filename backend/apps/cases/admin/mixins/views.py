@@ -157,6 +157,11 @@ class CaseAdminViewsMixin:  # pragma: no cover
                 self.admin_site.admin_view(self.email_folder_import_view),  # type: ignore[attr-defined]
                 name="cases_case_email_folder_import",
             ),
+            path(
+                "<int:object_id>/dedup/",
+                self.admin_site.admin_view(self.dedup_view),  # type: ignore[attr-defined]
+                name="cases_case_dedup",
+            ),
         ]
         return custom_urls + urls
 
@@ -363,6 +368,42 @@ class CaseAdminViewsMixin:  # pragma: no cover
         )
 
         return render(request, "admin/cases/case/materials.html", context)
+
+    def dedup_view(self, request: HttpRequest, object_id: int) -> HttpResponse:  # pragma: no cover
+        """文件去重管理页面"""
+        case = self._get_case_with_relations(object_id)
+        if case is None:
+            raise Http404("案件不存在")
+
+        if not self.has_change_permission(request, case):  # type: ignore[attr-defined]
+            raise PermissionDenied
+
+        # 检查是否有文件夹绑定
+        folder_binding = getattr(case, "folder_binding", None)
+        has_binding = folder_binding is not None
+        binding_info = {}
+        if has_binding:
+            binding_info = {
+                "folder_path": folder_binding.folder_path or "",
+                "storage_type": folder_binding.storage_type or "local",
+                "storage_type_display": getattr(folder_binding, "get_storage_type_display", lambda: "")() or folder_binding.storage_type or "",
+            }
+
+        context = self.admin_site.each_context(request)  # type: ignore[attr-defined]
+        context.update(
+            {
+                "case": case,
+                "title": "文件去重: %(name)s" % {"name": case.name},
+                "opts": self.model._meta,  # type: ignore[attr-defined]
+                "detail_url": reverse("admin:cases_case_detail", args=[case.pk]),
+                "materials_url": reverse("admin:cases_case_materials", args=[case.pk]),
+                "has_binding": has_binding,
+                "binding_info": binding_info,
+                "binding_info_json": json_mod.dumps(binding_info, ensure_ascii=False),
+            }
+        )
+
+        return render(request, "admin/cases/case/dedup.html", context)
 
     def _get_case_with_relations(self, case_id: int) -> Case | None:  # pragma: no cover
         service = self._get_case_admin_service()  # type: ignore[attr-defined]

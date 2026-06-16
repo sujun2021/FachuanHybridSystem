@@ -14,6 +14,7 @@ from .caselog_api import router as caselog_router
 from .casenumber_api import router as casenumber_router
 from .caseparty_api import router as caseparty_router
 from .cause_court_api import router as cause_court_router
+from .dedup_api import router as dedup_router
 from .folder_binding_api import router as folder_binding_router
 from .folder_generation_api import router as folder_generation_router
 from .folder_scan_api import router as folder_scan_router
@@ -36,6 +37,7 @@ router.add_router("", folder_generation_router, tags=["案件文件夹生成"])
 router.add_router("", folder_binding_router, tags=["案件文件夹绑定"])
 router.add_router("", case_material_router, tags=["案件材料"])
 router.add_router("", folder_scan_router, tags=["案件文件夹自动捕获"])
+router.add_router("", dedup_router, tags=["文件去重"])
 router.add_router("", template_binding_router, tags=["案件模板绑定"])
 
 __all__ = ["router"]

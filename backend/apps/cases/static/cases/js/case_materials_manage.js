@@ -955,6 +955,31 @@
               this.isUploading = false;
             });
         },
+
+        async deleteFileRow(event, row) {
+          // 先询问确认
+          if (!window.confirm(`确定要删除文件「${row.fileName || ''}」吗？\n\n注意：此操作将删除文件的材料绑定及附件记录。`)) return;
+
+          try {
+            // 如果已绑定材料，先解绑材料
+            if (row.materialId) {
+              const resp = await fetch(`/api/v1/cases/${this.caseId}/materials/${row.materialId}`, {
+                method: 'DELETE',
+                headers: { 'X-CSRFToken': getCsrfToken() },
+              });
+              if (!resp.ok) {
+                const data = await resp.json().catch(() => ({}));
+                throw new Error(data.message || data.detail || '删除材料绑定失败');
+              }
+            }
+            // 从列表中移除
+            this.rows = (this.rows || []).filter(r => r.attachmentId !== row.attachmentId);
+            this.selectedIds = (this.selectedIds || []).filter(id => String(id) !== String(row.attachmentId));
+            this.showMessage('文件已删除', 'success');
+          } catch (err) {
+            this.showMessage((err && err.message) || '删除失败', 'error');
+          }
+        },
       };
     });
   });

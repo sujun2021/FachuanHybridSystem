@@ -1,0 +1,371 @@
+/* 文件去重页面样式 */
+
+.case-dedup-page {
+    padding: 20px 30px;
+    max-width: 1100px;
+}
+
+.dedup-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.dedup-title {
+    margin: 0 0 6px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--body-fg, #333);
+}
+
+.dedup-subtitle {
+    font-size: 13px;
+    color: var(--body-quiet-color, #666);
+}
+
+.dedup-subtitle a {
+    color: var(--link-fg, #417690);
+}
+
+.dedup-message {
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.dedup-message.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.dedup-message.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.dedup-message.warn {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+/* 无绑定 */
+.dedup-no-binding {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.dedup-empty-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+.dedup-empty-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--body-fg, #333);
+}
+
+.dedup-empty-desc {
+    color: var(--body-quiet-color, #666);
+    font-size: 14px;
+}
+
+/* 配置卡片 */
+.dedup-config-card {
+    background: var(--darkened-bg, #f8f8f8);
+    border: 1px solid var(--border-color, #ccc);
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+}
+
+.dedup-config-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 8px;
+    align-items: center;
+}
+
+.dedup-label {
+    min-width: 80px;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--body-quiet-color, #666);
+}
+
+.dedup-value {
+    font-size: 14px;
+}
+
+.dedup-path {
+    font-size: 12px;
+    background: var(--body-bg, #fff);
+    padding: 2px 8px;
+    border-radius: 3px;
+    border: 1px solid var(--border-color, #ddd);
+    word-break: break-all;
+}
+
+.dedup-config-desc {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--body-quiet-color, #666);
+    line-height: 1.6;
+}
+
+/* 进度条 */
+.dedup-progress {
+    margin-bottom: 20px;
+}
+
+.dedup-progress-bar {
+    height: 8px;
+    background: var(--darkened-bg, #e9ecef);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.dedup-progress-fill {
+    height: 100%;
+    background: var(--link-fg, #417690);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.dedup-progress-fill--action {
+    background: #5cb85c;
+}
+
+.dedup-progress-text {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--body-quiet-color, #666);
+}
+
+.dedup-progress-desc {
+    font-size: 12px;
+    color: var(--body-quiet-color, #999);
+    margin-top: 4px;
+}
+
+/* 摘要统计 */
+.dedup-summary {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.dedup-stat {
+    flex: 1;
+    min-width: 100px;
+    background: var(--darkened-bg, #f8f8f8);
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 6px;
+    padding: 14px 16px;
+    text-align: center;
+}
+
+.dedup-stat--warn {
+    border-color: #ffc107;
+}
+
+.dedup-stat--danger {
+    border-color: #f5c6cb;
+}
+
+.dedup-stat-num {
+    display: block;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--body-fg, #333);
+    margin-bottom: 4px;
+}
+
+.dedup-stat--warn .dedup-stat-num {
+    color: #856404;
+}
+
+.dedup-stat--danger .dedup-stat-num {
+    color: #721c24;
+}
+
+.dedup-stat-label {
+    font-size: 12px;
+    color: var(--body-quiet-color, #666);
+}
+
+/* 操作栏 */
+.dedup-execute-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    background: var(--darkened-bg, #f8f8f8);
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 6px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.dedup-execute-hint {
+    font-size: 13px;
+    color: var(--body-quiet-color, #666);
+    margin-right: auto;
+}
+
+/* 空状态 */
+.dedup-empty {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+/* 重复组 */
+.dedup-groups-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 16px 0;
+    color: var(--body-fg, #333);
+}
+
+.dedup-group {
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.dedup-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    background: var(--darkened-bg, #f0f0f0);
+    border-bottom: 1px solid var(--border-color, #ddd);
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.dedup-group-hash {
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 12px;
+    color: var(--body-quiet-color, #666);
+}
+
+.dedup-group-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--body-fg, #333);
+}
+
+.dedup-group-wasted {
+    color: #721c24;
+    font-weight: 600;
+}
+
+.dedup-file-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.dedup-file-table th {
+    padding: 8px 12px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--body-quiet-color, #666);
+    border-bottom: 1px solid var(--border-color, #ddd);
+    background: var(--body-bg, #fff);
+}
+
+.dedup-file-table td {
+    padding: 8px 12px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--hairline-color, #eee);
+    vertical-align: top;
+}
+
+.dedup-file-table tr.is-keep {
+    background: rgba(92, 184, 92, 0.05);
+}
+
+.dedup-file-table tr.is-dup {
+    background: rgba(217, 83, 79, 0.03);
+}
+
+.dedup-keep-badge {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    line-height: 22px;
+    text-align: center;
+    background: #5cb85c;
+    color: #fff;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.dedup-dup-badge {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    line-height: 22px;
+    text-align: center;
+    background: #d9534f;
+    color: #fff;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.dedup-file-name {
+    font-weight: 500;
+    margin-bottom: 2px;
+    word-break: break-all;
+}
+
+.dedup-file-path {
+    font-size: 11px;
+    color: var(--body-quiet-color, #999);
+    font-family: 'Consolas', 'Monaco', monospace;
+    word-break: break-all;
+}
+
+/* 错误列表 */
+.dedup-errors {
+    margin-top: 24px;
+    padding: 14px 18px;
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 6px;
+}
+
+.dedup-errors-title {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    color: #721c24;
+}
+
+.dedup-errors-list {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.dedup-errors-list li {
+    font-size: 12px;
+    color: #721c24;
+    margin-bottom: 4px;
+    word-break: break-all;
+}

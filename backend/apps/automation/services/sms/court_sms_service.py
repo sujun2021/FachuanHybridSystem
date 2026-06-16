@@ -6,7 +6,7 @@
 
 import hashlib
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from django.db import transaction
@@ -173,8 +173,8 @@ class CourtSMSService(SMSCaseBindingMixin, SMSDocumentMixin, SMSDownloadMixin):
             qs = qs.filter(received_at__lte=date_to)
         return qs
 
-    def submit_sms(self, content: str, received_at: datetime | None = None) -> CourtSMS:  # pragma: no cover
-        """提交短信，创建记录并触发异步处理。30天内相同内容自动去重。"""
+    def submit_sms(self, content: str, received_at: datetime | None = None, case_id: int | None = None) -> CourtSMS:  # pragma: no cover
+        """提交短信，创建记录并触发异步处理。全库内容去重（MD5），支持案件级过滤。"""
         if not content or not content.strip():
             raise ValidationException(
                 message="短信内容不能为空", code="EMPTY_SMS_CONTENT", errors={"content": "短信内容不能为空"}
@@ -187,17 +187,15 @@ class CourtSMSService(SMSCaseBindingMixin, SMSDocumentMixin, SMSDownloadMixin):
         content_hash = hashlib.md5(content_stripped.encode("utf-8")).hexdigest()
 
         try:
-            # 30天内去重
-            dedup_before = received_at - timedelta(days=30)
-            original = (
-                CourtSMS.objects.filter(
-                    content_hash=content_hash,
-                    received_at__gte=dedup_before,
-                    duplicate_of__isnull=True,  # 只匹配"原始"短信，不匹配已被标记为重复的
-                )
-                .order_by("received_at")
-                .first()
+            # 全库去重（移除30天时间窗口），可选案件级过滤
+            dedup_qs = CourtSMS.objects.filter(
+                content_hash=content_hash,
+                duplicate_of__isnull=True,  # 只匹配"原始"短信，不匹配已被标记为重复的
             )
+            if case_id:
+                dedup_qs = dedup_qs.filter(case_id=case_id)
+
+            original = dedup_qs.order_by("received_at").first()
 
             if original and original.id:
                 processing_statuses = {

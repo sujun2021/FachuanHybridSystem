@@ -1,0 +1,227 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrahead %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static 'cases/css/case_dedup.css' %}">
+{% endblock %}
+
+{% block content_title %}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+    › <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    › <a href="{% url 'admin:cases_case_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+    › <a href="{{ detail_url }}">{{ case.name }}</a>
+    › {% trans "文件去重" %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="case-dedup-page"
+     x-data="caseDedupApp({
+        caseId: {{ case.pk }},
+        detailUrl: '{{ detail_url|escapejs }}',
+        materialsUrl: '{{ materials_url|escapejs }}',
+        hasBinding: {{ has_binding|yesno:'true,false' }},
+        bindingInfo: JSON.parse('{{ binding_info_json|escapejs }}'),
+        texts: {
+            noBinding: '{% trans "未绑定文件夹" %}',
+            scanning: '{% trans "正在扫描重复文件" %}',
+            scanningDesc: '{% trans "正在按大小预分组并计算 MD5 哈希值..." %}',
+            completed: '{% trans "扫描完成" %}',
+            failed: '{% trans "扫描失败" %}',
+            noDuplicates: '{% trans "未发现重复文件" %}',
+            executing: '{% trans "正在执行去重操作" %}',
+            executeDone: '{% trans "操作完成" %}',
+            confirmDelete: '{% trans "确定要删除所有重复文件（保留每个组中最新的一份）吗？此操作不可撤销！" %}',
+            confirmRecycle: '{% trans "确定要将所有重复文件移动到回收目录吗？" %}',
+        }
+     })"
+     x-init="init()">
+
+    <header class="dedup-header">
+        <div>
+            <h1 class="dedup-title">{% trans "文件去重" %}：{{ case.name }}</h1>
+            <div class="dedup-subtitle">
+                <a href="{{ detail_url }}">← {% trans "返回案件详情" %}</a>
+                |
+                <a href="{{ materials_url }}">{% trans "上传/绑定材料" %}</a>
+            </div>
+        </div>
+
+        <div class="dedup-actions" x-show="!noBinding">
+            <button type="button" class="button default" :disabled="isScanning || isExecuting" @click="startScan()">
+                <span x-text="isScanning ? texts.scanning : '{% trans "扫描重复文件" %}'">{% trans "扫描重复文件" %}</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="dedup-message" x-show="message" x-transition :class="messageType" x-text="message" aria-live="polite"></div>
+
+    <!-- 无文件夹绑定 -->
+    <div class="dedup-no-binding" x-show="noBinding">
+        <div class="dedup-empty-icon">📁</div>
+        <div class="dedup-empty-title" x-text="texts.noBinding">{% trans "未绑定文件夹" %}</div>
+        <div class="dedup-empty-desc">
+            {% trans "请先在案件详情页面为案件绑定文件夹，然后才能执行文件去重扫描。" %}
+            <br>
+            <a href="{{ detail_url }}" class="button" style="margin-top: 16px;">{% trans "前往案件详情" %}</a>
+        </div>
+    </div>
+
+    <!-- 扫描配置 -->
+    <div class="dedup-config" x-show="!noBinding && !isScanning && !scanResult">
+        <div class="dedup-config-card">
+            <div class="dedup-config-row">
+                <span class="dedup-label">{% trans "存储类型" %}</span>
+                <span class="dedup-value" x-text="bindingInfo.storage_type_display || bindingInfo.storage_type || '本地'"></span>
+            </div>
+            <div class="dedup-config-row">
+                <span class="dedup-label">{% trans "绑定路径" %}</span>
+                <code class="dedup-path" x-text="bindingInfo.folder_path"></code>
+            </div>
+            <div class="dedup-config-desc">
+                {% trans "扫描将递归遍历所有子目录，按文件大小预分组后计算 MD5 哈希值，找出内容完全相同的重复文件。扫描过程对文件只读，不修改任何内容。" %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 扫描进度 -->
+    <div class="dedup-progress" x-show="isScanning">
+        <div class="dedup-progress-bar">
+            <div class="dedup-progress-fill" :style="`width: ${scanProgress}%`"></div>
+        </div>
+        <div class="dedup-progress-text">
+            <span class="dedup-progress-status" x-text="scanStatusText"></span>
+            <span class="dedup-progress-percent" x-text="scanProgress + '%'"></span>
+        </div>
+        <div class="dedup-progress-desc" x-show="scanStatusDesc" x-text="scanStatusDesc"></div>
+    </div>
+
+    <!-- 扫描结果 -->
+    <div class="dedup-result" x-show="scanResult && !isScanning">
+        <!-- 摘要统计 -->
+        <div class="dedup-summary">
+            <div class="dedup-stat">
+                <span class="dedup-stat-num" x-text="scanResult.summary.total_files">0</span>
+                <span class="dedup-stat-label">{% trans "扫描文件" %}</span>
+            </div>
+            <div class="dedup-stat">
+                <span class="dedup-stat-num" x-text="scanResult.summary.total_size_mb">0</span>
+                <span class="dedup-stat-label">{% trans "总大小 MB" %}</span>
+            </div>
+            <div class="dedup-stat dedup-stat--warn">
+                <span class="dedup-stat-num" x-text="scanResult.summary.duplicate_groups">0</span>
+                <span class="dedup-stat-label">{% trans "重复组" %}</span>
+            </div>
+            <div class="dedup-stat dedup-stat--danger">
+                <span class="dedup-stat-num" x-text="scanResult.summary.total_duplicate_files">0</span>
+                <span class="dedup-stat-label">{% trans "重复文件" %}</span>
+            </div>
+            <div class="dedup-stat dedup-stat--danger">
+                <span class="dedup-stat-num" x-text="scanResult.summary.total_wasted_mb">0</span>
+                <span class="dedup-stat-label">{% trans "可释放 MB" %}</span>
+            </div>
+            <div class="dedup-stat">
+                <span class="dedup-stat-num" x-text="scanResult.summary.duration_seconds">0</span>
+                <span class="dedup-stat-label">{% trans "耗时 秒" %}</span>
+            </div>
+        </div>
+
+        <!-- 无重复 -->
+        <div class="dedup-empty" x-show="!scanResult.duplicate_groups.length">
+            <div class="dedup-empty-title" x-text="texts.noDuplicates">{% trans "未发现重复文件" %}</div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="dedup-execute-bar" x-show="scanResult.duplicate_groups.length && !isExecuting">
+            <span class="dedup-execute-hint">
+                {% trans "扫描只检测不操作，点击下方按钮执行去重：" %}
+            </span>
+            <button type="button"
+                    class="button"
+                    :disabled="isExecuting"
+                    @click="executeDedup('recycle')">
+                ♻ {% trans "移至回收目录" %}
+            </button>
+            <button type="button"
+                    class="button"
+                    style="border-color: #d9534f; color: #d9534f;"
+                    :disabled="isExecuting"
+                    @click="executeDedup('delete')">
+                🗑 {% trans "删除重复文件" %}
+            </button>
+        </div>
+
+        <!-- 操作进度 -->
+        <div class="dedup-progress" x-show="isExecuting">
+            <div class="dedup-progress-bar">
+                <div class="dedup-progress-fill dedup-progress-fill--action" :style="`width: ${execProgress}%`"></div>
+            </div>
+            <div class="dedup-progress-text">
+                <span class="dedup-progress-status" x-text="texts.executing"></span>
+            </div>
+        </div>
+
+        <!-- 重复组详情 -->
+        <div class="dedup-groups" x-show="scanResult.duplicate_groups.length">
+            <h2 class="dedup-groups-title">
+                {% trans "重复文件详情" %}（<span x-text="scanResult.duplicate_groups.length"></span> {% trans "组" %}）
+            </h2>
+
+            <template x-for="(group, gIdx) in scanResult.duplicate_groups" :key="group.hash_value">
+                <div class="dedup-group">
+                    <div class="dedup-group-header">
+                        <span class="dedup-group-hash" x-text="'MD5: ' + group.hash_value.substring(0, 16) + '...'"></span>
+                        <span class="dedup-group-meta">
+                            <span x-text="group.file_count + ' 份文件'"></span>
+                            <span class="dedup-group-wasted" x-text="'可释放 ' + group.total_wasted_mb + ' MB'"></span>
+                        </span>
+                    </div>
+                    <table class="dedup-file-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 56px;">{% trans "保留" %}</th>
+                                <th>{% trans "文件名" %}</th>
+                                <th style="width: 100px;">{% trans "大小" %}</th>
+                                <th style="width: 160px;">{% trans "修改时间" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="file in group.files" :key="file.path">
+                                <tr :class="{ 'is-keep': file.is_keep, 'is-dup': !file.is_keep }">
+                                    <td>
+                                        <span class="dedup-keep-badge" x-show="file.is_keep">✓</span>
+                                        <span class="dedup-dup-badge" x-show="!file.is_keep">✗</span>
+                                    </td>
+                                    <td>
+                                        <div class="dedup-file-name" x-text="file.name"></div>
+                                        <div class="dedup-file-path" x-text="file.path"></div>
+                                    </td>
+                                    <td x-text="file.size_mb + ' MB'"></td>
+                                    <td x-text="file.modified_display"></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </template>
+        </div>
+
+        <!-- 错误列表 -->
+        <div class="dedup-errors" x-show="scanResult.errors && scanResult.errors.length">
+            <h3 class="dedup-errors-title">{% trans "错误" %}（<span x-text="scanResult.errors.length"></span>）</h3>
+            <ul class="dedup-errors-list">
+                <template x-for="err in scanResult.errors" :key="err">
+                    <li x-text="err"></li>
+                </template>
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% csrf_token %}
+<script src="{% static 'cases/js/case_dedup.js' %}"></script>
+{% endblock %}
