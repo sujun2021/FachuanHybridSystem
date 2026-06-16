@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-import time
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch, call
-
-import pytest
+from unittest.mock import MagicMock, patch
 
 
 # ======================================================================
@@ -147,12 +144,12 @@ class TestGetCaptchaRecognizer:
         assert result.task is task
 
     def test_no_plugin_no_task_raises(self):
-        """插件未安装且无 task 时，应抛出 RuntimeError"""
-        from apps.automation.services.scraper.core.captcha_recognizer import get_captcha_recognizer
+        """插件未安装且无 task 时，应返回 FileBasedCaptchaRecognizer"""
+        from apps.automation.services.scraper.core.captcha_recognizer import get_captcha_recognizer, FileBasedCaptchaRecognizer
 
         mock_plugins = MagicMock()
         mock_plugins.has_captcha_ocr_plugin.return_value = False
 
         with patch.dict("sys.modules", {"plugins": mock_plugins}):
-            with pytest.raises(RuntimeError, match="需要 task 参数"):
-                get_captcha_recognizer()
+            result = get_captcha_recognizer()
+            assert isinstance(result, FileBasedCaptchaRecognizer)

@@ -750,11 +750,12 @@ class TestOrientationDetectionServiceFull:
         assert result["rotation"] == 0
         assert "ocr_text" in result
 
-    def test_detect_batch_multiple(self):
+    @patch("apps.image_rotation.services.orientation.service.OrientationDetectionService.ocr_service",
+           new_callable=PropertyMock, return_value=None)
+    def test_detect_batch_multiple(self, _mock_ocr_prop):
         from apps.image_rotation.services.orientation.service import OrientationDetectionService
         import base64
         svc = OrientationDetectionService()
-        svc._ocr_service = None
         img_b64 = base64.b64encode(_make_test_image()).decode()
         results = svc.detect_batch([
             {"filename": "a.png", "data": img_b64},

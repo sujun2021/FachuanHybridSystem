@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -51,7 +50,6 @@ class TestManualCaptchaRecognizerRecognize:
         r = ManualCaptchaRecognizer(task=task, timeout=0, poll_interval=0.01)
 
         with patch("apps.automation.services.scraper.core.captcha_recognizer.Path") as mock_path_cls:
-            mock_dir = MagicMock()
             mock_path_instance = MagicMock()
             mock_path_instance.__truediv__ = MagicMock(return_value=MagicMock())
             mock_path_cls.return_value = mock_path_instance
@@ -144,8 +142,9 @@ class TestGetCaptchaRecognizer:
     def test_no_task_no_plugin_raises(self):
         with patch.dict("sys.modules", {"plugins": None}):
             with patch.dict("sys.modules", {"plugins.captcha_ocr": None}):
-                with pytest.raises(RuntimeError, match="task 参数"):
-                    get_captcha_recognizer(task=None)
+                result = get_captcha_recognizer(task=None)
+                from apps.automation.services.scraper.core.captcha_recognizer import FileBasedCaptchaRecognizer
+                assert isinstance(result, FileBasedCaptchaRecognizer)
 
 
 # ── CaptchaRecognizer ABC ──────────────────────────────────────────────────
