@@ -133,6 +133,13 @@
         scanEnableRecognition: false,
         redirectTimer: null,
 
+        // ── 文件去重 ──
+        isDedupScanning: false,
+        dedupScanned: false,
+        dedupResult: { total_files: 0, duplicate_groups: [], total_duplicates: 0, wasted_display: '0 B' },
+        dedupSelectedIds: [],
+        isDedupDeleting: false,
+
         get uploadButtonText() {
           if (this.isUploading) return '上传中...';
           const n = (this.pendingFiles || []).length;
@@ -978,6 +985,65 @@
             this.showMessage('文件已删除', 'success');
           } catch (err) {
             this.showMessage((err && err.message) || '删除失败', 'error');
+          }
+        },
+
+        // ── 文件去重 ──
+        async startDedupScan() {
+          if (this.isDedupScanning) return;
+          this.isDedupScanning = true;
+          this.dedupScanned = false;
+          this.dedupSelectedIds = [];
+          this.dedupResult = { total_files: 0, duplicate_groups: [], total_duplicates: 0, wasted_display: '0 B' };
+          try {
+            const resp = await fetch(`/api/v1/cases/${this.caseId}/materials/dedup-scan`, {
+              method: 'POST',
+              headers: { 'X-CSRFToken': getCsrfToken() },
+            });
+            if (!resp.ok) throw new Error('扫描失败');
+            const data = await resp.json();
+            this.dedupResult = data;
+            this.dedupScanned = true;
+            if (data.total_duplicates > 0) {
+              this.showMessage(`发现 ${data.total_duplicates} 个重复文件，可释放 ${data.wasted_display}`, 'warn');
+            } else {
+              this.showMessage('未发现重复文件', 'success');
+            }
+          } catch (err) {
+            this.showMessage('去重扫描失败: ' + ((err && err.message) || '未知错误'), 'error');
+          } finally {
+            this.isDedupScanning = false;
+          }
+        },
+
+        async deleteSelectedDups() {
+          const ids = this.dedupSelectedIds || [];
+          if (!ids.length) return;
+          if (!window.confirm(`确定要删除选中的 ${ids.length} 个重复文件吗？此操作不可撤销！`)) return;
+          this.isDedupDeleting = true;
+          try {
+            const resp = await fetch(`/api/v1/cases/${this.caseId}/materials/dedup-delete`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken(),
+              },
+              body: JSON.stringify({ attachment_ids: ids.map(Number) }),
+            });
+            if (!resp.ok) throw new Error('删除失败');
+            const data = await resp.json();
+            const deletedCount = data.deleted || 0;
+            const errors = data.errors || [];
+            let msg = `已删除 ${deletedCount} 个文件`;
+            if (errors.length) msg += `，${errors.length} 个失败`;
+            this.showMessage(msg, errors.length ? 'error' : 'success');
+            if (deletedCount > 0) {
+              window.setTimeout(() => { window.location.reload(); }, 800);
+            }
+          } catch (err) {
+            this.showMessage('删除失败: ' + ((err && err.message) || '未知错误'), 'error');
+          } finally {
+            this.isDedupDeleting = false;
           }
         },
       };

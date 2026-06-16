@@ -739,3 +739,124 @@
   color: var(--cm-muted);
   margin-top: 2px;
 }
+
+/* ── 文件去重面板 ── */
+.cm-dedup-card {
+  margin-bottom: 20px;
+}
+
+.cm-dedup-status {
+  padding: 12px 0;
+}
+
+.cm-dedup-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 0;
+}
+
+.cm-dedup-summary-text {
+  font-size: 13px;
+  color: var(--cm-text);
+  line-height: 1.6;
+}
+
+.cm-text-danger {
+  color: var(--cm-danger);
+}
+
+.cm-dedup-empty {
+  padding: 20px 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--cm-muted);
+}
+
+.cm-dedup-group {
+  margin-bottom: 16px;
+  border: 1px solid var(--cm-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.cm-dedup-group-hash {
+  padding: 8px 14px;
+  background: #f1f5f9;
+  font-size: 12px;
+  color: var(--cm-muted);
+  font-family: monospace;
+  border-bottom: 1px solid var(--cm-border);
+}
+
+.cm-dedup-file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--cm-border);
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.12s;
+}
+
+.cm-dedup-file:last-child {
+  border-bottom: none;
+}
+
+.cm-dedup-file:hover {
+  background: #f8fafc;
+}
+
+.cm-dedup-file.is-keep {
+  background: rgba(22, 163, 74, 0.04);
+}
+
+.cm-dedup-file input[type="checkbox"] {
+  flex-shrink: 0;
+  accent-color: var(--cm-danger);
+}
+
+.cm-dedup-file.is-keep input[type="checkbox"] {
+  accent-color: #9ca3af;
+}
+
+.cm-dedup-file-name {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  word-break: break-all;
+}
+
+.cm-dedup-keep-tag {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.cm-dedup-file-meta {
+  font-size: 12px;
+  color: var(--cm-muted);
+  white-space: nowrap;
+}
+
+.cm-dedup-file-link {
+  font-size: 12px;
+  color: var(--cm-primary);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.cm-dedup-file-link:hover {
+  text-decoration: underline;
+}

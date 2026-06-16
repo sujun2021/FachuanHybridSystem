@@ -75,13 +75,19 @@
             </div>
             <div class="cm-actions">
                 <button type="button"
-                        class="button default"
-                        :disabled="isScanning"
+                        class="button"
+                        :disabled="isScanning || isDedupScanning"
                         @click="startFolderScan(false)">{% trans "开始扫描" %}</button>
                 <button type="button"
                         class="button"
-                        :disabled="isScanning"
+                        :disabled="isScanning || isDedupScanning"
                         @click="startFolderScan(true)">{% trans "重新扫描" %}</button>
+                <button type="button"
+                        class="button"
+                        :disabled="isScanning || isDedupScanning"
+                        @click="startDedupScan()">
+                    <span x-text="isDedupScanning ? '{% trans "正在扫描..." %}' : '{% trans "扫描重复文件" %}'">{% trans "扫描重复文件" %}</span>
+                </button>
             </div>
         </div>
 
@@ -209,6 +215,76 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+    </section>
+
+    <section class="cm-card cm-dedup-card" x-show="dedupScanned || isDedupScanning">
+        <div class="cm-card-header">
+            <div>
+                <div class="cm-card-title">{% trans "重复文件" %}</div>
+                <div class="cm-card-subtitle">
+                    {% trans "扫描已上传附件中的 MD5 重复文件" %}
+                </div>
+            </div>
+            <div class="cm-actions">
+                <button type="button"
+                        class="button"
+                        :disabled="isDedupScanning"
+                        @click="startDedupScan()">
+                    <span x-text="isDedupScanning ? '{% trans "扫描中..." %}' : '{% trans "重新扫描" %}'"></span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 扫描状态 -->
+        <div class="cm-dedup-status" x-show="isDedupScanning">
+            <span class="cm-status-pill is-pending">{% trans "正在计算 MD5 哈希值..." %}</span>
+        </div>
+
+        <!-- 摘要 -->
+        <div class="cm-dedup-summary" x-show="dedupScanned && !isDedupScanning">
+            <template x-if="dedupResult.total_duplicates > 0">
+                <div class="cm-dedup-summary-row">
+                    <span class="cm-dedup-summary-text">
+                        {% trans "扫描" %} <strong x-text="dedupResult.total_files"></strong> {% trans "个文件" %}，
+                        {% trans "发现" %} <strong class="cm-text-danger" x-text="dedupResult.total_duplicates"></strong> {% trans "个重复" %}，
+                        {% trans "可释放" %} <strong class="cm-text-danger" x-text="dedupResult.wasted_display"></strong>
+                    </span>
+                    <button type="button"
+                            class="button"
+                            style="border-color: #d9534f; color: #d9534f;"
+                            :disabled="!dedupSelectedIds.length || isDedupDeleting"
+                            @click="deleteSelectedDups()">
+                        <span x-text="isDedupDeleting ? '{% trans "删除中..." %}' : '{% trans "删除选中" %}（' + dedupSelectedIds.length + '）'"></span>
+                    </button>
+                </div>
+            </template>
+            <template x-if="dedupResult.total_duplicates === 0">
+                <div class="cm-dedup-empty">{% trans "未发现重复文件" %}</div>
+            </template>
+        </div>
+
+        <!-- 重复组 -->
+        <div class="cm-dedup-groups" x-show="dedupScanned && dedupResult.duplicate_groups.length && !isDedupScanning">
+            <template x-for="(group, gIdx) in dedupResult.duplicate_groups" :key="group.hash_value">
+                <div class="cm-dedup-group">
+                    <div class="cm-dedup-group-hash" x-text="'MD5 ' + group.hash_value.substring(0, 8) + '...  |  ' + group.wasted_display + ' 可释放'"></div>
+                    <template x-for="(file, fIdx) in group.files" :key="file.attachment_id">
+                        <label class="cm-dedup-file" :class="{ 'is-keep': fIdx === 0 }">
+                            <input type="checkbox"
+                                   :value="file.attachment_id"
+                                   :disabled="fIdx === 0"
+                                   x-model="dedupSelectedIds" />
+                            <span class="cm-dedup-file-name">
+                                <span x-text="file.file_name"></span>
+                                <span x-show="fIdx === 0" class="cm-dedup-keep-tag">{% trans "保留" %}</span>
+                            </span>
+                            <span class="cm-dedup-file-meta" x-text="file.size_display + ' | ' + file.uploaded_at"></span>
+                            <a class="cm-dedup-file-link" :href="file.file_url" target="_blank" x-show="file.file_url">{% trans "查看" %}</a>
+                        </label>
+                    </template>
+                </div>
+            </template>
         </div>
     </section>
 
