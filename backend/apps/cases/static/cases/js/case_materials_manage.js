@@ -964,27 +964,21 @@
         },
 
         async deleteFileRow(event, row) {
-          // 先询问确认
-          if (!window.confirm(`确定要删除文件「${row.fileName || ''}」吗？\n\n注意：此操作将删除文件的材料绑定及附件记录。`)) return;
+          if (!window.confirm('确定要删除文件「' + (row.fileName || '') + '」吗？\n\n注意：此操作将删除文件的材料绑定及附件记录。')) return;
 
           try {
-            // 如果已绑定材料，先解绑材料
             if (row.materialId) {
-              const resp = await fetch(`/api/v1/cases/${this.caseId}/materials/${row.materialId}`, {
+              const resp = await fetch('/api/v1/cases/' + this.caseId + '/materials/' + row.materialId, {
                 method: 'DELETE',
                 headers: { 'X-CSRFToken': getCsrfToken() },
               });
-              if (!resp.ok) {
-                const data = await resp.json().catch(() => ({}));
-                throw new Error(data.message || data.detail || '删除材料绑定失败');
-              }
+              if (!resp.ok) throw new Error('删除失败');
             }
-            // 从列表中移除
-            this.rows = (this.rows || []).filter(r => r.attachmentId !== row.attachmentId);
-            this.selectedIds = (this.selectedIds || []).filter(id => String(id) !== String(row.attachmentId));
+            this.rows = (this.rows || []).filter(function(r) { return r.attachmentId !== row.attachmentId; });
+            this.selectedIds = (this.selectedIds || []).filter(function(id) { return String(id) !== String(row.attachmentId); });
             this.showMessage('文件已删除', 'success');
           } catch (err) {
-            this.showMessage((err && err.message) || '删除失败', 'error');
+            this.showMessage('删除失败: ' + ((err && err.message) || '未知错误'), 'error');
           }
         },
 
@@ -996,16 +990,17 @@
           this.dedupSelectedIds = [];
           this.dedupResult = { total_files: 0, duplicate_groups: [], total_duplicates: 0, wasted_display: '0 B' };
           try {
-            const resp = await fetch(`/api/v1/cases/${this.caseId}/materials/dedup-scan`, {
+            var url = '/api/v1/cases/' + this.caseId + '/materials/dedup-scan';
+            var resp = await fetch(url, {
               method: 'POST',
               headers: { 'X-CSRFToken': getCsrfToken() },
             });
             if (!resp.ok) throw new Error('扫描失败');
-            const data = await resp.json();
+            var data = await resp.json();
             this.dedupResult = data;
             this.dedupScanned = true;
             if (data.total_duplicates > 0) {
-              this.showMessage(`发现 ${data.total_duplicates} 个重复文件，可释放 ${data.wasted_display}`, 'warn');
+              this.showMessage('发现 ' + data.total_duplicates + ' 个重复文件，可释放 ' + data.wasted_display, 'warn');
             } else {
               this.showMessage('未发现重复文件', 'success');
             }
@@ -1017,12 +1012,13 @@
         },
 
         async deleteSelectedDups() {
-          const ids = this.dedupSelectedIds || [];
+          var ids = this.dedupSelectedIds || [];
           if (!ids.length) return;
-          if (!window.confirm(`确定要删除选中的 ${ids.length} 个重复文件吗？此操作不可撤销！`)) return;
+          if (!window.confirm('确定要删除选中的 ' + ids.length + ' 个重复文件吗？此操作不可撤销！')) return;
           this.isDedupDeleting = true;
           try {
-            const resp = await fetch(`/api/v1/cases/${this.caseId}/materials/dedup-delete`, {
+            var url = '/api/v1/cases/' + this.caseId + '/materials/dedup-delete';
+            var resp = await fetch(url, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -1031,14 +1027,14 @@
               body: JSON.stringify({ attachment_ids: ids.map(Number) }),
             });
             if (!resp.ok) throw new Error('删除失败');
-            const data = await resp.json();
-            const deletedCount = data.deleted || 0;
-            const errors = data.errors || [];
-            let msg = `已删除 ${deletedCount} 个文件`;
-            if (errors.length) msg += `，${errors.length} 个失败`;
-            this.showMessage(msg, errors.length ? 'error' : 'success');
+            var data = await resp.json();
+            var deletedCount = data.deleted || 0;
+            var errorList = data.errors || [];
+            var msg = '已删除 ' + deletedCount + ' 个文件';
+            if (errorList.length) msg += '，' + errorList.length + ' 个失败';
+            this.showMessage(msg, errorList.length ? 'error' : 'success');
             if (deletedCount > 0) {
-              window.setTimeout(() => { window.location.reload(); }, 800);
+              window.setTimeout(function() { window.location.reload(); }, 800);
             }
           } catch (err) {
             this.showMessage('删除失败: ' + ((err && err.message) || '未知错误'), 'error');
