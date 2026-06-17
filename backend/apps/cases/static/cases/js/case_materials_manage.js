@@ -854,16 +854,32 @@
           for (const row of this.rows) {
             if (!row.category) continue;
             if (!row.typeSelect) {
-              throw new Error(`文件「${row.fileName}」未选择类型`);
+              // 自动选择类型：优先匹配 type_name_hint，否则取第一个
+              const options = this.typeOptions(row);
+              const hint = (row.customTypeName || row.type_name_hint || '').trim();
+              if (hint) {
+                const matched = options.find(function(t) { return t.name === hint; });
+                if (matched) {
+                  row.typeSelect = String(matched.id);
+                } else {
+                  row.typeSelect = '__custom__';
+                  row.customTypeName = hint;
+                }
+              } else if (options.length > 0) {
+                row.typeSelect = String(options[0].id);
+              } else {
+                // 没有可用类型，跳过此行
+                continue;
+              }
             }
             if (row.typeSelect === '__custom__' && !(row.customTypeName || '').trim()) {
-              throw new Error(`文件「${row.fileName}」自定义类型为空`);
+              throw new Error('文件「' + row.fileName + '」自定义类型为空');
             }
             if (row.category === 'party') {
-              if (!row.side) throw new Error(`文件「${row.fileName}」未选择我方/对方`);
+              if (!row.side) throw new Error('文件「' + row.fileName + '」未选择我方/对方');
             }
             if (row.category === 'non_party') {
-              if (!row.supervisingAuthorityId) throw new Error(`文件「${row.fileName}」未选择主管机关`);
+              if (!row.supervisingAuthorityId) throw new Error('文件「' + row.fileName + '」未选择主管机关');
             }
             const item = {
               attachment_id: row.attachmentId,
