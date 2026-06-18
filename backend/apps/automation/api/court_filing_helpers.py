@@ -416,6 +416,8 @@ def _match_slot(*, material: Any, file_path: Path, filing_type: str) -> str:
         return best_slot
 
     joined_signal = "".join(primary_signals + secondary_signals)
+
+    # === 启发式兜底：即使评分全为 0，通过关键词推断应属槽位 ===
     if filing_type == _FILING_TYPE_EXECUTION:
         execution_apply_hits = ("执行申请书", "申请执行书", "强制执行", "申请执行")
         execution_apply_excludes = ("限制高消费", "纳入失信", "公开信息", "出境")
@@ -423,6 +425,19 @@ def _match_slot(*, material: Any, file_path: Path, filing_type: str) -> str:
             keyword in joined_signal for keyword in execution_apply_excludes
         ):
             return "0"
+        # 执行案件身份材料推断
+        identity_kw = ("身份证明", "身份证", "营业执照", "统一社会信用代码", "法定代表人",
+                       "身份材料", "天眼查", "企查查", "工商登记", "市场监督管理局",
+                       "组织机构代码", "国家企业信用")
+        if any(kw in joined_signal for kw in identity_kw):
+            return "3"
+
+    # 通用兜底：身份材料推断（民事 slot 1 / 执行 slot 3 已在上方处理）
+    identity_kw = ("身份证明", "身份证", "营业执照", "统一社会信用代码", "法定代表人",
+                   "户口簿", "身份材料", "天眼查", "企查查", "工商登记", "市场监督管理局",
+                   "组织机构代码", "国家企业信用")
+    if any(kw in joined_signal for kw in identity_kw):
+        return "1"
     if "送达地址" in joined_signal:
         return "4"
     if any(kw in joined_signal for kw in ("保全", "保函", "保全申请")):
