@@ -85,6 +85,7 @@ const CourtSmsDetailPage = lazy(() => import('@/pages/dashboard/tools/CourtSmsDe
 const CourierTrackingPage = lazy(() => import('@/pages/dashboard/tools/CourierTrackingPage'))
 const ElementConvertPage = lazy(() => import('@/pages/dashboard/tools/ElementConvertPage'))
 const LprCalculatorPage = lazy(() => import('@/pages/dashboard/tools/LprCalculatorPage'))
+const DocSpacePage = lazy(() => import('@/pages/dashboard/tools/DocSpacePage'))
 
 // 财务管理
 const CollectionPage = lazy(() => import('@/pages/dashboard/finance/CollectionPage'))
@@ -373,6 +374,10 @@ export const router = createBrowserRouter([
           {
             path: PATHS.ADMIN_FINANCE_COLLECTION,
             element: <CollectionPage />,
+          },
+          {
+            path: PATHS.ADMIN_TOOLS_DOCSPACE,
+            element: <DocSpacePage />,
           },
           // Phase 4: 设置 + 任务队列 + 日志
           {
