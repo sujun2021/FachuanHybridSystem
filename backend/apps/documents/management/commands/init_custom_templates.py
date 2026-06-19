@@ -33,7 +33,7 @@ class Command(BaseCommand):
             result = service.delete_all_custom_templates()
             self.stdout.write(
                 self.style.SUCCESS(
-                    "删除完成：文件夹 %(folders)d 个，文件模板 %(documents)d 个"
+                    "删除完成：文件夹 %(folders_deleted)d 个，文件模板 %(documents_deleted)d 个"
                     % result
                 )
             )
