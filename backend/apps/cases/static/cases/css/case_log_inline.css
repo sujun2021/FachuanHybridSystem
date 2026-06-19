@@ -20,21 +20,21 @@
     align-items: center;
     padding: 10px;
     margin: 0;
-    background: #417690;
+    background: var(--fc-admin-blue);
     border-radius: 4px 4px 0 0;
     cursor: pointer;
     user-select: none;
 }
 
 .case-log-header:hover {
-    background: #205067;
+    background: var(--fc-admin-blue-hover);
 }
 
 .case-log-section .case-log-header h2,
 .case-log-header h2 {
     margin: 0;
     padding: 0;
-    color: #fff;
+    color: var(--fc-text-on-primary);
     font-size: 13px;
     font-weight: normal;
     display: flex;
@@ -44,16 +44,16 @@
 }
 
 .case-log-icon { font-size: 14px; }
-.case-log-count { font-weight: normal; font-size: 12px; color: #fff; }
+.case-log-count { font-weight: normal; font-size: 12px; color: var(--fc-text-on-primary); }
 
 .case-log-sort-link {
-    color: #fff !important;
+    color: var(--fc-text-on-primary) !important;
     text-decoration: none !important;
     font-weight: normal !important;
 }
 
 .case-log-sort-link:hover {
-    color: #fff !important;
+    color: var(--fc-text-on-primary) !important;
     text-decoration: underline !important;
 }
 
@@ -63,13 +63,13 @@
     align-items: center;
 }
 
-.case-log-toggle { color: #fff; font-size: 10px; transition: transform 0.2s ease; }
+.case-log-toggle { color: var(--fc-text-on-primary); font-size: 10px; transition: transform 0.2s ease; }
 .case-log-section.collapsed .case-log-toggle { transform: rotate(-90deg); }
 
 /* 内容区域 */
 .case-log-content {
     padding: 10px;
-    background: #f8f9fa;
+    background: var(--fc-bg-muted);
     max-height: 350px;
     overflow-y: auto;
 }
@@ -83,7 +83,7 @@
     top: 0;
     bottom: 0;
     width: 2px;
-    background: #ddd;
+    background: var(--fc-border);
 }
 
 /* 日志卡片 */
@@ -95,17 +95,17 @@
     top: 10px;
     width: 8px;
     height: 8px;
-    background: #417690;
+    background: var(--fc-admin-blue);
     border-radius: 50%;
-    border: 2px solid #fff;
+    border: 2px solid var(--fc-text-on-primary);
     box-shadow: 0 0 0 1px #417690;
 }
-.case-log-item.new::before { background: #28a745; box-shadow: 0 0 0 1px #28a745; }
+.case-log-item.new::before { background: var(--fc-success-text); box-shadow: 0 0 0 1px #28a745; }
 
 /* 日志卡片样式 */
 .log-card {
-    background: white;
-    border: 1px solid #e0e0e0;
+    background: var(--fc-bg-card);
+    border: 1px solid var(--fc-border);
     border-radius: 4px;
     overflow: hidden;
 }
@@ -117,13 +117,13 @@
     justify-content: space-between;
     align-items: center;
     padding: 4px 10px;
-    background: #fafafa;
-    border-bottom: 1px solid #eee;
+    background: var(--fc-bg-muted-light);
+    border-bottom: 1px solid var(--fc-border);
 }
 
 .log-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.log-time { color: #666; font-size: 11px; font-weight: 500; }
-.log-author { color: #417690; font-size: 11px; font-weight: 600; padding: 1px 6px; background: #e3f2fd; border-radius: 8px; }
+.log-time { color: var(--fc-text-muted); font-size: 11px; font-weight: 500; }
+.log-author { color: var(--fc-admin-blue); font-size: 11px; font-weight: 600; padding: 1px 6px; background: var(--fc-info-bg); border-radius: 8px; }
 .log-reminder-badge { font-size: 10px; padding: 1px 6px; background: #fff3e0; color: #e65100; border-radius: 8px; }
 
 .log-actions { display: flex; gap: 6px; }
@@ -134,26 +134,26 @@
     cursor: pointer;
     text-decoration: none;
 }
-.log-expand-btn { background: #f0f0f0; border: 1px solid #ddd; color: #555; }
-.log-expand-btn:hover { background: #e0e0e0; }
-.log-edit-link { background: #417690; border: 1px solid #417690; color: white; }
-.log-edit-link:hover { background: #2e5984; }
+.log-expand-btn { background: var(--fc-bg-muted-light); border: 1px solid var(--fc-border); color: var(--fc-text-muted); }
+.log-expand-btn:hover { background: var(--fc-border); }
+.log-edit-link { background: var(--fc-admin-blue); border: 1px solid var(--fc-admin-blue); color: var(--fc-text-on-primary); }
+.log-edit-link:hover { background: var(--fc-admin-blue-hover); }
 
 /* 卡片内容 */
 .log-card-body { padding: 6px 10px; }
 .log-content-preview, .log-content-full {
-    color: #333;
+    color: var(--fc-text-secondary);
     font-size: 12px;
     line-height: 1.4;
     white-space: pre-wrap;
     word-break: break-word;
 }
-.log-content-preview { color: #555; }
+.log-content-preview { color: var(--fc-text-muted); }
 .log-content-full {
-    background: #fafafa;
+    background: var(--fc-bg-muted-light);
     padding: 6px;
     border-radius: 3px;
-    border-left: 2px solid #417690;
+    border-left: 2px solid var(--fc-admin-blue);
     margin-top: 4px;
 }
 
@@ -161,7 +161,7 @@
 .log-reminder-info {
     margin-top: 4px;
     padding: 3px 6px;
-    background: #fff8e1;
+    background: var(--fc-warning-bg);
     border-radius: 3px;
     font-size: 11px;
     color: #f57c00;
@@ -175,20 +175,20 @@
 .log-attachments {
     margin-top: 4px;
     padding: 3px 6px;
-    background: #f5f5f5;
+    background: var(--fc-bg-muted-light);
     border-radius: 3px;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 4px;
 }
-.attachment-label { font-size: 11px; color: #666; }
+.attachment-label { font-size: 11px; color: var(--fc-text-muted); }
 .attachment-link {
     font-size: 11px;
-    color: #1976d2;
+    color: var(--fc-primary);
     text-decoration: none;
     padding: 1px 5px;
-    background: #e3f2fd;
+    background: var(--fc-info-bg);
     border-radius: 3px;
     max-width: 180px;
     overflow: hidden;
@@ -196,14 +196,14 @@
     white-space: nowrap;
     display: inline-block;
 }
-.attachment-link:hover { background: #bbdefb; text-decoration: underline; }
+.attachment-link:hover { background: var(--fc-primary-light); text-decoration: underline; }
 
 /* 新增日志表单 */
-.log-add-form { background: white; border: 1px dashed #28a745; border-radius: 4px; }
+.log-add-form { background: var(--fc-bg-card); border: 1px dashed var(--fc-success-text); border-radius: 4px; }
 .log-add-header {
     padding: 5px 10px;
-    background: #e8f5e9;
-    color: #2e7d32;
+    background: var(--fc-success-bg);
+    color: var(--fc-success-text);
     font-weight: 600;
     font-size: 12px;
     display: flex;
@@ -213,21 +213,21 @@
 .add-icon { font-size: 12px; }
 .log-add-body { padding: 8px; }
 .log-add-body .form-row { margin-bottom: 6px; }
-.log-add-body label { display: block; margin-bottom: 2px; font-weight: 600; font-size: 11px; color: #555; }
+.log-add-body label { display: block; margin-bottom: 2px; font-weight: 600; font-size: 11px; color: var(--fc-text-muted); }
 .log-add-body textarea {
     width: 100%;
     min-height: 50px;
     padding: 6px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--fc-border);
     border-radius: 3px;
     font-size: 12px;
     resize: vertical;
     box-sizing: border-box;
 }
-.log-add-body textarea:focus { outline: none; border-color: #417690; }
+.log-add-body textarea:focus { outline: none; border-color: var(--fc-admin-blue); }
 .log-add-body select, .log-add-body input[type="text"] {
     padding: 4px 6px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--fc-border);
     border-radius: 3px;
     font-size: 12px;
 }
@@ -237,8 +237,8 @@
 
 /* 滚动条 */
 .case-log-content::-webkit-scrollbar { width: 5px; }
-.case-log-content::-webkit-scrollbar-track { background: #f1f1f1; }
-.case-log-content::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 2px; }
+.case-log-content::-webkit-scrollbar-track { background: var(--fc-bg-muted-light); }
+.case-log-content::-webkit-scrollbar-thumb { background: var(--fc-border); border-radius: 2px; }
 
 /* 响应式 - 移动端保持舒适 */
 @media (max-width: 768px) {

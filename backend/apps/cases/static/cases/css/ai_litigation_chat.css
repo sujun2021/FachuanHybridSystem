@@ -134,13 +134,13 @@
     width: 75%;
     display: flex;
     flex-direction: column;
-    background: white;
+    background: var(--fc-bg-card);
 }
 
 .chat-header {
     padding: 16px 24px;
-    border-bottom: 1px solid #f0f0f0;
-    background: white;
+    border-bottom: 1px solid var(--fc-bg-muted-light);
+    background: var(--fc-bg-card);
     box-shadow: 0 1px 2px rgba(0,0,0,0.02);
     z-index: 10;
 }
@@ -150,24 +150,24 @@
     align-items: center;
     gap: 12px;
     font-size: 14px;
-    color: #666;
+    color: var(--fc-text-muted);
 }
 
 .doc-type {
     font-weight: 600;
-    color: #333;
+    color: var(--fc-text-secondary);
     font-size: 15px;
 }
 
 .separator {
-    color: #eee;
+    color: var(--fc-border);
     font-size: 12px;
 }
 
 .status-badge {
     padding: 2px 8px;
-    background: #e8f5e9;
-    color: #2e7d32;
+    background: var(--fc-success-bg);
+    color: var(--fc-success-text);
     border-radius: 12px;
     font-size: 12px;
     font-weight: 500;
@@ -181,7 +181,7 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
-    background: #fff;
+    background: var(--fc-bg-card);
 }
 
 .message {
@@ -213,18 +213,18 @@
     justify-content: center;
     font-size: 16px;
     flex-shrink: 0;
-    background: #f5f5f5;
+    background: var(--fc-bg-muted-light);
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .message.user .message-avatar {
-    background: #1976d2;
-    color: white;
+    background: var(--fc-primary);
+    color: var(--fc-text-on-primary);
 }
 
 .message.assistant .message-avatar {
-    background: #fff;
-    border: 1px solid #e0e0e0;
+    background: var(--fc-bg-card);
+    border: 1px solid var(--fc-border);
 }
 
 .message-content {
@@ -243,32 +243,32 @@
 }
 
 .message.user .message-text {
-    background: #1976d2;
-    color: white;
+    background: var(--fc-primary);
+    color: var(--fc-text-on-primary);
     border-top-right-radius: 2px;
 }
 
 .message.assistant .message-text {
-    background: #f8f9fa;
-    color: #333;
-    border: 1px solid #f0f0f0;
+    background: var(--fc-bg-muted);
+    color: var(--fc-text-secondary);
+    border: 1px solid var(--fc-bg-muted-light);
     border-top-left-radius: 2px;
 }
 
 .message.system .message-text {
-    background: #fff8e1;
-    color: #856404;
+    background: var(--fc-warning-bg);
+    color: var(--fc-warning-text);
     text-align: center;
     font-size: 13px;
     padding: 8px 16px;
     border-radius: 20px;
     box-shadow: none;
-    border: 1px solid #ffeeba;
+    border: 1px solid var(--fc-warning-border);
 }
 
 .message-time {
     font-size: 11px;
-    color: #bbb;
+    color: var(--fc-text-muted);
     margin-top: 6px;
     padding: 0 4px;
 }
@@ -276,8 +276,8 @@
 /* ========== 输入区域 ========== */
 .input-area {
     padding: 20px 24px;
-    border-top: 1px solid #f0f0f0;
-    background: white;
+    border-top: 1px solid var(--fc-bg-muted-light);
+    background: var(--fc-bg-card);
     display: flex;
     gap: 12px;
     align-items: flex-end;
@@ -286,13 +286,13 @@
 .input-area textarea {
     flex: 1;
     padding: 12px 16px;
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--fc-border);
     border-radius: 12px;
     font-size: 15px;
     font-family: inherit;
     resize: none;
     line-height: 1.5;
-    background: #f9f9f9;
+    background: var(--fc-bg-muted-light);
     transition: all 0.2s;
     max-height: 120px;
     min-height: 48px;
@@ -300,16 +300,16 @@
 
 .input-area textarea:focus {
     outline: none;
-    border-color: #1976d2;
-    background: white;
+    border-color: var(--fc-primary);
+    background: var(--fc-bg-card);
     box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
 }
 
 .btn-send {
     padding: 0 24px;
     height: 48px;
-    background: #1976d2;
-    color: white;
+    background: var(--fc-primary);
+    color: var(--fc-text-on-primary);
     border: none;
     border-radius: 12px;
     cursor: pointer;
@@ -321,7 +321,7 @@
 }
 
 .btn-send:hover {
-    background: #1565c0;
+    background: var(--fc-primary-dark);
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(25, 118, 210, 0.3);
 }
@@ -331,8 +331,8 @@
 }
 
 .btn-send:disabled {
-    background: #e0e0e0;
-    color: #999;
+    background: var(--fc-border);
+    color: var(--fc-text-muted);
     cursor: not-allowed;
     box-shadow: none;
     transform: none;
@@ -345,7 +345,7 @@
     align-items: center;
     justify-content: center;
     padding: 60px 20px;
-    color: #999;
+    color: var(--fc-text-muted);
     text-align: center;
     height: 100%;
 }
@@ -354,7 +354,7 @@
     font-size: 64px;
     margin-bottom: 24px;
     opacity: 0.5;
-    background: #f5f5f5;
+    background: var(--fc-bg-muted-light);
     width: 120px;
     height: 120px;
     border-radius: 50%;
@@ -366,13 +366,13 @@
 .empty-text {
     font-size: 18px;
     font-weight: 500;
-    color: #666;
+    color: var(--fc-text-muted);
     margin-bottom: 12px;
 }
 
 .empty-hint {
     font-size: 14px;
-    color: #bbb;
+    color: var(--fc-text-muted);
 }
 
 /* ========== 加载状态 ========== */
@@ -382,14 +382,14 @@
     align-items: center;
     justify-content: center;
     padding: 40px;
-    color: #666;
+    color: var(--fc-text-muted);
 }
 
 .spinner {
     width: 40px;
     height: 40px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #1976d2;
+    border: 4px solid var(--fc-bg-muted-light);
+    border-top: 4px solid var(--fc-primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: 15px;
@@ -424,7 +424,7 @@
 
 .dialog-content {
     position: relative;
-    background: white;
+    background: var(--fc-bg-card);
     padding: 24px;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -435,12 +435,12 @@
 .dialog-content h3 {
     margin: 0 0 12px 0;
     font-size: 18px;
-    color: #333;
+    color: var(--fc-text-secondary);
 }
 
 .dialog-content p {
     margin: 0 0 20px 0;
-    color: #666;
+    color: var(--fc-text-muted);
     line-height: 1.5;
 }
 
@@ -452,22 +452,22 @@
 
 .btn-cancel {
     padding: 8px 16px;
-    background: #f5f5f5;
-    color: #333;
-    border: 1px solid #ddd;
+    background: var(--fc-bg-muted-light);
+    color: var(--fc-text-secondary);
+    border: 1px solid var(--fc-border);
     border-radius: 4px;
     cursor: pointer;
     font-size: 14px;
 }
 
 .btn-cancel:hover {
-    background: #e0e0e0;
+    background: var(--fc-border);
 }
 
 .btn-danger {
     padding: 8px 16px;
-    background: #f44336;
-    color: white;
+    background: var(--fc-error-text);
+    color: var(--fc-text-on-primary);
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -475,7 +475,7 @@
 }
 
 .btn-danger:hover {
-    background: #d32f2f;
+    background: var(--fc-error-text);
 }
 
 /* ========== 响应式设计 ========== */

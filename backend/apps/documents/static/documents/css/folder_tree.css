@@ -281,7 +281,7 @@
 }
 
 .sortable-chosen {
-    background: #f0f7ff;
+    background: var(--fc-bg-muted-light);
 }
 
 .sortable-drag {

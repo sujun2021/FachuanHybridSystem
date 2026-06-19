@@ -12,7 +12,7 @@
             </div>
 
             <div x-show="!loading">
-                <div style="background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); border: 1px solid var(--fc-border); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px;">
+                <div style="background: linear-gradient(180deg, var(--fc-bg-muted) 0%, var(--fc-bg-muted-light) 100%); border: 1px solid var(--fc-border); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px;">
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px 16px;">
                         <div style="display: flex; align-items: center; gap: 6px; min-width: 0;">
                             <span style="color: var(--fc-text-muted); font-size: 12px; flex: 0 0 auto;">{% translate "管辖法院" %}：</span>
@@ -63,19 +63,19 @@
                     <template x-if="quoteContext">
                         <div>
                             <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
-                                <span x-show="isQuotePolling()" style="font-size:12px; color:var(--fc-primary-dark); background:#dbeafe; border-radius:999px; padding:2px 8px;">{% trans "询价刷新中..." %}</span>
+                                <span x-show="isQuotePolling()" style="font-size:12px; color:var(--fc-primary-dark); background:var(--fc-info-bg); border-radius:999px; padding:2px 8px;">{% trans "询价刷新中..." %}</span>
                             </div>
 
                             <template x-if="quoteContext.items && quoteContext.items.length > 0">
-                                <div style="max-height: 220px; overflow:auto; border:1px solid #dbeafe; border-radius:8px; background:var(--fc-bg-card);">
+                                <div style="max-height: 220px; overflow:auto; border:1px solid var(--fc-info-bg); border-radius:8px; background:var(--fc-bg-card);">
                                     <table style="width:100%; border-collapse: collapse; font-size:12px;">
                                         <thead>
-                                            <tr style="background:var(--fc-primary-subtle); color:#1e3a8a;">
-                                                <th style="text-align:center; padding:6px 8px; border-bottom:1px solid #dbeafe; width:36px;">{% trans "序号" %}</th>
-                                                <th style="text-align:left; padding:6px 8px; border-bottom:1px solid #dbeafe;">{% trans "担保机构" %}</th>
-                                                <th style="text-align:center; padding:6px 8px; border-bottom:1px solid #dbeafe;">{% trans "报价区间" %}</th>
-                                                <th style="text-align:right; padding:6px 8px; border-bottom:1px solid #dbeafe;">{% trans "最高保全金额" %}</th>
-                                                <th style="text-align:center; padding:6px 8px; border-bottom:1px solid #dbeafe;">{% trans "操作" %}</th>
+                                            <tr style="background:var(--fc-primary-subtle); color:var(--fc-primary-darker);">
+                                                <th style="text-align:center; padding:6px 8px; border-bottom:1px solid var(--fc-info-bg); width:36px;">{% trans "序号" %}</th>
+                                                <th style="text-align:left; padding:6px 8px; border-bottom:1px solid var(--fc-info-bg);">{% trans "担保机构" %}</th>
+                                                <th style="text-align:center; padding:6px 8px; border-bottom:1px solid var(--fc-info-bg);">{% trans "报价区间" %}</th>
+                                                <th style="text-align:right; padding:6px 8px; border-bottom:1px solid var(--fc-info-bg);">{% trans "最高保全金额" %}</th>
+                                                <th style="text-align:center; padding:6px 8px; border-bottom:1px solid var(--fc-info-bg);">{% trans "操作" %}</th>
                                             </tr>
                                         </thead>
                                         <tbody>

@@ -285,7 +285,7 @@
 
 .confidence-score.low {
     background: #fdd;
-    color: #900;
+    color: var(--fc-error-text);
 }
 
 .result-grid {

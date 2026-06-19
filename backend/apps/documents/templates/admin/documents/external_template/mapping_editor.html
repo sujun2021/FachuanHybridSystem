@@ -21,20 +21,20 @@
 .me-preview p { margin: 4px 0; }
 
 /* Highlights */
-.me-highlight { background: #e8f0fe; outline: 2px solid #4285f4; outline-offset: -1px; cursor: pointer; position: relative; border-radius: 2px; transition: background 0.15s; }
-.me-highlight:hover { background: #d2e3fc; }
-.me-highlight.active { background: #c6dafc; outline-color: #1a73e8; }
-.me-highlight-badge { position: absolute; top: -8px; right: -8px; background: #4285f4; color: var(--fc-text-on-primary); font-size: 10px; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10; pointer-events: none; }
+.me-highlight { background: var(--fc-info-bg); outline: 2px solid var(--fc-primary); outline-offset: -1px; cursor: pointer; position: relative; border-radius: 2px; transition: background 0.15s; }
+.me-highlight:hover { background: var(--fc-info-bg); }
+.me-highlight.active { background: var(--fc-primary-hover); outline-color: var(--fc-primary); }
+.me-highlight-badge { position: absolute; top: -8px; right: -8px; background: var(--fc-primary); color: var(--fc-text-on-primary); font-size: 10px; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10; pointer-events: none; }
 
 /* Mapping list */
 .me-mapping-item { padding: 10px 14px; border-bottom: 1px solid var(--fc-border); cursor: pointer; transition: background 0.1s; font-size: 0.85rem; }
 .me-mapping-item:hover { background: var(--fc-bg-muted); }
-.me-mapping-item.active { background: #e8f0fe; border-left: 3px solid #4285f4; }
+.me-mapping-item.active { background: var(--fc-info-bg); border-left: 3px solid var(--fc-primary); }
 .me-mapping-label { font-weight: 600; color: var(--fc-text-secondary); }
 .me-mapping-meta { color: var(--fc-text-disabled); font-size: 0.75rem; margin-top: 2px; }
 .me-mapping-actions { display: flex; gap: 6px; margin-top: 6px; }
 .me-mapping-actions button { font-size: 0.75rem; padding: 2px 8px; border: 1px solid var(--fc-border-input); border-radius: 3px; background: var(--fc-bg-card); cursor: pointer; }
-.me-mapping-actions button:hover { background: #f0f0f0; }
+.me-mapping-actions button:hover { background: var(--fc-bg-muted-light); }
 .me-mapping-actions .me-btn-delete { color: var(--fc-error-text); border-color: var(--fc-error-text); }
 .me-mapping-actions .me-btn-delete:hover { background: var(--fc-error-bg); }
 
@@ -52,9 +52,9 @@
 .me-btn-primary { background: var(--fc-admin-blue); color: var(--fc-text-on-primary); }
 .me-btn-primary:hover { background: var(--fc-admin-blue-hover); }
 .me-btn-secondary { background: var(--fc-bg-muted-light); color: var(--fc-text-secondary); border: 1px solid var(--fc-border-input); }
-.me-btn-secondary:hover { background: #e8e8e8; }
+.me-btn-secondary:hover { background: var(--fc-bg-muted-light); }
 .me-btn-danger { background: var(--fc-error-text); color: var(--fc-text-on-primary); }
-.me-btn-danger:hover { background: #c82333; }
+.me-btn-danger:hover { background: var(--fc-error-text); }
 .me-btn-sm { padding: 4px 10px; font-size: 0.75rem; }
 .me-btn:disabled { opacity: .5; cursor: not-allowed; }
 
@@ -74,15 +74,15 @@
 .me-toast-error { background: var(--fc-error-text); }
 
 /* Add mapping hint */
-.me-add-hint { padding: 12px 14px; background: #fffbe6; border-bottom: 1px solid var(--fc-border); font-size: 0.8rem; color: var(--fc-warning-text); display: flex; align-items: center; gap: 6px; }
+.me-add-hint { padding: 12px 14px; background: var(--fc-warning-bg); border-bottom: 1px solid var(--fc-border); font-size: 0.8rem; color: var(--fc-warning-text); display: flex; align-items: center; gap: 6px; }
 
 /* Select mode */
 .me-select-mode .me-preview { cursor: crosshair; }
 .me-select-mode .me-preview td:hover,
-.me-select-mode .me-preview th:hover { background: var(--fc-warning-bg) !important; outline: 2px dashed #ffc107; outline-offset: -2px; }
-.me-select-mode .me-preview p:hover { background: var(--fc-warning-bg) !important; outline: 2px dashed #ffc107; outline-offset: -2px; }
+.me-select-mode .me-preview th:hover { background: var(--fc-warning-bg) !important; outline: 2px dashed var(--fc-warning-text); outline-offset: -2px; }
+.me-select-mode .me-preview p:hover { background: var(--fc-warning-bg) !important; outline: 2px dashed var(--fc-warning-text); outline-offset: -2px; }
 .me-select-target { background: var(--fc-success-bg) !important; outline: 2px solid var(--fc-success-text) !important; outline-offset: -2px; }
-.me-position-preview { padding: 8px 10px; background: var(--fc-bg-muted); border: 1px solid var(--fc-border); border-radius: 4px; font-size: 0.8rem; color: #495057; max-height: 60px; overflow-y: auto; word-break: break-all; }
+.me-position-preview { padding: 8px 10px; background: var(--fc-bg-muted); border: 1px solid var(--fc-border); border-radius: 4px; font-size: 0.8rem; color: var(--fc-text-secondary); max-height: 60px; overflow-y: auto; word-break: break-all; }
 .me-add-hint .me-btn-cancel { margin-left: auto; font-size: 0.75rem; padding: 2px 10px; }
 </style>
 {% endblock %}

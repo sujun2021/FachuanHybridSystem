@@ -16,7 +16,7 @@
 
 /* 头部区域 */
 .detail-header {
-    background: var(--unfold-bg-card, #fff);
+    background: var(--fc-bg-card);
     border-radius: 12px;
     padding: 24px;
     margin-bottom: 24px;
@@ -41,7 +41,7 @@
 .case-title {
     font-size: 24px;
     font-weight: 600;
-    color: var(--unfold-text-primary, #1a1a1a);
+    color: var(--fc-text-heading);
     margin: 0;
 }
 
@@ -88,7 +88,7 @@
 }
 
 .archived-status.archived {
-    color: #15803d;
+    color: var(--fc-success-text);
 }
 
 /* 操作按钮 */
@@ -113,30 +113,30 @@
 
 .btn-primary {
     background: var(--unfold-primary, #3b82f6);
-    color: #fff !important;
+    color: var(--fc-text-on-primary) !important;
     border: 1px solid var(--unfold-primary, #3b82f6);
 }
 
 .btn-primary:hover:not(:disabled) {
     background: var(--unfold-primary-dark, #2563eb);
-    color: #fff !important;
+    color: var(--fc-text-on-primary) !important;
     border-color: var(--unfold-primary-dark, #2563eb);
 }
 
 .btn-primary:disabled,
 .btn-primary.btn-disabled {
-    background: #9ca3af;
-    border-color: #9ca3af;
-    color: #fff !important;
+    background: var(--fc-text-disabled);
+    border-color: var(--fc-text-disabled);
+    color: var(--fc-text-on-primary) !important;
 }
 
 .btn-secondary {
-    background: #f3f4f6;
+    background: var(--fc-bg-muted-light);
     color: #374151;
 }
 
 .btn-secondary:hover {
-    background: #e5e7eb;
+    background: var(--fc-border);
 }
 
 .btn-disabled {
@@ -146,7 +146,7 @@
 
 /* 标签页导航 */
 .tab-panel {
-    background: var(--unfold-bg-card, #fff);
+    background: var(--fc-bg-card);
     border-radius: 12px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     overflow: hidden;
@@ -154,7 +154,7 @@
 
 .tab-nav {
     display: flex;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--fc-border);
     padding: 0 16px;
 }
 
@@ -224,7 +224,7 @@
 
 /* 信息卡片 */
 .info-card {
-    background: #fafafa;
+    background: var(--fc-bg-muted-light);
     border-radius: 8px;
     padding: 20px;
     transition: box-shadow 0.2s ease;
@@ -280,7 +280,7 @@
 
 .info-item dd {
     font-size: 13px;
-    color: #1a1a1a;
+    color: var(--fc-text-heading);
     text-align: left;
     margin: 0;
     word-break: break-word;
@@ -288,7 +288,7 @@
 
 /* 空状态 */
 .empty-state {
-    color: #9ca3af;
+    color: var(--fc-text-disabled);
     font-size: 13px;
     text-align: center;
     padding: 20px;
@@ -315,7 +315,7 @@
 
 .case-number-list li {
     padding: 8px 0;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--fc-border);
 }
 
 .case-number-list li:last-child {
@@ -324,7 +324,7 @@
 
 .case-number {
     font-weight: 500;
-    color: #1a1a1a;
+    color: var(--fc-text-heading);
 }
 
 .case-number-doc-name {
@@ -345,12 +345,12 @@
 }
 
 .case-number-active-badge {
-    background: #dcfce7;
-    color: #166534;
+    background: var(--fc-success-bg);
+    color: var(--fc-success-text);
 }
 
 .case-number-inactive-badge {
-    background: #f3f4f6;
+    background: var(--fc-bg-muted-light);
     color: var(--fc-text-muted);
 }
 
@@ -377,7 +377,7 @@
 }
 
 .authority-type {
-    background: #e5e7eb;
+    background: var(--fc-border);
     padding: 2px 8px;
     border-radius: 4px;
     font-size: 12px;
@@ -385,7 +385,7 @@
 }
 
 .authority-name {
-    color: #1a1a1a;
+    color: var(--fc-text-heading);
 }
 
 /* 当事人列表 */
@@ -400,7 +400,7 @@
     align-items: center;
     gap: 12px;
     padding: 10px 0;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--fc-border);
 }
 
 .party-item:last-child, .lawyer-item:last-child {
@@ -409,20 +409,20 @@
 
 .party-name, .lawyer-name {
     font-weight: 500;
-    color: #1a1a1a;
+    color: var(--fc-text-heading);
 }
 
 .legal-status {
     font-size: 12px;
     color: var(--fc-text-muted);
-    background: #f3f4f6;
+    background: var(--fc-bg-muted-light);
     padding: 2px 8px;
     border-radius: 4px;
 }
 
 .our-client-badge {
-    background: #dbeafe;
-    color: #1d4ed8;
+    background: var(--fc-info-bg);
+    color: var(--fc-info-text);
     font-size: 11px;
     padding: 2px 6px;
     border-radius: 4px;
@@ -431,8 +431,8 @@
 
 /* 对方当事人徽章 */
 .opposing-party-badge {
-    background: #fee2e2;
-    color: #dc2626;
+    background: var(--fc-error-bg);
+    color: var(--fc-error-text);
     font-size: 11px;
     padding: 2px 6px;
     border-radius: 4px;
@@ -441,7 +441,7 @@
 
 /* 我方当事人高亮 */
 .party-item.our-client {
-    background: #f0f9ff;
+    background: var(--fc-primary-subtle);
     margin: 0 -12px;
     padding: 10px 12px;
     border-radius: 6px;
@@ -462,7 +462,7 @@
     top: 0;
     bottom: 0;
     width: 2px;
-    background: #e5e7eb;
+    background: var(--fc-border);
 }
 
 .timeline-item {
@@ -483,14 +483,14 @@
     height: 12px;
     border-radius: 50%;
     background: var(--unfold-primary, #3b82f6);
-    border: 2px solid #fff;
+    border: 2px solid var(--fc-text-on-primary);
 }
 
 .timeline-content {
-    background: #fff;
+    background: var(--fc-bg-card);
     border-radius: 8px;
     padding: 16px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--fc-border);
     overflow: hidden;
     min-width: 0;
 }
@@ -508,12 +508,12 @@
 
 .timeline-time {
     font-size: 12px;
-    color: #9ca3af;
+    color: var(--fc-text-disabled);
 }
 
 .timeline-body {
     font-size: 14px;
-    color: #4b5563;
+    color: var(--fc-text-secondary);
     line-height: 1.6;
     overflow-wrap: break-word;
     word-break: break-word;
@@ -530,14 +530,14 @@
 .timeline-reminder {
     margin-top: 12px;
     padding: 8px 12px;
-    background: #fef3c7;
+    background: var(--fc-warning-bg);
     border-radius: 6px;
     font-size: 12px;
 }
 
 .reminder-type {
     font-weight: 500;
-    color: #92400e;
+    color: var(--fc-warning-text);
 }
 
 .reminder-time {
@@ -548,7 +548,7 @@
 .timeline-attachments {
     margin-top: 12px;
     padding-top: 12px;
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid var(--fc-border);
     overflow-wrap: break-word;
     word-break: break-all;
 }
@@ -585,7 +585,7 @@
     align-items: center;
     gap: 12px;
     padding: 10px 0;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--fc-border);
 }
 
 .chat-item:last-child {
@@ -593,7 +593,7 @@
 }
 
 .chat-platform {
-    background: #e5e7eb;
+    background: var(--fc-border);
     padding: 2px 8px;
     border-radius: 4px;
     font-size: 12px;
@@ -603,7 +603,7 @@
 .chat-name {
     flex: 1;
     font-weight: 500;
-    color: #1a1a1a;
+    color: var(--fc-text-heading);
 }
 
 .chat-status {
@@ -613,13 +613,13 @@
 }
 
 .chat-status.active {
-    background: #dcfce7;
-    color: #15803d;
+    background: var(--fc-success-bg);
+    color: var(--fc-success-text);
 }
 
 .chat-status.inactive {
-    background: #fee2e2;
-    color: #dc2626;
+    background: var(--fc-error-bg);
+    color: var(--fc-error-text);
 }
 
 /* 文件夹绑定 */
@@ -635,12 +635,12 @@
 }
 
 .binding-status.bound {
-    color: #15803d;
+    color: var(--fc-success-text);
 }
 
 .folder-path {
     font-size: 13px;
-    color: #4b5563;
+    color: var(--fc-text-secondary);
     word-break: break-all;
 }
 
@@ -823,7 +823,7 @@
 
 .btn-hint {
     font-size: 12px;
-    color: #9ca3af;
+    color: var(--fc-text-disabled);
 }
 
 /* 消息提示 */
@@ -839,13 +839,13 @@
 }
 
 .message-toast.success {
-    background: #dcfce7;
-    color: #15803d;
+    background: var(--fc-success-bg);
+    color: var(--fc-success-text);
 }
 
 .message-toast.error {
-    background: #fee2e2;
-    color: #dc2626;
+    background: var(--fc-error-bg);
+    color: var(--fc-error-text);
 }
 
 
@@ -898,17 +898,17 @@
 
 .btn-outline:hover {
     background: var(--unfold-primary, #3b82f6);
-    color: #fff;
+    color: var(--fc-text-on-primary);
 }
 
 .btn-outline.btn-disabled {
-    border-color: #d1d5db;
-    color: #9ca3af;
+    border-color: var(--fc-border-input);
+    color: var(--fc-text-disabled);
 }
 
 .btn-outline.btn-disabled:hover {
     background: transparent;
-    color: #9ca3af;
+    color: var(--fc-text-disabled);
 }
 
 /* 抽屉组件样式 */
@@ -927,7 +927,7 @@
     bottom: 0;
     width: 420px;
     max-width: 90vw;
-    background: #fff;
+    background: var(--fc-bg-card);
     box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
     z-index: 1001;
     display: flex;
@@ -945,13 +945,13 @@
     align-items: center;
     justify-content: space-between;
     padding: 16px 20px;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--fc-border);
 }
 
 .drawer-title {
     font-size: 16px;
     font-weight: 600;
-    color: #1a1a1a;
+    color: var(--fc-text-heading);
     margin: 0;
 }
 
@@ -991,13 +991,13 @@
 
 .detail-value {
     font-size: 14px;
-    color: #1a1a1a;
+    color: var(--fc-text-heading);
     word-break: break-all;
     user-select: text;
 }
 
 .detail-value.copyable {
-    background: #f9fafb;
+    background: var(--fc-bg-muted-light);
     padding: 8px 12px;
     border-radius: 6px;
     cursor: pointer;
@@ -1005,12 +1005,12 @@
 }
 
 .detail-value.copyable:hover {
-    background: #f3f4f6;
+    background: var(--fc-bg-muted-light);
 }
 
 .copy-hint {
     font-size: 11px;
-    color: #9ca3af;
+    color: var(--fc-text-disabled);
     margin-top: 2px;
 }
 
@@ -1023,7 +1023,7 @@
 
 .party-item.clickable:hover,
 .lawyer-item.clickable:hover {
-    background: #f3f4f6;
+    background: var(--fc-bg-muted-light);
     margin: 0 -12px;
     padding: 10px 12px;
     border-radius: 6px;
@@ -1032,7 +1032,7 @@
 .party-item .view-detail-icon,
 .lawyer-item .view-detail-icon {
     margin-left: auto;
-    color: #9ca3af;
+    color: var(--fc-text-disabled);
     font-size: 14px;
 }
 
@@ -1066,13 +1066,13 @@
     min-height: 42px !important;
     margin: 0 !important;
     padding: 0 12px !important;
-    border: 1px solid #d1d5db !important;
+    border: 1px solid var(--fc-border-input) !important;
     border-radius: 8px !important;
     font-size: 14px !important;
     line-height: 40px !important;
     font-family: inherit;
-    color: #0f172a;
-    background: #fff;
+    color: var(--fc-text-heading);
+    background: var(--fc-bg-card);
     box-shadow: none !important;
 }
 
@@ -1087,7 +1087,7 @@
 .court-guarantee-form-row > select.court-guarantee-control:focus,
 .court-guarantee-form-row > input.court-guarantee-control:focus {
     outline: none;
-    border-color: #3b82f6 !important;
+    border-color: var(--fc-primary) !important;
     box-shadow: none !important;
 }
 
@@ -1100,8 +1100,8 @@
 
 /* 一张网申请担保：摘要信息区 */
 .court-guarantee-summary {
-    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-    border: 1px solid #e2e8f0;
+    background: linear-gradient(180deg, var(--fc-bg-muted) 0%, var(--fc-bg-muted-light) 100%);
+    border: 1px solid var(--fc-border);
     border-radius: 10px;
     padding: 14px 16px;
     margin-bottom: 14px;
@@ -1121,7 +1121,7 @@
 }
 
 .court-guarantee-summary-label {
-    color: #64748b;
+    color: var(--fc-text-muted);
     font-size: 12px;
     flex: 0 0 auto;
 }
@@ -1129,7 +1129,7 @@
 .court-guarantee-summary-value {
     font-size: 14px;
     font-weight: 600;
-    color: #1e293b;
+    color: var(--fc-text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1139,10 +1139,10 @@
 /* 一张网申请担保：询价区域 */
 .court-guarantee-quote-section {
     margin-bottom: 12px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--fc-border);
     border-radius: 10px;
     padding: 12px;
-    background: #f8fafc;
+    background: var(--fc-bg-muted);
 }
 
 .court-guarantee-quote-header {
@@ -1156,7 +1156,7 @@
 .court-guarantee-quote-title {
     font-size: 13px;
     font-weight: 600;
-    color: #0f172a;
+    color: var(--fc-text-heading);
 }
 
 .court-guarantee-reuse-row {
@@ -1170,9 +1170,9 @@
 .court-guarantee-quote-table-wrap {
     max-height: 220px;
     overflow: auto;
-    border: 1px solid #dbeafe;
+    border: 1px solid var(--fc-info-bg);
     border-radius: 8px;
-    background: #fff;
+    background: var(--fc-bg-card);
 }
 
 .court-guarantee-quote-table {
@@ -1183,13 +1183,13 @@
 }
 
 .court-guarantee-quote-table thead tr {
-    background: #eff6ff;
-    color: #1e3a8a;
+    background: var(--fc-info-bg);
+    color: var(--fc-info-text);
 }
 
 .court-guarantee-quote-table th {
     padding: 6px 8px;
-    border-bottom: 1px solid #dbeafe;
+    border-bottom: 1px solid var(--fc-info-bg);
     font-weight: 500;
 }
 
@@ -1201,10 +1201,10 @@
 
 .court-guarantee-quote-table td {
     padding: 6px 8px;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--fc-bg-muted-light);
 }
 
-.qtd-num { text-align: center; color: #64748b; }
+.qtd-num { text-align: center; color: var(--fc-text-muted); }
 .qtd-company { text-align: left; }
 .qtd-range { text-align: center; white-space: nowrap; }
 .qtd-max { text-align: right; }
@@ -1213,15 +1213,15 @@
 /* 一张网申请担保：被申请人选择 */
 .court-guarantee-respondent-section {
     margin-bottom: 12px;
-    border: 1px dashed #cbd5e1;
+    border: 1px dashed var(--fc-border-input);
     border-radius: 8px;
     padding: 10px 12px;
-    background: #f8fafc;
+    background: var(--fc-bg-muted);
 }
 
 .court-guarantee-respondent-title {
     font-size: 12px;
-    color: #334155;
+    color: var(--fc-text-secondary);
     margin-bottom: 8px;
     font-weight: 600;
 }
@@ -1242,10 +1242,10 @@
 .data-table td {
     padding: 8px 12px;
     text-align: left;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--fc-border);
 }
 .data-table th {
-    background: #f9fafb;
+    background: var(--fc-bg-muted-light);
     font-weight: 600;
     color: #374151;
     font-size: 12px;
@@ -1253,7 +1253,7 @@
     letter-spacing: 0.025em;
 }
 .data-table tbody tr:hover {
-    background: #f3f4f6;
+    background: var(--fc-bg-muted-light);
 }
 .tag {
     display: inline-block;
@@ -1261,7 +1261,7 @@
     border-radius: 4px;
     font-size: 11px;
     font-weight: 500;
-    background: #e5e7eb;
+    background: var(--fc-border);
     color: #374151;
 }
 .table-responsive {
@@ -1272,14 +1272,14 @@
     font-size: 12px;
 }
 .btn-danger {
-    background: #ef4444;
-    color: #fff;
+    background: var(--fc-error-text);
+    color: var(--fc-text-on-primary);
     border: none;
     border-radius: 4px;
     cursor: pointer;
 }
 .btn-danger:hover {
-    background: #dc2626;
+    background: var(--fc-error-text);
 }
 .modal-overlay {
     position: fixed;
@@ -1294,7 +1294,7 @@
     z-index: 1000;
 }
 .modal-content {
-    background: #fff;
+    background: var(--fc-bg-card);
     border-radius: 8px;
     padding: 24px;
     width: 90%;
@@ -1321,13 +1321,13 @@
 .form-control {
     width: 100%;
     padding: 8px 10px;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--fc-border-input);
     border-radius: 4px;
     font-size: 13px;
 }
 .form-control:focus {
     outline: none;
-    border-color: #3b82f6;
+    border-color: var(--fc-primary);
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
 }
 .form-actions {
@@ -1336,15 +1336,15 @@
     gap: 8px;
     margin-top: 20px;
     padding-top: 16px;
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid var(--fc-border);
 }
 
 /* 案件关联时间线 */
 .case-timeline {
     padding: 10px 16px;
     margin: 0 0 8px;
-    background: #fff;
-    border: 1px solid #e5e7eb;
+    background: var(--fc-bg-card);
+    border: 1px solid var(--fc-border);
     border-radius: 8px;
 }
 .case-timeline-head {
@@ -1354,9 +1354,9 @@
     margin-bottom: 10px;
     font-size: 12px;
     font-weight: 600;
-    color: #475569;
+    color: var(--fc-text-secondary);
 }
-.case-timeline-head svg { color: #6366f1; }
+.case-timeline-head svg { color: var(--fc-primary); }
 .case-timeline-steps {
     display: flex;
     align-items: center;
@@ -1375,19 +1375,19 @@
     transition: background .15s;
     flex-shrink: 0;
 }
-a.ct-step:hover { background: #f1f5f9; }
+a.ct-step:hover { background: var(--fc-bg-muted-light); }
 .ct-step.active {
-    background: #eef2ff;
+    background: var(--fc-primary-subtle);
 }
 .ct-dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #cbd5e1;
+    background: var(--fc-border-input);
     flex-shrink: 0;
 }
 .ct-step.active .ct-dot {
-    background: #6366f1;
+    background: var(--fc-primary);
     box-shadow: 0 0 0 2px rgba(99,102,241,.25);
 }
 .ct-content {
@@ -1398,13 +1398,13 @@ a.ct-step:hover { background: #f1f5f9; }
 .ct-stage {
     font-size: 11px;
     font-weight: 600;
-    color: #6366f1;
+    color: var(--fc-primary);
     line-height: 1.3;
 }
-.ct-step.active .ct-stage { color: #4f46e5; }
+.ct-step.active .ct-stage { color: var(--fc-primary); }
 .ct-name {
     font-size: 11px;
-    color: #64748b;
+    color: var(--fc-text-muted);
     line-height: 1.3;
     max-width: 120px;
     overflow: hidden;
@@ -1413,7 +1413,7 @@ a.ct-step:hover { background: #f1f5f9; }
 .ct-line {
     width: 20px;
     height: 2px;
-    background: #d1d5db;
+    background: var(--fc-border-input);
     flex-shrink: 0;
     margin: 0 2px;
 }
