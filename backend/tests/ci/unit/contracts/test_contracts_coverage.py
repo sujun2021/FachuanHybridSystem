@@ -8,7 +8,7 @@
 - apps/contracts/services/archive/override_service.py
 - apps/contracts/services/archive/wiring.py
 - apps/contracts/services/assignment/wiring.py
-- apps/contracts/services/contract/usecases/composition.py
+- apps.contracts.services.contract.wiring.py
 - apps/contracts/validators.py
 """
 
@@ -267,10 +267,10 @@ class TestAssignmentWiring:
 class TestCompositionUsecase:
     """composition.py build_contract_service 测试"""
 
-    @patch("apps.contracts.services.contract.usecases.composition.ContractService")
-    @patch("apps.contracts.services.contract.usecases.composition.ContractQueryFacade")
-    @patch("apps.contracts.services.contract.usecases.composition.ContractAccessPolicy")
-    @patch("apps.contracts.services.contract.usecases.composition.ContractQueryService")
+    @patch("apps.contracts.services.contract.wiring.ContractService")
+    @patch("apps.contracts.services.contract.wiring.ContractQueryFacade")
+    @patch("apps.contracts.services.contract.wiring.ContractAccessPolicy")
+    @patch("apps.contracts.services.contract.wiring.ContractQueryService")
     def test_build_contract_service(self, MockQS, MockAP, MockQF, MockCS):
         from apps.contracts.services.contract.wiring import build_contract_service
 

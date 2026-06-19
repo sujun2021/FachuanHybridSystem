@@ -542,17 +542,14 @@ class TestOverrideServiceExtended:
 
 
 class TestCompositionExtended:
-    """composition.py extended tests."""
+    """wiring.py extended tests."""
 
-    @patch("apps.contracts.services.contract.wiring.ContractService")
-    @patch("apps.contracts.services.contract.wiring.ContractQueryFacade")
-    @patch("apps.contracts.services.contract.wiring.ContractAccessPolicy")
-    @patch("apps.contracts.services.contract.wiring.ContractQueryService")
-    def test_build_without_services(self, MockQS: Any, MockAP: Any, MockQF: Any, MockCS: Any) -> None:
+    @patch("apps.contracts.services.contract.query.ContractQueryFacade")
+    @patch("apps.contracts.services.contract.domain.ContractAccessPolicy")
+    @patch("apps.contracts.services.contract.query.ContractQueryService")
+    def test_build_without_services(self, MockQS: Any, MockAP: Any, MockQF: Any) -> None:
         from apps.contracts.services.contract.wiring import build_contract_service
 
-        mock_instance = MagicMock()
-        MockCS.return_value = mock_instance
         with patch(
             "apps.contracts.services.assignment.lawyer_assignment_service.LawyerAssignmentService"
         ):

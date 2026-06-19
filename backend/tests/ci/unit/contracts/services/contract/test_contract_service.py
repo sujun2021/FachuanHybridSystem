@@ -228,7 +228,7 @@ class TestContractServiceDelegationMethods:
 
         svc = ContractService()
         with patch(
-            "apps.contracts.services.contract.usecases.get_contract_all_parties.GetContractAllPartiesUseCase"
+            "apps.contracts.services.contract._candidate_post_processor.GetContractAllPartiesUseCase"
         ) as mock_uc:
             mock_uc.return_value.execute.return_value = []
             result = svc.get_all_parties(1)

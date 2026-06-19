@@ -133,7 +133,7 @@ class TestContractServiceDelegatedCalls:
     def test_get_all_parties(self):
         from apps.contracts.services.contract.contract_service import ContractService
         svc = ContractService()
-        with patch("apps.contracts.services.contract.usecases.get_contract_all_parties.GetContractAllPartiesUseCase") as MockUC:
+        with patch("apps.contracts.services.contract._candidate_post_processor.GetContractAllPartiesUseCase") as MockUC:
             MockUC.return_value.execute.return_value = [{"id": 1}]
             result = svc.get_all_parties(1)
             assert len(result) == 1

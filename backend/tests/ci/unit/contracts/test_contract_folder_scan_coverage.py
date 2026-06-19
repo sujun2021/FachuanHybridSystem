@@ -327,8 +327,8 @@ class TestNormalizeDocxName:
 
 class TestConstants:
     def test_quality_card_title(self):
-        from apps.contracts.services.contract.integrations.folder_scan_service import ContractFolderScanService
-        assert "监督卡" in ContractFolderScanService._QUALITY_CARD_TITLE
+        from apps.contracts.services.contract.integrations._import_pipeline import ImportPipeline
+        assert "监督卡" in ImportPipeline._QUALITY_CARD_TITLE
 
     def test_active_statuses(self):
         from apps.contracts.models import ContractFolderScanStatus
