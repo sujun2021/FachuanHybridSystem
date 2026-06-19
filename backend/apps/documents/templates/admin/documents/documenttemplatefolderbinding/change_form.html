@@ -6,7 +6,7 @@
 <style>
 /* 树形选择器样式 */
 .folder-tree-selector {
-    border: 1px solid #ccc;
+    border: 1px solid var(--fc-border);
     border-radius: 4px;
     padding: 10px;
     max-height: 400px;
@@ -26,13 +26,13 @@
 }
 
 .folder-tree-selector .tree-node.selected {
-    background: #bbdefb;
+    background: var(--fc-primary-hover);
     font-weight: bold;
 }
 
 .folder-tree-selector .tree-node .node-icon {
     margin-right: 6px;
-    color: #ffc107;
+    color: var(--fc-warning-text);
 }
 
 .folder-tree-selector .tree-node .node-name {
@@ -41,7 +41,7 @@
 
 .folder-tree-selector .tree-children {
     margin-left: 20px;
-    border-left: 1px dashed #ccc;
+    border-left: 1px dashed var(--fc-border);
     padding-left: 10px;
 }
 
@@ -54,11 +54,11 @@
 }
 
 .folder-tree-selector .tree-toggle:hover {
-    color: #1976d2;
+    color: var(--fc-primary);
 }
 
 .folder-tree-placeholder {
-    color: #999;
+    color: var(--fc-text-muted);
     font-style: italic;
     padding: 20px;
     text-align: center;
@@ -67,8 +67,8 @@
 .selected-folder-display {
     margin-top: 10px;
     padding: 8px 12px;
-    background: #e8f5e9;
-    border: 1px solid #a5d6a7;
+    background: var(--fc-success-bg);
+    border: 1px solid var(--fc-success-border);
     border-radius: 4px;
     color: var(--fc-success-text);
 }

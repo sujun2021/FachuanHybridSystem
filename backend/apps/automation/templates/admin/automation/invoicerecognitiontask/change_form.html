@@ -41,7 +41,7 @@
 
     <!-- 上传进度条 -->
     <div x-show="uploading" style="margin-bottom: 16px;">
-        <div style="font-size: 0.875rem; color: #555; margin-bottom: 4px;">
+        <div style="font-size: 0.875rem; color: var(--fc-text-muted); margin-bottom: 4px;">
             {% trans "上传中" %}... <span x-text="uploadProgress + '%'"></span>
         </div>
         <div class="ir-progress-bar">
@@ -185,7 +185,7 @@
                                     </template>
                                     <template x-if="!record.total_amount"><span>-</span></template>
                                 </td>
-                                <td x-text="getDuplicateReason(record)" style="color:#c0392b;font-size:0.8rem;"></td>
+                                <td x-text="getDuplicateReason(record)" style="color:var(--fc-error-text);font-size:0.8rem;"></td>
                             </tr>
                         </template>
                     </tbody>

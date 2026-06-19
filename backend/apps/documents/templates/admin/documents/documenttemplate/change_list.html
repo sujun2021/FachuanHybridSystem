@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block content %}
-    <div style="margin: 0 0 12px 0; padding: 10px 12px; border: 1px solid #d0d7de; background: #f6f8fa; border-radius: 6px;">
+    <div style="margin: 0 0 12px 0; padding: 10px 12px; border: 1px solid var(--fc-border); background: var(--fc-bg-muted); border-radius: 6px;">
         <div>
             <strong>{% trans "当前模板来源" %}：</strong>{{ docx_templates_source_label }}
             <span style="margin-left: 12px;"><strong>{% trans "当前模板根目录" %}：</strong><code>{{ docx_templates_root }}</code></span>
