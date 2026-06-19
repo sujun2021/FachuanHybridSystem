@@ -14,6 +14,25 @@
             <button type="submit" class="button">{% trans "保存模板目录" %}</button>
         </form>
     </div>
+
+    {% if initialize_custom_url %}
+    <div style="margin: 0 0 12px 0; padding: 10px 12px; border: 1px solid #e8c8b0; background: #fdf6f0; border-radius: 6px;">
+        <strong>自定义模板管理</strong>
+        <span style="margin-left: 8px; font-size: 12px; color: #888;">（独立于原作者模板，仅你可见）</span>
+        <div style="margin-top: 8px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <a href="{{ initialize_custom_url }}" class="button" style="background: #f0a060; border-color: #d08040; color: #fff;">
+                初始化自定义模板（含文件夹与绑定关系）
+            </a>
+            <form method="post" action="{{ delete_custom_url }}" style="display: inline; margin: 0;">
+                {% csrf_token %}
+                <button type="submit" class="button" style="background: #e05050; border-color: #c04040; color: #fff;" onclick="return confirm('确认删除所有自定义模板（文件夹+文件模板+绑定关系）？此操作不可撤销。');">
+                    删除所有自定义模板
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
     {{ block.super }}
 {% endblock %}
 

@@ -91,6 +91,14 @@ class DocumentCaseFileSubType(models.TextChoices):
     SERVICE_ADDRESS_MATERIALS = "service_address_materials", "送达地址材料"
     REFUND_ACCOUNT_MATERIALS = "refund_account_materials", "收款退费账户材料"
     APPLICATION_MATERIALS = "application_materials", "申请材料"
+    # ---- 用户自定义子类型 ----
+    DELEGATION_MATERIALS = "delegation_materials", "委托代理材料"
+    CASE_REFERENCE = "case_reference", "案件内参"
+    OUR_PLEADINGS = "our_pleadings", "我方文书"
+    COURT_DOCUMENTS = "court_documents", "法院文书"
+    COMMUNICATION_RECORDS = "communication_records", "沟通留痕"
+    ONLINE_FILING = "online_filing", "网上立案"
+    ENFORCEMENT_MATERIALS = "enforcement_materials", "强制执行材料"
     OTHER_MATERIALS = "other_materials", "其他材料"
 
 

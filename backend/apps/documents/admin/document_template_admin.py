@@ -527,6 +527,16 @@ class DocumentTemplateAdmin(admin.ModelAdmin):  # pragma: no cover
                 self.admin_site.admin_view(self.smart_fill_render_view),
                 name="documents_documenttemplate_smart_fill_render",
             ),
+            path(
+                "initialize-custom/",
+                self.admin_site.admin_view(self.initialize_custom_view),
+                name="documents_documenttemplate_initialize_custom",
+            ),
+            path(
+                "delete-custom/",
+                self.admin_site.admin_view(self.delete_custom_view),
+                name="documents_documenttemplate_delete_custom",
+            ),
         ]
         return custom_urls + urls
 
@@ -755,6 +765,83 @@ class DocumentTemplateAdmin(admin.ModelAdmin):  # pragma: no cover
 
         return HttpResponseRedirect(reverse("admin:documents_documenttemplate_changelist"))
 
+    def initialize_custom_view(self, request: Any) -> Any:  # pragma: no cover
+        """初始化用户自定义模板（与原作者默认模板完全独立）"""
+        from django.contrib import messages
+        from django.http import HttpResponseRedirect
+        from django.urls import reverse
+
+        from apps.documents.services.document_template.custom_init_service import (
+            CustomTemplateInitService,
+        )
+
+        try:
+            init_service = CustomTemplateInitService()
+            result = init_service.initialize_custom_templates()
+        except FileNotFoundError as exc:
+            messages.error(request, str(exc))
+            return HttpResponseRedirect(reverse("admin:documents_documenttemplate_changelist"))
+        except Exception as exc:
+            logger.exception("初始化自定义模板失败")
+            messages.error(request, "初始化失败：%(error)s" % {"error": str(exc)})
+            return HttpResponseRedirect(reverse("admin:documents_documenttemplate_changelist"))
+
+        if not result.get("success", True):
+            missing_files = result.get("missing_files", [])
+            preview_files = "、".join(str(item) for item in missing_files[:5])
+            if len(missing_files) > 5:
+                preview_files = f"{preview_files} ..."
+            messages.error(
+                request,
+                "初始化失败：缺少 %(count)s 个模板文件。缺失示例：%(files)s"
+                % {"count": len(missing_files), "files": preview_files or "-"},
+            )
+            return HttpResponseRedirect(reverse("admin:documents_documenttemplate_changelist"))
+
+        msg_parts = []
+        if result["folder_created"] > 0:
+            msg_parts.append(f"文件夹模板 {result['folder_created']} 个")
+        if result["doc_created"] > 0:
+            msg_parts.append(f"文件模板 {result['doc_created']} 个")
+        if result["binding_created"] > 0:
+            msg_parts.append(f"绑定关系 {result['binding_created']} 个")
+
+        if msg_parts:
+            messages.success(request, f"✅ 自定义模板初始化成功！创建了：{' | '.join(msg_parts)}")
+        else:
+            messages.info(request, "ℹ️ 所有自定义模板已存在，无需初始化")
+
+        return HttpResponseRedirect(reverse("admin:documents_documenttemplate_changelist"))
+
+    def delete_custom_view(self, request: Any) -> Any:  # pragma: no cover
+        """删除所有用户自定义模板"""
+        from django.contrib import messages
+        from django.http import HttpResponseRedirect
+        from django.urls import reverse
+
+        from apps.documents.services.document_template.custom_init_service import (
+            CustomTemplateInitService,
+        )
+
+        if request.method != "POST":
+            messages.error(request, "仅支持 POST 请求")
+            return HttpResponseRedirect(reverse("admin:documents_documenttemplate_changelist"))
+
+        try:
+            init_service = CustomTemplateInitService()
+            result = init_service.delete_all_custom_templates()
+        except Exception as exc:
+            logger.exception("删除自定义模板失败")
+            messages.error(request, "删除失败：%(error)s" % {"error": str(exc)})
+            return HttpResponseRedirect(reverse("admin:documents_documenttemplate_changelist"))
+
+        messages.success(
+            request,
+            "✅ 已删除自定义模板：文件夹 %(folders)d 个，文件模板 %(documents)d 个"
+            % result,
+        )
+        return HttpResponseRedirect(reverse("admin:documents_documenttemplate_changelist"))
+
     def set_docx_root_view(self, request: Any) -> HttpResponseRedirect:  # pragma: no cover
         """在线设置私有模板根目录（为空则切回公用目录）。"""
         from django.contrib import messages
@@ -810,6 +897,12 @@ class DocumentTemplateAdmin(admin.ModelAdmin):  # pragma: no cover
 
         extra_context = extra_context or {}
         extra_context["initialize_url"] = reverse("admin:documents_documenttemplate_initialize")
+        extra_context["initialize_custom_url"] = reverse(
+            "admin:documents_documenttemplate_initialize_custom"
+        )
+        extra_context["delete_custom_url"] = reverse(
+            "admin:documents_documenttemplate_delete_custom"
+        )
         extra_context.update(self._get_docx_root_extra_context())
         return super().changelist_view(request, extra_context=extra_context)
 

@@ -308,3 +308,9 @@ ml-training/
 
 # FastAPI rewrite (see feat/fastapi-rewrite branch)
 FastAPI_backend/
+
+# User custom template data (private, do not commit)
+backend/apps/documents/services/document_template/custom_defaults.json
+
+# User custom docx template files (private, do not commit)
+backend/apps/documents/docx_templates/0101*/
