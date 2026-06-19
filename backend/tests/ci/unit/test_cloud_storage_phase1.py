@@ -74,7 +74,8 @@ class TestCollectDocxFilesCloud:
 
     def _get_service(self):
         from apps.contracts.services.contract.integrations._candidate_post_processor import CandidatePostProcessor
-        return CandidatePostProcessor()
+        from unittest.mock import MagicMock
+        return CandidatePostProcessor(scan_service=MagicMock())
 
     def test_returns_empty_for_litigation(self):
         service = self._get_service()
@@ -119,10 +120,11 @@ class TestConvertDocxToTempPdfFromBytes:
     """Test the bytes-based docx→PDF conversion."""
 
     def _get_service(self):
-        from apps.contracts.services.contract.integrations.folder_scan_service import ContractFolderScanService
-        return ContractFolderScanService()
+        from apps.contracts.services.contract.integrations._import_pipeline import ImportPipeline
+        from unittest.mock import MagicMock
+        return ImportPipeline(scan_service=MagicMock())
 
-    @patch("apps.contracts.services.contract.integrations.folder_scan_service.ContractFolderScanService._convert_docx_to_temp_pdf_from_bytes")
+    @patch("apps.contracts.services.contract.integrations._import_pipeline.ImportPipeline._convert_docx_to_temp_pdf_from_bytes")
     def test_returns_none_on_conversion_failure(self, mock_convert):
         mock_convert.return_value = None
         service = self._get_service()
