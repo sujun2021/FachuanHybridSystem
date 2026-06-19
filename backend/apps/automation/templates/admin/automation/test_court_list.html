@@ -81,24 +81,24 @@
     </div>
 
     <!-- 测试立案（未来功能） -->
-    <div style="background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ddd; opacity: 0.6;">
-        <h2 style="margin-top: 0; color: #6c757d;">📝 测试立案</h2>
-        <p style="color: #666; margin-bottom: 15px;">
+    <div style="background: var(--fc-bg-card); padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--fc-border); opacity: 0.6;">
+        <h2 style="margin-top: 0; color: var(--fc-text-muted);">📝 测试立案</h2>
+        <p style="color: var(--fc-text-muted); margin-bottom: 15px;">
             🚧 功能开发中...
         </p>
-        <button disabled style="padding: 8px 16px; background: #6c757d; color: white; border: none;
+        <button disabled style="padding: 8px 16px; background: var(--fc-text-muted); color: var(--fc-text-on-primary); border: none;
                                border-radius: 4px; cursor: not-allowed;">
             即将推出
         </button>
     </div>
 
     <!-- 测试查询（未来功能） -->
-    <div style="background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ddd; opacity: 0.6;">
-        <h2 style="margin-top: 0; color: #6c757d;">🔍 测试查询</h2>
-        <p style="color: #666; margin-bottom: 15px;">
+    <div style="background: var(--fc-bg-card); padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--fc-border); opacity: 0.6;">
+        <h2 style="margin-top: 0; color: var(--fc-text-muted);">🔍 测试查询</h2>
+        <p style="color: var(--fc-text-muted); margin-bottom: 15px;">
             🚧 功能开发中...
         </p>
-        <button disabled style="padding: 8px 16px; background: #6c757d; color: white; border: none;
+        <button disabled style="padding: 8px 16px; background: var(--fc-text-muted); color: var(--fc-text-on-primary); border: none;
                                border-radius: 4px; cursor: not-allowed;">
             即将推出
         </button>
@@ -107,7 +107,7 @@
     <!-- 提示信息 -->
     <div style="margin-top: 30px; padding: 15px; background: #e7f3ff; border-radius: 4px; border-left: 4px solid #2196F3;">
         <h3 style="margin-top: 0; color: #1976D2;">💡 使用提示</h3>
-        <ul style="margin: 10px 0; padding-left: 20px; color: #555;">
+        <ul style="margin: 10px 0; padding-left: 20px; color: var(--fc-text-muted);">
             <li>点击"测试登录"后，系统会自动打开浏览器窗口</li>
             <li>浏览器会自动执行登录操作，请不要手动关闭</li>
             <li>登录成功后会自动捕获 Token 并保存到 Redis 和数据库</li>
@@ -121,7 +121,7 @@
     <!-- Token 使用示例 -->
     <div style="margin-top: 30px; padding: 15px; background: #fff3cd; border-radius: 4px; border-left: 4px solid #ffc107;">
         <h3 style="margin-top: 0; color: #856404;">📝 Token 使用示例</h3>
-        <pre style="background: #f5f5f5; padding: 15px; border-radius: 4px; overflow-x: auto; color: #333;"><code>from apps.automation.services.scraper.core.token_service import TokenService
+        <pre style="background: var(--fc-bg-muted-light); padding: 15px; border-radius: 4px; overflow-x: auto; color: var(--fc-text-secondary);"><code>from apps.automation.services.scraper.core.token_service import TokenService
 
 # 获取 Token
 token_service = TokenService()
@@ -137,24 +137,24 @@ else:
     </div>
 
     <!-- 快捷链接 -->
-    <div style="margin-top: 30px; padding: 15px; background: #f8f9fa; border-radius: 4px;">
+    <div style="margin-top: 30px; padding: 15px; background: var(--fc-bg-muted); border-radius: 4px;">
         <h3 style="margin-top: 0;">🔗 快捷链接</h3>
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <a href="{% url 'admin:organization_accountcredential_changelist' %}"
                class="button"
-               style="padding: 8px 16px; background: #6c757d; color: white; text-decoration: none;
+               style="padding: 8px 16px; background: var(--fc-text-muted); color: var(--fc-text-on-primary); text-decoration: none;
                       border-radius: 4px; display: inline-block;">
                 📋 管理账号凭证
             </a>
             <a href="{% url 'admin:automation_scrapertask_changelist' %}"
                class="button"
-               style="padding: 8px 16px; background: #6c757d; color: white; text-decoration: none;
+               style="padding: 8px 16px; background: var(--fc-text-muted); color: var(--fc-text-on-primary); text-decoration: none;
                       border-radius: 4px; display: inline-block;">
                 📊 查看任务列表
             </a>
             <a href="{% url 'admin:index' %}"
                class="button"
-               style="padding: 8px 16px; background: #6c757d; color: white; text-decoration: none;
+               style="padding: 8px 16px; background: var(--fc-text-muted); color: var(--fc-text-on-primary); text-decoration: none;
                       border-radius: 4px; display: inline-block;">
                 🏠 返回首页
             </a>
