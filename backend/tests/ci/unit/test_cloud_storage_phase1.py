@@ -73,8 +73,8 @@ class TestCollectDocxFilesCloud:
     """Test the cloud variant of _collect_docx_files."""
 
     def _get_service(self):
-        from apps.contracts.services.contract.integrations.folder_scan_service import ContractFolderScanService
-        return ContractFolderScanService()
+        from apps.contracts.services.contract.integrations._candidate_post_processor import CandidatePostProcessor
+        return CandidatePostProcessor()
 
     def test_returns_empty_for_litigation(self):
         service = self._get_service()
@@ -140,15 +140,15 @@ class TestConfirmImportProviderThreading:
         assert "storage_provider" in sig.parameters
 
     def test_mark_already_imported_accepts_storage_provider(self):
-        from apps.contracts.services.contract.integrations.folder_scan_service import ContractFolderScanService
+        from apps.contracts.services.contract.integrations._candidate_post_processor import CandidatePostProcessor
         import inspect
-        sig = inspect.signature(ContractFolderScanService._mark_already_imported)
+        sig = inspect.signature(CandidatePostProcessor._mark_already_imported)
         assert "storage_provider" in sig.parameters
 
     def test_collect_docx_files_accepts_storage_provider(self):
-        from apps.contracts.services.contract.integrations.folder_scan_service import ContractFolderScanService
+        from apps.contracts.services.contract.integrations._candidate_post_processor import CandidatePostProcessor
         import inspect
-        sig = inspect.signature(ContractFolderScanService._collect_docx_files)
+        sig = inspect.signature(CandidatePostProcessor._collect_docx_files)
         assert "storage_provider" in sig.parameters
 
 
