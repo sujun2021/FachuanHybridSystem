@@ -66,7 +66,7 @@
                            placeholder="输入机构名称后回车添加，或搜索法院..."
                            autocomplete="off" />
                     <div x-show="isLoading" class="autocomplete-loading"
-                         style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;color:#9ca3af;">
+                         style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--fc-text-muted);">
                         搜索中...
                     </div>
                     <div x-show="isOpen && results.length > 0"

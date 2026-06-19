@@ -181,7 +181,7 @@
         const content = overlay.querySelector('.merge-content');
         content.innerHTML = `
             <div class="merge-success-icon">✓</div>
-            <div class="merge-title" style="color: #2e7d32;">合并 PDF 成功</div>
+            <div class="merge-title" style="color: var(--fc-success-text);">合并 PDF 成功</div>
             <div class="merge-message">共 ${data.total_pages || 0} 页</div>
             <div class="merge-detail">${data.pdf_filename || ''}</div>
             <button class="merge-close-btn" onclick="window.location.reload()">确定</button>
@@ -205,7 +205,7 @@
         const content = overlay.querySelector('.merge-content');
         content.innerHTML = `
             <div class="merge-error-icon">✕</div>
-            <div class="merge-title" style="color: #d32f2f;">合并失败</div>
+            <div class="merge-title" style="color: var(--fc-error-text);">合并失败</div>
             <div class="merge-message">${error}</div>
             <button class="merge-close-btn" onclick="document.getElementById('merge-overlay').style.display='none'">关闭</button>
         `;
@@ -232,7 +232,7 @@
                     z-index: 10000;
                 }
                 .merge-content {
-                    background: white;
+                    background: var(--fc-bg-card);
                     padding: 32px 48px;
                     border-radius: 8px;
                     text-align: center;
@@ -242,8 +242,8 @@
                 .merge-spinner {
                     width: 48px;
                     height: 48px;
-                    border: 4px solid #e0e0e0;
-                    border-top-color: #1976d2;
+                    border: 4px solid var(--fc-border);
+                    border-top-color: var(--fc-info-text);
                     border-radius: 50%;
                     animation: spin 1s linear infinite;
                     margin: 0 auto 16px;
@@ -255,35 +255,35 @@
                     font-size: 18px;
                     font-weight: 600;
                     margin-bottom: 16px;
-                    color: #333;
+                    color: var(--fc-text-secondary);
                 }
                 .merge-progress-bar {
                     width: 100%;
                     height: 8px;
-                    background: #e0e0e0;
+                    background: var(--fc-border);
                     border-radius: 4px;
                     overflow: hidden;
                     margin-bottom: 12px;
                 }
                 .merge-progress-fill {
                     height: 100%;
-                    background: #1976d2;
+                    background: var(--fc-info-text);
                     transition: width 0.3s ease;
                 }
                 .merge-message {
-                    color: #666;
+                    color: var(--fc-text-muted);
                     font-size: 14px;
                     margin-bottom: 8px;
                 }
                 .merge-detail {
-                    color: #999;
+                    color: var(--fc-text-muted);
                     font-size: 12px;
                 }
                 .merge-success-icon {
                     width: 48px;
                     height: 48px;
-                    background: #2e7d32;
-                    color: white;
+                    background: var(--fc-success-text);
+                    color: var(--fc-text-on-primary);
                     border-radius: 50%;
                     display: flex;
                     align-items: center;
@@ -294,8 +294,8 @@
                 .merge-error-icon {
                     width: 48px;
                     height: 48px;
-                    background: #d32f2f;
-                    color: white;
+                    background: var(--fc-error-text);
+                    color: var(--fc-text-on-primary);
                     border-radius: 50%;
                     display: flex;
                     align-items: center;
@@ -306,15 +306,15 @@
                 .merge-close-btn {
                     margin-top: 16px;
                     padding: 8px 24px;
-                    background: #1976d2;
-                    color: white;
+                    background: var(--fc-info-text);
+                    color: var(--fc-text-on-primary);
                     border: none;
                     border-radius: 4px;
                     cursor: pointer;
                     font-size: 14px;
                 }
                 .merge-close-btn:hover {
-                    background: #1565c0;
+                    background: var(--fc-info-text);
                 }
             </style>
             <div class="merge-content"></div>

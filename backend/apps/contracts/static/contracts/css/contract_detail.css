@@ -569,7 +569,7 @@
 }
 
 .reminder-item.reminder-overdue {
-    background: #fef2f2;
+    background: var(--fc-error-bg);
     border-color: #f87171;
 }
 
@@ -1244,7 +1244,7 @@
     display: inline-flex;
     align-items: center;
     padding: 2px 8px;
-    background: #dcfce7;
+    background: var(--fc-success-bg);
     color: var(--fc-success-text);
     border-radius: 4px;
     font-size: 12px;
@@ -1322,8 +1322,8 @@
     display: inline-flex;
     align-items: center;
     padding: 3px 10px;
-    background: #fee2e2;
-    color: #dc2626;
+    background: var(--fc-error-bg);
+    color: var(--fc-error-text);
     border-radius: 4px;
     font-size: 12px;
     font-weight: 600;

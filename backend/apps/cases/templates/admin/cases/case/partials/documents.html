@@ -291,7 +291,7 @@
                     <div style="font-size: 14px; color: var(--fc-text-primary);">
                         {% if matched_folder_templates_list %}
                             {% for template in matched_folder_templates_list %}
-                                <a href="{% url 'admin:documents_foldertemplate_change' template.id %}" target="_blank" style="color: #059669; text-decoration: none; border-bottom: 1px solid #6ee7b7; margin-right: 12px; padding-bottom: 1px; transition: all 0.2s;">{{ template.name }}</a>{% if not forloop.last %}<span style="color: #d1d5db; margin-right: 12px;">|</span>{% endif %}
+                                <a href="{% url 'admin:documents_foldertemplate_change' template.id %}" target="_blank" style="color: #059669; text-decoration: none; border-bottom: 1px solid #6ee7b7; margin-right: 12px; padding-bottom: 1px; transition: all 0.2s;">{{ template.name }}</a>{% if not forloop.last %}<span style="color: var(--fc-border-input); margin-right: 12px;">|</span>{% endif %}
                             {% endfor %}
                         {% else %}
                             <span style="color: var(--fc-text-disabled);">{% trans "无匹配模板" %}</span>

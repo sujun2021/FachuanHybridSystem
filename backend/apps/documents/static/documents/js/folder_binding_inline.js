@@ -155,7 +155,7 @@
                 folderStructureCache[tid] = data.structure;
                 renderTree(data.structure, $popup, $nodeInput, $display);
             } else {
-                $popup.html('<div style="padding:15px;color:#c00;">无数据</div>');
+                $popup.html('<div style="padding:15px;color:var(--fc-error-text);">无数据</div>');
             }
         });
     }
@@ -174,18 +174,18 @@
             var hasKids = node.children && node.children.length > 0;
             var $li = $('<li style="margin:2px 0;"></li>');
             var $row = $('<div style="display:flex;align-items:center;padding:4px 6px;cursor:pointer;border-radius:3px;"></div>');
-            var $toggle = $('<span style="width:14px;font-size:9px;color:#666;">' + (hasKids ? '▶' : '') + '</span>');
+            var $toggle = $('<span style="width:14px;font-size:9px;color:var(--fc-text-muted);">' + (hasKids ? '▶' : '') + '</span>');
             var $name = $('<span style="flex:1;">📁 ' + node.name + '</span>');
             $row.append($toggle).append($name);
-            if ($nodeInput.val() === node.id) $row.css({'background':'#e3f2fd','color':'#1565c0'});
-            $row.hover(function(){ if($nodeInput.val()!==node.id) $(this).css('background','#f0f0f0'); },
+            if ($nodeInput.val() === node.id) $row.css({'background':'var(--fc-info-bg)','color':'var(--fc-info-text)'});
+            $row.hover(function(){ if($nodeInput.val()!==node.id) $(this).css('background','var(--fc-border)'); },
                        function(){ if($nodeInput.val()!==node.id) $(this).css('background',''); });
             $name.on('click', function(e) {
                 e.stopPropagation();
                 $popup.find('div').css({'background':'','color':''});
-                $row.css({'background':'#e3f2fd','color':'#1565c0'});
+                $row.css({'background':'var(--fc-info-bg)','color':'var(--fc-info-text)'});
                 $nodeInput.val(node.id);
-                $display.html('<span style="color:#1565c0;">' + path + '</span>');
+                $display.html('<span style="color:var(--fc-info-text);">' + path + '</span>');
                 setTimeout(function(){ $popup.hide(); }, 100);
             });
             $li.append($row);
@@ -208,14 +208,14 @@
     function loadPath(tid, nodeId, $display) {
         if (folderStructureCache[tid]) {
             var p = findPath(folderStructureCache[tid].children || [], nodeId, '');
-            if (p) $display.html('<span style="color:#1565c0;">' + p + '</span>');
+            if (p) $display.html('<span style="color:var(--fc-info-text);">' + p + '</span>');
             return;
         }
         $.get('/admin/documents/foldertemplate/' + tid + '/structure-json/', function(data) {
             if (data.success && data.structure) {
                 folderStructureCache[tid] = data.structure;
                 var p = findPath(data.structure.children || [], nodeId, '');
-                if (p) $display.html('<span style="color:#1565c0;">' + p + '</span>');
+                if (p) $display.html('<span style="color:var(--fc-info-text);">' + p + '</span>');
             }
         });
     }
