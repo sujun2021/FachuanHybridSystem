@@ -141,7 +141,7 @@ jobs:
           fi
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@0db1207a148e82e5d14b2af714b8e36db9e34555  # v5.2.0
 
       - name: Setup Python
         run: uv python install ${{ matrix.python-version }}
@@ -329,7 +329,7 @@ jobs:
           persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@0db1207a148e82e5d14b2af714b8e36db9e34555  # v5.2.0
 
       - name: Setup Python
         run: uv python install ${{ matrix.python-version }}
@@ -392,7 +392,7 @@ jobs:
           persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@0db1207a148e82e5d14b2af714b8e36db9e34555  # v5.2.0
 
       - name: Setup Python
         run: uv python install ${{ matrix.python-version }}
@@ -444,7 +444,7 @@ jobs:
           persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@0db1207a148e82e5d14b2af714b8e36db9e34555  # v5.2.0
 
       - name: Setup Python
         run: uv python install ${{ matrix.python-version }}
@@ -498,7 +498,7 @@ jobs:
           persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@0db1207a148e82e5d14b2af714b8e36db9e34555  # v5.2.0
 
       - name: Setup Python
         run: uv python install ${{ matrix.python-version }}
@@ -534,7 +534,7 @@ jobs:
           persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@0db1207a148e82e5d14b2af714b8e36db9e34555  # v5.2.0
 
       - name: Setup Python
         run: uv python install 3.12
