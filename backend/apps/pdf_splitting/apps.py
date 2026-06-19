@@ -7,4 +7,4 @@ class PdfSplittingConfig(AppConfig):
     verbose_name = "PDF 拆解"
 
     def ready(self) -> None:
-        from . import signals  # noqa: F401
+        from . import signals

@@ -7,4 +7,4 @@ class BatchPrintingConfig(AppConfig):
     verbose_name = "批量打印"
 
     def ready(self) -> None:
-        from . import signals  # noqa: F401
+        from . import signals
