@@ -15,7 +15,13 @@ from apps.core.exceptions import NotFoundError, ValidationException
 # ── _normalize_scan_subfolder ─────────────────────────────────────
 
 class TestNormalizeScanSubfolder:
-    def _make_service(self):
+    def _make_processor():
+    from apps.contracts.services.contract.integrations._candidate_post_processor import CandidatePostProcessor
+    from unittest.mock import MagicMock
+    return CandidatePostProcessor(scan_service=MagicMock())
+
+
+def _make_service(self):
         from apps.contracts.services.contract.integrations.folder_scan_service import ContractFolderScanService
         return ContractFolderScanService()
 

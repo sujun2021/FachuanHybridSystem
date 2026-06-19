@@ -151,7 +151,8 @@ class TestResolveScanScope:
 
 class TestRelativePathStr:
     def setup_method(self):
-        self.service = ContractFolderScanService(scan_service=MagicMock())
+        from apps.contracts.services.contract.integrations._candidate_post_processor import CandidatePostProcessor
+        self.service = CandidatePostProcessor(scan_service=MagicMock())
 
     def test_relative_path(self):
         import tempfile
@@ -218,7 +219,8 @@ class TestMakeProviderForBindingCloud:
 
 class TestPostProcessCandidates:
     def setup_method(self):
-        self.service = ContractFolderScanService(scan_service=MagicMock())
+        from apps.contracts.services.contract.integrations._candidate_post_processor import CandidatePostProcessor
+        self.service = CandidatePostProcessor(scan_service=MagicMock())
 
     def test_insurance_files_deselected(self):
         candidates = [
@@ -226,7 +228,7 @@ class TestPostProcessCandidates:
             {"source_path": "/path/保函.pdf", "filename": "保函.pdf", "suggested_category": "other"},
             {"source_path": "/path/normal.pdf", "filename": "normal.pdf", "suggested_category": "other"},
         ]
-        result = self.service._post_process_candidates(
+        result = self.service.post_process_candidates(
             candidates=candidates,
             archive_category="litigation",
             scan_folder="/path",
@@ -238,7 +240,7 @@ class TestPostProcessCandidates:
             assert f.get("selected") is False
 
     def test_empty_candidates(self):
-        result = self.service._post_process_candidates(
+        result = self.service.post_process_candidates(
             candidates=[],
             archive_category="litigation",
             scan_folder="/path",

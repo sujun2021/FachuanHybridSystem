@@ -18,6 +18,12 @@ from apps.contracts.models import ContractFolderScanStatus
 # Helpers
 # ---------------------------------------------------------------------------
 
+def _make_processor():
+    from apps.contracts.services.contract.integrations._candidate_post_processor import CandidatePostProcessor
+    from unittest.mock import MagicMock
+    return CandidatePostProcessor(scan_service=MagicMock())
+
+
 def _make_service(**overrides: Any) -> Any:
     from apps.contracts.services.contract.integrations.folder_scan_service import (
         ContractFolderScanService,
@@ -565,7 +571,7 @@ class TestPostProcessCandidates:
                 "source_path": "/root/合同.pdf",
                 "suggested_category": "archive_document",
             }]
-            result = svc._post_process_candidates(
+            result = svc.post_process_candidates(
                 candidates=candidates, archive_category="non_litigation", scan_folder="/root"
             )
             assert result[0]["suggested_category"] == "case_material"
@@ -586,7 +592,7 @@ class TestPostProcessCandidates:
                 "source_path": "/root/通知.pdf",
                 "suggested_category": "archive_document",
             }]
-            result = svc._post_process_candidates(
+            result = svc.post_process_candidates(
                 candidates=candidates, archive_category="non_litigation", scan_folder="/root"
             )
             assert result[0]["selected"] is False
@@ -607,7 +613,7 @@ class TestPostProcessCandidates:
                 "source_path": "/root/保单.pdf",
                 "suggested_category": "case_material",
             }]
-            result = svc._post_process_candidates(
+            result = svc.post_process_candidates(
                 candidates=candidates, archive_category="litigation", scan_folder="/root"
             )
             assert result[0]["selected"] is False
