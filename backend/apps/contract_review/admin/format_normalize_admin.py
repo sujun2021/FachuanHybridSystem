@@ -379,7 +379,7 @@ class FormatNormalizeAdmin(admin.ModelAdmin):  # pragma: no cover
             annotation_content = request.POST.get("annotation_content", "")
             if annotation_content:
                 # FormatNormalize 是 ReviewTask 的代理模型，task 本身就是 format_record
-                format_record = FormatNormalize.objects.get(pk=task.pk)  # type: ignore[misc]
+                format_record = FormatNormalize.objects.get(pk=task.pk)
 
                 # 添加批注
                 annotation = {
