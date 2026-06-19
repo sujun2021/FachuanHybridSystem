@@ -130,6 +130,8 @@
 
 <!-- 引入 Alpine.js 组件 -->
 <script src="{% static 'client/identity_app.js' %}"></script>
+<script src="{% static 'client/identity_app_upload.js' %}"></script>
+<script src="{% static 'client/identity_app_form.js' %}"></script>
 
 <!--
 @deprecated 以下是原有的原生 JS 实现，已被 Alpine.js 版本替代
@@ -370,7 +372,7 @@ function highlightFilledFields() {
     ['name', 'id_number', 'address', 'legal_representative'].forEach(function(fieldName) {
         const field = document.getElementById('id_' + fieldName);
         if (field && field.value) {
-            field.style.backgroundColor = '#e8f5e8';
+            field.style.backgroundColor = 'var(--fc-success-bg)';
             field.style.borderColor = '#4caf50';
             setTimeout(function() {
                 field.style.backgroundColor = '';

@@ -5,15 +5,15 @@
 {{ block.super }}
 <style>
     .merge-help-box {
-        background: #f8f9fa;
-        border: 1px solid #dee2e6;
+        background: var(--fc-bg-muted);
+        border: 1px solid var(--fc-border);
         border-radius: 4px;
         padding: 15px;
         margin-bottom: 20px;
     }
     .merge-help-box h3 {
         margin-top: 0;
-        color: #495057;
+        color: var(--fc-text-secondary);
     }
     .merge-help-box ol {
         margin-bottom: 0;
@@ -23,7 +23,7 @@
         margin-bottom: 8px;
     }
     .merge-help-box code {
-        background: #e9ecef;
+        background: var(--fc-border);
         padding: 2px 6px;
         border-radius: 3px;
         font-size: 0.9em;
@@ -42,8 +42,8 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        background: #417690;
-        color: #fff !important;
+        background: var(--fc-admin-blue);
+        color: var(--fc-text-on-primary) !important;
         padding: 8px 16px;
         border-radius: 4px;
         text-decoration: none;
@@ -51,7 +51,7 @@
         transition: background 0.2s;
     }
     .merge-button:hover {
-        background: #205067;
+        background: var(--fc-admin-blue-hover);
         text-decoration: none;
     }
 </style>

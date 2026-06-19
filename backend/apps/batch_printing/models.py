@@ -6,8 +6,6 @@ from typing import Any, ClassVar
 
 from django.conf import settings
 from django.db import models
-from django.db.models.signals import post_delete
-from django.dispatch import receiver
 
 
 class BatchPrintJobStatus(models.TextChoices):
@@ -198,11 +196,3 @@ class BatchPrintItem(models.Model):
 
     def __str__(self) -> str:
         return f"{self.source_original_name} ({self.get_status_display()})"
-
-
-@receiver(post_delete, sender=BatchPrintJob)
-def delete_job_files(sender: type, instance: BatchPrintJob, **kwargs: object) -> None:
-    """删除任务时清理关联文件目录。"""
-    from apps.batch_printing.services.storage import BatchPrintStorage
-
-    BatchPrintStorage(instance.id).cleanup()

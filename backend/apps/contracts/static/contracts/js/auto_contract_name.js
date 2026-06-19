@@ -23,10 +23,10 @@
             'display: inline-flex',
             'align-items: center',
             'justify-content: center',
-            'background: #f8f9fa',
-            'border: 1px solid #ddd',
+            'background: var(--fc-bg-muted)',
+            'border: 1px solid var(--fc-border)',
             'cursor: pointer',
-            'color: #666',
+            'color: var(--fc-text-muted)',
             'padding: 4px 6px',
             'border-radius: 4px',
             'margin-left: 4px',
@@ -38,16 +38,16 @@
         // 鼠标悬停效果
         btn.addEventListener('mouseenter', function() {
             if (!btn.disabled) {
-                btn.style.background = '#e8f4fd';
-                btn.style.borderColor = '#447e9b';
-                btn.style.color = '#447e9b';
+                btn.style.background = 'var(--fc-primary-subtle)';
+                btn.style.borderColor = 'var(--fc-admin-blue)';
+                btn.style.color = 'var(--fc-admin-blue)';
             }
         });
         btn.addEventListener('mouseleave', function() {
             if (!btn.disabled) {
-                btn.style.background = '#f8f9fa';
-                btn.style.borderColor = '#ddd';
-                btn.style.color = '#666';
+                btn.style.background = 'var(--fc-bg-muted)';
+                btn.style.borderColor = 'var(--fc-border)';
+                btn.style.color = 'var(--fc-text-muted)';
             }
         });
 
@@ -231,14 +231,14 @@
 
         btn.disabled = !canGenerate;
         if (!canGenerate) {
-            btn.style.background = '#f5f5f5';
-            btn.style.borderColor = '#eee';
-            btn.style.color = '#ccc';
+            btn.style.background = 'var(--fc-bg-muted)';
+            btn.style.borderColor = 'var(--fc-border)';
+            btn.style.color = 'var(--fc-border)';
             btn.style.cursor = 'not-allowed';
         } else {
-            btn.style.background = '#f8f9fa';
-            btn.style.borderColor = '#ddd';
-            btn.style.color = '#666';
+            btn.style.background = 'var(--fc-bg-muted)';
+            btn.style.borderColor = 'var(--fc-border)';
+            btn.style.color = 'var(--fc-text-muted)';
             btn.style.cursor = 'pointer';
         }
 

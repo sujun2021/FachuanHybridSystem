@@ -37,7 +37,7 @@
 .field-case_types_field label:hover,
 .field-case_stages_field label:hover,
 .field-contract_types_field label:hover {
-    background-color: #f0f0f0;
+    background-color: var(--fc-bg-muted-light);
 }
 
 .field-case_types_field input[type="checkbox"],
@@ -50,7 +50,7 @@
 .field-case_types_field input[type="checkbox"]:checked + span,
 .field-case_stages_field input[type="checkbox"]:checked + span,
 .field-contract_types_field input[type="checkbox"]:checked + span {
-    color: #417690;
+    color: var(--fc-admin-blue);
     font-weight: 500;
 }
 
@@ -60,6 +60,6 @@
 .field-contract_types_field .help {
     display: block;
     margin-top: 8px;
-    color: #666;
+    color: var(--fc-text-muted);
     font-size: 11px;
 }

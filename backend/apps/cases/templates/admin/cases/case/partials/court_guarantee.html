@@ -1,5 +1,5 @@
 {% load i18n %}
-<div x-data="courtGuaranteeApp()" style="margin-top: 20px; border-top: 1px solid #e5e7eb; padding-top: 16px;">
+<div x-data="courtGuaranteeApp()" style="margin-top: 20px; border-top: 1px solid var(--fc-border); padding-top: 16px;">
     <div class="info-grid">
         <div class="info-card" style="grid-column: 1 / -1;">
             <div class="card-header">
@@ -12,26 +12,26 @@
             </div>
 
             <div x-show="!loading">
-                <div style="background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; margin-bottom: 14px;">
+                <div style="background: linear-gradient(180deg, var(--fc-bg-muted) 0%, var(--fc-bg-muted-light) 100%); border: 1px solid var(--fc-border); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px;">
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px 16px;">
                         <div style="display: flex; align-items: center; gap: 6px; min-width: 0;">
-                            <span style="color: #64748b; font-size: 12px; flex: 0 0 auto;">{% translate "管辖法院" %}：</span>
-                            <span style="font-size: 14px; font-weight: 600; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" x-text="caseInfo.court_name || '{% trans "未设置" %}'"></span>
+                            <span style="color: var(--fc-text-muted); font-size: 12px; flex: 0 0 auto;">{% translate "管辖法院" %}：</span>
+                            <span style="font-size: 14px; font-weight: 600; color: var(--fc-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" x-text="caseInfo.court_name || '{% trans "未设置" %}'"></span>
                         </div>
                         <div style="display: flex; align-items: center; gap: 6px; min-width: 0;">
-                            <span style="color: #64748b; font-size: 12px; flex: 0 0 auto;">{% translate "保全类别" %}：</span>
-                            <span style="font-size: 14px; font-weight: 600; color: #1e293b;" x-text="caseInfo.preserve_category || '-'"></span>
+                            <span style="color: var(--fc-text-muted); font-size: 12px; flex: 0 0 auto;">{% translate "保全类别" %}：</span>
+                            <span style="font-size: 14px; font-weight: 600; color: var(--fc-text-primary);" x-text="caseInfo.preserve_category || '-'"></span>
                         </div>
                         <div style="display: flex; align-items: center; gap: 6px; min-width: 0;">
-                            <span style="color: #64748b; font-size: 12px; flex: 0 0 auto;">{% translate "保全金额" %}：</span>
-                            <span style="font-size: 14px; font-weight: 700; color: #0f172a;" x-text="caseInfo.preserve_amount ? '¥' + caseInfo.preserve_amount : '-'"></span>
+                            <span style="color: var(--fc-text-muted); font-size: 12px; flex: 0 0 auto;">{% translate "保全金额" %}：</span>
+                            <span style="font-size: 14px; font-weight: 700; color: var(--fc-text-heading);" x-text="caseInfo.preserve_amount ? '¥' + caseInfo.preserve_amount : '-'"></span>
                         </div>
                     </div>
                 </div>
 
-                <div style="margin-bottom: 12px; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; background: #f8fafc;">
+                <div style="margin-bottom: 12px; border: 1px solid var(--fc-border); border-radius: 10px; padding: 12px; background: var(--fc-bg-muted);">
                     <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px;">
-                        <div style="font-size: 13px; font-weight: 600; color: #0f172a;">{% trans "财产保全询价" %}</div>
+                        <div style="font-size: 13px; font-weight: 600; color: var(--fc-text-heading);">{% trans "财产保全询价" %}</div>
                         <button type="button"
                                 class="btn btn-primary"
                                 style="font-size: 12px; padding: 6px 10px;"
@@ -46,7 +46,7 @@
                     <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
                         <select x-model="selectedReusableQuoteId"
                                 :disabled="quoteLoading || !canStartQuote()"
-                                style="flex:1; min-width:220px; height:32px; border:1px solid #cbd5e1; border-radius:6px; padding:0 8px; background:#fff;">
+                                style="flex:1; min-width:220px; height:32px; border:1px solid var(--fc-border-input); border-radius:6px; padding:0 8px; background:var(--fc-bg-card);">
                             <option value="">{% trans "选择同保全金额历史询价记录" %}</option>
                             <template x-for="option in reusableQuoteOptions" :key="option.quote_id">
                                 <option :value="String(option.quote_id)" x-text="formatReusableQuoteOption(option)"></option>
@@ -63,32 +63,32 @@
                     <template x-if="quoteContext">
                         <div>
                             <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
-                                <span x-show="isQuotePolling()" style="font-size:12px; color:#1d4ed8; background:#dbeafe; border-radius:999px; padding:2px 8px;">{% trans "询价刷新中..." %}</span>
+                                <span x-show="isQuotePolling()" style="font-size:12px; color:var(--fc-primary-dark); background:var(--fc-info-bg); border-radius:999px; padding:2px 8px;">{% trans "询价刷新中..." %}</span>
                             </div>
 
                             <template x-if="quoteContext.items && quoteContext.items.length > 0">
-                                <div style="max-height: 220px; overflow:auto; border:1px solid #dbeafe; border-radius:8px; background:#fff;">
+                                <div style="max-height: 220px; overflow:auto; border:1px solid var(--fc-info-bg); border-radius:8px; background:var(--fc-bg-card);">
                                     <table style="width:100%; border-collapse: collapse; font-size:12px;">
                                         <thead>
-                                            <tr style="background:#eff6ff; color:#1e3a8a;">
-                                                <th style="text-align:center; padding:6px 8px; border-bottom:1px solid #dbeafe; width:36px;">{% trans "序号" %}</th>
-                                                <th style="text-align:left; padding:6px 8px; border-bottom:1px solid #dbeafe;">{% trans "担保机构" %}</th>
-                                                <th style="text-align:center; padding:6px 8px; border-bottom:1px solid #dbeafe;">{% trans "报价区间" %}</th>
-                                                <th style="text-align:right; padding:6px 8px; border-bottom:1px solid #dbeafe;">{% trans "最高保全金额" %}</th>
-                                                <th style="text-align:center; padding:6px 8px; border-bottom:1px solid #dbeafe;">{% trans "操作" %}</th>
+                                            <tr style="background:var(--fc-primary-subtle); color:var(--fc-primary-darker);">
+                                                <th style="text-align:center; padding:6px 8px; border-bottom:1px solid var(--fc-info-bg); width:36px;">{% trans "序号" %}</th>
+                                                <th style="text-align:left; padding:6px 8px; border-bottom:1px solid var(--fc-info-bg);">{% trans "担保机构" %}</th>
+                                                <th style="text-align:center; padding:6px 8px; border-bottom:1px solid var(--fc-info-bg);">{% trans "报价区间" %}</th>
+                                                <th style="text-align:right; padding:6px 8px; border-bottom:1px solid var(--fc-info-bg);">{% trans "最高保全金额" %}</th>
+                                                <th style="text-align:center; padding:6px 8px; border-bottom:1px solid var(--fc-info-bg);">{% trans "操作" %}</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <template x-for="(item, idx) in quoteContext.items" :key="item.id">
                                                 <tr>
-                                                    <td style="padding:6px 8px; border-bottom:1px solid #f1f5f9; text-align:center; color:#64748b;" x-text="idx + 1"></td>
-                                                    <td style="padding:6px 8px; border-bottom:1px solid #f1f5f9;">
+                                                    <td style="padding:6px 8px; border-bottom:1px solid var(--fc-bg-muted-light); text-align:center; color:var(--fc-text-muted);" x-text="idx + 1"></td>
+                                                    <td style="padding:6px 8px; border-bottom:1px solid var(--fc-bg-muted-light);">
                                                         <span x-text="item.company_name"></span>
-                                                        <span x-show="item.is_recommended" style="margin-left:4px; color:#15803d;">🏆</span>
+                                                        <span x-show="item.is_recommended" style="margin-left:4px; color:var(--fc-success-text);">🏆</span>
                                                     </td>
-                                                    <td style="padding:6px 8px; border-bottom:1px solid #f1f5f9; text-align:center; white-space:nowrap;" x-text="formatQuoteRange(item)"></td>
-                                                    <td style="padding:6px 8px; border-bottom:1px solid #f1f5f9; text-align:right;" x-text="formatMaxApplyAmountYi(item)"></td>
-                                                    <td style="padding:6px 8px; border-bottom:1px solid #f1f5f9; text-align:center;">
+                                                    <td style="padding:6px 8px; border-bottom:1px solid var(--fc-bg-muted-light); text-align:center; white-space:nowrap;" x-text="formatQuoteRange(item)"></td>
+                                                    <td style="padding:6px 8px; border-bottom:1px solid var(--fc-bg-muted-light); text-align:right;" x-text="formatMaxApplyAmountYi(item)"></td>
+                                                    <td style="padding:6px 8px; border-bottom:1px solid var(--fc-bg-muted-light); text-align:center;">
                                                         <button type="button"
                                                                 class="btn"
                                                                 style="font-size:12px; padding:4px 8px;"
@@ -105,17 +105,17 @@
                     </template>
 
                     <template x-if="!quoteContext">
-                        <div style="font-size: 12px; color: #64748b;">{% trans "尚未发起询价，可点击“发起询价”获取担保报价。" %}</div>
+                        <div style=”font-size: 12px; color: var(--fc-text-muted);”>{% trans “尚未发起询价，可点击”发起询价”获取担保报价。” %}</div>
                     </template>
                 </div>
 
-                <div x-show="respondentOptions.length > 1" style="margin-bottom: 12px; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 10px 12px; background: #f8fafc;">
-                    <div style="font-size: 12px; color: #334155; margin-bottom: 8px; font-weight: 600;">
+                <div x-show="respondentOptions.length > 1" style="margin-bottom: 12px; border: 1px dashed var(--fc-border-input); border-radius: 8px; padding: 10px 12px; background: var(--fc-bg-muted);">
+                    <div style="font-size: 12px; color: var(--fc-text-secondary); margin-bottom: 8px; font-weight: 600;">
                         {% trans "被申请人（可多选，默认全选）" %}
                     </div>
                     <div style="display:flex; flex-wrap:wrap; gap:8px 16px;">
                         <template x-for="option in respondentOptions" :key="option.party_id">
-                            <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:#0f172a; cursor:pointer;">
+                            <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--fc-text-heading); cursor:pointer;">
                                 <input type="checkbox"
                                        x-model="selectedRespondentIds"
                                        :value="option.party_id"
@@ -151,27 +151,27 @@
                     </button>
                 </div>
 
-                <div style="margin-bottom: 14px; font-size: 12px; color: #dc2626;" x-show="!caseInfo.court_name">
+                <div style="margin-bottom: 14px; font-size: 12px; color: var(--fc-error-text);" x-show="!caseInfo.court_name">
                     {% translate "请先设置管辖法院（案件管辖机关）" %}
                 </div>
-                <div style="margin-bottom: 14px; font-size: 12px; color: #dc2626;" x-show="caseInfo.court_name && !caseInfo.has_court_credential">
+                <div style="margin-bottom: 14px; font-size: 12px; color: var(--fc-error-text);" x-show="caseInfo.court_name && !caseInfo.has_court_credential">
                     {% translate "您没有一张网账号密码，请先在律师管理中添加" %}
                 </div>
-                <div style="margin-bottom: 14px; font-size: 12px; color: #dc2626;" x-show="caseInfo.court_name && caseInfo.has_court_credential && !caseInfo.our_party_is_plaintiff_side">
+                <div style="margin-bottom: 14px; font-size: 12px; color: var(--fc-error-text);" x-show="caseInfo.court_name && caseInfo.has_court_credential && !caseInfo.our_party_is_plaintiff_side">
                     {% translate "我方当事人非申请方，系统默认禁止发起担保申请" %}
                 </div>
-                <div style="margin-bottom: 14px; font-size: 12px; color: #dc2626;" x-show="caseInfo.court_name && caseInfo.has_court_credential && caseInfo.our_party_is_plaintiff_side && !caseInfo.preserve_amount">
+                <div style="margin-bottom: 14px; font-size: 12px; color: var(--fc-error-text);" x-show="caseInfo.court_name && caseInfo.has_court_credential && caseInfo.our_party_is_plaintiff_side && !caseInfo.preserve_amount">
                     {% translate "请先维护案件保全金额（preservation_amount）" %}
                 </div>
-                <div style="margin-bottom: 14px; font-size: 12px; color: #dc2626;" x-show="respondentOptions.length > 1 && selectedRespondentIds.length === 0">
+                <div style="margin-bottom: 14px; font-size: 12px; color: var(--fc-error-text);" x-show="respondentOptions.length > 1 && selectedRespondentIds.length === 0">
                     {% translate "请至少选择一个被申请人" %}
                 </div>
 
                 <template x-if="lastResult">
-                    <div :style="lastResult.success ? 'background:#f0fdf4;border:1px solid #86efac;' : 'background:#fef2f2;border:1px solid #fca5a5;'"
+                    <div :style="lastResult.success ? 'background:var(--fc-success-bg);border:1px solid var(--fc-success-border);' : 'background:var(--fc-error-bg);border:1px solid var(--fc-error-border);'"
                          style="border-radius:8px;padding:12px;">
-                        <span x-show="lastResult.success" style="color:#15803d;">✓ <span x-text="lastResult.message"></span></span>
-                        <span x-show="!lastResult.success" style="color:#dc2626;">✗ <span x-text="lastResult.message"></span></span>
+                        <span x-show="lastResult.success" style="color:var(--fc-success-text);">✓ <span x-text="lastResult.message"></span></span>
+                        <span x-show="!lastResult.success" style="color:var(--fc-error-text);">✗ <span x-text="lastResult.message"></span></span>
                     </div>
                 </template>
             </div>

@@ -18,7 +18,7 @@
 </li>
 
 {% if sync_status %}
-<li style="margin-left: 20px; color: #666; font-size: 12px; line-height: 28px;">
+<li style="margin-left: 20px; color: var(--fc-text-muted); font-size: 12px; line-height: 28px;">
     {% blocktranslate with date=sync_status.latest_rate_date count=sync_status.total_records %}
     最新数据: {{ date }} | 共 {{ count }} 条记录
     {% endblocktranslate %}

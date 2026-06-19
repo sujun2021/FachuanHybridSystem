@@ -5,16 +5,16 @@
 {{ block.super }}
 <style>
   .case-handling-page {
-    --bg-soft: linear-gradient(180deg, #f8faff 0%, #eef2ff 100%);
+    --bg-soft: linear-gradient(180deg, var(--fc-bg-muted) 0%, var(--fc-primary-subtle) 100%);
     --card-bg: rgba(255, 255, 255, 0.97);
-    --line: #e0e7ff;
-    --line-strong: #c7d2fe;
-    --text-main: #1e1b4b;
-    --text-sub: #6b7280;
-    --brand: #6366f1;
-    --brand-strong: #4338ca;
-    --brand-soft: #eef2ff;
-    --success-soft: #eef2ff;
+    --line: var(--fc-border);
+    --line-strong: var(--fc-border-input);
+    --text-main: var(--fc-text-heading);
+    --text-sub: var(--fc-text-muted);
+    --brand: var(--fc-primary);
+    --brand-strong: var(--fc-primary-dark);
+    --brand-soft: var(--fc-primary-subtle);
+    --success-soft: var(--fc-primary-subtle);
     --shadow-soft: 0 10px 30px rgba(99, 102, 241, 0.08);
     --shadow-card: 0 8px 24px rgba(15, 23, 42, 0.05);
   }
@@ -81,7 +81,7 @@
     border-radius: 999px;
     padding: 6px 12px;
     background: rgba(255, 255, 255, 0.88);
-    border: 1px solid #e0e7ff;
+    border: 1px solid var(--fc-border);
     color: var(--brand-strong);
     font-size: 12px;
     font-weight: 700;
@@ -152,7 +152,7 @@
     height: 44px;
     border: 1px solid var(--line-strong);
     border-radius: 14px;
-    background: #fff;
+    background: var(--fc-bg-card);
     padding: 0 14px 0 42px;
     font-size: 14px;
     color: var(--text-main);
@@ -162,7 +162,7 @@
 
   .search-box input:focus {
     outline: none;
-    border-color: #a5b4fc;
+    border-color: var(--fc-primary-light);
     box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
   }
 
@@ -173,7 +173,7 @@
     transform: translateY(-50%);
     width: 16px;
     height: 16px;
-    color: #94a3b8;
+    color: var(--fc-text-disabled);
   }
 
   .toolbar-tips {
@@ -188,9 +188,9 @@
     gap: 6px;
     border-radius: 999px;
     padding: 6px 10px;
-    border: 1px solid #e0e7ff;
-    background: #fff;
-    color: #334155;
+    border: 1px solid var(--fc-border);
+    background: var(--fc-bg-card);
+    color: var(--fc-text-secondary);
     font-size: 12px;
     font-weight: 600;
   }
@@ -213,7 +213,7 @@
 
   .tool-card:hover {
     transform: translateY(-3px);
-    border-color: #c7d2fe;
+    border-color: var(--fc-border-input);
     box-shadow: 0 16px 30px rgba(99, 102, 241, 0.1);
   }
 
@@ -223,7 +223,7 @@
     inset: 0 0 auto 0;
     height: 4px;
     border-radius: 18px 18px 0 0;
-    background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+    background: linear-gradient(90deg, var(--fc-primary) 0%, var(--fc-primary-light) 100%);
   }
 
   .tool-top {
@@ -263,7 +263,7 @@
     align-items: center;
     justify-content: center;
     border-radius: 10px;
-    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+    background: linear-gradient(135deg, var(--fc-primary-subtle) 0%, var(--fc-border) 100%);
     color: var(--brand-strong);
     font-size: 14px;
     font-weight: 800;
@@ -283,9 +283,9 @@
     padding: 4px 10px;
     font-size: 12px;
     font-weight: 700;
-    border: 1px solid #e0e7ff;
-    background: #eef2ff;
-    color: #3730a3;
+    border: 1px solid var(--fc-border);
+    background: var(--fc-primary-subtle);
+    color: var(--fc-text-secondary);
   }
 
   .enter-link {
@@ -297,7 +297,7 @@
     border-radius: 12px;
     padding: 8px 12px;
     background: var(--brand-soft);
-    border: 1px solid #e0e7ff;
+    border: 1px solid var(--fc-border);
     color: var(--brand-strong);
     font-size: 12px;
     font-weight: 700;
@@ -308,7 +308,7 @@
   .enter-link:hover,
   .enter-link:focus {
     text-decoration: none;
-    background: #e0e7ff;
+    background: var(--fc-border);
   }
 
   .submenu-title {
@@ -335,9 +335,9 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    border: 1px solid #e0e7ff;
-    background: linear-gradient(180deg, #ffffff 0%, #f8faff 100%);
-    color: #3730a3;
+    border: 1px solid var(--fc-border);
+    background: linear-gradient(180deg, var(--fc-bg-card) 0%, var(--fc-bg-muted) 100%);
+    color: var(--fc-text-secondary);
     border-radius: 999px;
     padding: 6px 11px;
     font-size: 12px;
@@ -355,8 +355,8 @@
   .child-link:hover,
   .child-link:focus {
     text-decoration: none;
-    border-color: #a5b4fc;
-    background: #eef2ff;
+    border-color: var(--fc-primary-light);
+    background: var(--fc-primary-subtle);
     transform: translateY(-1px);
   }
 

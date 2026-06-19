@@ -53,7 +53,7 @@
             container = document.createElement('div');
             container.id = containerId;
             container.className = 'litigation-fee-display';
-            container.style.cssText = 'margin-top: 5px; padding: 8px 12px; background: #f8f9fa; border-radius: 4px; font-size: 13px; color: #495057;';
+            container.style.cssText = 'margin-top: 5px; padding: 8px 12px; background: var(--fc-bg-muted); border-radius: 4px; font-size: 13px; color: #495057;';
 
             // 插入到字段后面
             const fieldWrapper = field.closest('.form-row') || field.parentElement;
@@ -83,7 +83,7 @@
                         const halfMin = result.fee_range_min / 2;
                         const halfMax = result.fee_range_max / 2;
                         if (result.show_half_fee) {
-                            html += `<div style="color: #6c757d; font-size: 12px;">减半后受理费：${halfMin.toFixed(2)}-${halfMax.toFixed(2)}元</div>`;
+                            html += `<div style="color: var(--fc-text-muted); font-size: 12px;">减半后受理费：${halfMin.toFixed(2)}-${halfMax.toFixed(2)}元</div>`;
                         }
                     } else {
                         // 精确费用
@@ -142,7 +142,7 @@
                 html += `<div><strong>支付令申请费：</strong>${formatCurrency(result.payment_order_fee)}</div>`;
             }
 
-            targetDisplay.innerHTML = html || '<div style="color: #6c757d;">请输入涉案金额</div>';
+            targetDisplay.innerHTML = html || '<div style="color: var(--fc-text-muted);">请输入涉案金额</div>';
         }
 
         // 财产保全费
@@ -151,7 +151,7 @@
             if (result.preservation_fee !== null && result.preservation_fee !== undefined) {
                 preservationDisplay.innerHTML = `<div><strong>财产保全费：</strong>${formatCurrency(result.preservation_fee)}</div>`;
             } else {
-                preservationDisplay.innerHTML = '<div style="color: #6c757d;">请输入财产保全金额</div>';
+                preservationDisplay.innerHTML = '<div style="color: var(--fc-text-muted);">请输入财产保全金额</div>';
             }
         }
     }
@@ -160,7 +160,7 @@
     function showError(message) {
         const targetDisplay = getOrCreateFeeDisplay(CONFIG.TARGET_AMOUNT_FIELD, '');
         if (targetDisplay) {
-            targetDisplay.innerHTML = `<div style="color: #dc3545;">${message}</div>`;
+            targetDisplay.innerHTML = `<div style="color: var(--fc-error-text);">${message}</div>`;
         }
     }
 

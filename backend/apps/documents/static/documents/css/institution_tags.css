@@ -5,16 +5,16 @@
 }
 
 .institution-tags-wrapper {
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--fc-border-input);
     border-radius: 6px;
     padding: 6px 8px;
-    background: #fff;
+    background: var(--fc-bg-card);
     min-height: 42px;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .institution-tags-wrapper:focus-within {
-    border-color: #417690;
+    border-color: var(--fc-admin-blue);
     box-shadow: 0 0 0 3px rgba(65, 118, 144, 0.15);
 }
 
@@ -34,11 +34,11 @@
     align-items: center;
     gap: 4px;
     padding: 3px 8px;
-    background: linear-gradient(135deg, #e8f4f8 0%, #d5eef6 100%);
-    border: 1px solid #b8dce8;
+    background: linear-gradient(135deg, var(--fc-primary-subtle) 0%, var(--fc-primary-subtle) 100%);
+    border: 1px solid var(--fc-border);
     border-radius: 4px;
     font-size: 13px;
-    color: #1a5276;
+    color: var(--fc-primary-dark);
     line-height: 1.4;
 }
 
@@ -51,7 +51,7 @@
     padding: 0;
     border: none;
     background: transparent;
-    color: #7fb3c8;
+    color: var(--fc-text-muted);
     font-size: 14px;
     line-height: 1;
     cursor: pointer;
@@ -60,8 +60,8 @@
 }
 
 .institution-tag-remove:hover {
-    background: #c0392b;
-    color: #fff;
+    background: var(--fc-error-text);
+    color: var(--fc-text-on-primary);
 }
 
 .institution-input-wrapper {
@@ -79,7 +79,7 @@
 }
 
 .institution-input::placeholder {
-    color: #9ca3af;
+    color: var(--fc-text-disabled);
     font-size: 13px;
 }
 

@@ -6,9 +6,9 @@
 
 /* 内联表格基础样式 */
 .inline-group {
-    border: 1px solid #e6edf3;
+    border: 1px solid var(--fc-border);
     border-radius: 10px;
-    background: #fff;
+    background: var(--fc-bg-card);
     overflow: hidden;
     box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
     font-family: inherit;
@@ -16,10 +16,10 @@
 
 .inline-group > h2 {
     background: transparent;
-    color: #0f172a;
+    color: var(--fc-text-heading);
     padding: 10px 12px;
     margin: 0;
-    border-bottom: 1px solid #e6edf3;
+    border-bottom: 1px solid var(--fc-border);
     font-weight: 600;
     letter-spacing: normal;
     font-family: inherit;
@@ -34,13 +34,13 @@
 }
 
 .inline-group .tabular thead th {
-    background: linear-gradient(180deg, #2b6a85 0%, #205b74 100%);
-    color: white;
+    background: linear-gradient(180deg, var(--fc-admin-blue) 0%, var(--fc-admin-blue-hover) 100%);
+    color: var(--fc-text-on-primary);
     padding: 9px 10px;
     text-align: left;
     font-weight: 600;
     font-size: 13px;
-    border-bottom: 1px solid #1a4a5f;
+    border-bottom: 1px solid var(--fc-admin-blue-hover);
     font-family: inherit;
 }
 
@@ -58,21 +58,21 @@
 }
 
 .inline-group .tabular tbody tr {
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--fc-border);
 }
 
 .inline-group .tabular tbody tr:nth-child(even) {
-    background: #fbfdff;
+    background: var(--fc-bg-card);
 }
 
 .inline-group .tabular tbody tr:hover {
-    background-color: #f1f7ff;
+    background-color: var(--fc-primary-subtle);
 }
 
 .inline-group .tabular td {
     padding: 12px 10px;
     vertical-align: top;
-    border-bottom: 1px solid #eef2f6;
+    border-bottom: 1px solid var(--fc-border);
 }
 
 /* 序号字段（order）：完全隐藏，只用于拖拽排序 */
@@ -94,9 +94,9 @@
     margin: 0;
     padding: 6px 8px;
     font-weight: 600;
-    color: #334155;
+    color: var(--fc-text-secondary);
     font-size: 14px;
-    background: #f1f5f9;
+    background: var(--fc-bg-muted-light);
     border-radius: 6px;
     min-width: 32px;
     text-align: center;
@@ -110,10 +110,10 @@
 .inline-group .tabular td.field-name input {
     width: 100%;
     box-sizing: border-box;
-    border: 1px solid #cbd5e1;
+    border: 1px solid var(--fc-border-input);
     border-radius: 8px;
     padding: 6px 8px;
-    background: #fff;
+    background: var(--fc-bg-card);
     height: 34px;
     line-height: 20px;
     display: block;
@@ -129,16 +129,16 @@
     min-height: 72px;
     box-sizing: border-box;
     resize: vertical;
-    border: 1px solid #cbd5e1;
+    border: 1px solid var(--fc-border-input);
     border-radius: 10px;
     padding: 8px 10px;
-    background: #fff;
+    background: var(--fc-bg-card);
 }
 
 .inline-group .tabular input:focus,
 .inline-group .tabular textarea:focus {
     outline: none;
-    border-color: #60a5fa;
+    border-color: var(--fc-primary-light);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
@@ -147,11 +147,11 @@
     width: 220px;
     font-size: 13px;
     line-height: 1.6;
-    color: #475569;
+    color: var(--fc-text-secondary);
 }
 
 .inline-group .tabular td.field-file a {
-    color: #0369a1;
+    color: var(--fc-info-text);
     text-decoration: none;
     font-weight: 500;
     word-break: break-all;
@@ -167,7 +167,7 @@
     width: 100%;
     font-size: 12px;
     margin-top: 6px;
-    color: #64748b;
+    color: var(--fc-text-muted);
 }
 
 /* 页数和页码范围字段 */
@@ -177,9 +177,9 @@
     text-align: center;
     font-family: inherit;
     font-variant-numeric: tabular-nums;
-    background: #f1f5f9;
-    border-left: 1px solid #eef2f6;
-    border-right: 1px solid #eef2f6;
+    background: var(--fc-bg-muted-light);
+    border-left: 1px solid var(--fc-border);
+    border-right: 1px solid var(--fc-border);
     font-size: 12px;
 }
 
@@ -192,7 +192,7 @@
 .drag-handle {
     cursor: move;
     padding: 4px;
-    color: #94a3b8;
+    color: var(--fc-text-disabled);
     font-size: 18px;
     user-select: none;
     display: inline-flex;
@@ -206,22 +206,22 @@
 }
 
 .drag-handle:hover {
-    color: #475569;
-    background: #f1f5f9;
+    color: var(--fc-text-secondary);
+    background: var(--fc-bg-muted-light);
 }
 
 /* 拖拽状态样式 */
 .sortable-ghost {
     opacity: 0.4;
-    background-color: #e3f2fd !important;
+    background-color: var(--fc-primary-subtle) !important;
 }
 
 .sortable-chosen {
-    background-color: #e3f2fd !important;
+    background-color: var(--fc-primary-subtle) !important;
 }
 
 .sortable-drag {
-    background-color: #fff !important;
+    background-color: var(--fc-bg-card) !important;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 

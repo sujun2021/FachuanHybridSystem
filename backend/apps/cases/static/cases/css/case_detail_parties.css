@@ -1,0 +1,163 @@
+/* case_detail_parties.css — 当事人列表、群聊列表、文件夹绑定、可折叠箭头 */
+
+/* 当事人列表 */
+.party-list, .lawyer-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.party-item, .lawyer-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--fc-border);
+}
+
+.party-item:last-child, .lawyer-item:last-child {
+    border-bottom: none;
+}
+
+.party-name, .lawyer-name {
+    font-weight: 500;
+    color: var(--fc-text-heading);
+}
+
+.legal-status {
+    font-size: 12px;
+    color: var(--fc-text-muted);
+    background: var(--fc-bg-muted-light);
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.our-client-badge {
+    background: var(--fc-info-bg);
+    color: var(--fc-info-text);
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+/* 对方当事人徽章 */
+.opposing-party-badge {
+    background: var(--fc-error-bg);
+    color: var(--fc-error-text);
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+/* 我方当事人高亮 */
+.party-item.our-client {
+    background: var(--fc-primary-subtle);
+    margin: 0 -12px;
+    padding: 10px 12px;
+    border-radius: 6px;
+}
+
+/* 群聊列表 */
+.chat-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.chat-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--fc-border);
+}
+
+.chat-item:last-child {
+    border-bottom: none;
+}
+
+.chat-platform {
+    background: var(--fc-border);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--fc-text-secondary);
+}
+
+.chat-name {
+    flex: 1;
+    font-weight: 500;
+    color: var(--fc-text-heading);
+}
+
+.chat-status {
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.chat-status.active {
+    background: var(--fc-success-bg);
+    color: var(--fc-success-text);
+}
+
+.chat-status.inactive {
+    background: var(--fc-error-bg);
+    color: var(--fc-error-text);
+}
+
+/* 文件夹绑定 */
+.folder-binding {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.binding-status {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.binding-status.bound {
+    color: var(--fc-success-text);
+}
+
+.folder-path {
+    font-size: 13px;
+    color: var(--fc-text-secondary);
+    word-break: break-all;
+}
+
+/* 当事人/律师项目可点击样式 */
+.party-item.clickable,
+.lawyer-item.clickable {
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.party-item.clickable:hover,
+.lawyer-item.clickable:hover {
+    background: var(--fc-bg-muted-light);
+    margin: 0 -12px;
+    padding: 10px 12px;
+    border-radius: 6px;
+}
+
+.party-item .view-detail-icon,
+.lawyer-item .view-detail-icon {
+    margin-left: auto;
+    color: var(--fc-text-disabled);
+    font-size: 14px;
+}
+
+.party-item:hover .view-detail-icon,
+.lawyer-item:hover .view-detail-icon {
+    color: var(--unfold-primary, #3b82f6);
+}
+
+/* 可折叠箭头旋转 */
+.rotate-180 {
+    transform: rotate(180deg);
+}

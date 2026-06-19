@@ -1,0 +1,182 @@
+/* case_detail_cards.css — 案件详情页信息卡片、列表和空状态 */
+
+/* 信息网格 */
+.info-grid {
+    display: grid;
+    gap: 20px;
+}
+
+.info-grid.two-columns {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+/* 文档生成页：匹配模板卡片占 3/4，文件夹绑定占 1/4 */
+.info-grid.two-columns.documents-layout-grid {
+    grid-template-columns: 3fr 1fr;
+}
+
+/* 信息卡片 */
+.info-card {
+    background: var(--fc-bg-muted-light);
+    border-radius: 8px;
+    padding: 20px;
+    transition: box-shadow 0.2s ease;
+}
+
+.info-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.info-card.full-width {
+    grid-column: 1 / -1;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.card-icon {
+    font-size: 18px;
+}
+
+.card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--fc-text-secondary);
+    margin: 0;
+}
+
+/* 信息列表 */
+.info-list {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+}
+
+.info-item {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 12px;
+    align-items: baseline;
+}
+
+.info-item dt {
+    font-size: 13px;
+    color: var(--fc-text-muted);
+    flex-shrink: 0;
+}
+
+.info-item dd {
+    font-size: 13px;
+    color: var(--fc-text-heading);
+    text-align: left;
+    margin: 0;
+    word-break: break-word;
+}
+
+/* 空状态 */
+.empty-state {
+    color: var(--fc-text-disabled);
+    font-size: 13px;
+    text-align: center;
+    padding: 20px;
+    margin: 0;
+}
+
+/* 合同链接 */
+.contract-link {
+    color: var(--unfold-primary, #3b82f6);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.contract-link:hover {
+    text-decoration: underline;
+}
+
+/* 案号列表 */
+.case-number-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.case-number-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--fc-border);
+}
+
+.case-number-list li:last-child {
+    border-bottom: none;
+}
+
+.case-number {
+    font-weight: 500;
+    color: var(--fc-text-heading);
+}
+
+.case-number-doc-name {
+    font-size: 12px;
+    color: var(--fc-text-muted);
+    margin-left: 8px;
+}
+
+.case-number-active-badge,
+.case-number-inactive-badge {
+    display: inline-block;
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-left: 6px;
+    font-weight: 500;
+    vertical-align: middle;
+}
+
+.case-number-active-badge {
+    background: var(--fc-success-bg);
+    color: var(--fc-success-text);
+}
+
+.case-number-inactive-badge {
+    background: var(--fc-bg-muted-light);
+    color: var(--fc-text-muted);
+}
+
+.remarks {
+    display: block;
+    font-size: 12px;
+    color: var(--fc-text-muted);
+    margin-top: 4px;
+}
+
+/* 主管机关列表 */
+.authority-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 8px;
+}
+
+.authority-list li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.authority-type {
+    background: var(--fc-border);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--fc-text-secondary);
+}
+
+.authority-name {
+    color: var(--fc-text-heading);
+}

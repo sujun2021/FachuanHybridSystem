@@ -1,0 +1,201 @@
+.batch-table-meta {
+    margin: 0 0 10px;
+    font-size: 12px;
+    color: var(--fc-text-label);
+    background: var(--batch-bg-soft);
+    border: 1px solid var(--fc-border);
+    border-radius: 8px;
+    padding: 8px 10px;
+}
+
+.batch-table-wrapper {
+    overflow: auto;
+    border: 1px solid var(--fc-border);
+    border-radius: 10px;
+}
+
+.batch-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1100px;
+    background: var(--fc-bg-card);
+}
+
+.batch-table th,
+.batch-table td {
+    border-bottom: 1px solid var(--fc-border);
+    padding: 10px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.batch-table th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--fc-bg-muted);
+    color: var(--fc-text-primary);
+    font-size: 12px;
+    letter-spacing: 0.02em;
+}
+
+.batch-table tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+.batch-table tbody tr:hover {
+    background: var(--fc-bg-muted);
+}
+
+.batch-table tbody tr.is-selected {
+    background: var(--fc-primary-subtle);
+}
+
+.batch-table select {
+    width: 100%;
+    min-height: 34px;
+    border: 1px solid var(--fc-border-input);
+    border-radius: 7px;
+    background: var(--fc-bg-card);
+    padding: 0 8px;
+}
+
+.batch-table select.is-ready {
+    border-color: var(--fc-success-border);
+    background: var(--fc-success-bg);
+}
+
+.batch-table select:focus {
+    border-color: var(--fc-admin-blue-light);
+    box-shadow: 0 0 0 2px rgba(75, 132, 170, 0.16);
+    outline: none;
+}
+
+.cell-main {
+    color: var(--fc-text-heading);
+    font-weight: 500;
+}
+
+.cell-main.is-muted {
+    color: var(--fc-text-muted);
+    font-weight: 400;
+}
+
+.cell-sub {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--fc-text-muted);
+}
+
+.confidence-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    margin-top: 7px;
+    padding: 2px 9px;
+    font-size: 11px;
+    font-weight: 700;
+    border: 1px solid transparent;
+}
+
+.confidence-pill.is-high {
+    color: var(--fc-success-text);
+    background: var(--fc-success-bg);
+    border-color: var(--fc-success-border);
+}
+
+.confidence-pill.is-medium {
+    color: var(--fc-warning-text);
+    background: var(--fc-warning-bg);
+    border-color: var(--fc-warning-border);
+}
+
+.confidence-pill.is-low {
+    color: var(--fc-error-text);
+    background: var(--fc-error-bg);
+    border-color: var(--fc-error-border);
+}
+
+.batch-open-btn {
+    border-radius: 6px;
+    min-height: 28px;
+    width: 36px;
+    padding: 0;
+    border-color: var(--fc-border-input);
+    background: var(--fc-bg-muted);
+    color: var(--fc-admin-blue);
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.batch-open-btn:hover {
+    background: var(--fc-bg-muted-light);
+}
+
+.batch-open-btn:disabled {
+    opacity: 0.4;
+}
+
+.apply-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    user-select: none;
+}
+
+.apply-toggle input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.apply-toggle-ui {
+    width: 26px;
+    height: 16px;
+    border-radius: 999px;
+    background: var(--fc-border-input);
+    position: relative;
+    transition: background-color 0.15s ease;
+    flex-shrink: 0;
+}
+
+.apply-toggle-ui::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--fc-bg-card);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    transition: transform 0.15s ease;
+}
+
+.apply-toggle input:checked + .apply-toggle-ui {
+    background: var(--batch-primary);
+}
+
+.apply-toggle input:checked + .apply-toggle-ui::after {
+    transform: translateX(10px);
+}
+
+.apply-toggle-text {
+    color: var(--fc-text-primary);
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.batch-empty-card {
+    margin-top: 8px;
+    border: 1px dashed var(--fc-border);
+    border-radius: 8px;
+    padding: 14px;
+    text-align: center;
+    color: var(--fc-text-muted);
+    background: var(--fc-bg-muted);
+}

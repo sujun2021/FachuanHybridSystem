@@ -158,7 +158,7 @@ class EvidenceExportService:
         Raises:
             NotFoundError: 模板不存在
         """
-        from apps.evidence.models import (  # type: ignore[attr-defined]
+        from apps.documents.models import (
             DocumentCaseFileSubType,
             DocumentTemplate,
             DocumentTemplateType,

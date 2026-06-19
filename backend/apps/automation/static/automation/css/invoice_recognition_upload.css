@@ -1,0 +1,366 @@
+/* Invoice Recognition — Upload & Results Styles */
+
+.ir-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 4px;
+}
+
+/* Upload Zone */
+.ir-upload-zone {
+    border: 2px dashed var(--fc-border-input);
+    border-radius: 10px;
+    padding: 36px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    background: var(--fc-bg-muted-light);
+    margin-bottom: 24px;
+}
+
+.ir-upload-zone:hover {
+    border-color: var(--fc-admin-blue);
+    background: var(--fc-primary-subtle);
+}
+
+.ir-upload-zone.dragging {
+    border-color: var(--fc-admin-blue);
+    background: var(--fc-primary-subtle);
+    border-style: solid;
+}
+
+.ir-upload-zone .upload-icon {
+    font-size: 2.2rem;
+    margin-bottom: 10px;
+    opacity: 0.5;
+}
+
+.ir-upload-zone p {
+    margin: 4px 0;
+    color: var(--fc-text-muted);
+    font-size: 0.95rem;
+}
+
+.ir-upload-zone .upload-hint {
+    font-size: 0.8rem;
+    color: var(--fc-text-muted);
+    margin-top: 6px;
+}
+
+/* Progress Bar */
+.ir-progress-bar {
+    background: var(--fc-border);
+    border-radius: 4px;
+    height: 6px;
+    overflow: hidden;
+    margin: 10px 0 16px;
+}
+
+.ir-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--fc-admin-blue), var(--fc-admin-blue-hover));
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+/* Section title */
+.ir-section-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--fc-admin-blue);
+    margin: 24px 0 12px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--fc-border);
+    letter-spacing: 0.02em;
+}
+
+/* Category Group */
+.ir-category-group {
+    border: 1px solid var(--fc-border);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.ir-category-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 16px;
+    background: var(--fc-primary-subtle);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+}
+
+.ir-category-header:hover {
+    background: var(--fc-primary-hover);
+}
+
+.ir-category-header .category-title {
+    font-weight: 600;
+    color: var(--fc-admin-blue);
+    font-size: 0.9rem;
+}
+
+.ir-category-header .category-stats {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 0.85rem;
+    color: var(--fc-text-muted);
+}
+
+.ir-category-header .category-subtotal {
+    font-weight: 700;
+    color: var(--fc-success-text);
+    font-size: 0.95rem;
+}
+
+.ir-category-header .toggle-icon {
+    color: var(--fc-text-muted);
+    font-size: 0.75rem;
+    transition: transform 0.2s;
+}
+
+.ir-category-header .toggle-icon.open {
+    transform: rotate(180deg);
+}
+
+/* Invoice Table */
+.ir-invoice-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.ir-invoice-table th {
+    background: var(--fc-bg-muted-light);
+    padding: 8px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--fc-text-muted);
+    border-bottom: 1px solid var(--fc-border);
+    white-space: nowrap;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.ir-invoice-table td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--fc-border);
+    color: var(--fc-text-secondary);
+    vertical-align: middle;
+}
+
+.ir-invoice-table tr:last-child td {
+    border-bottom: none;
+}
+
+.ir-invoice-table tr:hover td {
+    background: var(--fc-bg-muted-light);
+}
+
+/* Category Download Buttons */
+.ir-category-download {
+    padding: 8px 14px;
+    background: var(--fc-bg-muted-light);
+    border-top: 1px solid var(--fc-border);
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.btn-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 14px;
+    border-radius: 5px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+}
+
+.btn-pdf {
+    background: var(--fc-error-bg);
+    color: var(--fc-error-text);
+    border-color: var(--fc-error-border);
+}
+
+.btn-pdf:hover {
+    background: var(--fc-error-bg);
+    border-color: var(--fc-error-border);
+}
+
+.btn-zip {
+    background: var(--fc-primary-subtle);
+    color: var(--fc-admin-blue);
+    border-color: var(--fc-border);
+}
+
+.btn-zip:hover {
+    background: var(--fc-primary-hover);
+    border-color: var(--fc-border);
+}
+
+/* Duplicate Section */
+.ir-duplicate-section {
+    background: var(--fc-bg-muted-light);
+    border: 1px solid var(--fc-border);
+    border-radius: 8px;
+    margin-bottom: 16px;
+    overflow: hidden;
+}
+
+.ir-duplicate-header {
+    padding: 10px 16px;
+    background: var(--fc-bg-muted);
+    font-weight: 600;
+    color: var(--fc-text-muted);
+    font-size: 0.875rem;
+}
+
+.ir-duplicate-row td {
+    background: var(--fc-bg-muted-light) !important;
+    color: var(--fc-text-muted) !important;
+    text-decoration: line-through;
+}
+
+/* Total Section */
+.ir-total-section {
+    background: linear-gradient(135deg, var(--fc-success-bg), var(--fc-success-bg));
+    border: 1px solid var(--fc-success-border);
+    border-radius: 8px;
+    padding: 14px 20px;
+    margin: 16px 0;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.ir-total-section .total-label {
+    font-size: 0.9rem;
+    color: var(--fc-success-text);
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.ir-total-section .total-amount {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--fc-success-text);
+    letter-spacing: -0.02em;
+}
+
+.ir-total-section .total-amount-cn {
+    font-size: 1rem;
+    color: var(--fc-success-text);
+    margin-left: auto;
+    font-weight: 500;
+}
+
+/* Download Buttons (全部下载) */
+.ir-download-btns {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 12px 0 20px;
+}
+
+.ir-download-btns .btn-download {
+    padding: 8px 20px;
+    font-size: 0.875rem;
+}
+
+.ir-download-btns .btn-pdf {
+    background: var(--fc-error-text);
+    color: var(--fc-text-on-primary);
+    border-color: var(--fc-error-text);
+}
+
+.ir-download-btns .btn-pdf:hover {
+    background: var(--fc-error-text);
+}
+
+.ir-download-btns .btn-zip {
+    background: var(--fc-admin-blue);
+    color: var(--fc-text-on-primary);
+    border-color: var(--fc-admin-blue);
+}
+
+.ir-download-btns .btn-zip:hover {
+    background: var(--fc-admin-blue-hover);
+}
+
+/* Record Status Badge */
+.ir-record-status {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.ir-record-status.success {
+    background: var(--fc-success-bg);
+    color: var(--fc-success-text);
+}
+
+.ir-record-status.failed {
+    background: var(--fc-error-bg);
+    color: var(--fc-error-text);
+}
+
+.ir-record-status.pending {
+    background: var(--fc-warning-bg);
+    color: var(--fc-warning-text);
+}
+
+/* Upload status message */
+.ir-upload-message {
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-bottom: 14px;
+    font-size: 0.875rem;
+}
+
+.ir-upload-message.success {
+    background: var(--fc-success-bg);
+    color: var(--fc-success-text);
+    border: 1px solid var(--fc-success-border);
+}
+
+.ir-upload-message.error {
+    background: var(--fc-error-bg);
+    color: var(--fc-error-text);
+    border: 1px solid var(--fc-error-border);
+}
+
+/* Empty state */
+.ir-empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--fc-text-muted);
+    font-size: 0.9rem;
+}
+
+/* Download button in table */
+.ir-invoice-table .button {
+    padding: 3px 10px;
+    font-size: 0.78rem;
+    background: var(--fc-primary-subtle);
+    color: var(--fc-admin-blue);
+    border: 1px solid var(--fc-border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.ir-invoice-table .button:hover {
+    background: var(--fc-primary-hover);
+}

@@ -18,22 +18,22 @@
 .autocomplete-input {
     width: 100%;
     padding: 8px 32px 8px 12px;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--fc-border-input);
     border-radius: 6px;
     font-size: 14px;
     line-height: 1.5;
-    background: #fff;
+    background: var(--fc-bg-card);
     transition: all 0.15s ease;
 }
 
 .autocomplete-input:focus {
     outline: none;
-    border-color: #417690;
+    border-color: var(--fc-admin-blue);
     box-shadow: 0 0 0 3px rgba(65, 118, 144, 0.15);
 }
 
 .autocomplete-input::placeholder {
-    color: #9ca3af;
+    color: var(--fc-text-disabled);
 }
 
 /* ========== 加载动画 ========== */
@@ -44,7 +44,7 @@
     transform: translateY(-50%);
     width: 16px;
     height: 16px;
-    color: #6b7280;
+    color: var(--fc-text-muted);
 }
 
 .ac-spinner svg {
@@ -60,8 +60,8 @@
 
 /* ========== 下拉框 ========== */
 .ac-dropdown {
-    background: #fff;
-    border: 1px solid #e5e7eb;
+    background: var(--fc-bg-card);
+    border: 1px solid var(--fc-border);
     border-radius: 8px;
     box-shadow:
         0 4px 6px -1px rgba(0, 0, 0, 0.1),
@@ -87,12 +87,12 @@
 }
 
 .ac-list::-webkit-scrollbar-thumb {
-    background: #d1d5db;
+    background: var(--fc-border-input);
     border-radius: 3px;
 }
 
 .ac-list::-webkit-scrollbar-thumb:hover {
-    background: #9ca3af;
+    background: var(--fc-text-disabled);
 }
 
 /* ========== 选项项 ========== */
@@ -100,10 +100,10 @@
     padding: 10px 14px;
     font-size: 14px;
     line-height: 1.4;
-    color: #374151;
+    color: var(--fc-text-secondary);
     cursor: pointer;
     transition: background 0.1s ease;
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 1px solid var(--fc-bg-muted-light);
 }
 
 .ac-item:last-child {
@@ -111,24 +111,24 @@
 }
 
 .ac-item:hover {
-    background: #f9fafb;
+    background: var(--fc-bg-muted-light);
 }
 
 /* 选中/高亮状态 */
 .ac-item.ac-active {
-    background: linear-gradient(135deg, #417690 0%, #4a8db0 100%);
-    color: #fff;
+    background: linear-gradient(135deg, var(--fc-admin-blue) 0%, var(--fc-admin-blue-hover) 100%);
+    color: var(--fc-text-on-primary);
 }
 
 .ac-item.ac-active .ac-highlight {
     background: rgba(255, 255, 255, 0.3);
-    color: #fff;
+    color: var(--fc-text-on-primary);
 }
 
 /* ========== 关键词高亮 ========== */
 .ac-highlight {
-    background: #fef08a;
-    color: #92400e;
+    background: var(--fc-warning-bg);
+    color: var(--fc-warning-text);
     padding: 1px 3px;
     border-radius: 2px;
     font-weight: 500;
@@ -138,7 +138,7 @@
 .ac-empty {
     padding: 24px 16px;
     text-align: center;
-    color: #9ca3af;
+    color: var(--fc-text-disabled);
 }
 
 .ac-empty svg {
@@ -159,19 +159,19 @@
     justify-content: space-between;
     align-items: center;
     padding: 8px 14px;
-    background: #f9fafb;
-    border-top: 1px solid #e5e7eb;
+    background: var(--fc-bg-muted-light);
+    border-top: 1px solid var(--fc-border);
     font-size: 12px;
-    color: #6b7280;
+    color: var(--fc-text-muted);
 }
 
 .ac-footer strong {
-    color: #374151;
+    color: var(--fc-text-secondary);
     font-weight: 600;
 }
 
 .ac-hint {
-    color: #9ca3af;
+    color: var(--fc-text-disabled);
     font-size: 11px;
 }
 

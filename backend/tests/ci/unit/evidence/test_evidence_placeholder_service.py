@@ -106,10 +106,8 @@ class TestGetPartiesBrief:
                 {"legal_status": "plaintiff", "client_name": "张三", "name": "张三"},
             ]
         }
-        # These helper methods don't exist on the class (dead code in source),
-        # so the method raises AttributeError for non-empty parties.
-        with pytest.raises(AttributeError):
-            svc.get_parties_brief(case_data)
+        result = svc.get_parties_brief(case_data)
+        assert result == "原告:张三"
 
 
 class TestGetEvidenceItems:

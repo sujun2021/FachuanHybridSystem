@@ -17,8 +17,8 @@
   margin-bottom: 8px; flex-wrap: wrap;
 }
 .aq-row select, .aq-row input[type=text] {
-  height: 32px; border: 1px solid #ccc; border-radius: 4px;
-  padding: 0 8px; font-size: 13px; background: #fff;
+  height: 32px; border: 1px solid var(--fc-border); border-radius: 4px;
+  padding: 0 8px; font-size: 13px; background: var(--fc-bg-card);
 }
 .aq-row select.aq-op { width: 80px; }
 .aq-row select.aq-field { width: 140px; }
@@ -27,17 +27,17 @@
   height: 28px; padding: 0 10px; border-radius: 4px; border: none;
   cursor: pointer; font-size: 12px; font-weight: 600;
 }
-.aq-btn-add { background: #417690; color: #fff; }
-.aq-btn-add:hover { background: #205067; }
-.aq-btn-del { background: #ba2121; color: #fff; }
-.aq-btn-del:hover { background: #8a1a1a; }
-.aq-hint { font-size: 12px; color: #666; margin-top: 6px; }
+.aq-btn-add { background: var(--fc-admin-blue); color: var(--fc-text-on-primary); }
+.aq-btn-add:hover { background: var(--fc-admin-blue-hover); }
+.aq-btn-del { background: var(--fc-error-text); color: var(--fc-text-on-primary); }
+.aq-btn-del:hover { background: var(--fc-error-text); }
+.aq-hint { font-size: 12px; color: var(--fc-text-muted); margin-top: 6px; }
 .aq-toggle {
   display: inline-flex; align-items: center; gap: 6px;
-  cursor: pointer; font-size: 13px; color: #417690; font-weight: 600;
+  cursor: pointer; font-size: 13px; color: var(--fc-admin-blue); font-weight: 600;
   margin-bottom: 8px; user-select: none;
 }
-.aq-toggle:hover { color: #205067; }
+.aq-toggle:hover { color: var(--fc-admin-blue-hover); }
 .aq-arrow { transition: transform .2s; display: inline-block; }
 .aq-arrow.open { transform: rotate(90deg); }
 </style>
@@ -224,7 +224,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var btn = document.createElement('button');
   btn.type = 'button';
   btn.textContent = '测试连通性';
-  btn.style.cssText = 'margin-left:8px;padding:4px 12px;border:1px solid #417690;border-radius:4px;background:#417690;color:#fff;cursor:pointer;font-size:13px;vertical-align:middle;';
+  btn.style.cssText = 'margin-left:8px;padding:4px 12px;border:1px solid var(--fc-admin-blue);border-radius:4px;background:var(--fc-admin-blue);color:var(--fc-text-on-primary);cursor:pointer;font-size:13px;vertical-align:middle;';
   modelSelect.parentElement.appendChild(btn);
 
   var statusSpan = document.createElement('span');
@@ -233,7 +233,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   btn.addEventListener('click', function () {
     var modelId = modelSelect.value;
-    if (!modelId) { statusSpan.textContent = '请先选择模型'; statusSpan.style.color = '#ba2121'; return; }
+    if (!modelId) { statusSpan.textContent = '请先选择模型'; statusSpan.style.color = 'var(--fc-error-text)'; return; }
 
     btn.disabled = true;
     btn.textContent = '测试中…';
@@ -251,15 +251,15 @@ document.addEventListener('DOMContentLoaded', function () {
     .then(function (data) {
       if (data.ok) {
         statusSpan.textContent = '✓ 连通，延迟 ' + data.latency_ms + 'ms（' + (data.backend || '') + '）';
-        statusSpan.style.color = '#1a7f37';
+        statusSpan.style.color = 'var(--fc-success-text)';
       } else {
         statusSpan.textContent = '✗ 失败：' + (data.error || '未知错误');
-        statusSpan.style.color = '#ba2121';
+        statusSpan.style.color = 'var(--fc-error-text)';
       }
     })
     .catch(function (err) {
       statusSpan.textContent = '✗ 请求异常：' + err.message;
-      statusSpan.style.color = '#ba2121';
+      statusSpan.style.color = 'var(--fc-error-text)';
     })
     .finally(function () {
       btn.disabled = false;

@@ -311,7 +311,19 @@ class TestAPIInterceptResponseSchema:
     def test_valid(self):
         from apps.automation.schemas.court_document import APIInterceptResponseSchema
         data = APIInterceptResponseSchema(
-            code=200, msg="ok", data=[{"key": "val"}], success=True, totalRows=1,
+            code=200, msg="ok", data=[
+                {
+                    "c_sdbh": "SD001",
+                    "c_stbh": "ST001",
+                    "wjlj": "http://example.com/doc.pdf",
+                    "c_wsbh": "WS001",
+                    "c_wsmc": "判决书",
+                    "c_fybh": "FY001",
+                    "c_fymc": "天河法院",
+                    "c_wjgs": "pdf",
+                    "dt_cjsj": "2025-01-01",
+                }
+            ], success=True, totalRows=1,
         )
         assert data.totalRows == 1
 

@@ -22,23 +22,23 @@
     line-height: 1;
     white-space: nowrap;
     user-select: none;
-    color: #fff;
-    background: #2f6da6;
-    border-color: #2a5f90;
+    color: var(--fc-text-on-primary);
+    background: var(--fc-admin-blue);
+    border-color: var(--fc-admin-blue-hover);
     margin-left: 8px;
     vertical-align: middle;
     transition: background 0.15s ease;
 }
 .parse-reminder-btn:hover {
-    background: #285b8c;
+    background: var(--fc-admin-blue-hover);
 }
 .parse-reminder-btn:active {
-    background: #1f4d75;
+    background: var(--fc-admin-blue-hover);
 }
 .parse-reminder-btn:disabled {
-    background: #d9dee7;
-    border-color: #c9d0db;
-    color: #8a97a8;
+    background: var(--fc-bg-muted-light);
+    border-color: var(--fc-border);
+    color: var(--fc-text-muted);
     cursor: not-allowed;
 }
 /* Toast */
@@ -49,8 +49,8 @@
     z-index: 10000;
 }
 .toast {
-    background-color: #333;
-    color: white;
+    background-color: var(--fc-text-secondary);
+    color: var(--fc-text-on-primary);
     padding: 12px 20px;
     border-radius: 4px;
     margin-bottom: 10px;
@@ -65,10 +65,10 @@
     transform: translateX(0);
 }
 .toast.success {
-    background-color: #28a745;
+    background-color: var(--fc-success-text);
 }
 .toast.error {
-    background-color: #dc3545;
+    background-color: var(--fc-error-text);
 }
 /* content 字段旁的解析按钮容器 */
 .field-content .parse-reminder-btn-wrapper {
