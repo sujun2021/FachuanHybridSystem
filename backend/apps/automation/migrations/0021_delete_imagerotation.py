@@ -6,11 +6,11 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('automation', '0017_remove_courtsms_automation__status_40c207_idx_and_more'),
+        ("automation", "0019_remove_courtsms_automation__status_40c207_idx_and_more"),
     ]
 
     operations = [
         migrations.DeleteModel(
-            name='ImageRotation',
+            name="ImageRotation",
         ),
     ]
