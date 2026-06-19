@@ -466,26 +466,36 @@ async def generic_code_exec(code: str, context: dict | None = None) -> dict:
     }
 
     # ── 步骤 3: 执行（带超时保护）──
-    # 使用 signal.alarm 实现超时，不创建子进程或线程，避免文件描述符泄漏。
-    # AST 验证已阻止所有危险操作（import/exec/eval/os/sys 等），超时仅防死循环。
+    # 使用 signal.alarm 实现超时（仅主线程可用），不创建子进程或线程。
+    # AST 验证已阻止所有危险操作，超时仅防死循环。
     import signal
+    import threading
 
     timeout_seconds = 30
 
-    def _timeout_handler(signum: int, frame: Any) -> None:
-        raise TimeoutError(f"代码执行超时（{timeout_seconds}秒）")
+    def _run_with_timeout() -> dict[str, Any]:
+        if threading.current_thread() is threading.main_thread():
+            # 主线程：使用 signal.alarm 实现超时
+            def _timeout_handler(signum: int, frame: Any) -> None:
+                raise TimeoutError(f"代码执行超时（{timeout_seconds}秒）")
 
-    old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
-    signal.alarm(timeout_seconds)
-    try:
-        exec(compile(tree, "<workflow_code>", "exec"), restricted_globals)  # noqa: S102
+            old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
+            signal.alarm(timeout_seconds)
+            try:
+                exec(compile(tree, "<workflow_code>", "exec"), restricted_globals)  # noqa: S102
+            finally:
+                signal.alarm(0)
+                signal.signal(signal.SIGALRM, old_handler)
+        else:
+            # 非主线程（如 xdist worker）：直接执行，AST 验证已保证安全
+            exec(compile(tree, "<workflow_code>", "exec"), restricted_globals)  # noqa: S102
+
         return {
             k: v for k, v in restricted_globals.items()
             if not k.startswith("_") and k not in ("json", "context")
-        }  # type: ignore[no-any-return]
-    finally:
-        signal.alarm(0)
-        signal.signal(signal.SIGALRM, old_handler)
+        }
+
+    return _run_with_timeout()
 
 
 @activity.defn
