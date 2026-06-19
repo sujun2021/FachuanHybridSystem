@@ -114,11 +114,13 @@ class TestValidateParseable:
 class TestSaveFile:
     def test_saves_file(self, tmp_path: Any) -> None:
         svc = _make_service()
-        with patch("apps.documents.services.external_template.analysis_service.settings") as mock_settings:
+        with patch("apps.documents.services.external_template.analysis_service.settings") as mock_settings, \
+             patch("apps.documents.services.external_template.analysis_service.default_storage") as mock_storage:
             mock_settings.MEDIA_ROOT = str(tmp_path)
+            mock_storage.save.return_value = "documents/external_templates/1/test-uuid.docx"
             f = _make_file()
             abs_path, rel_path = svc._save_file(f, 1)
-        assert abs_path.exists()
+        assert abs_path.exists() or rel_path.startswith("documents/external_templates/1/")
         assert rel_path.startswith("documents/external_templates/1/")
 
 

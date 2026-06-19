@@ -22,9 +22,10 @@ class TestBoundFolderScanService:
     def _make_service(self, **kwargs):
         from apps.core.services.bound_folder_scan_service import BoundFolderScanService
 
-        with patch("apps.core.services.bound_folder_scan_service.TextExtractionService"):
-            with patch("apps.core.services.bound_folder_scan_service.MaterialClassificationService"):
-                return BoundFolderScanService(**kwargs)
+        # TextExtractionService is TYPE_CHECKING-only, so we inject it via the constructor
+        kwargs.setdefault("text_extraction_service", MagicMock())
+        with patch("apps.core.services.bound_folder_scan_service.MaterialClassificationService"):
+            return BoundFolderScanService(**kwargs)
 
     def test_parse_version_v_pattern(self):
         svc = self._make_service()

@@ -27,7 +27,7 @@ from apps.documents.admin.template_admin_views_mixin import (
 class TestToDjangoRelativePath:
     def test_relative_path(self) -> None:
         """Should return a posix relative path from backend root."""
-        with patch("apps.documents.admin.template_admin_views_mixin.settings") as mock_settings:
+        with patch("django.conf.settings") as mock_settings:
             mock_settings.BASE_DIR = str(Path("/app/backend"))
             result = _to_django_relative_path(Path("/app/templates/foo.docx"))
             # result should be relative to backend's parent
@@ -35,7 +35,7 @@ class TestToDjangoRelativePath:
 
     def test_same_path(self) -> None:
         """When path equals backend root, returns '.' like relative."""
-        with patch("apps.documents.admin.template_admin_views_mixin.settings") as mock_settings:
+        with patch("django.conf.settings") as mock_settings:
             mock_settings.BASE_DIR = str(Path("/app/backend"))
             # path outside backend root should still return something
             result = _to_django_relative_path(Path("/other/path"))
@@ -64,7 +64,7 @@ class TestNormalizePrivateDocxRoot:
 
     def test_relative_path_resolves(self) -> None:
         """Relative path should be resolved against backend root."""
-        with patch("apps.documents.admin.template_admin_views_mixin.settings") as mock_settings:
+        with patch("django.conf.settings") as mock_settings:
             mock_settings.BASE_DIR = str(Path(__file__).resolve().parent)
             # path that doesn't exist
             with pytest.raises(ValueError):
