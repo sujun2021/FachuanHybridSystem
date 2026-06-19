@@ -1,0 +1,226 @@
+/* 合同详情页 — 当事人、律师、补充协议、提醒 */
+
+/* 当事人列表 */
+.party-list, .lawyer-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.party-item, .lawyer-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--fc-border);
+}
+
+.party-item:last-child, .lawyer-item:last-child {
+    border-bottom: none;
+}
+
+.party-name, .lawyer-name {
+    font-weight: 500;
+    color: var(--fc-text-heading);
+}
+
+.party-role {
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.party-role.role-principal {
+    background: var(--fc-info-bg);
+    color: var(--fc-info-text);
+}
+
+.party-role.role-beneficiary {
+    background: var(--fc-success-bg);
+    color: var(--fc-success-text);
+}
+
+.party-role.role-opposing {
+    background: var(--fc-error-bg);
+    color: var(--fc-error-text);
+}
+
+.party-legal-rep {
+    font-size: 12px;
+    color: var(--fc-text-muted);
+}
+
+.primary-badge {
+    background: var(--fc-warning-bg);
+    color: var(--fc-warning-text);
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+/* 当事人/律师可点击样式 */
+.party-item.clickable,
+.lawyer-item.clickable {
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.party-item.clickable:hover,
+.lawyer-item.clickable:hover {
+    background: var(--fc-bg-muted-light);
+    margin: 0 -12px;
+    padding: 10px 12px;
+    border-radius: 6px;
+}
+
+.view-detail-icon {
+    margin-left: auto;
+    color: var(--fc-text-disabled);
+    font-size: 14px;
+}
+
+.party-item:hover .view-detail-icon,
+.lawyer-item:hover .view-detail-icon {
+    color: var(--unfold-primary, #3b82f6);
+}
+
+/* 补充协议列表 */
+.agreement-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.agreement-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: var(--fc-bg-card);
+    border: 1px solid var(--fc-border);
+    border-radius: 6px;
+}
+
+.agreement-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--fc-text-heading);
+}
+
+.agreement-date {
+    font-size: 12px;
+    color: var(--fc-text-muted);
+}
+
+/* 提醒列表 */
+.reminder-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.reminder-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--fc-bg-card);
+    border: 1px solid var(--fc-border);
+    border-radius: 6px;
+    flex-wrap: wrap;
+}
+
+.reminder-item.reminder-soon {
+    background: var(--fc-warning-bg);
+    border-color: var(--fc-warning-border);
+}
+
+.reminder-item.reminder-overdue {
+    background: var(--fc-error-bg);
+    border-color: var(--fc-error-border);
+}
+
+.reminder-type {
+    display: inline-block;
+    padding: 3px 10px;
+    background: var(--fc-info-bg);
+    color: var(--fc-primary);
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.reminder-content {
+    flex: 1;
+    font-size: 14px;
+    color: var(--fc-text-heading);
+    min-width: 150px;
+}
+
+.reminder-due-date {
+    font-size: 13px;
+    color: var(--fc-text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.soon-badge {
+    background: #f59e0b;
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 500;
+}
+
+.overdue-badge {
+    background: #ef4444;
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 500;
+}
+
+/* 补充协议选择列表 */
+.agreement-select-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.agreement-select-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--fc-bg-muted-light);
+    border: 2px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.agreement-select-item:hover {
+    background: var(--fc-info-bg);
+    border-color: var(--fc-info-border);
+}
+
+.agreement-select-item.selected {
+    background: var(--fc-info-bg);
+    border-color: var(--unfold-primary, #3b82f6);
+}
+
+.agreement-select-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--fc-text-heading);
+}
+
+.agreement-select-date {
+    font-size: 12px;
+    color: var(--fc-text-muted);
+}
