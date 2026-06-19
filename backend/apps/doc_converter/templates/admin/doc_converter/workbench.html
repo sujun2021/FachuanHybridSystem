@@ -15,7 +15,7 @@
 
 /* 警告横幅 */
 .dc-warning {
-    background: var(--fc-warning-bg); border: 1px solid #ffe082; border-radius: 10px;
+    background: var(--fc-warning-bg); border: 1px solid var(--fc-warning-border); border-radius: 10px;
     padding: 12px 18px; margin-bottom: 20px; font-size: 13px; color: var(--fc-warning-text);
     display: flex; align-items: center; gap: 10px;
 }
@@ -23,7 +23,7 @@
 
 /* 上传区域 */
 .dc-upload-zone {
-    border: 3px dashed #b8d4e3; border-radius: 16px; padding: 50px 20px;
+    border: 3px dashed var(--fc-border-input); border-radius: 16px; padding: 50px 20px;
     text-align: center; cursor: pointer; transition: all 0.3s;
     background: linear-gradient(135deg, var(--fc-bg-muted-light), var(--fc-bg-muted-light));
     min-height: 200px; display: flex; flex-direction: column;
@@ -178,12 +178,12 @@
 
 /* 错误 */
 .dc-error {
-    background: #fff5f5; border: 1px solid #ffcdd2; border-radius: 12px;
+    background: var(--fc-error-bg); border: 1px solid var(--fc-error-border); border-radius: 12px;
     padding: 36px 20px; text-align: center; margin-top: 20px;
 }
 .dc-error .icon { font-size: 44px; margin-bottom: 14px; }
 .dc-error h3 { color: var(--fc-error-text); margin: 0 0 8px; font-size: 17px; }
-.dc-error p { color: #e53935; margin: 0 0 18px; font-size: 13px; word-break: break-all; }
+.dc-error p { color: var(--fc-error-text); margin: 0 0 18px; font-size: 13px; word-break: break-all; }
 
 .hidden { display: none !important; }
 </style>
@@ -550,7 +550,7 @@
         var header = document.getElementById('resultHeader');
         if (job.failed_files > 0) {
             header.textContent = '部分转换失败';
-            header.style.background = 'linear-gradient(135deg, #e65100, #bf360c)';
+            header.style.background = 'linear-gradient(135deg, var(--fc-warning-text), var(--fc-error-text))';
         } else {
             header.textContent = '转换完成';
             header.style.background = 'linear-gradient(135deg, var(--fc-admin-blue), var(--fc-admin-blue-hover)';

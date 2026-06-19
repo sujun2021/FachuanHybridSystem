@@ -566,7 +566,7 @@
             const reportBtn = document.createElement('button');
             reportBtn.type = 'button';
             reportBtn.className = 'duplicate-report-btn';
-            reportBtn.style.cssText = 'margin-top: 10px; padding: 5px 10px; background: #007cba; color: white; border: none; border-radius: 3px; cursor: pointer;';
+            reportBtn.style.cssText = 'margin-top: 10px; padding: 5px 10px; background: var(--fc-admin-blue); color: var(--fc-text-on-primary); border: none; border-radius: 3px; cursor: pointer;';
             reportBtn.textContent = '📊 查看重复ID报告';
 
             // 插入到结构字段后面
@@ -704,11 +704,11 @@
 
             if (result.isValid) {
                 validationDiv.className = 'validation-status valid';
-                messageDiv.innerHTML = '<span style="color: green;">✅ 文件夹结构ID验证通过</span>';
+                messageDiv.innerHTML = '<span style="color: var(--fc-success-text);">✅ 文件夹结构ID验证通过</span>';
             } else {
                 validationDiv.className = 'validation-status invalid';
                 const errorHtml = result.errors.map(error =>
-                    `<div style="color: red; margin: 2px 0;">❌ ${this.escapeHtml(error)}</div>`
+                    `<div style="color: var(--fc-error-text); margin: 2px 0;">❌ ${this.escapeHtml(error)}</div>`
                 ).join('');
                 messageDiv.innerHTML = errorHtml;
             }
@@ -731,7 +731,7 @@
                 // 显示提示信息，告知用户后端会自动修复
                 const messageDiv = validationDiv.querySelector('.validation-message');
                 if (messageDiv) {
-                    messageDiv.innerHTML = '<span style="color: #856404;">⏳ 正在提交，后端将自动修复重复ID...</span>';
+                    messageDiv.innerHTML = '<span style="color: var(--fc-warning-text);">⏳ 正在提交，后端将自动修复重复ID...</span>';
                 }
             }
         }
@@ -769,7 +769,7 @@
             let html = `
                 <div class="duplicate-report" style="padding: 20px; max-height: 400px; overflow-y: auto;">
                     <h3 style="margin-top: 0;">📊 重复ID报告</h3>
-                    <div style="background: #f5f5f5; padding: 10px; border-radius: 5px; margin: 10px 0;">
+                    <div style="background: var(--fc-bg-muted); padding: 10px; border-radius: 5px; margin: 10px 0;">
                         <p><strong>总模板数:</strong> ${report.total_templates}</p>
                         <p><strong>唯一ID数:</strong> ${report.total_unique_ids}</p>
                         <p><strong>重复ID数:</strong> ${report.duplicate_count}</p>
@@ -777,13 +777,13 @@
             `;
 
             if (report.duplicate_count > 0) {
-                html += '<h4 style="color: red;">🚨 重复详情:</h4><ul style="max-height: 200px; overflow-y: auto;">';
+                html += '<h4 style="color: var(--fc-error-text);">🚨 重复详情:</h4><ul style="max-height: 200px; overflow-y: auto;">';
                 for (const [id, templates] of Object.entries(report.duplicates)) {
                     html += `<li style="margin: 5px 0;"><strong>${this.escapeHtml(id)}</strong>: ${templates.map(t => this.escapeHtml(t)).join(', ')}</li>`;
                 }
                 html += '</ul>';
             } else {
-                html += '<p style="color: green; font-weight: bold;">✅ 未发现重复ID</p>';
+                html += '<p style="color: var(--fc-success-text); font-weight: bold;">✅ 未发现重复ID</p>';
             }
 
             html += '</div>';
@@ -804,20 +804,20 @@
             // 创建模态框
             const modal = document.createElement('div');
             modal.style.cssText = `
-                background: white; border-radius: 8px; max-width: 600px; width: 90%;
+                background: var(--fc-bg-card); border-radius: 8px; max-width: 600px; width: 90%;
                 max-height: 80vh; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
             `;
 
             modal.innerHTML = `
-                <div style="padding: 15px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center;">
+                <div style="padding: 15px; border-bottom: 1px solid var(--fc-border); display: flex; justify-content: space-between; align-items: center;">
                     <h3 style="margin: 0;">${this.escapeHtml(title)}</h3>
-                    <button class="close-modal" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">&times;</button>
+                    <button class="close-modal" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--fc-text-muted);">&times;</button>
                 </div>
                 <div style="overflow-y: auto; max-height: calc(80vh - 80px);">
                     ${content}
                 </div>
-                <div style="padding: 15px; border-top: 1px solid #ddd; text-align: right;">
-                    <button class="close-modal" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">关闭</button>
+                <div style="padding: 15px; border-top: 1px solid var(--fc-border); text-align: right;">
+                    <button class="close-modal" style="padding: 8px 16px; background: var(--fc-text-muted); color: var(--fc-text-on-primary); border: none; border-radius: 4px; cursor: pointer;">关闭</button>
                 </div>
             `;
 

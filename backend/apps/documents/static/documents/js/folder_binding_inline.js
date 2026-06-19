@@ -96,9 +96,9 @@
         }
 
         var html = '<div class="folder-selector-box" style="display:inline-flex;align-items:center;gap:8px;">' +
-            '<span class="folder-display" style="min-width:150px;padding:4px 8px;background:#f5f5f5;border:1px solid #ddd;border-radius:3px;font-size:13px;"><em style="color:#999;">请选择</em></span>' +
-            '<button type="button" class="folder-btn" style="padding:4px 12px;background:#417690;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:13px;">选择文件夹</button>' +
-            '<div class="folder-popup" style="display:none;position:absolute;z-index:9999;background:#fff;border:1px solid #ccc;border-radius:4px;box-shadow:0 2px 10px rgba(0,0,0,0.2);min-width:300px;max-height:350px;overflow-y:auto;padding:8px;margin-top:4px;"></div>' +
+            '<span class="folder-display" style="min-width:150px;padding:4px 8px;background:var(--fc-bg-muted);border:1px solid var(--fc-border);border-radius:3px;font-size:13px;"><em style="color:var(--fc-text-muted);">请选择</em></span>' +
+            '<button type="button" class="folder-btn" style="padding:4px 12px;background:var(--fc-admin-blue);color:var(--fc-text-on-primary);border:none;border-radius:3px;cursor:pointer;font-size:13px;">选择文件夹</button>' +
+            '<div class="folder-popup" style="display:none;position:absolute;z-index:9999;background:var(--fc-bg-card);border:1px solid var(--fc-border);border-radius:4px;box-shadow:0 2px 10px rgba(0,0,0,0.2);min-width:300px;max-height:350px;overflow-y:auto;padding:8px;margin-top:4px;"></div>' +
             '</div>';
 
         $nodeInput.after(html);
@@ -135,7 +135,7 @@
         $templateSelect.off('change').on('change', function() {
             console.log('[FolderBinding] 模板选择器变更，当前值:', $(this).val());
             $nodeInput.val('');
-            $display.html('<em style="color:#999;">请选择</em>');
+            $display.html('<em style="color:var(--fc-text-muted);">请选择</em>');
             $popup.hide().empty();
         });
 

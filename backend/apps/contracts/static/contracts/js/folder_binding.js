@@ -150,7 +150,7 @@
                 .catch(function(error) {
                     console.error('加载绑定状态失败:', error);
                     self.elements.bindingStatusText.textContent = '未绑定';
-                    self.elements.bindingStatusText.style.color = '#666';
+                    self.elements.bindingStatusText.style.color = 'var(--fc-text-muted)';
                     self.showBindingButtons(false);
                 });
         },
@@ -165,12 +165,12 @@
 
                 this.elements.bindingStatusText.innerHTML =
                     '已绑定：<strong>' + this.escapeHtml(displayPath) + '</strong><br>' +
-                    '<small style="color: #999;">绑定时间：' + bindingTime + '</small>';
-                this.elements.bindingStatusText.style.color = '#2e7d32';
+                    '<small style="color: var(--fc-text-muted);">绑定时间：' + bindingTime + '</small>';
+                this.elements.bindingStatusText.style.color = 'var(--fc-success-text)';
                 this.showBindingButtons(true);
             } else {
                 this.elements.bindingStatusText.textContent = '未绑定';
-                this.elements.bindingStatusText.style.color = '#666';
+                this.elements.bindingStatusText.style.color = 'var(--fc-text-muted)';
                 this.showBindingButtons(false);
             }
         },
@@ -378,7 +378,7 @@
             var messageDiv = document.createElement('div');
             messageDiv.textContent = message;
             messageDiv.style.cssText =
-                'position: fixed; top: 20px; right: 20px; background: #4caf50; color: white; ' +
+                'position: fixed; top: 20px; right: 20px; background: var(--fc-success-text); color: var(--fc-text-on-primary); ' +
                 'padding: 12px 20px; border-radius: 4px; z-index: 10001; font-size: 14px; ' +
                 'box-shadow: 0 2px 8px rgba(0,0,0,0.2);';
 

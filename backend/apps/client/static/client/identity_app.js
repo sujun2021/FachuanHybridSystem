@@ -767,8 +767,8 @@ function identityApp(config = {}) {
         highlightField(fieldName) {
             const field = document.getElementById('id_' + fieldName);
             if (field && field.value) {
-                field.style.backgroundColor = '#e8f5e8';
-                field.style.borderColor = '#4caf50';
+                field.style.backgroundColor = 'var(--fc-success-bg)';
+                field.style.borderColor = 'var(--fc-success-text)';
                 field.style.transition = 'all 0.3s ease';
 
                 setTimeout(() => {
@@ -859,13 +859,13 @@ function identityApp(config = {}) {
          */
         showInlineToast(message, type = 'success') {
             const toast = document.createElement('div');
-            const bgColor = type === 'success' ? '#4caf50' : '#f44336';
+            const bgColor = type === 'success' ? 'var(--fc-success-text)' : 'var(--fc-error-text)';
             toast.style.cssText = `
                 position: fixed;
                 top: 20px;
                 right: 20px;
                 background: ${bgColor};
-                color: #fff;
+                color: var(--fc-text-on-primary);
                 padding: 12px 20px;
                 border-radius: 6px;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.15);

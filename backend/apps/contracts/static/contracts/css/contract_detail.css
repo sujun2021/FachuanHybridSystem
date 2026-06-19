@@ -557,8 +557,8 @@
     align-items: center;
     gap: 12px;
     padding: 10px 12px;
-    background: #fff;
-    border: 1px solid #e5e7eb;
+    background: var(--fc-bg-card);
+    border: 1px solid var(--fc-border);
     border-radius: 6px;
     flex-wrap: wrap;
 }
@@ -576,8 +576,8 @@
 .reminder-type {
     display: inline-block;
     padding: 3px 10px;
-    background: #e0e7ff;
-    color: #4338ca;
+    background: var(--fc-info-bg);
+    color: var(--fc-primary);
     border-radius: 4px;
     font-size: 12px;
     font-weight: 500;
@@ -586,13 +586,13 @@
 .reminder-content {
     flex: 1;
     font-size: 14px;
-    color: #1a1a1a;
+    color: var(--fc-text-heading);
     min-width: 150px;
 }
 
 .reminder-due-date {
     font-size: 13px;
-    color: #6b7280;
+    color: var(--fc-text-muted);
     display: flex;
     align-items: center;
     gap: 6px;
@@ -635,25 +635,25 @@
     justify-content: center;
     width: 24px;
     height: 24px;
-    background: #dcfce7;
-    color: #15803d;
+    background: var(--fc-success-bg);
+    color: var(--fc-success-text);
     border-radius: 50%;
     font-size: 14px;
 }
 
 .binding-status.unbound .status-icon {
-    background: #f3f4f6;
-    color: #6b7280;
+    background: var(--fc-bg-muted-light);
+    color: var(--fc-text-muted);
 }
 
 .binding-status .status-text {
     font-size: 14px;
     font-weight: 500;
-    color: #15803d;
+    color: var(--fc-success-text);
 }
 
 .binding-status.unbound .status-text {
-    color: #6b7280;
+    color: var(--fc-text-muted);
 }
 
 .folder-path,
@@ -666,14 +666,14 @@
 .folder-path label,
 .binding-time label {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--fc-text-muted);
 }
 
 .path-value {
     font-size: 13px;
-    color: #1a1a1a;
+    color: var(--fc-text-heading);
     font-family: monospace;
-    background: #f3f4f6;
+    background: var(--fc-bg-muted-light);
     padding: 6px 10px;
     border-radius: 4px;
     word-break: break-all;
@@ -698,7 +698,7 @@
     gap: 8px;
     padding: 12px 20px;
     background: var(--unfold-primary, #3b82f6);
-    color: #fff;
+    color: var(--fc-text-on-primary);
     border: none;
     border-radius: 8px;
     font-size: 14px;
@@ -714,8 +714,8 @@
 
 .btn-action:disabled,
 .btn-action.btn-disabled {
-    background: #d1d5db;
-    color: #6b7280;
+    background: var(--fc-border-input);
+    color: var(--fc-text-muted);
     cursor: not-allowed;
 }
 
@@ -763,7 +763,7 @@
 
 .action-hint {
     font-size: 12px;
-    color: #9ca3af;
+    color: var(--fc-text-disabled);
 }
 
 /* 加载动画 */
@@ -776,7 +776,7 @@
     width: 14px;
     height: 14px;
     border: 2px solid rgba(255, 255, 255, 0.3);
-    border-top-color: #fff;
+    border-top-color: var(--fc-text-on-primary);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }
@@ -800,7 +800,7 @@
 }
 
 .modal-dialog {
-    background: #fff;
+    background: var(--fc-bg-card);
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     width: 90%;
@@ -815,21 +815,21 @@
     align-items: center;
     justify-content: space-between;
     padding: 16px 20px;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--fc-border);
 }
 
 .modal-header h3 {
     margin: 0;
     font-size: 16px;
     font-weight: 600;
-    color: #1a1a1a;
+    color: var(--fc-text-heading);
 }
 
 .modal-close {
     background: none;
     border: none;
     font-size: 20px;
-    color: #6b7280;
+    color: var(--fc-text-muted);
     cursor: pointer;
     padding: 4px;
     line-height: 1;
@@ -847,7 +847,7 @@
 
 .modal-hint {
     margin: 0 0 16px;
-    color: #6b7280;
+    color: var(--fc-text-muted);
     font-size: 14px;
 }
 
@@ -856,7 +856,7 @@
     justify-content: flex-end;
     gap: 10px;
     padding: 16px 20px;
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid var(--fc-border);
 }
 
 /* 补充协议选择列表 */
@@ -871,7 +871,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 12px 16px;
-    background: #f9fafb;
+    background: var(--fc-bg-muted-light);
     border: 2px solid transparent;
     border-radius: 8px;
     cursor: pointer;
@@ -884,19 +884,19 @@
 }
 
 .agreement-select-item.selected {
-    background: #dbeafe;
+    background: var(--fc-info-bg);
     border-color: var(--unfold-primary, #3b82f6);
 }
 
 .agreement-select-name {
     font-size: 14px;
     font-weight: 500;
-    color: #1a1a1a;
+    color: var(--fc-text-heading);
 }
 
 .agreement-select-date {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--fc-text-muted);
 }
 
 /* Toast 消息提示 */
@@ -923,13 +923,13 @@
 }
 
 .toast-success {
-    background: #dcfce7;
-    color: #15803d;
+    background: var(--fc-success-bg);
+    color: var(--fc-success-text);
 }
 
 .toast-error {
-    background: #fee2e2;
-    color: #dc2626;
+    background: var(--fc-error-bg);
+    color: var(--fc-error-text);
 }
 
 .toast-icon {
@@ -968,7 +968,7 @@
     bottom: 0;
     width: 420px;
     max-width: 90vw;
-    background: #fff;
+    background: var(--fc-bg-card);
     box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
     z-index: 1001;
     display: flex;
@@ -985,13 +985,13 @@
     align-items: center;
     justify-content: space-between;
     padding: 16px 20px;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--fc-border);
 }
 
 .drawer-title {
     font-size: 16px;
     font-weight: 600;
-    color: #1a1a1a;
+    color: var(--fc-text-heading);
     margin: 0;
 }
 
@@ -999,7 +999,7 @@
     background: none;
     border: none;
     font-size: 20px;
-    color: #6b7280;
+    color: var(--fc-text-muted);
     cursor: pointer;
     padding: 4px;
     line-height: 1;
@@ -1025,19 +1025,19 @@
 
 .detail-label {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--fc-text-muted);
     margin-bottom: 4px;
 }
 
 .detail-value {
     font-size: 14px;
-    color: #1a1a1a;
+    color: var(--fc-text-heading);
     word-break: break-all;
     user-select: text;
 }
 
 .detail-value.copyable {
-    background: #f9fafb;
+    background: var(--fc-bg-muted-light);
     padding: 8px 12px;
     border-radius: 6px;
     cursor: pointer;
@@ -1045,12 +1045,12 @@
 }
 
 .detail-value.copyable:hover {
-    background: #f3f4f6;
+    background: var(--fc-bg-muted-light);
 }
 
 .copy-hint {
     font-size: 11px;
-    color: #9ca3af;
+    color: var(--fc-text-disabled);
     margin-top: 2px;
 }
 
@@ -1069,7 +1069,7 @@
 .card-date {
     margin-left: auto;
     font-size: 13px;
-    color: #6b7280;
+    color: var(--fc-text-muted);
 }
 
 /* 响应式 */
@@ -1124,7 +1124,7 @@
     align-items: center;
     gap: 12px;
     padding: 12px 0;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--fc-border);
     flex-wrap: wrap;
 }
 
@@ -1154,7 +1154,7 @@
 
 .case-cause {
     font-size: 13px;
-    color: #6b7280;
+    color: var(--fc-text-muted);
     flex-shrink: 0;
 }
 
@@ -1167,7 +1167,7 @@
 
 .case-lawyer::before {
     content: "主办：";
-    color: #9ca3af;
+    color: var(--fc-text-disabled);
 }
 
 
@@ -1191,17 +1191,17 @@
 
 .progress-amount-item label {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--fc-text-muted);
 }
 
 .progress-value {
     font-size: 18px;
     font-weight: 600;
-    color: #1a1a1a;
+    color: var(--fc-text-heading);
 }
 
 .progress-value.amount {
-    color: #15803d;
+    color: var(--fc-success-text);
 }
 
 .progress-bar-container {
@@ -1212,7 +1212,7 @@
 
 .progress-bar {
     height: 8px;
-    background: #e5e7eb;
+    background: var(--fc-border);
     border-radius: 4px;
     overflow: hidden;
 }
@@ -1245,7 +1245,7 @@
     align-items: center;
     padding: 2px 8px;
     background: #dcfce7;
-    color: #15803d;
+    color: var(--fc-success-text);
     border-radius: 4px;
     font-size: 12px;
     font-weight: 500;
@@ -1253,7 +1253,7 @@
 
 .progress-hint {
     font-size: 13px;
-    color: #9ca3af;
+    color: var(--fc-text-disabled);
     margin: 0;
 }
 
@@ -1278,21 +1278,21 @@
 
 .invoice-amount-item label {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--fc-text-muted);
 }
 
 .invoice-value {
     font-size: 16px;
     font-weight: 600;
-    color: #1a1a1a;
+    color: var(--fc-text-heading);
 }
 
 .invoice-value.invoiced {
-    color: #15803d;
+    color: var(--fc-success-text);
 }
 
 .invoice-value.pending {
-    color: #dc2626;
+    color: var(--fc-error-text);
     font-weight: 700;
 }
 

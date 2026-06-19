@@ -131,7 +131,7 @@
             const pageIndex = pageNum - startPage + 1;
             const totalPages = endPage - startPage + 1;
             pageInfo.textContent = `${pageIndex} / ${totalPages}`;
-            pageInfo.style.color = '#4ade80';  // 所有页面都在范围内，显示绿色
+            pageInfo.style.color = 'var(--fc-success-text)';  // 所有页面都在范围内，显示绿色
 
             // 更新按钮状态（只允许在片段范围内翻页）
             prevBtn.disabled = pageNum <= startPage;

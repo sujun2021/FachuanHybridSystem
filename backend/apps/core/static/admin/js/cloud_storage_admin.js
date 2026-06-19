@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function () {
       if (heading && heading.textContent.indexOf(cfg.headingContains) !== -1) {
         authSection.style.margin = '12px 0 0 0';
         authSection.style.padding = '12px';
-        authSection.style.borderTop = '1px solid #eee';
+        authSection.style.borderTop = '1px solid var(--fc-border)';
         fieldsets[i].appendChild(authSection);
         break;
       }

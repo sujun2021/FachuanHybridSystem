@@ -346,12 +346,12 @@
 .btn-secondary:visited,
 .btn-secondary:active {
     background: var(--fc-success-text);
-    color: #ffffff !important;
+    color: var(--fc-text-on-primary) !important;
 }
 
 .btn-secondary:hover {
     background: var(--fc-success-text);
-    color: #ffffff !important;
+    color: var(--fc-text-on-primary) !important;
 }
 
 .btn.hidden {

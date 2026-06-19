@@ -83,7 +83,7 @@ function filingNumberHandler() {
                     this.filingNumber = '保存后自动生成';
                     display.textContent = this.filingNumber;
                     display.style.fontStyle = 'italic';
-                    display.style.color = '#666';
+                    display.style.color = 'var(--fc-text-muted)';
                 }
             } else {
                 // 取消勾选：清空显示

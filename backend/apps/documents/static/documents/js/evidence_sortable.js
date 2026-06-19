@@ -292,8 +292,8 @@
             div.className = 'evidence-message ' + type;
             div.textContent = message;
             div.style.cssText = 'position: fixed; top: 20px; right: 20px; padding: 10px 20px; border-radius: 4px; z-index: 9999;';
-            div.style.backgroundColor = type === 'success' ? '#4caf50' : '#f44336';
-            div.style.color = 'white';
+            div.style.backgroundColor = type === 'success' ? 'var(--fc-success-text)' : 'var(--fc-error-text)';
+            div.style.color = 'var(--fc-text-on-primary)';
             document.body.appendChild(div);
 
             setTimeout(function() {

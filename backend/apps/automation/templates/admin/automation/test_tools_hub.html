@@ -69,8 +69,8 @@
         opacity: 1;
     }
     .tool-card.primary { --card-color-start: var(--fc-admin-blue); --card-color-end: var(--fc-admin-blue-hover); }
-    .tool-card.secondary { --card-color-start: #6366f1; --card-color-end: #4f46e5; }
-    .tool-card.success { --card-color-start: #10b981; --card-color-end: #059669; }
+    .tool-card.secondary { --card-color-start: var(--fc-primary); --card-color-end: var(--fc-primary-dark); }
+    .tool-card.success { --card-color-start: var(--fc-success-text); --card-color-end: var(--fc-success-text); }
     .tool-card.warning { --card-color-start: #f59e0b; --card-color-end: var(--fc-warning-text); }
 
     .tool-icon {
@@ -91,11 +91,11 @@
         color: var(--fc-text-on-primary);
     }
     .tool-icon.secondary {
-        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        background: linear-gradient(135deg, var(--fc-primary) 0%, var(--fc-primary-dark) 100%);
         color: var(--fc-text-on-primary);
     }
     .tool-icon.success {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        background: linear-gradient(135deg, var(--fc-success-text) 0%, var(--fc-success-text) 100%);
         color: var(--fc-text-on-primary);
     }
     .tool-icon.warning {

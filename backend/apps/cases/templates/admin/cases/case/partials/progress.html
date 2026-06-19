@@ -166,8 +166,8 @@
     padding: 4px 12px;
     border-radius: 6px;
     border: 1px solid #93c5fd;
-    background: #eff6ff;
-    color: #2563eb;
+    background: var(--fc-primary-subtle);
+    color: var(--fc-primary);
     font-size: 12px;
     font-weight: 500;
     cursor: pointer;
@@ -175,7 +175,7 @@
     white-space: nowrap;
 }
 .email-import-btn:hover { background: #dbeafe; border-color: #60a5fa; }
-.email-import-btn:disabled { opacity: 0.5; cursor: not-allowed; background: #f3f4f6; border-color: #d1d5db; color: #9ca3af; }
+.email-import-btn:disabled { opacity: 0.5; cursor: not-allowed; background: #f3f4f6; border-color: var(--fc-border-input); color: var(--fc-text-disabled); }
 /* 弹窗 */
 .email-import-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; }
 .email-import-modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.4); }
