@@ -6,8 +6,6 @@
 
 from typing import Any
 
-from django.http import status as http_status
-
 from apps.core.exceptions import BusinessError
 
 
@@ -18,7 +16,7 @@ class PreservationQuoteError(BusinessError):
     所有询价相关的错误都应该继承此类。
     """
 
-    def __init__(self, message: str, code: str = "PRESERVATION_QUOTE_ERROR", status: int = http_status.HTTP_400_BAD_REQUEST):
+    def __init__(self, message: str, code: str = "PRESERVATION_QUOTE_ERROR", status: int = 400):
         super().__init__(message=message, code=code, status=status)
 
 
@@ -30,7 +28,7 @@ class TokenError(PreservationQuoteError):
     """
 
     def __init__(self, message: str):
-        super().__init__(message=message, code="TOKEN_ERROR", status=http_status.HTTP_401_UNAUTHORIZED)  # Unauthorized
+        super().__init__(message=message, code="TOKEN_ERROR", status=401)  # Unauthorized
 
 
 class APIError(PreservationQuoteError):
@@ -45,7 +43,7 @@ class APIError(PreservationQuoteError):
         if status_code:
             code = f"API_ERROR_{status_code}"
 
-        super().__init__(message=message, code=code, status=http_status.HTTP_502_BAD_GATEWAY)  # Bad Gateway
+        super().__init__(message=message, code=code, status=502)  # Bad Gateway
 
 
 class NetworkError(PreservationQuoteError):
@@ -56,7 +54,7 @@ class NetworkError(PreservationQuoteError):
     """
 
     def __init__(self, message: str):
-        super().__init__(message=message, code="NETWORK_ERROR", status=http_status.HTTP_504_GATEWAY_TIMEOUT)  # Gateway Timeout
+        super().__init__(message=message, code="NETWORK_ERROR", status=504)  # Gateway Timeout
 
 
 class ValidationError(PreservationQuoteError):
@@ -67,7 +65,7 @@ class ValidationError(PreservationQuoteError):
     """
 
     def __init__(self, message: str, errors: dict[str, Any] | None = None):
-        super().__init__(message=message, code="VALIDATION_ERROR", status=http_status.HTTP_400_BAD_REQUEST)  # Bad Request
+        super().__init__(message=message, code="VALIDATION_ERROR", status=400)  # Bad Request
         self.errors = errors or {}
 
 
@@ -79,7 +77,7 @@ class CompanyListEmptyError(PreservationQuoteError):
     """
 
     def __init__(self, message: str = "未获取到保险公司列表"):
-        super().__init__(message=message, code="COMPANY_LIST_EMPTY", status=http_status.HTTP_404_NOT_FOUND)  # Not Found
+        super().__init__(message=message, code="COMPANY_LIST_EMPTY", status=404)  # Not Found
 
 
 class QuoteExecutionError(PreservationQuoteError):
@@ -90,7 +88,7 @@ class QuoteExecutionError(PreservationQuoteError):
     """
 
     def __init__(self, message: str, quote_id: int | None = None):
-        super().__init__(message=message, code="QUOTE_EXECUTION_ERROR", status=http_status.HTTP_500_INTERNAL_SERVER_ERROR)  # Internal Server Error
+        super().__init__(message=message, code="QUOTE_EXECUTION_ERROR", status=500)  # Internal Server Error
         self.quote_id = quote_id
 
 
@@ -102,5 +100,5 @@ class RetryLimitExceededError(PreservationQuoteError):
     """
 
     def __init__(self, message: str, max_retries: int | None = None):
-        super().__init__(message=message, code="RETRY_LIMIT_EXCEEDED", status=http_status.HTTP_429_TOO_MANY_REQUESTS)  # Too Many Requests
+        super().__init__(message=message, code="RETRY_LIMIT_EXCEEDED", status=429)  # Too Many Requests
         self.max_retries = max_retries

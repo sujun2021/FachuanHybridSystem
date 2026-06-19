@@ -139,18 +139,18 @@
 .staff-search-wrapper { position: relative; }
 .staff-search-dropdown {
     position: absolute; z-index: 100; left: 0; right: 0;
-    background: var(--fc-bg-card); border: 1px solid #d0d7de; border-radius: 6px;
+    background: var(--fc-bg-card); border: 1px solid var(--fc-border); border-radius: 6px;
     margin-top: 2px; max-height: 240px; overflow-y: auto;
     box-shadow: 0 4px 12px rgba(0,0,0,.12);
 }
 .staff-search-item {
     padding: 8px 12px; cursor: pointer; display: flex; align-items: center; gap: 8px;
-    font-size: 13px; border-bottom: 1px solid #f0f0f0;
+    font-size: 13px; border-bottom: 1px solid var(--fc-border);
 }
 .staff-search-item:last-child { border-bottom: none; }
-.staff-search-item:hover { background: #f6f8fa; }
-.staff-search-meta { color: #656d76; }
-.staff-search-count { color: #8b949e; margin-left: auto; font-size: 12px; }
+.staff-search-item:hover { background: var(--fc-bg-muted); }
+.staff-search-meta { color: var(--fc-text-muted); }
+.staff-search-count { color: var(--fc-text-disabled); margin-left: auto; font-size: 12px; }
 </style>
 <script>
 function contactsApp() {
