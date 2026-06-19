@@ -81,7 +81,7 @@ def build_section_prompt(
     ):
         ctx[key] = (existing_sections or {}).get(key, "（待生成）")
 
-    template = _SECTION_PROMPTS.get(section_type, "请根据案情生成{section_type}内容。")
+    template = _SECTION_PROMPTS.get(section_type, f"请根据案情生成{section_type}内容。")
     user_content = template.format(**ctx)
 
     if feedback:

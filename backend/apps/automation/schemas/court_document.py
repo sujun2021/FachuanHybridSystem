@@ -19,8 +19,12 @@ class APIInterceptResponseSchema(BaseModel):
     @classmethod
     def validate_data_structure(cls, v: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """验证data数组中每个元素的必需字段"""
-        for idx, _item in enumerate(v):
+        required_fields = ["c_sdbh", "c_stbh", "wjlj", "c_wsbh", "c_wsmc", "c_fybh", "c_fymc", "c_wjgs", "dt_cjsj"]
+        for idx, item in enumerate(v):
             missing_fields: list[Any] = []
+            for field in required_fields:
+                if field not in item or item[field] is None:
+                    missing_fields.append(field)
             if missing_fields:
                 raise ValueError(f"数据项 {idx} 缺少必需字段: {', '.join(missing_fields)}")
         return v

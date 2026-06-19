@@ -124,6 +124,12 @@ class LPRSyncService:
                 if rate_1y is None:
                     continue
 
+                if rate_5y is None:
+                    logger.warning(
+                        "[LPRSync] 5年期利率解析失败，使用1年期利率替代: date=%s, rate_1y=%s",
+                        date_text, rate_1y,
+                    )
+
                 lpr_data_list.append(
                     LPRData(effective_date=effective_date, rate_1y=rate_1y, rate_5y=rate_5y or rate_1y)
                 )

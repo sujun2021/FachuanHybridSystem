@@ -199,13 +199,16 @@ class EvidenceListPlaceholderService:
         if not parties:
             return ""
 
-        groups = self._group_parties_by_status(parties)  # type: ignore[attr-defined]
+        groups = self._group_parties_by_status(parties)
         if not groups:
             return ""
 
-        lines = self._format_ordered_groups(groups)  # type: ignore[attr-defined]
+        lines = self._format_ordered_groups(groups)
         return "\n".join(lines)
 
+    def _group_parties_by_status(self, parties: list[dict[str, Any]]) -> dict[str, list[str]]:
+        """按诉讼地位分组当事人姓名"""
+        groups: dict[str, list[str]] = {}
         for party in parties:
             legal_status = party.get("legal_status")
             name = party.get("client_name") or party.get("name", "")
@@ -214,6 +217,9 @@ class EvidenceListPlaceholderService:
             groups.setdefault(legal_status, []).append(name)
         return groups
 
+    def _format_ordered_groups(self, groups: dict[str, list[str]]) -> list[str]:
+        """按法定顺序格式化诉讼地位分组"""
+        lines: list[str] = []
         seen_statuses: set[str] = set()
         for status in LEGAL_STATUS_ORDER:
             if status not in groups:
