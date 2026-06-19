@@ -64,6 +64,7 @@ class TestOnCourtReplySignal:
         run = SimpleNamespace(
             temporal_workflow_id="wf-abc",
             status="waiting_event",
+            current_step_id="wait_court",
             asave=AsyncMock(),
         )
         mock_model.objects.filter.return_value = _AsyncListIter([run])
@@ -79,7 +80,7 @@ class TestOnCourtReplySignal:
         await on_court_reply(case_id=1, status="rejected", documents=["doc1.pdf"])
 
         mock_handle.signal.assert_awaited_once_with(
-            "court-reply", {"status": "rejected", "documents": ["doc1.pdf"]}
+            "gate_approved", {"step_id": "wait_court", "approved": True, "comment": "rejected", "documents": ["doc1.pdf"]}
         )
         run.asave.assert_awaited_once_with(update_fields=["status"])
         assert run.status == "running"
@@ -95,6 +96,7 @@ class TestOnCourtReplyEmptyDocuments:
         run = SimpleNamespace(
             temporal_workflow_id="wf-def",
             status="waiting_event",
+            current_step_id="wait_court",
             asave=AsyncMock(),
         )
         mock_model.objects.filter.return_value = _AsyncListIter([run])
@@ -110,7 +112,7 @@ class TestOnCourtReplyEmptyDocuments:
         await on_court_reply(case_id=2, status="approved", documents=None)
 
         mock_handle.signal.assert_awaited_once_with(
-            "court-reply", {"status": "approved", "documents": []}
+            "gate_approved", {"step_id": "wait_court", "approved": True, "comment": "approved", "documents": []}
         )
 
     @patch("apps.workflow.events.dispatcher.Client")
@@ -121,6 +123,7 @@ class TestOnCourtReplyEmptyDocuments:
         run = SimpleNamespace(
             temporal_workflow_id="wf-ghi",
             status="waiting_event",
+            current_step_id="wait_court",
             asave=AsyncMock(),
         )
         mock_model.objects.filter.return_value = _AsyncListIter([run])
@@ -136,5 +139,5 @@ class TestOnCourtReplyEmptyDocuments:
         await on_court_reply(case_id=3, status="approved", documents=[])
 
         mock_handle.signal.assert_awaited_once_with(
-            "court-reply", {"status": "approved", "documents": []}
+            "gate_approved", {"step_id": "wait_court", "approved": True, "comment": "approved", "documents": []}
         )

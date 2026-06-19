@@ -49,4 +49,15 @@ class Migration(migrations.Migration):
                 verbose_name="更新时间",
             ),
         ),
+        # HistoricalCase: add fields with default (no auto_now for history records)
+        migrations.AddField(
+            model_name="historicalcase",
+            name="created_at",
+            field=models.DateTimeField(default=django.utils.timezone.now),
+        ),
+        migrations.AddField(
+            model_name="historicalcase",
+            name="updated_at",
+            field=models.DateTimeField(default=django.utils.timezone.now),
+        ),
     ]
