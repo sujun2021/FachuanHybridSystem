@@ -185,17 +185,17 @@ class TestRelativePathStr:
 
 class TestExtractScanSubfolder:
     def test_empty_payload(self):
-        svc = _make_processor()
+        svc = _make_service()
         assert svc._extract_scan_subfolder(None) == ""
         assert svc._extract_scan_subfolder({}) == ""
 
     def test_with_scope(self):
-        svc = _make_processor()
+        svc = _make_service()
         payload = {"scan_scope": {"scan_subfolder": "sub/folder"}}
         assert svc._extract_scan_subfolder(payload) == "sub/folder"
 
     def test_scope_no_subfolder(self):
-        svc = _make_processor()
+        svc = _make_service()
         payload = {"scan_scope": {}}
         assert svc._extract_scan_subfolder(payload) == ""
 
@@ -397,7 +397,7 @@ class TestPostProcessCandidates:
         assert result[0]["selected"] is False
 
     def test_non_litigation_collects_docx(self):
-        svc = _make_service()
+        svc = _make_processor()
         candidate = {
             "filename": "test.pdf",
             "source_path": "/tmp/test.pdf",
@@ -415,7 +415,7 @@ class TestPostProcessCandidates:
         assert len(result) == 2
 
     def test_cloud_storage_relative_path(self):
-        svc = _make_service()
+        svc = _make_processor()
         candidate = {
             "filename": "test.pdf",
             "source_path": "/cloud/scan/test.pdf",
@@ -438,7 +438,7 @@ class TestPostProcessCandidates:
 
 class TestCollectDocxFiles:
     def test_non_litigation_returns_empty(self):
-        svc = _make_service()
+        svc = _make_processor()
         assert svc._collect_docx_files("/tmp", "litigation") == []
 
     def test_local_no_files(self):
