@@ -121,8 +121,7 @@ class TestConvertDocxToTempPdfFromBytes:
 
     def _get_service(self):
         from apps.contracts.services.contract.integrations._import_pipeline import ImportPipeline
-        from unittest.mock import MagicMock
-        return ImportPipeline(scan_service=MagicMock())
+        return ImportPipeline()
 
     @patch("apps.contracts.services.contract.integrations._import_pipeline.ImportPipeline._convert_docx_to_temp_pdf_from_bytes")
     def test_returns_none_on_conversion_failure(self, mock_convert):
