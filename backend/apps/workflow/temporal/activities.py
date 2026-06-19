@@ -378,12 +378,14 @@ async def generic_code_exec(code: str, context: dict | None = None) -> dict:
     安全措施：
     1. AST 静态分析 — 执行前检查代码，拒绝危险模式
     2. 移除 getattr/hasattr — 阻断 MRO 链逃逸
-    3. 线程超时 — 防止死循环阻塞 worker
+    3. 子进程超时 — 防止死循环阻塞 worker（可用 proc.terminate() 真正杀死）
     4. 最小权限 builtins — 仅暴露安全的内置函数
+
+    使用 multiprocessing.Process + Queue（而非 Manager），避免 socket FD 泄漏。
     """
     import ast
     import builtins
-    import concurrent.futures
+    import multiprocessing
 
     # ── 危险属性名集合（__class__ 链 + 内省钩子）──
     _DANGEROUS_ATTRS = frozenset({
@@ -464,21 +466,58 @@ async def generic_code_exec(code: str, context: dict | None = None) -> dict:
         "context": context or {},
     }
 
-    # ── 步骤 3: 在子线程中执行（带超时） ──
-    def _run() -> dict:
-        exec(compile(tree, "<workflow_code>", "exec"), restricted_globals)  # noqa: S102
-        return {
-            k: v for k, v in restricted_globals.items()
-            if not k.startswith("_") and k not in ("json", "context")
-        }
+    # ── 步骤 3: 在子进程中执行（可用 terminate 真正杀死死循环）──
+    # 使用 fork context：子进程继承父进程内存，避免 spawn 重新导入 Django 等模块
+    # fork 在此处可接受 — 子进程运行的是受限沙箱代码，不做 Django ORM 操作
+    def _run_in_subprocess(
+        tree_arg: ast.Module,
+        globals_arg: dict[str, Any],
+        queue: multiprocessing.Queue,  # type: ignore[type-arg]
+    ) -> None:
+        """在子进程中执行受限代码，结果放入 queue。"""
+        try:
+            exec(compile(tree_arg, "<workflow_code>", "exec"), globals_arg)  # noqa: S102
+            result = {
+                k: v for k, v in globals_arg.items()
+                if not k.startswith("_") and k not in ("json", "context")
+            }
+            queue.put(("ok", result))
+        except Exception as exc:
+            queue.put(("error", str(exc)))
 
     timeout_seconds = 30
+    ctx = multiprocessing.get_context("fork")
+    queue: multiprocessing.Queue = ctx.Queue()  # type: ignore[type-arg]
+    proc = ctx.Process(
+        target=_run_in_subprocess,
+        args=(tree, restricted_globals, queue),
+        daemon=True,
+    )
     try:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-            future = pool.submit(_run)
-            return future.result(timeout=timeout_seconds)
-    except concurrent.futures.TimeoutError:
-        raise TimeoutError(f"代码执行超时（{timeout_seconds}秒）")
+        proc.start()
+        proc.join(timeout=timeout_seconds)
+
+        if proc.is_alive():
+            # 超时：terminate 可以真正杀死进程（线程做不到）
+            proc.terminate()
+            proc.join(timeout=5)
+            raise TimeoutError(f"代码执行超时（{timeout_seconds}秒）")
+
+        # 正常结束，从 queue 读取结果
+        if queue.empty():
+            raise RuntimeError("子进程异常退出，未返回结果")
+
+        status, payload = queue.get(block=False)
+        if status == "error":
+            raise ValueError(f"代码执行错误: {payload}")
+        return payload
+    finally:
+        # 确保 queue 的底层 pipe / semaphore 被清理
+        queue.close()
+        queue.join_thread()
+        if proc.is_alive():
+            proc.terminate()
+            proc.join(timeout=5)
 
 
 @activity.defn
