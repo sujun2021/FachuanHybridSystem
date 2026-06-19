@@ -62,7 +62,7 @@ class PartyInfoHandlerMixin(FormUtilsMixin):  # pragma: no cover
 
         for key, section_title in section_map.items():
             for party in case_data.get(key, []):
-                party_phone = str(party.get("phone", "") or "")
+                party_phone = str(party.get("fddbrsjhm_phone") or party.get("phone", "") or "")
                 if not self._is_mobile_phone(party_phone):
                     party_phone = agent_phone
                 party_address = str(party.get("address", "") or "")
