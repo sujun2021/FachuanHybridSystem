@@ -55,6 +55,11 @@ def _make_processor(**kwargs: Any) -> Any:
     return CandidatePostProcessor(**kwargs)
 
 
+def _make_pipeline(**kwargs: Any) -> Any:
+    from apps.contracts.services.contract.integrations._import_pipeline import ImportPipeline
+    return ImportPipeline()
+
+
 def _make_contract(id: int = 1, name: str = "Test Contract") -> MagicMock:
     c = MagicMock()
     c.id = id
@@ -216,12 +221,12 @@ class TestBuildStatusPayload:
 
 class TestImportWorkLogSuggestions:
     def test_empty_logs(self) -> None:
-        svc = _make_service()
+        svc = _make_pipeline()
         result = svc._import_work_log_suggestions(contract_id=1, confirmed_logs=[])
         assert result == 0
 
     def test_no_case(self) -> None:
-        svc = _make_service()
+        svc = _make_pipeline()
         with patch("apps.core.interfaces.ServiceLocator") as mock_sl:
             mock_sl.get_case_service.return_value.get_cases_by_contract.return_value = []
             result = svc._import_work_log_suggestions(
@@ -330,7 +335,7 @@ class TestPostProcessCandidates:
                 "apps.contracts.services.contract.integrations.folder_scan_service.collect_archive_item_options",
                 return_value=[],
             ):
-                result = svc._post_process_candidates(
+                result = svc.post_process_candidates(
                     candidates=candidates,
                     archive_category="litigation",
                     scan_folder="/tmp",
@@ -358,7 +363,7 @@ class TestPostProcessCandidates:
                 "confidence": 0.0,
                 "reason": "skip rule",
             }
-            result = svc._post_process_candidates(
+            result = svc.post_process_candidates(
                 candidates=candidates,
                 archive_category="litigation",
                 scan_folder="/tmp",
@@ -376,7 +381,7 @@ class TestPostProcessCandidates:
                 "suggested_category": "contract_original",
             }
         ]
-        result = svc._post_process_candidates(
+        result = svc.post_process_candidates(
             candidates=candidates,
             archive_category="litigation",
             scan_folder="/tmp",
