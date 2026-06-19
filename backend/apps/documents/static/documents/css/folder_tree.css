@@ -8,8 +8,8 @@
 .folder-editor-container {
     margin-top: 15px;
     padding: 15px;
-    background: #f8f9fa;
-    border: 1px solid #ddd;
+    background: var(--fc-bg-muted);
+    border: 1px solid var(--fc-border);
     border-radius: 8px;
 }
 
@@ -20,13 +20,13 @@
     align-items: center;
     margin-bottom: 15px;
     padding-bottom: 10px;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--fc-border);
 }
 
 .folder-editor-header h3 {
     margin: 0;
     font-size: 16px;
-    color: #333;
+    color: var(--fc-text-secondary);
 }
 
 .folder-editor-actions {
@@ -37,34 +37,34 @@
 .folder-editor-actions .btn {
     padding: 6px 12px;
     font-size: 13px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--fc-border);
     border-radius: 4px;
-    background: #fff;
+    background: var(--fc-bg-card);
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .folder-editor-actions .btn:hover {
-    background: #e9ecef;
-    border-color: #adb5bd;
+    background: var(--fc-border);
+    border-color: var(--fc-border);
 }
 
 .folder-editor-actions .add-root-folder {
-    background: #417690;
-    color: #fff;
-    border-color: #417690;
+    background: var(--fc-admin-blue);
+    color: var(--fc-text-on-primary);
+    border-color: var(--fc-admin-blue);
 }
 
 .folder-editor-actions .add-root-folder:hover {
-    background: #205067;
+    background: var(--fc-admin-blue-hover);
 }
 
 /* 可排序列表 */
 .sortable-folder-list {
     min-height: 50px;
     padding: 10px;
-    background: #fff;
-    border: 1px dashed #ccc;
+    background: var(--fc-bg-card);
+    border: 1px dashed var(--fc-border);
     border-radius: 4px;
     transition: background 0.2s;
 }
@@ -76,7 +76,7 @@
 }
 
 .sortable-folder-list .empty-hint {
-    color: #999;
+    color: var(--fc-text-muted);
     font-style: italic;
     font-size: 13px;
 }
@@ -86,16 +86,16 @@
     margin-top: 8px;
     margin-left: 24px;
     padding: 8px;
-    background: #fafafa;
-    border: 1px dashed #e0e0e0;
+    background: var(--fc-bg-muted-light);
+    border: 1px dashed var(--fc-border);
     border-radius: 4px;
 }
 
 /* 文件夹项 */
 .sortable-folder-item {
     margin-bottom: 8px;
-    background: #fff;
-    border: 1px solid #e0e0e0;
+    background: var(--fc-bg-card);
+    border: 1px solid var(--fc-border);
     border-radius: 4px;
     transition: box-shadow 0.2s;
 }
@@ -121,12 +121,12 @@
     width: 16px;
     cursor: pointer;
     user-select: none;
-    color: #666;
+    color: var(--fc-text-muted);
     font-size: 10px;
 }
 
 .folder-toggle:hover {
-    color: #333;
+    color: var(--fc-text-secondary);
 }
 
 /* 文件夹图标 */
@@ -150,7 +150,7 @@
 .folder-name input {
     width: 100%;
     padding: 6px 10px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--fc-border);
     border-radius: 4px;
     font-size: 14px;
     transition: border-color 0.2s;
@@ -159,7 +159,7 @@
 
 .folder-name input:focus {
     outline: none;
-    border-color: #417690;
+    border-color: var(--fc-admin-blue);
     box-shadow: 0 0 0 2px rgba(65, 118, 144, 0.2);
 }
 
@@ -175,9 +175,9 @@
     height: 28px;
     min-width: 28px;
     padding: 0;
-    border: 1px solid #ccc;
+    border: 1px solid var(--fc-border);
     border-radius: 4px;
-    background: #fff;
+    background: var(--fc-bg-card);
     cursor: pointer;
     font-size: 14px;
     line-height: 26px;
@@ -186,23 +186,23 @@
 }
 
 .folder-actions .add-child {
-    color: #28a745;
-    border-color: #28a745;
+    color: var(--fc-success-text);
+    border-color: var(--fc-success-text);
 }
 
 .folder-actions .add-child:hover {
-    background: #28a745;
-    color: #fff;
+    background: var(--fc-success-text);
+    color: var(--fc-text-on-primary);
 }
 
 .folder-actions .delete {
-    color: #dc3545;
-    border-color: #dc3545;
+    color: var(--fc-error-text);
+    border-color: var(--fc-error-text);
 }
 
 .folder-actions .delete:hover {
-    background: #dc3545;
-    color: #fff;
+    background: var(--fc-error-text);
+    color: var(--fc-text-on-primary);
 }
 
 /* 添加文件夹输入框 */
@@ -211,21 +211,21 @@
     gap: 8px;
     margin-top: 15px;
     padding: 12px;
-    background: #e9ecef;
+    background: var(--fc-border);
     border-radius: 4px;
 }
 
 .add-folder-input .new-folder-name {
     flex: 1;
     padding: 8px 12px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--fc-border);
     border-radius: 4px;
     font-size: 14px;
 }
 
 .add-folder-input .new-folder-name:focus {
     outline: none;
-    border-color: #417690;
+    border-color: var(--fc-admin-blue);
 }
 
 .add-folder-input .btn {
@@ -237,21 +237,21 @@
 }
 
 .add-folder-input .confirm-add {
-    background: #417690;
-    color: #fff;
+    background: var(--fc-admin-blue);
+    color: var(--fc-text-on-primary);
 }
 
 .add-folder-input .confirm-add:hover {
-    background: #205067;
+    background: var(--fc-admin-blue-hover);
 }
 
 .add-folder-input .cancel-add {
-    background: #6c757d;
-    color: #fff;
+    background: var(--fc-text-muted);
+    color: var(--fc-text-on-primary);
 }
 
 .add-folder-input .cancel-add:hover {
-    background: #545b62;
+    background: var(--fc-text-muted);
 }
 
 /* 保存状态 */
@@ -263,37 +263,37 @@
 }
 
 .save-status.success {
-    background: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
+    background: var(--fc-success-bg);
+    color: var(--fc-success-text);
+    border: 1px solid var(--fc-success-border);
 }
 
 .save-status.error {
-    background: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
+    background: var(--fc-error-bg);
+    color: var(--fc-error-text);
+    border: 1px solid var(--fc-error-border);
 }
 
 /* SortableJS 拖拽样式 */
 .sortable-ghost {
     opacity: 0.4;
-    background: #c8ebfb;
+    background: var(--fc-primary-light);
 }
 
 .sortable-chosen {
-    background: #f0f7ff;
+    background: var(--fc-bg-muted-light);
 }
 
 .sortable-drag {
-    background: #fff;
+    background: var(--fc-bg-card);
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 /* 结构预览 */
 .folder-structure-preview {
     padding: 10px;
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
+    background: var(--fc-bg-muted);
+    border: 1px solid var(--fc-border);
     border-radius: 4px;
     font-family: monospace;
     font-size: 13px;

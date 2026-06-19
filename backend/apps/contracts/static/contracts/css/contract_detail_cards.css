@@ -1,0 +1,153 @@
+/* 合同详情页 — 信息卡片基础样式 */
+
+/* 信息网格 */
+.info-grid {
+    display: grid;
+    gap: 20px;
+}
+
+.info-grid.two-columns {
+    grid-template-columns: repeat(2, 1fr);
+    align-items: stretch;
+}
+
+.info-grid.two-columns > .info-card {
+    margin-bottom: 0 !important;
+}
+
+@media (max-width: 768px) {
+    .info-grid.two-columns {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 信息卡片 */
+.info-card {
+    background: var(--fc-bg-muted-light);
+    border-radius: 8px;
+    padding: 20px;
+    transition: box-shadow 0.2s ease;
+    margin-bottom: 20px;
+}
+
+.info-card:last-child {
+    margin-bottom: 0;
+}
+
+.info-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.info-card.full-width {
+    grid-column: 1 / -1;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.card-icon {
+    font-size: 18px;
+}
+
+.card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--fc-text-secondary);
+    margin: 0;
+}
+
+.card-body {
+    /* 兼容旧模板 */
+}
+
+/* 信息列表 */
+.info-list {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+}
+
+.info-item {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 12px;
+    align-items: baseline;
+}
+
+.info-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.info-item label,
+.info-item dt {
+    font-size: 13px;
+    color: var(--fc-text-muted);
+    flex-shrink: 0;
+}
+
+.info-item span,
+.info-item dd {
+    font-size: 13px;
+    color: var(--fc-text-heading);
+    text-align: left;
+    margin: 0;
+    word-break: break-word;
+}
+
+/* 空状态 */
+.empty-state {
+    color: var(--fc-text-disabled);
+    font-size: 13px;
+    text-align: center;
+    padding: 20px;
+    margin: 0;
+}
+
+/* 文本样式 */
+.text-muted {
+    color: var(--fc-text-disabled);
+}
+
+/* 建档状态样式 */
+.archived-yes {
+    color: var(--fc-success-text);
+    font-weight: 500;
+}
+
+.archived-no {
+    color: var(--fc-text-muted);
+}
+
+/* 补充协议部分样式 */
+.supplementary-agreements-section {
+    margin-top: 24px;
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--fc-text-heading);
+    margin-bottom: 16px;
+}
+
+.card-date {
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--fc-text-muted);
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+    .document-actions {
+        flex-direction: column;
+    }
+
+    .btn-action {
+        width: 100%;
+        justify-content: center;
+    }
+}

@@ -8,6 +8,8 @@ from types import SimpleNamespace
 from typing import Any
 from unittest.mock import MagicMock, patch, PropertyMock
 
+from apps.core.api.schemas import SchemaMixin
+
 import pytest
 
 
@@ -427,13 +429,20 @@ class TestCaseLogSchemas:
     def test_case_log_attachment_out_resolvers(self):
         from apps.cases.schemas.log_schemas import CaseLogAttachmentOut
 
-        obj = SimpleNamespace(file=None, uploaded_at=None)
-        with patch("apps.cases.schemas.log_schemas.SchemaMixin._get_file_path", return_value="/path"):
-            assert CaseLogAttachmentOut.resolve_file_path(obj) == "/path"
-        with patch("apps.cases.schemas.log_schemas.SchemaMixin._get_file_url", return_value="/url"):
-            assert CaseLogAttachmentOut.resolve_media_url(obj) == "/url"
-        with patch("apps.cases.schemas.log_schemas.SchemaMixin._resolve_datetime", return_value=None):
-            assert CaseLogAttachmentOut.resolve_uploaded_at(obj) is None
+        # 测试 file=None 时返回 None
+        obj_none = SimpleNamespace(file=None, uploaded_at=None)
+        assert CaseLogAttachmentOut.resolve_file_path(obj_none) is None
+        assert CaseLogAttachmentOut.resolve_media_url(obj_none) is None
+        assert CaseLogAttachmentOut.resolve_uploaded_at(obj_none) is None
+
+        # 测试 file 有值时返回路径
+        mock_file = MagicMock()
+        mock_file.path = "/test/path.pdf"
+        mock_file.url = "/media/test/path.pdf"
+        obj_with_file = SimpleNamespace(file=mock_file, uploaded_at=datetime(2024, 1, 1))
+        assert CaseLogAttachmentOut.resolve_file_path(obj_with_file) == "/test/path.pdf"
+        assert CaseLogAttachmentOut.resolve_media_url(obj_with_file) == "/media/test/path.pdf"
+        assert CaseLogAttachmentOut.resolve_uploaded_at(obj_with_file) is not None
 
     def test_case_log_out_resolve_created_at(self):
         from apps.cases.schemas.log_schemas import CaseLogOut

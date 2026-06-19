@@ -87,6 +87,8 @@ class Contract(models.Model):
         verbose_name="精简视图",
         help_text="开启后，归档检查清单仅显示有材料的项，未上传材料的项目不纳入归档范围",
     )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
 
     history = HistoricalRecords()
 

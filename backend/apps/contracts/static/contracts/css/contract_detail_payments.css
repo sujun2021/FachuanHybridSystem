@@ -1,0 +1,190 @@
+/* 合同详情页 — 收费模式、收款记录、文件夹绑定 */
+
+/* 收费模式标签 */
+.fee-mode-tag {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.fee-mode-tag.fee-mode-fixed {
+    background: var(--fc-info-bg);
+    color: var(--fc-info-text);
+}
+
+.fee-mode-tag.fee-mode-semi_risk {
+    background: var(--fc-warning-bg);
+    color: var(--fc-warning-text);
+}
+
+.fee-mode-tag.fee-mode-full_risk {
+    background: var(--fc-error-bg);
+    color: var(--fc-error-text);
+}
+
+.fee-mode-tag.fee-mode-custom {
+    background: #f3e8ff;
+    color: var(--fc-primary);
+}
+
+/* 金额样式 */
+.amount {
+    font-weight: 600;
+    color: var(--fc-success-text);
+}
+
+/* 收款摘要 */
+.payment-summary {
+    display: flex;
+    gap: 30px;
+    padding: 12px 16px;
+    background: var(--fc-bg-muted-light);
+    border-radius: 6px;
+    margin-bottom: 16px;
+}
+
+.summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.summary-item label {
+    font-size: 12px;
+    color: var(--fc-text-muted);
+}
+
+.summary-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--fc-text-heading);
+}
+
+.summary-value.amount {
+    color: var(--fc-success-text);
+}
+
+/* 收款记录列表 */
+.payment-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.payment-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--fc-bg-card);
+    border: 1px solid var(--fc-border);
+    border-radius: 6px;
+    flex-wrap: wrap;
+}
+
+.payment-date {
+    font-size: 13px;
+    color: var(--fc-text-muted);
+    min-width: 90px;
+}
+
+.payment-amount {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--fc-success-text);
+    min-width: 100px;
+}
+
+.invoice-status {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.invoice-status.invoice-uninvoiced {
+    background: var(--fc-bg-muted-light);
+    color: var(--fc-text-muted);
+}
+
+.invoice-status.invoice-invoiced_partial {
+    background: var(--fc-warning-bg);
+    color: var(--fc-warning-text);
+}
+
+.invoice-status.invoice-invoiced_full {
+    background: var(--fc-success-bg);
+    color: var(--fc-success-text);
+}
+
+.payment-note {
+    font-size: 12px;
+    color: var(--fc-text-muted);
+    flex: 1;
+}
+
+/* 文件夹绑定 */
+.folder-binding-info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.binding-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.binding-status .status-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: var(--fc-success-bg);
+    color: var(--fc-success-text);
+    border-radius: 50%;
+    font-size: 14px;
+}
+
+.binding-status.unbound .status-icon {
+    background: var(--fc-bg-muted-light);
+    color: var(--fc-text-muted);
+}
+
+.binding-status .status-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--fc-success-text);
+}
+
+.binding-status.unbound .status-text {
+    color: var(--fc-text-muted);
+}
+
+.folder-path,
+.binding-time {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.folder-path label,
+.binding-time label {
+    font-size: 12px;
+    color: var(--fc-text-muted);
+}
+
+.path-value {
+    font-size: 13px;
+    color: var(--fc-text-heading);
+    font-family: monospace;
+    background: var(--fc-bg-muted-light);
+    padding: 6px 10px;
+    border-radius: 4px;
+    word-break: break-all;
+}

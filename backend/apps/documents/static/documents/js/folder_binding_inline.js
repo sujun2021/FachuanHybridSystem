@@ -96,9 +96,9 @@
         }
 
         var html = '<div class="folder-selector-box" style="display:inline-flex;align-items:center;gap:8px;">' +
-            '<span class="folder-display" style="min-width:150px;padding:4px 8px;background:#f5f5f5;border:1px solid #ddd;border-radius:3px;font-size:13px;"><em style="color:#999;">请选择</em></span>' +
-            '<button type="button" class="folder-btn" style="padding:4px 12px;background:#417690;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:13px;">选择文件夹</button>' +
-            '<div class="folder-popup" style="display:none;position:absolute;z-index:9999;background:#fff;border:1px solid #ccc;border-radius:4px;box-shadow:0 2px 10px rgba(0,0,0,0.2);min-width:300px;max-height:350px;overflow-y:auto;padding:8px;margin-top:4px;"></div>' +
+            '<span class="folder-display" style="min-width:150px;padding:4px 8px;background:var(--fc-bg-muted);border:1px solid var(--fc-border);border-radius:3px;font-size:13px;"><em style="color:var(--fc-text-muted);">请选择</em></span>' +
+            '<button type="button" class="folder-btn" style="padding:4px 12px;background:var(--fc-admin-blue);color:var(--fc-text-on-primary);border:none;border-radius:3px;cursor:pointer;font-size:13px;">选择文件夹</button>' +
+            '<div class="folder-popup" style="display:none;position:absolute;z-index:9999;background:var(--fc-bg-card);border:1px solid var(--fc-border);border-radius:4px;box-shadow:0 2px 10px rgba(0,0,0,0.2);min-width:300px;max-height:350px;overflow-y:auto;padding:8px;margin-top:4px;"></div>' +
             '</div>';
 
         $nodeInput.after(html);
@@ -135,7 +135,7 @@
         $templateSelect.off('change').on('change', function() {
             console.log('[FolderBinding] 模板选择器变更，当前值:', $(this).val());
             $nodeInput.val('');
-            $display.html('<em style="color:#999;">请选择</em>');
+            $display.html('<em style="color:var(--fc-text-muted);">请选择</em>');
             $popup.hide().empty();
         });
 
@@ -155,7 +155,7 @@
                 folderStructureCache[tid] = data.structure;
                 renderTree(data.structure, $popup, $nodeInput, $display);
             } else {
-                $popup.html('<div style="padding:15px;color:#c00;">无数据</div>');
+                $popup.html('<div style="padding:15px;color:var(--fc-error-text);">无数据</div>');
             }
         });
     }
@@ -174,18 +174,18 @@
             var hasKids = node.children && node.children.length > 0;
             var $li = $('<li style="margin:2px 0;"></li>');
             var $row = $('<div style="display:flex;align-items:center;padding:4px 6px;cursor:pointer;border-radius:3px;"></div>');
-            var $toggle = $('<span style="width:14px;font-size:9px;color:#666;">' + (hasKids ? '▶' : '') + '</span>');
+            var $toggle = $('<span style="width:14px;font-size:9px;color:var(--fc-text-muted);">' + (hasKids ? '▶' : '') + '</span>');
             var $name = $('<span style="flex:1;">📁 ' + node.name + '</span>');
             $row.append($toggle).append($name);
-            if ($nodeInput.val() === node.id) $row.css({'background':'#e3f2fd','color':'#1565c0'});
-            $row.hover(function(){ if($nodeInput.val()!==node.id) $(this).css('background','#f0f0f0'); },
+            if ($nodeInput.val() === node.id) $row.css({'background':'var(--fc-info-bg)','color':'var(--fc-info-text)'});
+            $row.hover(function(){ if($nodeInput.val()!==node.id) $(this).css('background','var(--fc-border)'); },
                        function(){ if($nodeInput.val()!==node.id) $(this).css('background',''); });
             $name.on('click', function(e) {
                 e.stopPropagation();
                 $popup.find('div').css({'background':'','color':''});
-                $row.css({'background':'#e3f2fd','color':'#1565c0'});
+                $row.css({'background':'var(--fc-info-bg)','color':'var(--fc-info-text)'});
                 $nodeInput.val(node.id);
-                $display.html('<span style="color:#1565c0;">' + path + '</span>');
+                $display.html('<span style="color:var(--fc-info-text);">' + path + '</span>');
                 setTimeout(function(){ $popup.hide(); }, 100);
             });
             $li.append($row);
@@ -208,14 +208,14 @@
     function loadPath(tid, nodeId, $display) {
         if (folderStructureCache[tid]) {
             var p = findPath(folderStructureCache[tid].children || [], nodeId, '');
-            if (p) $display.html('<span style="color:#1565c0;">' + p + '</span>');
+            if (p) $display.html('<span style="color:var(--fc-info-text);">' + p + '</span>');
             return;
         }
         $.get('/admin/documents/foldertemplate/' + tid + '/structure-json/', function(data) {
             if (data.success && data.structure) {
                 folderStructureCache[tid] = data.structure;
                 var p = findPath(data.structure.children || [], nodeId, '');
-                if (p) $display.html('<span style="color:#1565c0;">' + p + '</span>');
+                if (p) $display.html('<span style="color:var(--fc-info-text);">' + p + '</span>');
             }
         });
     }

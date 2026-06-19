@@ -19,8 +19,8 @@
         margin: 20px auto;
     }
     .mcp-panel {
-        background: #fff;
-        border: 1px solid #e2e8f0;
+        background: var(--fc-bg-card);
+        border: 1px solid var(--fc-border);
         border-radius: 10px;
         padding: 14px;
         margin-bottom: 14px;
@@ -29,7 +29,7 @@
     .mcp-panel h2 {
         margin: 0 0 10px;
         font-size: 18px;
-        color: #0f172a;
+        color: var(--fc-text-heading);
     }
     .mcp-row {
         display: grid;
@@ -47,9 +47,9 @@
         min-width: 240px;
     }
     .mcp-btn {
-        background: #1d4ed8;
-        border: 1px solid #1d4ed8;
-        color: #fff;
+        background: var(--fc-primary-dark);
+        border: 1px solid var(--fc-primary-dark);
+        color: var(--fc-text-on-primary);
         border-radius: 8px;
         padding: 8px 12px;
         cursor: pointer;
@@ -67,14 +67,14 @@
     }
     .mcp-table th,
     .mcp-table td {
-        border-bottom: 1px solid #e2e8f0;
+        border-bottom: 1px solid var(--fc-border);
         padding: 8px 6px;
         vertical-align: top;
     }
     .mcp-table th {
         text-align: left;
-        color: #334155;
-        background: #f8fafc;
+        color: var(--fc-text-secondary);
+        background: var(--fc-bg-muted);
     }
     .mcp-tool-name {
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -83,12 +83,12 @@
     }
     .mcp-small {
         font-size: 12px;
-        color: #64748b;
+        color: var(--fc-text-muted);
     }
     .mcp-error {
-        background: #fef2f2;
-        border: 1px solid #fecaca;
-        color: #b91c1c;
+        background: var(--fc-error-bg);
+        border: 1px solid var(--fc-error-border);
+        color: var(--fc-error-text);
         border-radius: 8px;
         padding: 10px 12px;
         margin-bottom: 10px;
@@ -96,7 +96,7 @@
     .mcp-form textarea {
         width: 100%;
         min-height: 220px;
-        border: 1px solid #cbd5e1;
+        border: 1px solid var(--fc-border-input);
         border-radius: 8px;
         padding: 10px;
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -106,7 +106,7 @@
     }
     .mcp-json {
         background: #0b1220;
-        color: #e2e8f0;
+        color: var(--fc-border);
         border-radius: 8px;
         padding: 12px;
         overflow: auto;
@@ -125,8 +125,8 @@
         margin-bottom: 10px;
     }
     .mcp-tag {
-        background: #e2e8f0;
-        color: #334155;
+        background: var(--fc-border);
+        color: var(--fc-text-secondary);
         padding: 2px 8px;
         border-radius: 999px;
         font-size: 12px;
@@ -275,9 +275,9 @@
                     <td><span class="mcp-tool-name">#{{ row.id }}</span></td>
                     <td>
                         {% if row.success %}
-                        <span class="mcp-tag" style="background:#dcfce7;color:#166534;">success</span>
+                        <span class="mcp-tag" style="background:var(--fc-success-bg);color:var(--fc-success-text);">success</span>
                         {% else %}
-                        <span class="mcp-tag" style="background:#fee2e2;color:#b91c1c;">failed</span>
+                        <span class="mcp-tag" style="background:var(--fc-error-bg);color:var(--fc-error-text);">failed</span>
                         {% endif %}
                         {% if row.replay_of_id %}
                         <div class="mcp-small">replay of #{{ row.replay_of_id }}</div>

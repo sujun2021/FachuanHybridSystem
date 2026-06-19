@@ -1,0 +1,385 @@
+.contract-batch-binding-page {
+    --batch-primary: var(--fc-admin-blue);
+    --batch-primary-strong: var(--fc-admin-blue-hover);
+    --batch-border: var(--fc-border);
+    --batch-muted: var(--fc-text-muted);
+    --batch-bg-soft: var(--fc-bg-muted-light);
+    max-width: 1380px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.batch-hero {
+    display: grid;
+    grid-template-columns: minmax(420px, 1fr) minmax(300px, 420px);
+    gap: 16px;
+    padding: 18px 20px;
+    border-radius: 14px;
+    border: 1px solid var(--batch-border);
+    background: linear-gradient(140deg, var(--fc-bg-muted) 0%, var(--fc-bg-muted-light) 100%);
+    box-shadow: 0 8px 22px rgba(32, 80, 103, 0.08);
+}
+
+.batch-hero-main h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--fc-text-heading);
+}
+
+.batch-hero-main p {
+    margin: 8px 0 0;
+    color: var(--fc-text-secondary);
+    line-height: 1.5;
+}
+
+.batch-hero-tips {
+    margin-top: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tip-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: var(--fc-bg-card);
+    border: 1px solid var(--fc-border);
+    color: var(--fc-admin-blue);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.batch-overview {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.overview-item {
+    border-radius: 10px;
+    border: 1px solid var(--fc-border);
+    background: var(--fc-bg-card);
+    padding: 10px 12px;
+}
+
+.overview-label {
+    display: block;
+    color: var(--batch-muted);
+    font-size: 12px;
+}
+
+.overview-value {
+    display: block;
+    margin-top: 4px;
+    font-size: 24px;
+    line-height: 1.1;
+    color: var(--fc-text-primary);
+}
+
+.batch-toolbar-card {
+    position: sticky;
+    top: 10px;
+    z-index: 3;
+    border-radius: 12px;
+    border: 1px solid var(--batch-border);
+    background: var(--fc-bg-card);
+    box-shadow: 0 6px 20px rgba(24, 58, 79, 0.08);
+    padding: 12px 14px;
+}
+
+.batch-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.batch-toolbar .button {
+    border-radius: 999px;
+    min-height: 34px;
+    padding: 0 14px;
+    font-weight: 600;
+}
+
+.batch-toolbar .button.button-primary {
+    background: linear-gradient(135deg, var(--batch-primary) 0%, var(--batch-primary-strong) 100%);
+    border-color: var(--batch-primary-strong);
+    color: var(--fc-text-on-primary);
+}
+
+.batch-toolbar .button.button-primary:hover {
+    filter: brightness(0.95);
+}
+
+.batch-toolbar-hint {
+    margin: 8px 2px 0;
+    font-size: 12px;
+    color: var(--batch-muted);
+}
+
+.batch-message {
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    font-size: 13px;
+}
+
+.batch-message.is-success {
+    border-color: var(--fc-success-border);
+    background: var(--fc-success-bg);
+    color: var(--fc-success-text);
+}
+
+.batch-message.is-error {
+    border-color: var(--fc-error-border);
+    background: var(--fc-error-bg);
+    color: var(--fc-error-text);
+}
+
+.batch-empty {
+    border: 1px dashed var(--fc-border);
+    border-radius: 10px;
+    padding: 24px;
+    text-align: center;
+    color: var(--fc-text-muted);
+    background: var(--fc-bg-muted);
+}
+
+.batch-card {
+    border: 1px solid var(--batch-border);
+    border-radius: 12px;
+    background: var(--fc-bg-card);
+    box-shadow: 0 4px 12px rgba(24, 58, 79, 0.05);
+    padding: 16px;
+}
+
+.batch-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.batch-card-title h2 {
+    margin: 0;
+    font-size: 19px;
+    color: var(--fc-text-primary);
+}
+
+.batch-card-badges {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.batch-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid transparent;
+}
+
+.batch-badge.is-warning {
+    background: var(--fc-warning-bg);
+    border-color: var(--fc-warning-border);
+    color: var(--fc-warning-text);
+}
+
+.batch-badge.is-info {
+    background: var(--fc-info-bg);
+    border-color: var(--fc-info-border);
+    color: var(--fc-primary-dark);
+}
+
+.batch-badge.is-muted {
+    background: var(--fc-bg-muted-light);
+    border-color: var(--fc-border-input);
+    color: var(--fc-text-secondary);
+}
+
+.batch-secondary-btn {
+    border-radius: 999px;
+    padding: 0 12px;
+    min-height: 32px;
+    color: var(--batch-primary);
+    border-color: var(--fc-border);
+    background: var(--fc-bg-muted);
+}
+
+.batch-secondary-btn:hover {
+    background: var(--fc-bg-muted-light);
+}
+
+.batch-storage-row {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.batch-storage-select {
+    min-height: 38px;
+    border-radius: 8px;
+    border: 1px solid var(--fc-border-input);
+    padding: 0 10px;
+    background: var(--fc-bg-muted);
+    font-size: 13px;
+    color: var(--fc-text-heading);
+}
+
+.batch-storage-select:focus {
+    border-color: var(--fc-admin-blue-light);
+    box-shadow: 0 0 0 2px rgba(75, 132, 170, 0.16);
+    outline: none;
+}
+
+.batch-root-row {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.batch-root-label label {
+    display: block;
+    color: var(--fc-text-primary);
+    font-weight: 600;
+}
+
+.batch-root-label span {
+    display: block;
+    margin-top: 4px;
+    color: var(--batch-muted);
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.batch-root-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.batch-root-row input {
+    flex: 1;
+    min-width: 0;
+    box-sizing: border-box;
+    min-height: 38px;
+    border-radius: 8px;
+    border: 1px solid var(--fc-border-input);
+    padding: 0 10px;
+    background: var(--fc-bg-muted);
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 12px;
+}
+
+.batch-root-row input:focus {
+    border-color: var(--fc-admin-blue-light);
+    box-shadow: 0 0 0 2px rgba(75, 132, 170, 0.16);
+    outline: none;
+}
+
+.batch-select-folder-btn {
+    flex-shrink: 0;
+    border-radius: 6px;
+    min-height: 32px;
+    padding: 0 16px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid var(--batch-primary);
+    background: var(--fc-bg-card);
+    color: var(--batch-primary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.batch-select-folder-btn:hover {
+    background: var(--batch-primary);
+    color: var(--fc-text-on-primary);
+}
+
+.batch-select-folder-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.batch-root-status {
+    flex-shrink: 0;
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.batch-root-status.is-ready {
+    color: var(--fc-success-text);
+    background: var(--fc-success-bg);
+    border: 1px solid var(--fc-success-border);
+}
+
+.batch-root-status.is-empty {
+    color: var(--fc-warning-text);
+    background: var(--fc-warning-bg);
+    border: 1px solid var(--fc-warning-border);
+}
+
+.batch-error {
+    color: var(--fc-error-text);
+    background: var(--fc-error-bg);
+    border: 1px solid var(--fc-error-border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-bottom: 10px;
+    font-size: 13px;
+}
+
+@media (max-width: 1180px) {
+    .batch-hero {
+        grid-template-columns: 1fr;
+    }
+
+    .batch-overview {
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+    }
+
+    .batch-root-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 860px) {
+    .batch-overview {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .batch-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .batch-toolbar-card {
+        position: static;
+    }
+
+    .batch-root-input-wrap {
+        flex-wrap: wrap;
+    }
+
+    .batch-select-folder-btn {
+        width: 100%;
+        margin-top: 4px;
+    }
+}

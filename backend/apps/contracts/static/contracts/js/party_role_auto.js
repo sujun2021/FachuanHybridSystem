@@ -206,7 +206,7 @@
     const btn = document.createElement("a");
     btn.href = "javascript://";
     btn.textContent = label;
-    btn.style.cssText = "margin-left:12px;color:#417690;cursor:pointer;font-size:13px;";
+    btn.style.cssText = "margin-left:12px;color:var(--fc-admin-blue);cursor:pointer;font-size:13px;";
     btn.addEventListener("click", function (e) {
       e.preventDefault();
       const parties = getSourceParties(suppIndex);

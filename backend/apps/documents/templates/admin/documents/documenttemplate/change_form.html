@@ -21,7 +21,7 @@
 
 /* 文件选择互斥提示样式 */
 .file-source-hint {
-    color: #666;
+    color: var(--fc-text-muted);
     font-size: 12px;
     margin-top: 5px;
 }
@@ -49,10 +49,10 @@
 }
 
 #placeholder-preview {
-    border: 1px solid #ddd;
+    border: 1px solid var(--fc-border);
     border-radius: 8px;
     overflow: hidden;
-    background: #fff;
+    background: var(--fc-bg-card);
 }
 
 #placeholder-preview .preview-body {
@@ -77,12 +77,12 @@
 }
 
 #placeholder-preview .placeholder-item .ph-key code {
-    background: #f5f5f5;
+    background: var(--fc-bg-muted-light);
     padding: 2px 8px;
     border-radius: 4px;
     font-family: 'Menlo', 'Consolas', monospace;
     font-size: 13px;
-    color: #333;
+    color: var(--fc-text-secondary);
     cursor: pointer;
     transition: background 0.15s;
     user-select: all;
@@ -93,7 +93,7 @@
 }
 
 #placeholder-preview .placeholder-item .ph-key code:active {
-    background: #ddd;
+    background: var(--fc-border);
 }
 
 .ph-copy-toast {
@@ -102,7 +102,7 @@
     left: 50%;
     transform: translateX(-50%) translateY(20px);
     background: rgba(30, 30, 30, 0.88);
-    color: #fff;
+    color: var(--fc-text-on-primary);
     padding: 10px 24px;
     border-radius: 10px;
     font-size: 13px;
@@ -125,14 +125,14 @@
 #placeholder-preview .preview-empty {
     padding: 24px 16px;
     text-align: center;
-    color: #999;
+    color: var(--fc-text-disabled);
     font-size: 13px;
 }
 
 #placeholder-preview .preview-loading {
     padding: 24px 16px;
     text-align: center;
-    color: #666;
+    color: var(--fc-text-muted);
     font-size: 13px;
 }
 
@@ -140,7 +140,7 @@
     display: inline-block;
     width: 16px;
     height: 16px;
-    border: 2px solid #ccc;
+    border: 2px solid var(--fc-border-input);
     border-top-color: #1976d2;
     border-radius: 50%;
     animation: spin 0.6s linear infinite;
@@ -156,19 +156,19 @@
     background: #fafbfc;
     padding: 8px 16px;
     font-size: 12px;
-    color: #666;
-    border-top: 1px solid #eee;
+    color: var(--fc-text-muted);
+    border-top: 1px solid var(--fc-border);
 }
 
 .placeholder-preview-hint {
-    color: #999;
+    color: var(--fc-text-disabled);
     font-size: 12px;
     margin-top: 6px;
 }
 
 /* AI 智能填充区域样式 — 沿用 Django .module 风格 */
 .smart-fill-desc {
-    color: #666;
+    color: var(--fc-text-muted);
     font-size: 13px;
     margin: 0 0 12px;
 }
@@ -186,7 +186,7 @@
 .smart-fill-preview-table th,
 .smart-fill-preview-table td {
     padding: 6px 10px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--fc-border);
     text-align: left;
 }
 .smart-fill-preview-table th {
@@ -196,14 +196,14 @@
 .smart-fill-preview-table td input[type="text"] {
     width: 100%;
     padding: 4px 8px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--fc-border-input);
     border-radius: 4px;
     font-size: 13px;
     box-sizing: border-box;
 }
-.smart-fill-source-auto { color: #28a745; font-weight: 600; }
-.smart-fill-source-llm { color: #417690; font-weight: 600; }
-.smart-fill-source-fallback { color: #999; }
+.smart-fill-source-auto { color: var(--fc-success-text); font-weight: 600; }
+.smart-fill-source-llm { color: var(--fc-admin-blue); font-weight: 600; }
+.smart-fill-source-fallback { color: var(--fc-text-disabled); }
 #smart-fill-error {
     margin-top: 8px;
     padding: 8px 12px;
@@ -254,7 +254,7 @@
             <tbody id="smart-fill-tbody"></tbody>
         </table>
         <div class="smart-fill-actions" style="margin-top:12px;">
-            <button type="button" id="smart-fill-download-btn" class="button default" style="background:#28a745;color:#fff;border-color:#28a745;">
+            <button type="button" id="smart-fill-download-btn" class="button default" style="background:var(--fc-success-text);color:var(--fc-text-on-primary);border-color:var(--fc-success-text);">
                 下载填充后的文件
             </button>
         </div>
@@ -344,7 +344,7 @@
 
         function renderError(msg) {
             previewContainer.html(
-                '<div class="preview-empty" style="color: #c62828;">提取失败: ' + escapeHtml(msg) + '</div>'
+                '<div class="preview-empty" style="color: var(--fc-error-text);">提取失败: ' + escapeHtml(msg) + '</div>'
             );
         }
 
@@ -569,7 +569,7 @@
                 var sourceClass = 'smart-fill-source-' + escapeHtml(p.source);
                 var sourceLabel = p.source === 'auto' ? '自动' : (p.source === 'llm' ? 'AI 填充' : '未匹配');
                 rows += '<tr>' +
-                    '<td style="font-family:monospace;background:#f8f9fa;">{{' + escapeHtml(p.key) + '}}</td>' +
+                    '<td style="font-family:monospace;background:var(--fc-bg-muted);">{{' + escapeHtml(p.key) + '}}</td>' +
                     '<td><input type="text" data-key="' + escapeHtml(p.key) + '" data-source="' + escapeHtml(p.source) + '" value="' + escapeHtml(p.value) + '"></td>' +
                     '<td class="' + sourceClass + '">' + sourceLabel + '</td>' +
                     '</tr>';

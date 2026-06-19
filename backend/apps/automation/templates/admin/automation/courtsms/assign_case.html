@@ -76,10 +76,10 @@
                 <label for="case-search">🔍 {% trans "搜索案件" %}:</label>
                 <input type="text" id="case-search" placeholder="{% trans '输入案件名称、案号或当事人姓名进行搜索...' %}"
                        style="width: 100%; padding: 8px; margin-bottom: 10px;">
-                <div id="search-results" style="display: none; border: 1px solid #ddd; border-radius: 4px; max-height: 300px; overflow-y: auto; background: white; margin-top: 5px;">
+                <div id="search-results" style="display: none; border: 1px solid var(--fc-border); border-radius: 4px; max-height: 300px; overflow-y: auto; background: var(--fc-bg-card); margin-top: 5px;">
                     <!-- AJAX 搜索结果将显示在这里 -->
                 </div>
-                <div id="search-loading" style="display: none; padding: 10px; text-align: center; color: #666;">
+                <div id="search-loading" style="display: none; padding: 10px; text-align: center; color: var(--fc-text-muted);">
                     🔄 {% trans "搜索中..." %}
                 </div>
             </div>
@@ -138,7 +138,7 @@
     {% else %}
     <div class="module">
         <h2>💡 {% trans "推荐案件" %}</h2>
-        <p style="color: #666; padding: 15px;">
+        <p style="color: var(--fc-text-muted); padding: 15px;">
             {% if sms.party_names or sms.case_numbers %}
                 {% trans "未找到匹配的推荐案件。请在下方搜索或选择最近的案件。" %}
             {% else %}
@@ -180,7 +180,7 @@
     {% else %}
     <div class="module">
         <h2>📅 {% trans "最近创建的案件" %}</h2>
-        <p style="color: #666; padding: 15px;">
+        <p style="color: var(--fc-text-muted); padding: 15px;">
             {% trans "暂无可用的案件数据。请检查系统中是否存在案件记录。" %}
         </p>
     </div>
@@ -196,20 +196,20 @@
 }
 
 .alert-success {
-    color: #3c763d;
-    background-color: #dff0d8;
-    border-color: #d6e9c6;
+    color: var(--fc-success-dark);
+    background-color: var(--fc-success-subtle);
+    border-color: var(--fc-success-border);
 }
 
 .alert-error {
-    color: #a94442;
-    background-color: #f2dede;
-    border-color: #ebccd1;
+    color: var(--fc-error-dark);
+    background-color: var(--fc-error-subtle);
+    border-color: var(--fc-error-border);
 }
 
 .sms-info {
     padding: 15px;
-    background-color: #f9f9f9;
+    background-color: var(--fc-bg-muted);
     border-radius: 4px;
 }
 
@@ -218,9 +218,9 @@
 }
 
 .sms-content {
-    background-color: #fff;
+    background-color: var(--fc-bg-card);
     padding: 10px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--fc-border);
     border-radius: 4px;
     margin-top: 5px;
     font-family: monospace;
@@ -249,7 +249,7 @@
 }
 
 .help {
-    color: #666;
+    color: var(--fc-text-muted);
     font-size: 12px;
     margin-top: 5px;
 }
@@ -260,23 +260,23 @@
 }
 
 .case-item {
-    border: 1px solid #ddd;
+    border: 1px solid var(--fc-border);
     border-radius: 4px;
     padding: 15px;
-    background-color: #fff;
+    background-color: var(--fc-bg-card);
     transition: border-color 0.2s;
 }
 
 .case-item:hover {
-    border-color: #007cba;
+    border-color: var(--fc-primary);
 }
 
 .case-item.suggested {
-    border-left: 4px solid #28a745;
+    border-left: 4px solid var(--fc-success);
 }
 
 .case-item.recent {
-    border-left: 4px solid #007cba;
+    border-left: 4px solid var(--fc-primary);
 }
 
 .case-header {
@@ -287,7 +287,7 @@
 }
 
 .case-id {
-    color: #666;
+    color: var(--fc-text-muted);
     font-size: 12px;
 }
 
@@ -306,18 +306,18 @@
 }
 
 .select-case {
-    background-color: #28a745 !important;
-    color: white !important;
+    background-color: var(--fc-success) !important;
+    color: var(--fc-text-on-primary) !important;
 }
 
 .select-case:hover {
-    background-color: #218838 !important;
+    background-color: var(--fc-success-dark) !important;
 }
 
 .submit-row {
     margin-top: 30px;
     padding-top: 20px;
-    border-top: 1px solid #ddd;
+    border-top: 1px solid var(--fc-border);
 }
 
 .cancel-link {
@@ -325,7 +325,7 @@
 }
 
 #case-search {
-    border: 1px solid #ddd;
+    border: 1px solid var(--fc-border);
     border-radius: 4px;
 }
 </style>
@@ -474,7 +474,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function displaySearchResults(cases) {
         if (cases.length === 0) {
-            searchResults.innerHTML = '<div style="padding: 10px; color: #666;">未找到匹配的案件</div>';
+            searchResults.innerHTML = '<div style="padding: 10px; color: var(--fc-text-muted);">未找到匹配的案件</div>';
             searchResults.style.display = 'block';
             return;
         }
@@ -485,11 +485,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const parties = case.parties.join(', ');
 
             html += `
-                <div class="search-result-item" data-case-id="${case.id}" style="padding: 10px; border-bottom: 1px solid #eee; cursor: pointer;">
-                    <div style="font-weight: bold;">${case.name} <span style="color: #666; font-size: 12px;">#${case.id}</span></div>
-                    ${caseNumbers ? `<div style="font-size: 12px; color: #666;">案号: ${caseNumbers}</div>` : ''}
-                    ${parties ? `<div style="font-size: 12px; color: #666;">当事人: ${parties}</div>` : ''}
-                    <div style="font-size: 12px; color: #999;">创建时间: ${case.created_at}</div>
+                <div class="search-result-item" data-case-id="${case.id}" style="padding: 10px; border-bottom: 1px solid var(--fc-border); cursor: pointer;">
+                    <div style="font-weight: bold;">${case.name} <span style="color: var(--fc-text-muted); font-size: 12px;">#${case.id}</span></div>
+                    ${caseNumbers ? `<div style="font-size: 12px; color: var(--fc-text-muted);">案号: ${caseNumbers}</div>` : ''}
+                    ${parties ? `<div style="font-size: 12px; color: var(--fc-text-muted);">当事人: ${parties}</div>` : ''}
+                    <div style="font-size: 12px; color: var(--fc-text-disabled);">创建时间: ${case.created_at}</div>
                 </div>
             `;
         });
@@ -508,7 +508,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // 高亮选中的案件
                 caseItems.forEach(caseItem => {
-                    caseItem.style.backgroundColor = caseItem.dataset.caseId === caseId ? '#e7f3ff' : '#fff';
+                    caseItem.style.backgroundColor = caseItem.dataset.caseId === caseId ? 'var(--fc-primary-subtle)' : 'var(--fc-bg-card)';
                 });
 
                 // 隐藏搜索结果
@@ -524,11 +524,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // 添加悬停效果
             item.addEventListener('mouseenter', function() {
-                this.style.backgroundColor = '#f0f0f0';
+                this.style.backgroundColor = 'var(--fc-bg-muted-light)';
             });
 
             item.addEventListener('mouseleave', function() {
-                this.style.backgroundColor = 'white';
+                this.style.backgroundColor = 'var(--fc-bg-card)';
             });
         });
     }
@@ -551,7 +551,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // 高亮选中的案件
             caseItems.forEach(item => {
-                item.style.backgroundColor = item.dataset.caseId === caseId ? '#e7f3ff' : '#fff';
+                item.style.backgroundColor = item.dataset.caseId === caseId ? 'var(--fc-bg-muted)' : 'var(--fc-bg-card)';
             });
 
             // 滚动到表单

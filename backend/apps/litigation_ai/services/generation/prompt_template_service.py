@@ -5,9 +5,8 @@ from typing import Any
 
 class PromptTemplateService:
     def get_system_template(self, name: str) -> str | None:
-        from ..wiring import get_prompt_version_service  # type: ignore[attr-defined]
-
-        return get_prompt_version_service().get_active_prompt_template(name)  # type: ignore[no-any-return]
+        # PromptVersionService 已移除，始终使用默认 prompt（由调用方提供 fallback）
+        return None
 
     def replace_variables(self, template: str, variables: dict[str, Any]) -> str:  # pragma: no cover
         from .placeholder_render_service import PlaceholderRenderService

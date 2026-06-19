@@ -6,8 +6,6 @@ from typing import Any, ClassVar
 
 from django.conf import settings
 from django.db import models
-from django.db.models.signals import post_delete
-from django.dispatch import receiver
 
 
 class PdfSplitJobStatus(models.TextChoices):
@@ -167,12 +165,3 @@ class PdfSplitSegment(models.Model):
 
     def __str__(self) -> str:
         return f"{self.job_id}:{self.page_start}-{self.page_end} {self.segment_type}"
-
-
-@receiver(post_delete, sender=PdfSplitJob)
-def delete_job_files(sender: type, instance: PdfSplitJob, **kwargs: object) -> None:
-    """删除任务时清理关联的文件目录"""
-    from apps.pdf_splitting.services.storage import PdfSplitStorage
-
-    storage = PdfSplitStorage(instance.id)
-    storage.cleanup()

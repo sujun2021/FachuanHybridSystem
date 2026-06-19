@@ -204,8 +204,8 @@ function clientAdminApp() {
             fields.forEach(fieldId => {
                 const field = document.getElementById(fieldId);
                 if (field && field.value) {
-                    field.style.backgroundColor = '#e8f5e8';
-                    field.style.borderColor = '#4caf50';
+                    field.style.backgroundColor = 'var(--fc-success-bg)';
+                    field.style.borderColor = 'var(--fc-success-text)';
 
                     // 3秒后恢复正常样式
                     setTimeout(() => {

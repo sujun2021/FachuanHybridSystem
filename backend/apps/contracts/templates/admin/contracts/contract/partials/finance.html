@@ -29,9 +29,9 @@
                 {% endif %}
             </dl>
             {% if contract.fee_mode == 'CUSTOM' and contract.custom_terms %}
-            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
-                <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">{% trans "自定义收费条款" %}</div>
-                <div style="font-size: 13px; color: #1a1a1a; white-space: pre-wrap;">{{ contract.custom_terms }}</div>
+            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--fc-border);">
+                <div style="font-size: 12px; color: var(--fc-text-muted); margin-bottom: 4px;">{% trans "自定义收费条款" %}</div>
+                <div style="font-size: 13px; color: var(--fc-text-heading); white-space: pre-wrap;">{{ contract.custom_terms }}</div>
             </div>
             {% endif %}
         </div>
@@ -45,7 +45,7 @@
 
             <!-- 收款进度 -->
             <div style="margin-bottom: 16px;">
-                <div style="font-size: 12px; color: #6b7280; font-weight: 600; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">{% trans "收款" %}</div>
+                <div style="font-size: 12px; color: var(--fc-text-muted); font-weight: 600; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">{% trans "收款" %}</div>
                 {% if payment_progress.progress_percent is not None %}
                 <div class="progress-summary">
                     <div class="progress-amounts">
@@ -80,8 +80,8 @@
             </div>
 
             <!-- 开票进度 -->
-            <div style="padding-top: 14px; border-top: 1px solid #e5e7eb;">
-                <div style="font-size: 12px; color: #6b7280; font-weight: 600; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">{% trans "开票" %}</div>
+            <div style="padding-top: 14px; border-top: 1px solid var(--fc-border);">
+                <div style="font-size: 12px; color: var(--fc-text-muted); font-weight: 600; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">{% trans "开票" %}</div>
                 {% if invoice_summary %}
                 <div class="invoice-amounts" style="margin-bottom: 8px;">
                     <div class="invoice-amount-item">
@@ -117,7 +117,7 @@
             <span class="card-icon">📋</span>
             <h3 class="card-title">{% trans "律师费收款记录" %}</h3>
             {% if payments %}
-            <span style="margin-left: auto; font-size: 12px; color: #6b7280;">{{ payments|length }} {% trans "笔" %} · {% trans "累计" %} ¥{{ total_payment_amount|floatformat:2|default:"0.00" }}</span>
+            <span style="margin-left: auto; font-size: 12px; color: var(--fc-text-muted);">{{ payments|length }} {% trans "笔" %} · {% trans "累计" %} ¥{{ total_payment_amount|floatformat:2|default:"0.00" }}</span>
             {% endif %}
         </div>
         {% if payments %}
@@ -132,12 +132,12 @@
             </div>
             {% with inv_list=invoices_by_payment|get_item:payment.id %}
             {% if inv_list %}
-            <div class="invoice-files-list" style="padding: 4px 0 8px 12px; border-left: 2px solid #e5e7eb; margin: 4px 0 8px 0;">
+            <div class="invoice-files-list" style="padding: 4px 0 8px 12px; border-left: 2px solid var(--fc-border); margin: 4px 0 8px 0;">
                 {% for inv in inv_list %}
                 <div class="invoice-file-item" style="display:flex;align-items:center;gap:8px;font-size:12px;padding:2px 0;">
-                    <a href="{{ media_url }}{{ inv.file_path }}" target="_blank" rel="noopener noreferrer" style="color:#2563eb;text-decoration:underline;">{{ inv.original_filename }}</a>
-                    <span style="color:#9ca3af;">{{ inv.uploaded_at|date:"Y-m-d H:i" }}</span>
-                    {% if inv.remark %}<span style="color:#6b7280;">{{ inv.remark }}</span>{% endif %}
+                    <a href="{{ media_url }}{{ inv.file_path }}" target="_blank" rel="noopener noreferrer" style="color:var(--fc-primary);text-decoration:underline;">{{ inv.original_filename }}</a>
+                    <span style="color: var(--fc-text-disabled);">{{ inv.uploaded_at|date:"Y-m-d H:i" }}</span>
+                    {% if inv.remark %}<span style="color:var(--fc-text-muted);">{{ inv.remark }}</span>{% endif %}
                 </div>
                 {% endfor %}
             </div>
@@ -156,7 +156,7 @@
             <span class="card-icon">💵</span>
             <h3 class="card-title">{% trans "客户回款" %}</h3>
             {% if client_payments %}
-            <span style="margin-left: auto; font-size: 12px; color: #6b7280;">
+            <span style="margin-left: auto; font-size: 12px; color: var(--fc-text-muted);">
                 {{ client_payments|length }} {% trans "笔" %} ·
                 {% trans "累计" %} ¥{{ total_client_payment|floatformat:2 }}
             </span>
@@ -169,12 +169,12 @@
                 <span class="payment-date">{{ payment.created_at|date:"Y-m-d" }}</span>
                 <span class="payment-amount">¥{{ payment.amount|floatformat:2 }}</span>
                 {% if payment.case %}
-                <span class="payment-cases" style="font-size: 12px; color: #6b7280;">
+                <span class="payment-cases" style="font-size: 12px; color: var(--fc-text-muted);">
                     {{ payment.case.name }}
                 </span>
                 {% endif %}
                 {% if payment.image_path %}
-                <a href="{{ media_url }}{{ payment.image_path }}" target="_blank" rel="noopener noreferrer" style="font-size: 12px; color: #2563eb; text-decoration: underline;">📎 {% trans "查看凭证" %}</a>
+                <a href="{{ media_url }}{{ payment.image_path }}" target="_blank" rel="noopener noreferrer" style="font-size: 12px; color: var(--fc-primary); text-decoration: underline;">📎 {% trans "查看凭证" %}</a>
                 {% endif %}
                 {% if payment.note %}
                 <span class="payment-note">{{ payment.note }}</span>

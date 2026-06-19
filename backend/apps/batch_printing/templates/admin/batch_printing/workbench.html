@@ -11,14 +11,14 @@
   .bp-hero {
     border-radius: 14px;
     padding: 22px;
-    background: linear-gradient(135deg, #0b4f6c 0%, #2f80ed 100%);
-    color: #fff;
+    background: linear-gradient(135deg, var(--fc-text-heading) 0%, var(--fc-primary) 100%);
+    color: var(--fc-text-on-primary);
     margin-bottom: 18px;
     box-shadow: 0 8px 24px rgba(15, 38, 74, 0.2);
   }
 
   .bp-hero h1 {
-    color: #fff;
+    color: var(--fc-text-on-primary);
     margin: 0 0 8px;
     font-size: 30px;
     font-weight: 800;
@@ -37,8 +37,8 @@
   }
 
   .bp-card {
-    background: #fff;
-    border: 1px solid #e6ebf2;
+    background: var(--fc-bg-card);
+    border: 1px solid var(--fc-border);
     border-radius: 12px;
     padding: 16px;
     box-shadow: 0 2px 6px rgba(16, 24, 40, 0.04);
@@ -51,7 +51,7 @@
   }
 
   .bp-muted {
-    color: #556070;
+    color: var(--fc-text-muted);
     font-size: 14px;
     line-height: 1.6;
   }
@@ -70,12 +70,12 @@
     font-size: 14px;
     cursor: pointer;
     font-weight: 700;
-    color: #fff;
-    background: #0b4f6c;
+    color: var(--fc-text-on-primary);
+    background: var(--fc-admin-blue);
   }
 
   .bp-btn.secondary {
-    background: #0d7490;
+    background: var(--fc-admin-blue-hover);
   }
 
   .bp-link-btn {
@@ -86,17 +86,17 @@
     padding: 9px 12px;
     text-decoration: none;
     font-weight: 700;
-    border: 1px solid #d0dae7;
-    color: #18467f;
-    background: #f5f8fc;
+    border: 1px solid var(--fc-border-input);
+    color: var(--fc-admin-blue);
+    background: var(--fc-bg-muted);
   }
 
   .bp-form {
-    border: 1px dashed #c8d6e5;
+    border: 1px dashed var(--fc-border-input);
     border-radius: 10px;
     padding: 14px;
     margin-top: 12px;
-    background: #fbfcfe;
+    background: var(--fc-bg-muted-light);
   }
 
   .bp-form input[type="file"] {
@@ -106,8 +106,8 @@
   .bp-result {
     margin-top: 12px;
     border-radius: 10px;
-    background: #0f172a;
-    color: #dbeafe;
+    background: var(--fc-text-heading);
+    color: var(--fc-info-bg);
     padding: 12px;
     white-space: pre-wrap;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -119,10 +119,10 @@
 
   .bp-tip {
     margin-top: 8px;
-    border-left: 4px solid #2f80ed;
+    border-left: 4px solid var(--fc-primary);
     padding: 8px 10px;
-    background: #eef6ff;
-    color: #1f3d66;
+    background: var(--fc-primary-subtle);
+    color: var(--fc-text-secondary);
     font-size: 13px;
     border-radius: 0 8px 8px 0;
   }

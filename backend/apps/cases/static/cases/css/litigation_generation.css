@@ -20,8 +20,8 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: white;
-    border: 2px solid #ccc;
+    background: var(--fc-bg-card);
+    border: 2px solid var(--fc-border-input);
     border-radius: 8px;
     padding: 24px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
@@ -32,10 +32,10 @@
 
 .litigation-dialog h3 {
     margin: 0 0 20px 0;
-    color: #333;
+    color: var(--fc-text-secondary);
     font-size: 18px;
     font-weight: 600;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--fc-border);
     padding-bottom: 12px;
 }
 
@@ -54,29 +54,29 @@
     align-items: center;
     justify-content: center;
     padding: 20px 16px;
-    border: 2px solid #e0e0e0;
+    border: 2px solid var(--fc-border);
     border-radius: 8px;
-    background: #fff;
+    background: var(--fc-bg-card);
     cursor: pointer;
     transition: all 0.2s ease;
     position: relative;
 }
 
 .litigation-type-option:hover:not(.disabled) {
-    border-color: #417690;
-    background: #f5f9fc;
+    border-color: var(--fc-admin-blue);
+    background: var(--fc-bg-muted-light);
 }
 
 .litigation-type-option.selected {
-    border-color: #417690;
-    background: #e3f2fd;
+    border-color: var(--fc-admin-blue);
+    background: var(--fc-info-bg);
     box-shadow: 0 0 0 2px rgba(65, 118, 144, 0.2);
 }
 
 .litigation-type-option.disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    background: #f5f5f5;
+    background: var(--fc-bg-muted-light);
 }
 
 .type-icon {
@@ -87,17 +87,14 @@
 .type-label {
     font-size: 14px;
     font-weight: 500;
-    color: #333;
-}
-
-/* 开发中徽章 */
+    color: var(--fc-text-secondary);
 .disabled-badge {
     position: absolute;
     top: 8px;
     right: 8px;
     padding: 2px 8px;
-    background: #9e9e9e;
-    color: white;
+    background: var(--fc-text-muted);
+    color: var(--fc-text-on-primary);
     font-size: 11px;
     font-weight: 600;
     border-radius: 10px;
@@ -107,10 +104,10 @@
 .litigation-error {
     margin-bottom: 16px;
     padding: 10px 14px;
-    background: #ffebee;
-    border: 1px solid #f44336;
+    background: var(--fc-error-bg);
+    border: 1px solid var(--fc-error-text);
     border-radius: 4px;
-    color: #c62828;
+    color: var(--fc-error-text);
     font-size: 13px;
 }
 
@@ -120,31 +117,28 @@
     justify-content: flex-end;
     gap: 10px;
     padding-top: 16px;
-    border-top: 1px solid #eee;
-}
-
-.btn-cancel {
+    border-top: 1px solid var(--fc-border);
     padding: 10px 20px;
     border-radius: 4px;
-    border: 1px solid #ccc;
-    background: #f0f0f0;
-    color: #333;
+    border: 1px solid var(--fc-border-input);
+    background: var(--fc-bg-muted-light);
+    color: var(--fc-text-secondary);
     cursor: pointer;
     font-size: 14px;
     transition: all 0.2s ease;
 }
 
 .btn-cancel:hover:not(:disabled) {
-    background: #e9ecef;
-    border-color: #adb5bd;
+    background: var(--fc-border);
+    border-color: var(--fc-border-input);
 }
 
 .btn-generate {
     padding: 10px 24px;
     border-radius: 4px;
-    border: 1px solid #417690;
-    background: #417690;
-    color: #fff;
+    border: 1px solid var(--fc-admin-blue);
+    background: var(--fc-admin-blue);
+    color: var(--fc-text-on-primary);
     cursor: pointer;
     font-size: 14px;
     font-weight: 500;
@@ -152,8 +146,8 @@
 }
 
 .btn-generate:hover:not(:disabled) {
-    background: #2e5984;
-    border-color: #2e5984;
+    background: var(--fc-admin-blue-hover);
+    border-color: var(--fc-admin-blue-hover);
 }
 
 .btn-generate:disabled,
@@ -167,8 +161,8 @@
     position: fixed;
     top: 20px;
     right: 20px;
-    background: #4caf50;
-    color: white;
+    background: var(--fc-success-text);
+    color: var(--fc-text-on-primary);
     padding: 12px 20px;
     border-radius: 6px;
     z-index: 10001;
@@ -180,7 +174,7 @@
     min-width: 250px;
     word-wrap: break-word;
     line-height: 1.4;
-    border-left: 4px solid #2e7d32;
+    border-left: 4px solid var(--fc-success-text);
 }
 
 /* Toast 容器 */
@@ -212,15 +206,15 @@
 }
 
 .litigation-toast-success {
-    background: #4caf50;
-    color: white;
-    border-left: 4px solid #2e7d32;
+    background: var(--fc-success-text);
+    color: var(--fc-text-on-primary);
+    border-left: 4px solid var(--fc-success-text);
 }
 
 .litigation-toast-error {
-    background: #f44336;
-    color: white;
-    border-left: 4px solid #c62828;
+    background: var(--fc-error-text);
+    color: var(--fc-text-on-primary);
+    border-left: 4px solid var(--fc-error-text);
 }
 
 .litigation-toast-icon {
@@ -244,7 +238,7 @@
     width: 16px;
     height: 16px;
     border: 2px solid rgba(255, 255, 255, 0.3);
-    border-top-color: #fff;
+    border-top-color: var(--fc-text-on-primary);
     border-radius: 50%;
     animation: spin 0.6s linear infinite;
 }

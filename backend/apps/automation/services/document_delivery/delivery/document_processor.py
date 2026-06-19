@@ -467,7 +467,7 @@ class DocumentProcessor:
             # 创建案件日志
             if renamed_files:
                 case_log_service = ServiceLocator.get_caselog_service()
-                file_names: list[Any] = []
+                file_names: list[str] = [str(Path(str(fp)).name) for fp in renamed_files]
                 case_log = case_log_service.create_log(
                     case_id=cast(int, case.id),
                     content=f"文书送达自动下载: {', '.join(file_names)}",
