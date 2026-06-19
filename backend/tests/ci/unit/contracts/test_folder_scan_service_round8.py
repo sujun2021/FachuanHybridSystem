@@ -127,7 +127,7 @@ class TestIsWithinRoot:
 
 class TestRelativePathStr:
     def test_within_root(self, tmp_path):
-        svc = _make_service()
+        svc = _make_processor()
         root = tmp_path / "project"
         root.mkdir()
         sub = root / "sub"
@@ -142,7 +142,7 @@ class TestRelativePathStr:
         assert result == "sub"
 
     def test_at_root(self, tmp_path):
-        svc = _make_service()
+        svc = _make_processor()
         root = tmp_path / "project"
         root.mkdir()
         target = root / "file.pdf"
@@ -155,7 +155,7 @@ class TestRelativePathStr:
         assert result == ""
 
     def test_outside_root(self, tmp_path):
-        svc = _make_service()
+        svc = _make_processor()
         root = tmp_path / "project"
         root.mkdir()
         other = tmp_path / "other"
@@ -175,17 +175,17 @@ class TestRelativePathStr:
 
 class TestExtractScanSubfolder:
     def test_empty_payload(self):
-        svc = _make_service()
+        svc = _make_processor()
         assert svc._extract_scan_subfolder(None) == ""
         assert svc._extract_scan_subfolder({}) == ""
 
     def test_with_scope(self):
-        svc = _make_service()
+        svc = _make_processor()
         payload = {"scan_scope": {"scan_subfolder": "sub/folder"}}
         assert svc._extract_scan_subfolder(payload) == "sub/folder"
 
     def test_scope_no_subfolder(self):
-        svc = _make_service()
+        svc = _make_processor()
         payload = {"scan_scope": {}}
         assert svc._extract_scan_subfolder(payload) == ""
 
@@ -254,7 +254,7 @@ class TestGetSession:
 
 class TestPostProcessCandidates:
     def test_archive_document_with_match(self):
-        svc = _make_service()
+        svc = _make_processor()
         candidate = {
             "filename": "起诉状.pdf",
             "source_path": "/tmp/起诉状.pdf",
@@ -270,7 +270,7 @@ class TestPostProcessCandidates:
                 "reason": "匹配",
             }
             with patch.object(svc, "_relative_path_str", return_value=""):
-                result = svc._post_process_candidates(
+                result = svc.post_process_candidates(
                     candidates=[candidate],
                     archive_category="litigation",
                     scan_folder="/tmp/scan",
@@ -279,7 +279,7 @@ class TestPostProcessCandidates:
         assert result[0]["archive_item_code"] == "l_0"
 
     def test_archive_document_skip(self):
-        svc = _make_service()
+        svc = _make_processor()
         candidate = {
             "filename": "skip.pdf",
             "source_path": "/tmp/skip.pdf",
@@ -288,7 +288,7 @@ class TestPostProcessCandidates:
 
         with patch("apps.contracts.services.contract.integrations._candidate_post_processor.classify_archive_material") as mock_cls:
             mock_cls.return_value = {"category": "skip", "reason": "不需要"}
-            result = svc._post_process_candidates(
+            result = svc.post_process_candidates(
                 candidates=[candidate],
                 archive_category="litigation",
                 scan_folder="/tmp/scan",
@@ -297,7 +297,7 @@ class TestPostProcessCandidates:
         assert result[0]["skip_reason"] == "不需要"
 
     def test_archive_document_no_match(self):
-        svc = _make_service()
+        svc = _make_processor()
         candidate = {
             "filename": "unknown.pdf",
             "source_path": "/tmp/unknown.pdf",
@@ -311,7 +311,7 @@ class TestPostProcessCandidates:
                 "archive_item_name": "未匹配",
                 "reason": "未匹配",
             }
-            result = svc._post_process_candidates(
+            result = svc.post_process_candidates(
                 candidates=[candidate],
                 archive_category="litigation",
                 scan_folder="/tmp/scan",
@@ -320,7 +320,7 @@ class TestPostProcessCandidates:
         assert result[0]["archive_item_code"] == ""
 
     def test_authorization_material(self):
-        svc = _make_service()
+        svc = _make_processor()
         candidate = {
             "filename": "授权.pdf",
             "source_path": "/tmp/auth.pdf",
@@ -335,7 +335,7 @@ class TestPostProcessCandidates:
                 "confidence": 0.8,
                 "reason": "授权",
             }
-            result = svc._post_process_candidates(
+            result = svc.post_process_candidates(
                 candidates=[candidate],
                 archive_category="litigation",
                 scan_folder="/tmp/scan",
@@ -344,7 +344,7 @@ class TestPostProcessCandidates:
         assert result[0]["archive_item_code"] == "l_2"
 
     def test_case_material_with_match(self):
-        svc = _make_service()
+        svc = _make_processor()
         candidate = {
             "filename": "合同.pdf",
             "source_path": "/tmp/contract.pdf",
@@ -360,7 +360,7 @@ class TestPostProcessCandidates:
                 "reason": "合同",
             }
             with patch.object(svc, "_relative_path_str", return_value="sub"):
-                result = svc._post_process_candidates(
+                result = svc.post_process_candidates(
                     candidates=[candidate],
                     archive_category="litigation",
                     scan_folder="/tmp/scan",
@@ -369,7 +369,7 @@ class TestPostProcessCandidates:
         assert result[0]["reason"] == "sub"
 
     def test_保单_keyword_deselects(self):
-        svc = _make_service()
+        svc = _make_processor()
         candidate = {
             "filename": "保单.pdf",
             "source_path": "/tmp/保单.pdf",
@@ -379,7 +379,7 @@ class TestPostProcessCandidates:
 
         with patch("apps.contracts.services.contract.integrations._candidate_post_processor.classify_archive_material") as mock_cls:
             mock_cls.return_value = {"category": "matched", "archive_item_code": "x", "archive_item_name": "x", "confidence": 0.5, "reason": ""}
-            result = svc._post_process_candidates(
+            result = svc.post_process_candidates(
                 candidates=[candidate],
                 archive_category="litigation",
                 scan_folder="/tmp/scan",
@@ -396,7 +396,7 @@ class TestPostProcessCandidates:
 
         with patch.object(svc, "_collect_docx_files", return_value=[{"filename": "doc.docx"}]):
             with patch.object(svc, "_mark_already_imported"):
-                result = svc._post_process_candidates(
+                result = svc.post_process_candidates(
                     candidates=[candidate],
                     archive_category="non_litigation",
                     scan_folder="/tmp/scan",
@@ -414,7 +414,7 @@ class TestPostProcessCandidates:
 
         with patch("apps.contracts.services.contract.integrations._candidate_post_processor.classify_archive_material") as mock_cls:
             mock_cls.return_value = {"category": "matched", "archive_item_code": "x", "archive_item_name": "x", "confidence": 0.5, "reason": ""}
-            result = svc._post_process_candidates(
+            result = svc.post_process_candidates(
                 candidates=[candidate],
                 archive_category="litigation",
                 scan_folder="/cloud/scan",
@@ -432,7 +432,7 @@ class TestCollectDocxFiles:
         assert svc._collect_docx_files("/tmp", "litigation") == []
 
     def test_local_no_files(self):
-        svc = _make_service()
+        svc = _make_processor()
         with patch("pathlib.Path") as MockPath:
             mock_root = MagicMock()
             mock_root.exists.return_value = False
@@ -446,14 +446,14 @@ class TestCollectDocxFiles:
 
 class TestLearnFromImportCorrection:
     def test_no_code_returns(self):
-        svc = _make_service()
+        svc = _make_processor()
         svc._learn_from_import_correction(
             candidate={}, actual_archive_item_code="", contract_id=1
         )
         # Should return without doing anything
 
     def test_same_code_returns(self):
-        svc = _make_service()
+        svc = _make_processor()
         candidate = {"archive_item_code": "l_1"}
         svc._learn_from_import_correction(
             candidate=candidate, actual_archive_item_code="l_1", contract_id=1
@@ -461,21 +461,21 @@ class TestLearnFromImportCorrection:
         # No learning needed
 
     def test_non_case_material_returns(self):
-        svc = _make_service()
+        svc = _make_processor()
         candidate = {"archive_item_code": "old", "suggested_category": "other"}
         svc._learn_from_import_correction(
             candidate=candidate, actual_archive_item_code="l_1", contract_id=1
         )
 
     def test_no_filename_returns(self):
-        svc = _make_service()
+        svc = _make_processor()
         candidate = {"archive_item_code": "old", "suggested_category": "case_material", "filename": ""}
         svc._learn_from_import_correction(
             candidate=candidate, actual_archive_item_code="l_1", contract_id=1
         )
 
     def test_successful_learning(self):
-        svc = _make_service()
+        svc = _make_processor()
         candidate = {
             "archive_item_code": "old_code",
             "suggested_category": "case_material",
