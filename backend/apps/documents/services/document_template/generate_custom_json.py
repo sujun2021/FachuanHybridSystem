@@ -60,12 +60,19 @@ def detect_template_type(path_in_custom: str, fname: str) -> str:
     # 99-归档下的文件
     if path_in_custom.startswith("99-归档"):
         return "archive"
-    # 00-委托代理材料中明显是合同的
-    contract_keywords = ["合同", "代理协议", "委托代理协议", "专项代理协议"]
-    lower_fname = fname.lower()
-    for kw in contract_keywords:
-        if kw in fname:
-            return "contract"
+    # 只有在 00-委托代理材料 目录下，且包含合同关键词的才算合同模板
+    if path_in_custom.startswith("00-委托代理材料"):
+        contract_keywords = [
+            "合同", "代理协议", "委托代理协议", "专项代理协议",
+            "风险代理", "代理合同",
+        ]
+        for kw in contract_keywords:
+            if kw in fname:
+                # 排除误判：授权委托书等不是合同
+                misleading = ["授权委托书", "所函", "变更委托"]
+                if any(m in fname for m in misleading):
+                    return "case"
+                return "contract"
     return "case"
 
 
