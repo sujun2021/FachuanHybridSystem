@@ -250,7 +250,7 @@ def main() -> None:
 
     # 申请执行文件夹
     folder_templates.append({
-        "name": "申请执行文件夹",
+        "name": "申请执行文件夹（自定义）",
         "template_type": "case",
         "case_types": ["civil", "criminal", "administrative", "execution"],
         "case_stages": ["enforcement"],
@@ -265,7 +265,7 @@ def main() -> None:
 
     # 合同文件夹
     folder_templates.append({
-        "name": "合同文件夹",
+        "name": "合同文件夹（自定义）",
         "template_type": "contract",
         "case_types": [],
         "case_stages": [],
@@ -348,7 +348,7 @@ def main() -> None:
         if ttype == "contract":
             bindings.append({
                 "document_template_name": finfo["name"],
-                "folder_template_name": "合同文件夹",
+                "folder_template_name": "合同文件夹（自定义）",
                 "folder_node_name": parent,
             })
             continue
@@ -381,7 +381,7 @@ def main() -> None:
         if "execution" in case_types:
             bindings.append({
                 "document_template_name": finfo["name"],
-                "folder_template_name": "申请执行文件夹",
+                "folder_template_name": "申请执行文件夹（自定义）",
                 "folder_node_name": parent,
             })
 
