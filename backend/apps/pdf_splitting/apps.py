@@ -5,3 +5,6 @@ class PdfSplittingConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "apps.pdf_splitting"
     verbose_name = "PDF 拆解"
+
+    def ready(self) -> None:
+        from . import signals  # noqa: F401

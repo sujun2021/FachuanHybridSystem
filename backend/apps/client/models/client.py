@@ -38,6 +38,8 @@ class Client(models.Model):
         max_length=64, blank=True, null=True, verbose_name="法定代表人/负责人身份证号码"
     )
     is_our_client = models.BooleanField(default=False, verbose_name="是否为我方当事人")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
 
     history = HistoricalRecords()
 
