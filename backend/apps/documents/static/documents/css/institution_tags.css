@@ -61,7 +61,7 @@
 
 .institution-tag-remove:hover {
     background: var(--fc-error-text);
-    color: #fff;
+    color: var(--fc-text-on-primary);
 }
 
 .institution-input-wrapper {
@@ -79,7 +79,7 @@
 }
 
 .institution-input::placeholder {
-    color: #9ca3af;
+    color: var(--fc-text-disabled);
     font-size: 13px;
 }
 

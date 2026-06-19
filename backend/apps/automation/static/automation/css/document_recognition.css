@@ -200,7 +200,7 @@
 
 /* 置信度样式 */
 .confidence-high {
-    color: #2e7d32;
+    color: var(--fc-success-text);
     font-weight: 600;
 }
 
@@ -210,13 +210,13 @@
 }
 
 .confidence-low {
-    color: #d32f2f;
+    color: var(--fc-error-text);
     font-weight: 600;
 }
 
 /* 绑定状态样式 */
 .binding-success {
-    color: #2e7d32;
+    color: var(--fc-success-text);
     font-weight: 600;
 }
 
@@ -345,7 +345,7 @@
 .btn-secondary:link,
 .btn-secondary:visited,
 .btn-secondary:active {
-    background: #28a745;
+    background: var(--fc-success-text);
     color: #ffffff !important;
 }
 
@@ -852,7 +852,7 @@
 
 /* 保存按钮 */
 .btn-success {
-    background: #28a745;
+    background: var(--fc-success-text);
     color: var(--fc-text-on-primary);
 }
 

@@ -8,8 +8,8 @@
 .folder-editor-container {
     margin-top: 15px;
     padding: 15px;
-    background: #f8f9fa;
-    border: 1px solid #ddd;
+    background: var(--fc-bg-muted);
+    border: 1px solid var(--fc-border);
     border-radius: 8px;
 }
 
@@ -26,7 +26,7 @@
 .folder-editor-header h3 {
     margin: 0;
     font-size: 16px;
-    color: #333;
+    color: var(--fc-text-secondary);
 }
 
 .folder-editor-actions {
@@ -37,9 +37,9 @@
 .folder-editor-actions .btn {
     padding: 6px 12px;
     font-size: 13px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--fc-border);
     border-radius: 4px;
-    background: #fff;
+    background: var(--fc-bg-card);
     cursor: pointer;
     transition: all 0.2s;
 }
@@ -63,7 +63,7 @@
 .sortable-folder-list {
     min-height: 50px;
     padding: 10px;
-    background: #fff;
+    background: var(--fc-bg-card);
     border: 1px dashed #ccc;
     border-radius: 4px;
     transition: background 0.2s;
@@ -76,7 +76,7 @@
 }
 
 .sortable-folder-list .empty-hint {
-    color: #999;
+    color: var(--fc-text-muted);
     font-style: italic;
     font-size: 13px;
 }
@@ -94,7 +94,7 @@
 /* 文件夹项 */
 .sortable-folder-item {
     margin-bottom: 8px;
-    background: #fff;
+    background: var(--fc-bg-card);
     border: 1px solid #e0e0e0;
     border-radius: 4px;
     transition: box-shadow 0.2s;
@@ -126,7 +126,7 @@
 }
 
 .folder-toggle:hover {
-    color: #333;
+    color: var(--fc-text-secondary);
 }
 
 /* 文件夹图标 */
@@ -150,7 +150,7 @@
 .folder-name input {
     width: 100%;
     padding: 6px 10px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--fc-border);
     border-radius: 4px;
     font-size: 14px;
     transition: border-color 0.2s;
@@ -175,9 +175,9 @@
     height: 28px;
     min-width: 28px;
     padding: 0;
-    border: 1px solid #ccc;
+    border: 1px solid var(--fc-border);
     border-radius: 4px;
-    background: #fff;
+    background: var(--fc-bg-card);
     cursor: pointer;
     font-size: 14px;
     line-height: 26px;
@@ -218,7 +218,7 @@
 .add-folder-input .new-folder-name {
     flex: 1;
     padding: 8px 12px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--fc-border);
     border-radius: 4px;
     font-size: 14px;
 }
@@ -285,14 +285,14 @@
 }
 
 .sortable-drag {
-    background: #fff;
+    background: var(--fc-bg-card);
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 /* 结构预览 */
 .folder-structure-preview {
     padding: 10px;
-    background: #f8f9fa;
+    background: var(--fc-bg-muted);
     border: 1px solid #e9ecef;
     border-radius: 4px;
     font-family: monospace;

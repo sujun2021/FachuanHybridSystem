@@ -673,7 +673,7 @@ function identityApp(config = {}) {
                     if (!fileNameSpan) {
                         fileNameSpan = document.createElement('span');
                         fileNameSpan.className = 'file-name-display';
-                        fileNameSpan.style.cssText = 'color: #4caf50; font-size: 12px; margin-left: 8px;';
+                        fileNameSpan.style.cssText = 'color: var(--fc-success-text); font-size: 12px; margin-left: 8px;';
                         uploadInput.parentNode.appendChild(fileNameSpan);
                     }
                     fileNameSpan.textContent = '✓ ' + this.uploadedFile.name;
@@ -684,7 +684,7 @@ function identityApp(config = {}) {
                     if (!fileHint) {
                         fileHint = document.createElement('div');
                         fileHint.className = 'file-hint';
-                        fileHint.style.cssText = 'color: #ff9800; font-size: 12px; margin: 5px 0; padding: 8px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px;';
+                        fileHint.style.cssText = 'color: var(--fc-warning-text); font-size: 12px; margin: 5px 0; padding: 8px; background: var(--fc-warning-bg); border: 1px solid var(--fc-warning-border); border-radius: 4px;';
                         uploadInput.parentNode.appendChild(fileHint);
                     }
                     fileHint.innerHTML = '⚠ 请点击"选择文件"按钮，选择文件: <strong>' + this.uploadedFile.name + '</strong>';
@@ -692,7 +692,7 @@ function identityApp(config = {}) {
             }
 
             // 高亮 inline 行
-            targetRow.style.backgroundColor = '#e8f5e8';
+            targetRow.style.backgroundColor = 'var(--fc-success-bg)';
             setTimeout(() => {
                 targetRow.style.backgroundColor = '';
             }, 3000);

@@ -532,8 +532,8 @@ class IdentityRecognitionInline {
         fieldNames.forEach(fieldName => {
             const field = document.getElementById('id_' + fieldName);
             if (field && field.value) {
-                field.style.backgroundColor = '#e8f5e8';
-                field.style.borderColor = '#4caf50';
+                field.style.backgroundColor = 'var(--fc-success-bg)';
+                field.style.borderColor = 'var(--fc-success-text)';
                 field.style.transition = 'all 0.3s ease';
 
                 // 3秒后恢复原样
@@ -611,10 +611,10 @@ class IdentityRecognitionInline {
         const successDiv = document.createElement('div');
         successDiv.className = 'success-message';
         successDiv.style.cssText = `
-            background: #d4edda;
-            color: #155724;
+            background: var(--fc-success-bg);
+            color: var(--fc-success-text);
             padding: 12px 16px;
-            border: 1px solid #c3e6cb;
+            border: 1px solid var(--fc-success-border);
             border-radius: 8px;
             margin-bottom: 16px;
             display: flex;

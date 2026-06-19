@@ -8,11 +8,11 @@
 <style>
 .result-tabs { display: flex; gap: 0; margin: 16px 0 0; border-bottom: 2px solid #e0e0e0; }
 .result-tab { padding: 10px 20px; cursor: pointer; border: none; background: none;
-    font-size: 14px; font-weight: 500; color: #666; border-bottom: 2px solid transparent;
+    font-size: 14px; font-weight: 500; color: var(--fc-text-muted); border-bottom: 2px solid transparent;
     margin-bottom: -2px; transition: all 0.2s; }
 .result-tab:hover { color: #795548; }
 .result-tab.active { color: #795548; border-bottom-color: #795548; font-weight: 600; }
-.result-panel { display: none; padding: 20px; background: #fafafa; border-radius: 0 0 8px 8px;
+.result-panel { display: none; padding: 20px; background: var(--fc-bg-muted-light); border-radius: 0 0 8px 8px;
     border: 1px solid #e0e0e0; border-top: none; max-height: 600px; overflow-y: auto; }
 .result-panel.active { display: block; }
 .result-panel pre { white-space: pre-wrap; word-wrap: break-word; font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;

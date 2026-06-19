@@ -187,8 +187,8 @@
 }
 
 .btn-pdf {
-    background: #fff0f0;
-    color: #c0392b;
+    background: var(--fc-error-bg);
+    color: var(--fc-error-text);
     border-color: #f5c6c6;
 }
 

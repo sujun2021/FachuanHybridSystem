@@ -477,14 +477,14 @@
 
 .payment-date {
     font-size: 13px;
-    color: #6b7280;
+    color: var(--fc-text-muted);
     min-width: 90px;
 }
 
 .payment-amount {
     font-size: 14px;
     font-weight: 600;
-    color: #15803d;
+    color: var(--fc-success-text);
     min-width: 100px;
 }
 
@@ -497,23 +497,23 @@
 }
 
 .invoice-status.invoice-uninvoiced {
-    background: #f3f4f6;
-    color: #6b7280;
+    background: var(--fc-bg-muted-light);
+    color: var(--fc-text-muted);
 }
 
 .invoice-status.invoice-invoiced_partial {
-    background: #fef3c7;
-    color: #92400e;
+    background: var(--fc-warning-bg);
+    color: var(--fc-warning-text);
 }
 
 .invoice-status.invoice-invoiced_full {
-    background: #dcfce7;
-    color: #15803d;
+    background: var(--fc-success-bg);
+    color: var(--fc-success-text);
 }
 
 .payment-note {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--fc-text-muted);
     flex: 1;
 }
 
@@ -529,20 +529,20 @@
     justify-content: space-between;
     align-items: center;
     padding: 10px 12px;
-    background: #fff;
-    border: 1px solid #e5e7eb;
+    background: var(--fc-bg-card);
+    border: 1px solid var(--fc-border);
     border-radius: 6px;
 }
 
 .agreement-name {
     font-size: 14px;
     font-weight: 500;
-    color: #1a1a1a;
+    color: var(--fc-text-heading);
 }
 
 .agreement-date {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--fc-text-muted);
 }
 
 /* 提醒列表 */
