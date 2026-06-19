@@ -5,15 +5,15 @@
 {{ block.super }}
 <style>
   .other-tools-page {
-    --bg-soft: linear-gradient(180deg, #f8fbff 0%, #f4f8fc 100%);
-    --card-bg: rgba(255, 255, 255, 0.96);
-    --line: #e6edf5;
-    --line-strong: #d7e3f3;
+    --bg-soft: linear-gradient(180deg, var(--fc-bg-muted-light) 0%, var(--fc-bg-muted) 100%);
+    --card-bg: var(--fc-bg-card);
+    --line: var(--fc-border);
+    --line-strong: var(--fc-border-input);
     --text-main: var(--fc-text-heading);
     --text-sub: var(--fc-text-muted);
     --brand: var(--fc-primary);
     --brand-strong: var(--fc-primary-dark);
-    --brand-soft: #eff6ff;
+    --brand-soft: var(--fc-primary-subtle);
     --success-soft: #ecfeff;
     --shadow-soft: 0 10px 30px rgba(37, 99, 235, 0.08);
     --shadow-card: 0 8px 24px rgba(15, 23, 42, 0.06);
@@ -80,8 +80,8 @@
     gap: 6px;
     border-radius: 999px;
     padding: 6px 12px;
-    background: rgba(255, 255, 255, 0.88);
-    border: 1px solid #dce8fb;
+    background: var(--fc-bg-card);
+    border: 1px solid var(--fc-border);
     color: var(--brand-strong);
     font-size: 12px;
     font-weight: 700;
@@ -114,7 +114,7 @@
   .stat-card {
     border: 1px solid var(--line-strong);
     border-radius: 16px;
-    background: rgba(255, 255, 255, 0.92);
+    background: var(--fc-bg-card);
     padding: 14px 16px;
   }
 
@@ -188,7 +188,7 @@
     gap: 6px;
     border-radius: 999px;
     padding: 6px 10px;
-    border: 1px solid #dce8fb;
+    border: 1px solid var(--fc-border);
     background: var(--fc-bg-card);
     color: var(--fc-text-secondary);
     font-size: 12px;
@@ -263,7 +263,7 @@
     align-items: center;
     justify-content: center;
     border-radius: 10px;
-    background: linear-gradient(135deg, #eff6ff 0%, #e0f2fe 100%);
+    background: linear-gradient(135deg, var(--fc-primary-subtle) 0%, var(--fc-bg-muted-light) 100%);
     color: var(--brand-strong);
     font-size: 14px;
     font-weight: 800;
@@ -284,7 +284,7 @@
     font-size: 12px;
     font-weight: 700;
     border: 1px solid #dbeafe;
-    background: #f8fbff;
+    background: var(--fc-bg-muted-light);
     color: #1e3a8a;
   }
 
@@ -308,7 +308,7 @@
   .enter-link:hover,
   .enter-link:focus {
     text-decoration: none;
-    background: #dbeafe;
+    background: var(--fc-primary-subtle);
   }
 
   .submenu-title {

@@ -5,11 +5,11 @@
 {{ block.super }}
 <style>
   .case-handling-page {
-    --bg-soft: linear-gradient(180deg, #f8faff 0%, #eef2ff 100%);
+    --bg-soft: linear-gradient(180deg, var(--fc-bg-muted) 0%, var(--fc-primary-subtle) 100%);
     --card-bg: rgba(255, 255, 255, 0.97);
-    --line: #e0e7ff;
-    --line-strong: #c7d2fe;
-    --text-main: #1e1b4b;
+    --line: var(--fc-border);
+    --line-strong: var(--fc-border-input);
+    --text-main: var(--fc-text-heading);
     --text-sub: var(--fc-text-muted);
     --brand: #6366f1;
     --brand-strong: #4338ca;
@@ -81,7 +81,8 @@
     border-radius: 999px;
     padding: 6px 12px;
     background: rgba(255, 255, 255, 0.88);
-    border: 1px solid #e0e7ff;
+    border: 1px solid var(--fc-border);
+    background: var(--fc-bg-card);
     color: var(--brand-strong);
     font-size: 12px;
     font-weight: 700;

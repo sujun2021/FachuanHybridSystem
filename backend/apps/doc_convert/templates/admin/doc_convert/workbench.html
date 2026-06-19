@@ -9,7 +9,7 @@
 .dc-container { max-width: 860px; margin: 0 auto; padding: 20px; }
 .dc-intro {
     color: var(--fc-text-muted); margin-bottom: 24px; font-size: 14px; line-height: 1.6;
-    background: linear-gradient(135deg, #f0f7ff, #e8f4f8);
+    background: linear-gradient(135deg, var(--fc-bg-muted-light), var(--fc-bg-muted-light));
     padding: 14px 18px; border-radius: 10px; border-left: 4px solid var(--fc-admin-blue);
 }
 
@@ -23,10 +23,10 @@
     transition: border-color 0.2s;
 }
 .dc-combobox-input:focus { border-color: var(--fc-admin-blue); outline: none; }
-.dc-combobox-input::placeholder { color: #aaa; }
+.dc-combobox-input::placeholder { color: var(--fc-text-muted); }
 .dc-combobox-arrow {
     position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-    pointer-events: none; color: #7f8c8d; transition: transform 0.2s;
+    pointer-events: none; color: var(--fc-text-muted); transition: transform 0.2s;
 }
 .dc-combobox.open .dc-combobox-arrow { transform: translateY(-50%) rotate(180deg); }
 .dc-combobox-dropdown {
@@ -44,29 +44,29 @@
     padding: 8px 14px; font-size: 14px; color: var(--fc-text-secondary); cursor: pointer;
     transition: background 0.15s;
 }
-.dc-combobox-option:hover, .dc-combobox-option.highlighted { background: #e8f4f8; }
-.dc-combobox-option.selected { background: #d0e8f0; font-weight: 600; }
+.dc-combobox-option:hover, .dc-combobox-option.highlighted { background: var(--fc-bg-muted-light); }
+.dc-combobox-option.selected { background: var(--fc-border-input); font-weight: 600; }
 .dc-combobox-empty {
-    padding: 16px 14px; text-align: center; color: #999; font-size: 13px;
+    padding: 16px 14px; text-align: center; color: var(--fc-text-muted); font-size: 13px;
 }
 .dc-combobox-dropdown::-webkit-scrollbar { width: 6px; }
-.dc-combobox-dropdown::-webkit-scrollbar-thumb { background: #c5d5de; border-radius: 3px; }
+.dc-combobox-dropdown::-webkit-scrollbar-thumb { background: var(--fc-border-input); border-radius: 3px; }
 .dc-combobox-dropdown::-webkit-scrollbar-track { background: transparent; }
 
 /* 上传区域 */
 .dc-upload-zone {
     border: 3px dashed #b8d4e3; border-radius: 16px; padding: 60px 20px;
     text-align: center; cursor: pointer; transition: all 0.3s;
-    background: linear-gradient(135deg, #f8fbfd, #eef5f9);
+    background: linear-gradient(135deg, var(--fc-bg-muted-light), var(--fc-bg-muted-light));
     min-height: 260px; display: flex; flex-direction: column;
     align-items: center; justify-content: center;
 }
 .dc-upload-zone:hover, .dc-upload-zone.dragging {
-    border-color: var(--fc-admin-blue); background: #e3f2fd; transform: scale(1.01);
+    border-color: var(--fc-admin-blue); background: var(--fc-primary-subtle); transform: scale(1.01);
 }
 .dc-upload-zone svg { width: 64px; height: 64px; color: var(--fc-admin-blue); margin-bottom: 16px; opacity: 0.8; }
 .dc-upload-zone h3 { margin: 0 0 8px; color: var(--fc-text-secondary); font-size: 18px; font-weight: 600; }
-.dc-upload-zone p { margin: 0 0 18px; color: #7f8c8d; font-size: 13px; }
+.dc-upload-zone p { margin: 0 0 18px; color: var(--fc-text-muted); font-size: 13px; }
 .dc-upload-btn {
     display: inline-block; padding: 12px 24px;
     background: linear-gradient(135deg, var(--fc-admin-blue), #2c5f7c);

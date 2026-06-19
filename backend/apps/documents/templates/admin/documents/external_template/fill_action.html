@@ -6,39 +6,39 @@
 <link rel="stylesheet" href="{% static 'documents/css/external_template.css' %}">
 <style>
 .fill-container { max-width: 960px; margin: 0 auto; padding: 20px; }
-.fill-step { margin-bottom: 24px; padding: 16px; border: 1px solid #ddd; border-radius: 6px; background: #fff; }
-.fill-step h3 { margin: 0 0 12px; font-size: 1rem; color: #333; }
+.fill-step { margin-bottom: 24px; padding: 16px; border: 1px solid var(--fc-border); border-radius: 6px; background: var(--fc-bg-card); }
+.fill-step h3 { margin: 0 0 12px; font-size: 1rem; color: var(--fc-text-secondary); }
 .fill-step-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .fill-step-header h3 { margin: 0; }
-.step-badge { background: #417690; color: #fff; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; margin-right: 6px; }
+.step-badge { background: var(--fc-admin-blue); color: var(--fc-text-on-primary); border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; margin-right: 6px; }
 
 /* Case input */
 .case-input-row { display: flex; gap: 10px; align-items: center; }
-.case-input-row input { flex: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.875rem; }
+.case-input-row input { flex: 1; padding: 8px 12px; border: 1px solid var(--fc-border-input); border-radius: 4px; font-size: 0.875rem; }
 .case-input-row button { padding: 8px 16px; }
 
 /* Party checkboxes */
 .party-list { display: flex; flex-wrap: wrap; gap: 8px; }
-.party-item { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; transition: background 0.15s; }
+.party-item { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--fc-border); border-radius: 4px; cursor: pointer; transition: background 0.15s; }
 .party-item:hover { background: #f0f4f8; }
-.party-item.selected { background: #e8f0fe; border-color: #417690; }
+.party-item.selected { background: var(--fc-primary-subtle); border-color: var(--fc-admin-blue); }
 .party-item input[type="checkbox"] { margin: 0; }
 
 /* Custom fields */
 .custom-field-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 .custom-field-row label { min-width: 160px; font-weight: 600; font-size: 0.875rem; }
-.custom-field-row input, .custom-field-row select { flex: 1; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.875rem; }
+.custom-field-row input, .custom-field-row select { flex: 1; padding: 6px 10px; border: 1px solid var(--fc-border-input); border-radius: 4px; font-size: 0.875rem; }
 
 /* Preview table */
 .preview-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-.preview-table th, .preview-table td { padding: 8px 12px; border: 1px solid #ddd; text-align: left; }
-.preview-table th { background: #f5f5f5; font-weight: 600; }
-.et-empty-value { background: #fff0f0 !important; }
+.preview-table th, .preview-table td { padding: 8px 12px; border: 1px solid var(--fc-border); text-align: left; }
+.preview-table th { background: var(--fc-bg-muted); font-weight: 600; }
+.et-empty-value { background: var(--fc-error-bg) !important; }
 
 /* Buttons */
 .fill-actions { display: flex; gap: 10px; margin-top: 16px; }
-.btn-primary { background: #417690; color: #fff; border: none; padding: 10px 24px; border-radius: 4px; cursor: pointer; font-size: 0.875rem; }
-.btn-primary:hover { background: #205067; }
+.btn-primary { background: var(--fc-admin-blue); color: var(--fc-text-on-primary); border: none; padding: 10px 24px; border-radius: 4px; cursor: pointer; font-size: 0.875rem; }
+.btn-primary:hover { background: var(--fc-admin-blue-hover); }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 .btn-secondary { background: #f5f5f5; color: #333; border: 1px solid #ccc; padding: 10px 24px; border-radius: 4px; cursor: pointer; font-size: 0.875rem; }
 .btn-secondary:hover { background: #e8e8e8; }

@@ -41,10 +41,10 @@
     </div>
 
     <!-- 测试结果 -->
-    <div style="background: {% if result.success %}#d4edda{% else %}#f8d7da{% endif %};
+    <div style="background: {% if result.success %}var(--fc-success-subtle){% else %}var(--fc-error-subtle){% endif %};
                 padding: 20px; border-radius: 8px; margin-bottom: 20px;
-                border: 2px solid {% if result.success %}#28a745{% else %}#dc3545{% endif %};">
-        <h2 style="margin-top: 0; color: {% if result.success %}#155724{% else %}#721c24{% endif %};">
+                border: 2px solid {% if result.success %}var(--fc-success){% else %}var(--fc-error){% endif %};">
+        <h2 style="margin-top: 0; color: {% if result.success %}var(--fc-success-dark){% else %}var(--fc-error-dark){% endif %};">
             {% if result.success %}
                 ✅ 登录成功
             {% else %}
@@ -56,17 +56,17 @@
         </p>
 
         {% if result.token %}
-        <div style="margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.7); border-radius: 4px;">
-            <p style="margin: 0 0 10px 0; font-weight: bold; color: #155724;">🔑 捕获的 Token:</p>
+        <div style="margin-top: 15px; padding: 15px; background: var(--fc-bg-card); border-radius: 4px;">
+            <p style="margin: 0 0 10px 0; font-weight: bold; color: var(--fc-success-dark);">🔑 捕获的 Token:</p>
             <code style="background: var(--fc-bg-card); padding: 10px; border-radius: 4px; display: block;
                         word-break: break-all; font-size: 12px; color: var(--fc-text-secondary);">{{ result.token }}</code>
-            <p style="margin: 10px 0 0 0; font-size: 13px; color: #155724;">
+            <p style="margin: 10px 0 0 0; font-size: 13px; color: var(--fc-success-dark);">
                 ✅ Token 已保存到 Redis 和数据库，其他脚本可以通过 <code>TokenService.get_token()</code> 获取
             </p>
         </div>
         {% else %}
-        <div style="margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.7); border-radius: 4px;">
-            <p style="margin: 0; font-size: 13px; color: #856404;">
+        <div style="margin-top: 15px; padding: 15px; background: var(--fc-bg-card); border-radius: 4px;">
+            <p style="margin: 0; font-size: 13px; color: var(--fc-warning-dark);">
                 ⚠️ 未捕获到 Token，可能登录接口未返回 Token 或格式不匹配
             </p>
         </div>
@@ -86,8 +86,8 @@
 
     <!-- 错误详情 -->
     {% if result.error %}
-    <div style="background: #fff3cd; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ffc107;">
-        <h2 style="margin-top: 0; color: #856404;">错误详情</h2>
+    <div style="background: var(--fc-warning-subtle); padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--fc-warning);">
+        <h2 style="margin-top: 0; color: var(--fc-warning-dark);">错误详情</h2>
         <pre style="background: var(--fc-bg-card); padding: 15px; border-radius: 4px; overflow-x: auto;
                     font-size: 12px; border: 1px solid var(--fc-border);">{{ result.error }}</pre>
     </div>

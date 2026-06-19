@@ -19,7 +19,7 @@
   padding: 12px 20px;
   border: none;
   background: transparent;
-  color: #62788b;
+  color: var(--fc-text-secondary);
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
@@ -27,8 +27,8 @@
   transition: all .25s ease;
   position: relative;
 }
-.eq-tab:hover:not(.is-active) { color: #1b4d73; background: rgba(27,77,115,.06); }
-.eq-tab.is-active { color: #1b4d73; background: var(--fc-bg-card); border-radius: 12px 12px 0 0; box-shadow: 0 -2px 6px rgba(31,41,55,.04); }
+.eq-tab:hover:not(.is-active) { color: var(--fc-primary-dark); background: rgba(27,77,115,.06); }
+.eq-tab.is-active { color: var(--fc-primary-dark); background: var(--fc-bg-card); border-radius: 12px 12px 0 0; box-shadow: 0 -2px 6px rgba(31,41,55,.04); }
 .eq-tab.is-active::after {
   content: '';
   position: absolute;

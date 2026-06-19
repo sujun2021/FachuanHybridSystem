@@ -20,12 +20,12 @@
         align-items: center;
         margin-bottom: 20px;
         padding-bottom: 15px;
-        border-bottom: 1px solid #ddd;
+        border-bottom: 1px solid var(--fc-border);
     }
     .page-title {
         font-size: 22px;
         font-weight: 600;
-        color: #333;
+        color: var(--fc-text-secondary);
         margin: 0;
     }
 
@@ -35,8 +35,8 @@
         align-items: center;
         padding: 12px 15px;
         margin-bottom: 20px;
-        background: #f8f9fa;
-        border: 1px solid #dee2e6;
+        background: var(--fc-bg-muted);
+        border: 1px solid var(--fc-border);
         border-radius: 4px;
     }
     .status-dot {
@@ -46,14 +46,14 @@
         margin-right: 10px;
     }
     .status-dot.online {
-        background: #28a745;
+        background: var(--fc-success-text);
     }
     .status-dot.offline {
-        background: #dc3545;
+        background: var(--fc-error-text);
     }
     .status-text {
         font-size: 14px;
-        color: #495057;
+        color: var(--fc-text-secondary);
     }
 
     /* 操作按钮 */
@@ -77,13 +77,13 @@
     }
     .task-count {
         font-size: 14px;
-        color: #6c757d;
+        color: var(--fc-text-muted);
     }
 
     /* 任务卡片 */
     .task-item {
-        background: #fff;
-        border: 1px solid #dee2e6;
+        background: var(--fc-bg-card);
+        border: 1px solid var(--fc-border);
         border-radius: 4px;
         padding: 15px;
         margin-bottom: 10px;
@@ -127,7 +127,7 @@
 
     .task-meta {
         font-size: 13px;
-        color: #6c757d;
+        color: var(--fc-text-muted);
         margin-bottom: 10px;
     }
     .task-meta span {
@@ -148,10 +148,10 @@
         background: #f8f9fa;
         border: 1px solid #dee2e6;
         border-radius: 4px;
-        color: #6c757d;
+        color: var(--fc-text-muted);
     }
     .empty-state h3 {
-        color: #495057;
+        color: var(--fc-text-secondary);
         margin-bottom: 10px;
     }
     .empty-state p {

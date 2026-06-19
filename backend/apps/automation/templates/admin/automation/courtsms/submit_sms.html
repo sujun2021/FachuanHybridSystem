@@ -89,13 +89,13 @@
                         <td>{{ sms.id }}</td>
                         <td>
                             {% if sms.status == 'completed' %}
-                                <span style="color: green; font-weight: bold;">✓ {{ sms.get_status_display }}</span>
+                                <span style="color: var(--fc-success-text); font-weight: bold;">✓ {{ sms.get_status_display }}</span>
                             {% elif sms.status == 'failed' or sms.status == 'download_failed' %}
-                                <span style="color: red; font-weight: bold;">✗ {{ sms.get_status_display }}</span>
+                                <span style="color: var(--fc-error-text); font-weight: bold;">✗ {{ sms.get_status_display }}</span>
                             {% elif sms.status == 'pending_manual' %}
-                                <span style="color: orange; font-weight: bold;">⚠ {{ sms.get_status_display }}</span>
+                                <span style="color: var(--fc-warning-text); font-weight: bold;">⚠ {{ sms.get_status_display }}</span>
                             {% else %}
-                                <span style="color: blue;">⏳ {{ sms.get_status_display }}</span>
+                                <span style="color: var(--fc-info-text);">⏳ {{ sms.get_status_display }}</span>
                             {% endif %}
                         </td>
                         <td>
@@ -116,7 +116,7 @@
                                 </a>
                             {% elif sms.status == 'pending_manual' %}
                                 <a href="{% url 'admin:automation_courtsms_assign_case' sms.id %}"
-                                   style="color: orange; font-weight: bold;">
+                                   style="color: var(--fc-warning-text); font-weight: bold;">
                                     🔗 {% trans "需要指定案件" %}
                                 </a>
                             {% else %}
@@ -151,15 +151,15 @@
 }
 
 .alert-success {
-    color: #3c763d;
-    background-color: #dff0d8;
-    border-color: #d6e9c6;
+    color: var(--fc-success-text);
+    background-color: var(--fc-success-bg);
+    border-color: var(--fc-success-border);
 }
 
 .alert-error {
-    color: #a94442;
-    background-color: #f2dede;
-    border-color: #ebccd1;
+    color: var(--fc-error-text);
+    background-color: var(--fc-error-bg);
+    border-color: var(--fc-error-border);
 }
 
 .subtitle {

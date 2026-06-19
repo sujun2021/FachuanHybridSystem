@@ -51,14 +51,14 @@
                         </code>
                     </td>
                     <td style="padding: 12px;">
-                        <a href="{{ credential.url }}" target="_blank" style="color: #0066cc; text-decoration: none;">
+                        <a href="{{ credential.url }}" target="_blank" style="color: var(--fc-primary); text-decoration: none;">
                             {{ credential.url|truncatechars:40 }}
                         </a>
                     </td>
                     <td style="padding: 12px; text-align: center;">
                         <a href="{% url 'admin:automation_testcourt_test_login' credential.id %}"
                            class="button"
-                           style="padding: 8px 16px; background: #28a745; color: white; text-decoration: none;
+                           style="padding: 8px 16px; background: var(--fc-success); color: var(--fc-text-on-primary); text-decoration: none;
                                   border-radius: 4px; display: inline-block; font-weight: 500;">
                             🔐 测试登录
                         </a>
@@ -71,7 +71,7 @@
         <div style="padding: 30px; text-align: center; background: var(--fc-bg-muted); border-radius: 4px; margin-top: 15px;">
             <p style="color: var(--fc-text-muted); margin: 0;">
                 ⚠️ 暂无账号凭证，请先在
-                <a href="{% url 'admin:organization_accountcredential_changelist' %}" style="color: #0066cc;">
+                <a href="{% url 'admin:organization_accountcredential_changelist' %}" style="color: var(--fc-primary);">
                     组织管理 → 账号密码
                 </a>
                 中添加。
@@ -105,8 +105,8 @@
     </div>
 
     <!-- 提示信息 -->
-    <div style="margin-top: 30px; padding: 15px; background: #e7f3ff; border-radius: 4px; border-left: 4px solid #2196F3;">
-        <h3 style="margin-top: 0; color: #1976D2;">💡 使用提示</h3>
+    <div style="margin-top: 30px; padding: 15px; background: var(--fc-primary-subtle); border-radius: 4px; border-left: 4px solid var(--fc-primary);">
+        <h3 style="margin-top: 0; color: var(--fc-primary-dark);">💡 使用提示</h3>
         <ul style="margin: 10px 0; padding-left: 20px; color: var(--fc-text-muted);">
             <li>点击"测试登录"后，系统会自动打开浏览器窗口</li>
             <li>浏览器会自动执行登录操作，请不要手动关闭</li>
@@ -119,8 +119,8 @@
     </div>
 
     <!-- Token 使用示例 -->
-    <div style="margin-top: 30px; padding: 15px; background: #fff3cd; border-radius: 4px; border-left: 4px solid #ffc107;">
-        <h3 style="margin-top: 0; color: #856404;">📝 Token 使用示例</h3>
+    <div style="margin-top: 30px; padding: 15px; background: var(--fc-warning-subtle); border-radius: 4px; border-left: 4px solid var(--fc-warning);">
+        <h3 style="margin-top: 0; color: var(--fc-warning-text);">📝 Token 使用示例</h3>
         <pre style="background: var(--fc-bg-muted-light); padding: 15px; border-radius: 4px; overflow-x: auto; color: var(--fc-text-secondary);"><code>from apps.automation.services.scraper.core.token_service import TokenService
 
 # 获取 Token
