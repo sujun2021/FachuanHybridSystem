@@ -17,6 +17,8 @@ from .court_filing_helpers import (
     _build_materials_map,
     _build_party_payloads,
     _build_session_status_payload,
+    _enrich_agent_info_from_lawyer,
+    _enrich_parties_from_complaint_ocr,
     _get_organization_service,
     _infer_filing_type,
     _normalize_filing_engine,
@@ -246,6 +248,16 @@ def execute_court_filing(request: HttpRequest, payload: ExecuteCourtFilingIn) ->
         }
 
     case_data["materials"] = materials_map
+
+    # ── OCR 增强：从起诉状提取当事人信息，补充缺失字段 ──
+    _enrich_parties_from_complaint_ocr(
+        materials_map=materials_map,
+        plaintiffs=plaintiffs,
+        defendants=defendants,
+        third_parties=third_parties,
+    )
+    # ── Lawyer 模型补齐代理人信息 ──
+    _enrich_agent_info_from_lawyer(agents=agents, case=case)
 
     if filing_type == _FILING_TYPE_EXECUTION:
         original_case_number = _resolve_original_case_number(case)

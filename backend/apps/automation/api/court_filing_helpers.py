@@ -137,6 +137,7 @@ def _build_party_payloads(
             party_data["uscc"] = client.id_number or ""
             party_data["legal_rep"] = client.legal_representative or ""
             party_data["legal_rep_id_number"] = client.legal_representative_id_number or ""
+            party_data["fddbrsjhm_phone"] = getattr(client, "fddbrsjhm_phone", "") or ""
 
         legal_status = str(getattr(party, "legal_status", "") or "").strip()
         if legal_status in _PLAINTIFF_SIDE_STATUSES:
@@ -501,6 +502,132 @@ def _build_materials_map(*, case: Any, filing_type: str) -> dict[str, list[tuple
         materials_map.setdefault(slot, []).append((normalized_path, original_name))
 
     return materials_map
+
+
+def _enrich_parties_from_complaint_ocr(
+    *,
+    materials_map: dict[str, list[tuple[str, str]]],
+    plaintiffs: list[dict[str, Any]],
+    defendants: list[dict[str, Any]],
+    third_parties: list[dict[str, Any]],
+) -> None:
+    """从起诉状 PDF（materials 槽位 "0"）OCR 提取当事人信息并补充。
+
+    在立案流程中调用：先构建当事人 payload，再尝试从起诉状 OCR
+    补充缺失的法定代表人手机号、法定代表人姓名等字段。
+    """
+    complaint_items = materials_map.get("0", [])
+    if not complaint_items:
+        logger.info("未找到起诉状材料（槽位 0），跳过 OCR 增强")
+        return
+
+    complaint_path = complaint_items[0][0]  # 第一个起诉状文件路径
+    logger.info("开始 OCR 提取起诉状当事人信息: %s", complaint_path)
+
+    try:
+        from apps.automation.services.ocr.complaint_text_extractor import _extract_from_complaint_pdf
+        from apps.automation.services.ocr.complaint_party_parser import merge_ocr_with_client, parse_complaint_text
+
+        text = _extract_from_complaint_pdf(complaint_path)
+        if not text:
+            logger.warning("起诉状 OCR 提取失败，跳过当事人信息增强")
+            return
+
+        ocr_parties = parse_complaint_text(text)
+        logger.info(
+            "解析完成: 原告 %d 人, 被告 %d 人, 第三人 %d 人",
+            len(ocr_parties.get("plaintiffs", [])),
+            len(ocr_parties.get("defendants", [])),
+            len(ocr_parties.get("third_parties", [])),
+        )
+
+        # 合并到已有的当事人数据中
+        merge_ocr_with_client(
+            ocr_parties=ocr_parties,
+            existing_parties=plaintiffs,
+        )
+        merge_ocr_with_client(
+            ocr_parties=ocr_parties,
+            existing_parties=defendants,
+        )
+        merge_ocr_with_client(
+            ocr_parties=ocr_parties,
+            existing_parties=third_parties,
+        )
+        logger.info("OCR 当事人信息增强完成")
+
+    except Exception:
+        logger.exception("起诉状 OCR 增强失败（不阻塞立案）")
+
+
+def _enrich_agent_info_from_lawyer(
+    *,
+    agents: list[dict[str, Any]],
+    case: Any,
+) -> None:
+    """从 Lawyer 模型补充代理人缺失信息。
+
+    如果代理人的手机号、身份证号、执业证号任意为空，
+    尝试从 CaseAssignment → Lawyer 模型补齐。
+    """
+    assignments = list(getattr(case, "assignments", None) or [])
+    if not assignments:
+        return
+
+    from apps.organization.models import Lawyer
+
+    lawyer_ids = [
+        getattr(a, "lawyer_id", None)
+        for a in assignments
+        if getattr(a, "lawyer_id", None) is not None
+    ]
+    if not lawyer_ids:
+        return
+
+    lawyers = {
+        l.id: l
+        for l in Lawyer.objects.filter(id__in=lawyer_ids).select_related("law_firm")
+    }
+
+    for agent in agents:
+        if not isinstance(agent, dict):
+            continue
+        agent_name = agent.get("name", "").strip()
+
+        for lawyer in lawyers.values():
+            lawyer_name = (
+                (getattr(lawyer, "real_name", "") or getattr(lawyer, "username", ""))
+            ).strip()
+            if not agent_name or not lawyer_name or agent_name not in lawyer_name:
+                continue
+
+            # 补充缺失字段（不覆盖已有数据）
+            if not agent.get("id_number"):
+                lawyer_id_card = getattr(lawyer, "id_card", "")
+                if lawyer_id_card:
+                    agent["id_number"] = str(lawyer_id_card)
+                    logger.info("补充代理人身份证号: %s", agent_name)
+
+            if not agent.get("phone"):
+                lawyer_phone = getattr(lawyer, "phone", "")
+                if lawyer_phone:
+                    agent["phone"] = str(lawyer_phone)
+                    logger.info("补充代理人手机号: %s", agent_name)
+
+            if not agent.get("bar_number"):
+                lawyer_license = getattr(lawyer, "license_no", "")
+                if lawyer_license:
+                    agent["bar_number"] = str(lawyer_license)
+                    logger.info("补充代理人执业证号: %s", agent_name)
+
+            if not agent.get("address"):
+                law_firm = getattr(lawyer, "law_firm", None)
+                if law_firm:
+                    firm_address = getattr(law_firm, "address", "")
+                    if firm_address:
+                        agent["address"] = str(firm_address)
+                        logger.info("补充代理人律所地址: %s", agent_name)
+            break
 
 
 def _build_session_status_payload(*, task: Any) -> dict[str, Any]:

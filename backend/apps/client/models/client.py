@@ -37,6 +37,9 @@ class Client(models.Model):
     legal_representative_id_number = models.CharField(
         max_length=64, blank=True, null=True, verbose_name="法定代表人/负责人身份证号码"
     )
+    fddbrsjhm_phone = models.CharField(
+        max_length=20, blank=True, default="", verbose_name="法定代表人手机号（对应一张网 fddbrsjhm）"
+    )
     is_our_client = models.BooleanField(default=False, verbose_name="是否为我方当事人")
 
     history = HistoricalRecords()

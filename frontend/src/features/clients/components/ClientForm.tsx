@@ -51,6 +51,7 @@ const clientFormSchema = z
     address: z.string().optional(),
     legal_representative: z.string().optional(),
     legal_representative_id_number: z.string().optional(),
+    fddbrsjhm_phone: z.string().optional(),
     is_our_client: z.boolean(),
   })
   .refine(
@@ -71,7 +72,8 @@ export function ClientForm({ clientId, mode }: ClientFormProps) {
     resolver: zodResolver(clientFormSchema),
     defaultValues: {
       name: '', client_type: 'natural', id_number: '', phone: '',
-      address: '', legal_representative: '', legal_representative_id_number: '', is_our_client: true,
+      address: '', legal_representative: '', legal_representative_id_number: '',
+      fddbrsjhm_phone: '', is_our_client: true,
     },
   })
 
@@ -91,6 +93,7 @@ export function ClientForm({ clientId, mode }: ClientFormProps) {
         id_number: client.id_number || '', phone: client.phone || '',
         address: client.address || '', legal_representative: client.legal_representative || '',
         legal_representative_id_number: client.legal_representative_id_number || '',
+        fddbrsjhm_phone: client.fddbrsjhm_phone || '',
         is_our_client: client.is_our_client,
       })
     }
@@ -145,6 +148,7 @@ export function ClientForm({ clientId, mode }: ClientFormProps) {
       address: data.address || null,
       legal_representative: data.client_type !== 'natural' ? data.legal_representative || null : null,
       legal_representative_id_number: data.client_type !== 'natural' ? data.legal_representative_id_number || null : null,
+      fddbrsjhm_phone: data.client_type !== 'natural' ? data.fddbrsjhm_phone || null : null,
       is_our_client: data.is_our_client,
     }
 
@@ -265,6 +269,17 @@ export function ClientForm({ clientId, mode }: ClientFormProps) {
                   <FormItem>
                     <FormLabel>{legalRepLabel}身份证号</FormLabel>
                     <FormControl><Input placeholder={`请输入${legalRepLabel}身份证号`} disabled={isPending} className="h-11" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              )}
+
+              {showLegalRep && (
+                <FormField control={form.control} name="fddbrsjhm_phone" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{legalRepLabel}手机号（一张网立案用）</FormLabel>
+                    <FormControl><Input placeholder={`请输入${legalRepLabel}手机号`} disabled={isPending} className="h-11" {...field} /></FormControl>
+                    <FormDescription>如果没有法定代表人手机号，将自动使用公司电话</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )} />

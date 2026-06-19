@@ -87,6 +87,7 @@ export interface Client {
   id_number: string | null
   legal_representative: string | null
   legal_representative_id_number: string | null
+  fddbrsjhm_phone: string | null
   identity_docs: IdentityDoc[]
   created_at?: string
 }
@@ -100,6 +101,7 @@ export interface ClientInput {
   id_number?: string | null
   legal_representative?: string | null
   legal_representative_id_number?: string | null
+  fddbrsjhm_phone?: string | null
 }
 
 // ============================================================================

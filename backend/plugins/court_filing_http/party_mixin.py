@@ -69,7 +69,7 @@ class PartyApiMixin:
                 "fddbrzw": "",
                 "fddbrzjlx": "1501_000015-1",
                 "fddbrzjhm": party.get("legal_rep_id_number", ""),
-                "fddbrsjhm": party.get("phone", ""),
+                "fddbrsjhm": party.get("fddbrsjhm_phone") or party.get("phone", ""),
                 "fddbrgddh": party.get("phone", ""),
                 "dwxz": "",
                 "dsrlx": "1501_000011-2",
