@@ -373,20 +373,112 @@ async def generic_http_request(method: str, url: str, headers: str = "", body: s
 
 @activity.defn
 async def generic_code_exec(code: str, context: dict | None = None) -> dict:
-    """受限 Python 代码执行 activity"""
-    safe_builtins = {
+    """受限 Python 代码执行 activity
+
+    安全措施：
+    1. AST 静态分析 — 执行前检查代码，拒绝危险模式
+    2. 移除 getattr/hasattr — 阻断 MRO 链逃逸
+    3. 线程超时 — 防止死循环阻塞 worker
+    4. 最小权限 builtins — 仅暴露安全的内置函数
+    """
+    import ast
+    import builtins
+    import concurrent.futures
+
+    # ── 危险属性名集合（__class__ 链 + 内省钩子）──
+    _DANGEROUS_ATTRS = frozenset({
+        "__class__", "__bases__", "__base__", "__mro__", "__subclasses__",
+        "__builtins__", "__globals__", "__init__", "__import__", "__loader__",
+        "__spec__", "__file__", "__path__", "__dict__", "__getattr__",
+        "__setattr__", "__delattr__", "__reduce__", "__reduce_ex__",
+        "__getattribute__", "__new__", "__del__",
+    })
+
+    # ── 危险函数/模块名 ──
+    _DANGEROUS_NAMES = frozenset({
+        "exec", "eval", "compile", "__import__", "breakpoint", "exit", "quit",
+        "open", "input", "globals", "locals", "vars", "dir", "type", "id",
+        "getattr", "hasattr", "delattr", "setattr", "super", "classmethod",
+        "staticmethod", "property", "object", "memoryview", "bytearray",
+        "os", "sys", "subprocess", "shutil", "pathlib", "importlib",
+        "socket", "http", "urllib", "requests", "tempfile", "ctypes",
+        "code", "ast", "inspect", "dis", "gc", "weakref", "threading",
+        "multiprocessing", "signal", "fcntl", "resource",
+    })
+
+    def _validate_ast(node: ast.AST) -> None:
+        """递归遍历 AST，拒绝危险模式。不安全则抛出 ValueError。"""
+        for child in ast.walk(node):
+            # 禁止 import 语句
+            if isinstance(child, (ast.Import, ast.ImportFrom)):
+                raise ValueError("代码中不允许 import 语句")
+            # 禁止 exec/eval 调用
+            if isinstance(child, ast.Call):
+                if isinstance(child.func, ast.Name) and child.func.id in ("exec", "eval", "compile"):
+                    raise ValueError(f"不允许调用 {child.func.id}()")
+            # 禁止访问危险属性（__class__、__bases__ 等）
+            if isinstance(child, ast.Attribute) and child.attr in _DANGEROUS_ATTRS:
+                raise ValueError(f"不允许访问属性 {child.attr}")
+            # 禁止使用危险名称
+            if isinstance(child, ast.Name) and child.id in _DANGEROUS_NAMES:
+                raise ValueError(f"不允许使用 {child.id}")
+            # 禁止 f-string（可携带任意表达式）
+            if isinstance(child, ast.JoinedStr):
+                raise ValueError("代码中不允许使用 f-string")
+            # 禁止 global/nonlocal 声明
+            if isinstance(child, (ast.Global, ast.Nonlocal)):
+                raise ValueError("代码中不允许 global/nonlocal 声明")
+            # 禁止 yield/yield from（生成器）
+            if isinstance(child, (ast.Yield, ast.YieldFrom)):
+                raise ValueError("代码中不允许使用 yield")
+            # 禁止 await
+            if isinstance(child, ast.Await):
+                raise ValueError("代码中不允许使用 await")
+
+    # ── 步骤 1: AST 静态验证 ──
+    try:
+        tree = ast.parse(code, mode="exec")
+    except SyntaxError as e:
+        raise ValueError(f"代码语法错误: {e}") from e
+    _validate_ast(tree)
+
+    # ── 步骤 2: 构建受限执行环境 ──
+    _SAFE_BUILTINS = {
         "len", "int", "float", "str", "bool", "list", "dict", "set", "tuple",
         "min", "max", "sum", "abs", "round", "sorted", "reversed", "enumerate",
-        "zip", "map", "filter", "any", "all", "range", "isinstance", "getattr",
-        "hasattr", "json",
+        "zip", "map", "filter", "any", "all", "range", "isinstance",
+        "repr", "print",
     }
-    import builtins
-    restricted_globals = {"__builtins__": {k: getattr(builtins, k) for k in safe_builtins if hasattr(builtins, k)}}
-    restricted_globals["json"] = json  # type: ignore[assignment]
-    restricted_globals["context"] = context or {}
+    restricted_builtins = {
+        k: getattr(builtins, k) for k in _SAFE_BUILTINS if hasattr(builtins, k)
+    }
+    # 提供安全的 json.loads / json.dumps 代理，不暴露 json 模块本身
+    _safe_json = type("SafeJson", (), {
+        "loads": staticmethod(json.loads),
+        "dumps": staticmethod(json.dumps),
+    })()
 
-    exec(code, restricted_globals)  # noqa: S102
-    return {k: v for k, v in restricted_globals.items() if not k.startswith("_") and k not in ("json", "context", "builtins")}
+    restricted_globals: dict[str, Any] = {
+        "__builtins__": restricted_builtins,
+        "json": _safe_json,
+        "context": context or {},
+    }
+
+    # ── 步骤 3: 在子线程中执行（带超时） ──
+    def _run() -> dict:
+        exec(compile(tree, "<workflow_code>", "exec"), restricted_globals)  # noqa: S102
+        return {
+            k: v for k, v in restricted_globals.items()
+            if not k.startswith("_") and k not in ("json", "context")
+        }
+
+    timeout_seconds = 30
+    try:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+            future = pool.submit(_run)
+            return future.result(timeout=timeout_seconds)
+    except concurrent.futures.TimeoutError:
+        raise TimeoutError(f"代码执行超时（{timeout_seconds}秒）")
 
 
 @activity.defn

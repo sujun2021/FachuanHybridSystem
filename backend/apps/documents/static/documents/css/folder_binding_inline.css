@@ -42,8 +42,8 @@
     flex: 1;
     min-height: 28px;
     padding: 4px 10px;
-    background: #f8f9fa;
-    border: 1px solid #ddd;
+    background: var(--fc-bg-muted);
+    border: 1px solid var(--fc-border);
     border-radius: 4px;
     font-size: 13px;
     display: flex;
@@ -51,19 +51,19 @@
 }
 
 .folder-selected-display .placeholder {
-    color: #999;
+    color: var(--fc-text-muted);
     font-style: italic;
 }
 
 .folder-selected-display .path-text {
-    color: #1565c0;
+    color: var(--fc-primary-dark);
     font-weight: 500;
 }
 
 /* 选择按钮 */
 .folder-select-btn {
-    background: #417690;
-    color: white;
+    background: var(--fc-admin-blue);
+    color: var(--fc-text-on-primary);
     border: none;
     padding: 6px 14px;
     border-radius: 4px;
@@ -74,7 +74,7 @@
 }
 
 .folder-select-btn:hover {
-    background: #205067;
+    background: var(--fc-admin-blue-hover);
 }
 
 /* 树形弹出层 */
@@ -83,8 +83,8 @@
     top: 100%;
     left: 0;
     z-index: 9999;
-    background: white;
-    border: 1px solid #ccc;
+    background: var(--fc-bg-card);
+    border: 1px solid var(--fc-border);
     border-radius: 6px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.2);
     min-width: 320px;
@@ -101,11 +101,11 @@
 .tree-empty {
     padding: 20px;
     text-align: center;
-    color: #666;
+    color: var(--fc-text-muted);
 }
 
 .tree-error {
-    color: #c62828;
+    color: var(--fc-error-text);
 }
 
 /* 树形列表 */
@@ -136,12 +136,12 @@
 }
 
 .folder-tree .tree-row:hover {
-    background: #f0f0f0;
+    background: var(--fc-bg-muted-light);
 }
 
 .folder-tree .tree-row.selected {
-    background: #e3f2fd;
-    color: #1565c0;
+    background: var(--fc-primary-subtle);
+    color: var(--fc-primary-dark);
 }
 
 /* 展开/折叠图标 */
@@ -152,7 +152,7 @@
     align-items: center;
     justify-content: center;
     font-size: 10px;
-    color: #666;
+    color: var(--fc-text-muted);
     flex-shrink: 0;
     margin-right: 2px;
 }
@@ -162,7 +162,7 @@
 }
 
 .folder-tree .tree-toggle.has-children:hover {
-    color: #1976d2;
+    color: var(--fc-primary-dark);
 }
 
 /* 文件夹图标 */
@@ -182,6 +182,6 @@
 
 /* 子节点容器 */
 .folder-tree .tree-children {
-    border-left: 1px dashed #ddd;
+    border-left: 1px dashed var(--fc-border);
     margin-left: 9px;
 }

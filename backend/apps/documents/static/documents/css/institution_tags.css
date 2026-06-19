@@ -5,16 +5,16 @@
 }
 
 .institution-tags-wrapper {
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--fc-border-input);
     border-radius: 6px;
     padding: 6px 8px;
-    background: #fff;
+    background: var(--fc-bg-card);
     min-height: 42px;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .institution-tags-wrapper:focus-within {
-    border-color: #417690;
+    border-color: var(--fc-admin-blue);
     box-shadow: 0 0 0 3px rgba(65, 118, 144, 0.15);
 }
 
@@ -60,7 +60,7 @@
 }
 
 .institution-tag-remove:hover {
-    background: #c0392b;
+    background: var(--fc-error-text);
     color: #fff;
 }
 

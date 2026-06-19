@@ -7,7 +7,7 @@
 <style>
 @media print {
     .no-print { display: none !important; }
-    body { background: #fff !important; }
+    body { background: var(--fc-bg-card) !important; }
     .report-card { box-shadow: none !important; margin: 0 !important; border-radius: 0 !important; }
     .report-body { padding: 32px 40px !important; }
 }
@@ -18,7 +18,7 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
     background: #f0f2f5;
     min-height: 100vh;
-    color: #1d2129;
+    color: var(--fc-text-primary);
     -webkit-font-smoothing: antialiased;
 }
 
@@ -32,17 +32,17 @@ body {
     -webkit-backdrop-filter: saturate(180%) blur(20px);
     border-bottom: 1px solid rgba(0,0,0,.06);
 }
-.action-bar-title { font-size: 15px; font-weight: 600; color: #1d2129; display: flex; align-items: center; gap: 8px; }
+.action-bar-title { font-size: 15px; font-weight: 600; color: var(--fc-text-primary); display: flex; align-items: center; gap: 8px; }
 .action-bar-title svg { width: 20px; height: 20px; color: #165dff; }
 .action-btns { display: flex; gap: 8px; }
 .btn {
     display: inline-flex; align-items: center; gap: 6px;
     padding: 7px 16px; border-radius: 8px; font-size: 13px; font-weight: 500;
-    text-decoration: none; cursor: pointer; border: 1px solid #e5e6eb; background: #fff;
+    text-decoration: none; cursor: pointer; border: 1px solid var(--fc-border); background: var(--fc-bg-card);
     color: #4e5969; transition: all .15s;
 }
-.btn:hover { background: #f7f8fa; border-color: #c9cdd4; }
-.btn-primary { background: #165dff; color: #fff; border-color: #165dff; }
+.btn:hover { background: var(--fc-bg-muted); border-color: #c9cdd4; }
+.btn-primary { background: #165dff; color: var(--fc-text-on-primary); border-color: #165dff; }
 .btn-primary:hover { background: #0e42d2; border-color: #0e42d2; }
 
 /* ── Page ── */
@@ -53,7 +53,7 @@ body {
     background: linear-gradient(135deg, #0e1d3d 0%, #1a3a6b 50%, #2563a8 100%);
     border-radius: 20px;
     padding: 52px 56px 44px;
-    color: #fff;
+    color: var(--fc-text-on-primary);
     position: relative;
     overflow: hidden;
     margin-bottom: 24px;
@@ -94,7 +94,7 @@ body {
 
 /* ── Report card ── */
 .report-card {
-    background: #fff;
+    background: var(--fc-bg-card);
     border-radius: 16px;
     box-shadow: 0 1px 3px rgba(0,0,0,.04), 0 8px 32px rgba(0,0,0,.06);
     overflow: hidden;
@@ -105,11 +105,11 @@ body {
     padding: 48px 56px 56px;
     line-height: 1.85;
     font-size: 15px;
-    color: #1d2129;
+    color: var(--fc-text-primary);
 }
 
 .report-body h1 {
-    font-size: 24px; font-weight: 700; color: #1d2129;
+    font-size: 24px; font-weight: 700; color: var(--fc-text-primary);
     margin: 40px 0 20px;
     padding-bottom: 12px;
     border-bottom: 2px solid #165dff;
@@ -117,7 +117,7 @@ body {
 .report-body h1:first-child { margin-top: 0; }
 
 .report-body h2 {
-    font-size: 18px; font-weight: 600; color: #1d2129;
+    font-size: 18px; font-weight: 600; color: var(--fc-text-primary);
     margin: 32px 0 14px;
     display: flex; align-items: center; gap: 10px;
 }
@@ -128,7 +128,7 @@ body {
 }
 
 .report-body h3 {
-    font-size: 16px; font-weight: 600; color: #1d2129;
+    font-size: 16px; font-weight: 600; color: var(--fc-text-primary);
     margin: 24px 0 10px;
 }
 
@@ -143,12 +143,12 @@ body {
 }
 .report-body li::marker { color: #86909c; }
 
-.report-body strong { color: #1d2129; font-weight: 600; }
+.report-body strong { color: var(--fc-text-primary); font-weight: 600; }
 
 .report-body blockquote {
     margin: 16px 0;
     padding: 14px 20px;
-    background: #f7f8fa;
+    background: var(--fc-bg-muted);
     border-left: 4px solid #165dff;
     border-radius: 0 8px 8px 0;
     color: #4e5969;
@@ -158,12 +158,12 @@ body {
     width: 100%; border-collapse: separate; border-spacing: 0;
     margin: 16px 0; font-size: 14px;
     border-radius: 8px; overflow: hidden;
-    border: 1px solid #e5e6eb;
+    border: 1px solid var(--fc-border);
 }
 .report-body th {
-    background: #f7f8fa; padding: 12px 16px;
-    text-align: left; font-weight: 600; color: #1d2129;
-    border-bottom: 1px solid #e5e6eb;
+    background: var(--fc-bg-muted); padding: 12px 16px;
+    text-align: left; font-weight: 600; color: var(--fc-text-primary);
+    border-bottom: 1px solid var(--fc-border);
 }
 .report-body td {
     padding: 12px 16px; border-bottom: 1px solid #f2f3f5;
@@ -176,13 +176,13 @@ body {
 }
 
 .report-body hr {
-    border: none; height: 1px; background: #e5e6eb; margin: 32px 0;
+    border: none; height: 1px; background: var(--fc-border); margin: 32px 0;
 }
 
 /* ── Footer ── */
 .report-footer {
     padding: 24px 56px;
-    background: #f7f8fa;
+    background: var(--fc-bg-muted);
     border-top: 1px solid #f2f3f5;
     font-size: 13px; color: #86909c;
     display: flex; align-items: center; justify-content: space-between;

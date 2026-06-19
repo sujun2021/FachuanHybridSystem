@@ -293,7 +293,7 @@ class IdentityRecognitionInline {
 
         // 如果没有有效数据，显示提示
         if (this.resultGrid.children.length === 0) {
-            this.resultGrid.innerHTML = '<div class="text-center" style="color: #999; padding: 20px;">未识别到有效信息</div>';
+            this.resultGrid.innerHTML = '<div class="text-center" style="color: var(--fc-text-muted); padding: 20px;">未识别到有效信息</div>';
         }
     }
 
@@ -439,8 +439,8 @@ class IdentityRecognitionInline {
             // 高亮填充的字段
             const field = document.getElementById('id_legal_representative_id_number');
             if (field && field.value) {
-                field.style.backgroundColor = '#e8f5e8';
-                field.style.borderColor = '#4caf50';
+                field.style.backgroundColor = 'var(--fc-success-bg)';
+                field.style.borderColor = 'var(--fc-success-text)';
                 field.style.transition = 'all 0.3s ease';
                 setTimeout(() => {
                     field.style.backgroundColor = '';

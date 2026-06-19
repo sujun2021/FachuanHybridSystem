@@ -233,8 +233,8 @@
 .evidence-merge-progress {
     margin: 12px 0;
     padding: 12px 14px;
-    border: 1px solid #dbeafe;
-    background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);
+    border: 1px solid var(--fc-info-border);
+    background: linear-gradient(180deg, var(--fc-info-bg) 0%, var(--fc-bg-card) 100%);
     border-radius: 12px;
     box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
     display: none;
@@ -249,7 +249,7 @@
 
 .evidence-merge-progress__text {
     font-weight: 600;
-    color: #0f172a;
+    color: var(--fc-text-heading);
     line-height: 1.35;
     font-family: inherit;
 }
@@ -258,7 +258,7 @@
     flex: 1;
     max-width: 560px;
     height: 10px;
-    background: #dbeafe;
+    background: var(--fc-info-bg);
     border-radius: 999px;
     overflow: hidden;
 }
@@ -266,13 +266,13 @@
 .evidence-merge-progress__bar {
     height: 10px;
     width: 0%;
-    background: linear-gradient(90deg, #2563eb 0%, #06b6d4 100%);
+    background: linear-gradient(90deg, var(--fc-primary) 0%, #06b6d4 100%);
     border-radius: 999px;
 }
 
 .evidence-merge-progress__error {
     margin-top: 8px;
-    color: #b91c1c;
+    color: var(--fc-error-text);
     display: none;
     white-space: pre-wrap;
     font-size: 12.5px;

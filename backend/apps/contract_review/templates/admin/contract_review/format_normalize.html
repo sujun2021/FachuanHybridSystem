@@ -109,20 +109,20 @@
         text-transform: uppercase;
     }
     .task-status.pending {
-        background: #fff3cd;
-        color: #856404;
+        background: var(--fc-warning-bg);
+        color: var(--fc-warning-text);
     }
     .task-status.processing {
         background: #cce5ff;
         color: #004085;
     }
     .task-status.completed {
-        background: #d4edda;
-        color: #155724;
+        background: var(--fc-success-bg);
+        color: var(--fc-success-text);
     }
     .task-status.failed {
-        background: #f8d7da;
-        color: #721c24;
+        background: var(--fc-error-bg);
+        color: var(--fc-error-text);
     }
 
     .task-meta {
@@ -138,15 +138,15 @@
         display: flex;
         gap: 8px;
         padding-top: 10px;
-        border-top: 1px solid #eee;
+        border-top: 1px solid var(--fc-border);
     }
 
     /* 空状态 */
     .empty-state {
         text-align: center;
         padding: 40px;
-        background: #f8f9fa;
-        border: 1px solid #dee2e6;
+        background: var(--fc-bg-muted);
+        border: 1px solid var(--fc-border);
         border-radius: 4px;
         color: var(--fc-text-muted);
     }
@@ -166,14 +166,14 @@
         font-size: 14px;
     }
     .alert-success {
-        background: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
+        background: var(--fc-success-bg);
+        color: var(--fc-success-text);
+        border: 1px solid var(--fc-success-border);
     }
     .alert-error {
-        background: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
+        background: var(--fc-error-bg);
+        color: var(--fc-error-text);
+        border: 1px solid var(--fc-error-border);
     }
 </style>
 {% endblock %}
@@ -213,7 +213,7 @@
     <!-- 任务列表 -->
     <div class="task-list">
         <div class="task-list-header">
-            <h2 style="font-size: 18px; margin: 0; color: #212529;">合同列表</h2>
+            <h2 style="font-size: 18px; margin: 0; color: var(--fc-text-heading);">合同列表</h2>
             <span class="task-count">{{ tasks|length }} 个任务</span>
         </div>
 
@@ -229,7 +229,7 @@
                     <span>用户: {{ task.user|default:"-" }}</span>
                     <span>创建: {{ task.created_at|date:"Y-m-d H:i" }}</span>
                     {% if task.output_file %}
-                    <span style="color: #28a745;">✓ 已处理</span>
+                    <span style="color: var(--fc-success-text);">✓ 已处理</span>
                     {% else %}
                     <span style="color: #ffc107;">⏳ 待处理</span>
                     {% endif %}

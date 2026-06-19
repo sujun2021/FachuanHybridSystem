@@ -19,12 +19,12 @@
 }
 
 .ir-upload-zone:hover {
-    border-color: #417690;
-    background: #eef4f8;
+    border-color: var(--fc-admin-blue);
+    background: var(--fc-primary-subtle);
 }
 
 .ir-upload-zone.dragging {
-    border-color: #417690;
+    border-color: var(--fc-admin-blue);
     background: #e3eef5;
     border-style: solid;
 }
@@ -37,19 +37,19 @@
 
 .ir-upload-zone p {
     margin: 4px 0;
-    color: #555;
+    color: var(--fc-text-muted);
     font-size: 0.95rem;
 }
 
 .ir-upload-zone .upload-hint {
     font-size: 0.8rem;
-    color: #aaa;
+    color: var(--fc-text-muted);
     margin-top: 6px;
 }
 
 /* Progress Bar */
 .ir-progress-bar {
-    background: #e9ecef;
+    background: var(--fc-border);
     border-radius: 4px;
     height: 6px;
     overflow: hidden;
@@ -58,7 +58,7 @@
 
 .ir-progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #417690, #5a9ab5);
+    background: linear-gradient(90deg, var(--fc-admin-blue), #5a9ab5);
     border-radius: 4px;
     transition: width 0.3s ease;
 }
@@ -67,7 +67,7 @@
 .ir-section-title {
     font-size: 0.95rem;
     font-weight: 600;
-    color: #417690;
+    color: var(--fc-admin-blue);
     margin: 24px 0 12px;
     padding-bottom: 6px;
     border-bottom: 2px solid #d0e4ed;
@@ -109,7 +109,7 @@
     align-items: center;
     gap: 14px;
     font-size: 0.85rem;
-    color: #666;
+    color: var(--fc-text-muted);
 }
 
 .ir-category-header .category-subtotal {
@@ -119,7 +119,7 @@
 }
 
 .ir-category-header .toggle-icon {
-    color: #999;
+    color: var(--fc-text-muted);
     font-size: 0.75rem;
     transition: transform 0.2s;
 }
@@ -140,7 +140,7 @@
     padding: 8px 12px;
     text-align: left;
     font-weight: 600;
-    color: #666;
+    color: var(--fc-text-muted);
     border-bottom: 1px solid #e5edf2;
     white-space: nowrap;
     font-size: 0.8rem;
@@ -151,7 +151,7 @@
 .ir-invoice-table td {
     padding: 9px 12px;
     border-bottom: 1px solid #f2f5f7;
-    color: #333;
+    color: var(--fc-text-secondary);
     vertical-align: middle;
 }
 
@@ -210,8 +210,8 @@
 
 /* Duplicate Section */
 .ir-duplicate-section {
-    background: #fafafa;
-    border: 1px solid #e0e0e0;
+    background: var(--fc-bg-muted-light);
+    border: 1px solid var(--fc-border);
     border-radius: 8px;
     margin-bottom: 16px;
     overflow: hidden;
@@ -219,15 +219,15 @@
 
 .ir-duplicate-header {
     padding: 10px 16px;
-    background: #f2f2f2;
+    background: var(--fc-bg-muted);
     font-weight: 600;
-    color: #888;
+    color: var(--fc-text-muted);
     font-size: 0.875rem;
 }
 
 .ir-duplicate-row td {
-    background: #fafafa !important;
-    color: #bbb !important;
+    background: var(--fc-bg-muted-light) !important;
+    color: var(--fc-text-muted) !important;
     text-decoration: line-through;
 }
 
@@ -278,9 +278,9 @@
 }
 
 .ir-download-btns .btn-pdf {
-    background: #dc3545;
-    color: #fff;
-    border-color: #dc3545;
+    background: var(--fc-error-text);
+    color: var(--fc-text-on-primary);
+    border-color: var(--fc-error-text);
 }
 
 .ir-download-btns .btn-pdf:hover {
@@ -288,9 +288,9 @@
 }
 
 .ir-download-btns .btn-zip {
-    background: #417690;
-    color: #fff;
-    border-color: #417690;
+    background: var(--fc-admin-blue);
+    color: var(--fc-text-on-primary);
+    border-color: var(--fc-admin-blue);
 }
 
 .ir-download-btns .btn-zip:hover {
@@ -307,18 +307,18 @@
 }
 
 .ir-record-status.success {
-    background: #d4edda;
-    color: #155724;
+    background: var(--fc-success-bg);
+    color: var(--fc-success-text);
 }
 
 .ir-record-status.failed {
-    background: #f8d7da;
-    color: #721c24;
+    background: var(--fc-error-bg);
+    color: var(--fc-error-text);
 }
 
 .ir-record-status.pending {
-    background: #fff3cd;
-    color: #856404;
+    background: var(--fc-warning-bg);
+    color: var(--fc-warning-text);
 }
 
 /* Upload status message */
@@ -330,22 +330,22 @@
 }
 
 .ir-upload-message.success {
-    background: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
+    background: var(--fc-success-bg);
+    color: var(--fc-success-text);
+    border: 1px solid var(--fc-success-border);
 }
 
 .ir-upload-message.error {
-    background: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
+    background: var(--fc-error-bg);
+    color: var(--fc-error-text);
+    border: 1px solid var(--fc-error-border);
 }
 
 /* Empty state */
 .ir-empty-state {
     text-align: center;
     padding: 48px 20px;
-    color: #bbb;
+    color: var(--fc-text-muted);
     font-size: 0.9rem;
 }
 
@@ -372,7 +372,7 @@
     border-radius: 5px;
     padding: 4px 12px;
     font-size: 0.82rem;
-    color: #417690;
+    color: var(--fc-admin-blue);
     cursor: pointer;
     transition: background 0.15s;
 }
@@ -388,7 +388,7 @@
 
 .ir-merge-hint {
     font-size: 0.82rem;
-    color: #888;
+    color: var(--fc-text-muted);
     margin-bottom: 12px;
 }
 
@@ -400,7 +400,7 @@
 }
 
 .ir-merge-group {
-    background: #fff;
+    background: var(--fc-bg-card);
     border: 2px dashed #c5d8e4;
     border-radius: 8px;
     padding: 10px 12px;
@@ -410,8 +410,8 @@
 }
 
 .ir-merge-group.drag-over {
-    border-color: #417690;
-    background: #eef4f8;
+    border-color: var(--fc-admin-blue);
+    background: var(--fc-primary-subtle);
 }
 
 .ir-merge-group-header {
@@ -424,20 +424,20 @@
 .ir-merge-group-name {
     flex: 1;
     border: none;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--fc-border);
     background: transparent;
     font-size: 0.85rem;
     font-weight: 600;
-    color: #333;
+    color: var(--fc-text-secondary);
     padding: 2px 4px;
     outline: none;
 }
-.ir-merge-group-name:focus { border-bottom-color: #417690; }
+.ir-merge-group-name:focus { border-bottom-color: var(--fc-admin-blue); }
 
 .ir-merge-remove-btn {
     background: none;
     border: none;
-    color: #bbb;
+    color: var(--fc-text-muted);
     cursor: pointer;
     font-size: 0.9rem;
     padding: 0 2px;
@@ -468,7 +468,7 @@
 
 .ir-merge-tag-remove {
     cursor: pointer;
-    color: #999;
+    color: var(--fc-text-muted);
     font-size: 0.9rem;
     line-height: 1;
 }
@@ -476,7 +476,7 @@
 
 .ir-merge-drop-hint {
     font-size: 0.78rem;
-    color: #bbb;
+    color: var(--fc-text-muted);
     font-style: italic;
 }
 
@@ -493,20 +493,20 @@
     border: 2px dashed #c5d8e4;
     border-radius: 8px;
     padding: 10px 16px;
-    color: #999;
+    color: var(--fc-text-muted);
     cursor: pointer;
     font-size: 0.85rem;
     align-self: stretch;
     min-width: 100px;
     transition: border-color 0.15s, color 0.15s;
 }
-.ir-merge-add-btn:hover { border-color: #417690; color: #417690; }
+.ir-merge-add-btn:hover { border-color: var(--fc-admin-blue); color: var(--fc-admin-blue); }
 
 /* Merged badge */
 .ir-merged-badge {
     display: inline-block;
     background: #e3eef5;
-    color: #417690;
+    color: var(--fc-admin-blue);
     border-radius: 10px;
     padding: 1px 7px;
     font-size: 0.72rem;

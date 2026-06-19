@@ -7,7 +7,7 @@
     <!-- 标题栏 - 使用 Django Admin 标准样式 -->
     <h2 style="cursor: pointer;" onclick="toggleCaseLogSection()">
         {{ inline_admin_formset.opts.verbose_name_plural|capfirst }}
-        <span style="font-weight: normal; font-size: 12px;">({{ inline_admin_formset.formset.initial_form_count }}{% trans "条" %}，<a href="javascript:void(0)" id="case-log-sort-link" style="color: #fff;">{% trans "倒序" %}</a>)</span>
+        <span style="font-weight: normal; font-size: 12px;">({{ inline_admin_formset.formset.initial_form_count }}{% trans "条" %}，<a href="javascript:void(0)" id="case-log-sort-link" style="color: var(--fc-text-on-primary);">{% trans "倒序" %}</a>)</span>
         <span class="case-log-toggle" style="float: right; font-size: 10px;">▼</span>
     </h2>
 

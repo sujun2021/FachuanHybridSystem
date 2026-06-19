@@ -54,7 +54,7 @@
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* Back link */
-.back-link { display: inline-block; margin-bottom: 16px; color: #417690; text-decoration: none; font-size: 0.875rem; }
+.back-link { display: inline-block; margin-bottom: 16px; color: var(--fc-admin-blue); text-decoration: none; font-size: 0.875rem; }
 .back-link:hover { text-decoration: underline; }
 
 /* Select all */
@@ -110,21 +110,21 @@ window.FILL_ACTION_I18N = {
           <span x-text="showActiveCases ? '▲' : '▼'" style="font-size:0.7rem;"></span>
         </button>
         <template x-if="selectedCase">
-          <span style="font-size:0.8rem;color:#417690;white-space:nowrap;" x-text="'{% translate "已选" %}: ' + selectedCase.name"></span>
+          <span style="font-size:0.8rem;color:var(--fc-admin-blue);white-space:nowrap;" x-text="'{% translate "已选" %}: ' + selectedCase.name"></span>
         </template>
       </div>
 
       <!-- 搜索结果下拉 -->
       <div x-show="showDropdown && caseResults.length > 0"
            @click.outside="showDropdown = false"
-           style="position:absolute;top:100%;left:0;width:calc(100% - 120px);z-index:200;background:#fff;border:1px solid #ccc;border-radius:4px;max-height:240px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;">
+           style="position:absolute;top:100%;left:0;width:calc(100% - 120px);z-index:200;background:var(--fc-bg-card);border:1px solid var(--fc-border-input);border-radius:4px;max-height:240px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;">
         <template x-for="c in caseResults" :key="c.id">
           <div @click="selectCase(c); showDropdown = false;"
-               style="padding:8px 12px;cursor:pointer;font-size:0.875rem;border-bottom:1px solid #eee;"
+               style="padding:8px 12px;cursor:pointer;font-size:0.875rem;border-bottom:1px solid var(--fc-border);"
                @mouseenter="$el.style.background='#f0f4f8'"
-               @mouseleave="$el.style.background='#fff'">
+               @mouseleave="$el.style.background='var(--fc-bg-card)'">
             <span x-text="c.name" style="font-weight:600;"></span>
-            <small x-text="c.cause_of_action ? ' · ' + c.cause_of_action : ''" style="color:#888;"></small>
+            <small x-text="c.cause_of_action ? ' · ' + c.cause_of_action : ''" style="color:var(--fc-text-disabled);"></small>
           </div>
         </template>
       </div>
@@ -132,19 +132,19 @@ window.FILL_ACTION_I18N = {
       <!-- 在办案件面板 -->
       <div id="active-cases-panel"
            x-show="showActiveCases"
-           style="position:absolute;top:100%;right:0;width:360px;z-index:200;background:#fff;border:1px solid #ccc;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;">
-        <div style="padding:8px 12px;border-bottom:1px solid #eee;font-size:0.8rem;color:#666;font-weight:600;">
+           style="position:absolute;top:100%;right:0;width:360px;z-index:200;background:var(--fc-bg-card);border:1px solid var(--fc-border-input);border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;">
+        <div style="padding:8px 12px;border-bottom:1px solid var(--fc-border);font-size:0.8rem;color:var(--fc-text-muted);font-weight:600;">
           {% translate "在办案件" %}
         </div>
         <!-- 加载中 -->
         <template x-if="loadingActiveCases">
-          <div style="padding:16px;text-align:center;font-size:0.875rem;color:#888;">
+          <div style="padding:16px;text-align:center;font-size:0.875rem;color:var(--fc-text-disabled);">
             <span class="loading-spinner"></span>{% translate "加载中..." %}
           </div>
         </template>
         <!-- 空列表 -->
         <template x-if="!loadingActiveCases && activeCases.length === 0">
-          <div style="padding:16px;text-align:center;font-size:0.875rem;color:#aaa;">
+          <div style="padding:16px;text-align:center;font-size:0.875rem;color:var(--fc-text-disabled);">
             {% translate "暂无在办案件" %}
           </div>
         </template>
@@ -152,11 +152,11 @@ window.FILL_ACTION_I18N = {
         <div style="max-height:300px;overflow-y:auto;">
           <template x-for="c in activeCases" :key="c.id">
             <div @click="selectCase(c); showActiveCases = false;"
-                 style="padding:10px 12px;cursor:pointer;font-size:0.875rem;border-bottom:1px solid #f0f0f0;"
+                 style="padding:10px 12px;cursor:pointer;font-size:0.875rem;border-bottom:1px solid var(--fc-border);"
                  @mouseenter="$el.style.background='#f0f4f8'"
-                 @mouseleave="$el.style.background='#fff'">
-              <div x-text="c.name" style="font-weight:600;color:#333;"></div>
-              <div style="font-size:0.75rem;color:#888;margin-top:2px;">
+                 @mouseleave="$el.style.background='var(--fc-bg-card)'">
+              <div x-text="c.name" style="font-weight:600;color:var(--fc-text-secondary);"></div>
+              <div style="font-size:0.75rem;color:var(--fc-text-disabled);margin-top:2px;">
                 <span x-text="c.cause_of_action || ''"></span>
                 <span x-show="c.case_number" x-text="' · ' + c.case_number" style="margin-left:4px;"></span>
               </div>
@@ -167,7 +167,7 @@ window.FILL_ACTION_I18N = {
     </div>
 
     <template x-if="searchingCases">
-      <p style="margin-top:6px;font-size:0.8rem;color:#888;"><span class="loading-spinner"></span>{% translate "搜索中..." %}</p>
+      <p style="margin-top:6px;font-size:0.8rem;color:var(--fc-text-disabled);"><span class="loading-spinner"></span>{% translate "搜索中..." %}</p>
     </template>
     <template x-if="partyError">
       <p class="result-error" x-text="partyError" style="margin-top:8px;"></p>
@@ -192,7 +192,7 @@ window.FILL_ACTION_I18N = {
                  :checked="selectedPartyIds.includes(p.id)"
                  @change="toggleParty(p.id)">
           <span x-text="p.name"></span>
-          <small x-text="p.role ? '(' + p.role + ')' : ''" style="color:#888;"></small>
+          <small x-text="p.role ? '(' + p.role + ')' : ''" style="color:var(--fc-text-disabled);"></small>
         </label>
       </template>
     </div>
@@ -203,7 +203,7 @@ window.FILL_ACTION_I18N = {
     <div class="fill-step-header">
       <h3><span class="step-badge">3</span>{% translate "自定义字段" %}</h3>
     </div>
-    <p style="color:#666;font-size:0.8rem;margin-bottom:12px;">{% translate "以下字段无法自动填充，请手动输入值" %}</p>
+    <p style="color:var(--fc-text-muted);font-size:0.8rem;margin-bottom:12px;">{% translate "以下字段无法自动填充，请手动输入值" %}</p>
     <template x-for="field in customFields" :key="field.mapping_id">
       <div class="custom-field-row">
         <label x-text="field.semantic_label"></label>
@@ -259,7 +259,7 @@ window.FILL_ACTION_I18N = {
                 <td>
                   <span x-show="item.value_source === 'auto'">{% translate "自动" %}</span>
                   <span x-show="item.value_source === 'manual'">{% translate "手动" %}</span>
-                  <span x-show="item.value_source === 'empty'" style="color:#dc3545;">{% translate "为空" %}</span>
+                  <span x-show="item.value_source === 'empty'" style="color:var(--fc-error-text);">{% translate "为空" %}</span>
                 </td>
                 <td x-text="item.fill_type"></td>
               </tr>
@@ -313,11 +313,11 @@ window.FILL_ACTION_I18N = {
         <template x-for="rec in (fillResult && fillResult.records ? fillResult.records : [])" :key="rec.id">
           <div class="result-item">
             <span x-text="rec.filename"></span>
-            <a :href="'/media/' + rec.file_path" style="margin-left:10px;color:#417690;">{% translate "下载" %}</a>
+            <a :href="'/media/' + rec.file_path" style="margin-left:10px;color:var(--fc-admin-blue);">{% translate "下载" %}</a>
           </div>
         </template>
       </div>
-      <div x-show="fillResult && fillResult.summary" style="margin-top:12px;padding:10px;background:#f9f9f9;border-radius:4px;font-size:0.8rem;">
+      <div x-show="fillResult && fillResult.summary" style="margin-top:12px;padding:10px;background:var(--fc-bg-muted-light);border-radius:4px;font-size:0.8rem;">
         <p>{% translate "总计" %}: <span x-text="fillResult && fillResult.summary ? fillResult.summary.total || 0 : 0"></span></p>
         <p>{% translate "成功" %}: <span x-text="fillResult && fillResult.summary ? fillResult.summary.success || 0 : 0"></span></p>
         <p>{% translate "失败" %}: <span x-text="fillResult && fillResult.summary ? fillResult.summary.failed || 0 : 0"></span></p>

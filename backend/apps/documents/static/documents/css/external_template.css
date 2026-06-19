@@ -33,13 +33,13 @@
 .et-mapping-table th,
 .et-mapping-table td {
     padding: 8px 12px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--fc-border);
     text-align: left;
     vertical-align: middle;
 }
 
 .et-mapping-table th {
-    background: #f8f8f8;
+    background: var(--fc-bg-muted);
     font-weight: 600;
 }
 
@@ -53,18 +53,18 @@
 .et-preview-table th,
 .et-preview-table td {
     padding: 8px 12px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--fc-border);
     text-align: left;
 }
 
 .et-preview-table th {
-    background: #f8f8f8;
+    background: var(--fc-bg-muted);
     font-weight: 600;
 }
 
 /* 填充预览 - 空值红色背景 */
 .et-empty-value {
-    background: #fff0f0 !important;
+    background: var(--fc-error-bg) !important;
 }
 
 /* 来源类型切换动画 */

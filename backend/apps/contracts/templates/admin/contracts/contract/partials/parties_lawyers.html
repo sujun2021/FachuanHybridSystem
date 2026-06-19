@@ -75,7 +75,7 @@
             <div class="card-header">
                 <span class="card-icon">📝</span>
                 <h3 class="card-title">{{ agreement.name|default:_("未命名补充协议") }} {% trans "当事人" %}</h3>
-                <span class="card-date" style="margin-left: auto; font-size: 13px; color: #6b7280;">{{ agreement.created_at|date:"Y-m-d" }}</span>
+                <span class="card-date" style="margin-left: auto; font-size: 13px; color: var(--fc-text-muted);">{{ agreement.created_at|date:"Y-m-d" }}</span>
             </div>
             {% if agreement.parties.all %}
             <div class="party-list">
@@ -166,7 +166,7 @@
 
                 <!-- 法人/非法人组织：法定代表人信息 -->
                 <template x-if="currentParty.clientType !== 'natural' && currentParty.legalRepName">
-                    <div class="detail-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                    <div class="detail-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--fc-border);">
                         <div class="detail-label" style="font-weight: 600; color: #374151;">
                             <span x-text="currentParty.clientType === 'legal' ? '法定代表人信息' : '负责人信息'"></span>
                         </div>
@@ -186,7 +186,7 @@
                 </template>
 
                 <!-- 复制全部按钮 -->
-                <div class="drawer-footer" style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
+                <div class="drawer-footer" style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--fc-border);">
                     <button class="btn-copy-all" @click="copyAllPartyInfo()">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
@@ -258,7 +258,7 @@
                     </template>
 
                     <!-- 复制全部按钮 -->
-                    <div class="drawer-footer" style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
+                    <div class="drawer-footer" style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--fc-border);">
                         <button class="btn-copy-all" @click="copyAllLawyerInfo()">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
                                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
@@ -279,8 +279,8 @@
     justify-content: center;
     width: 100%;
     padding: 10px 16px;
-    background: #3b82f6;
-    color: white;
+    background: var(--fc-primary);
+    color: var(--fc-text-on-primary);
     border: none;
     border-radius: 8px;
     font-size: 14px;
@@ -289,9 +289,9 @@
     transition: background 0.2s;
 }
 .btn-copy-all:hover {
-    background: #2563eb;
+    background: var(--fc-primary);
 }
 .btn-copy-all:active {
-    background: #1d4ed8;
+    background: var(--fc-primary-dark);
 }
 </style>

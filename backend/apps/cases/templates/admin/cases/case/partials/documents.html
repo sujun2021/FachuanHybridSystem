@@ -164,7 +164,7 @@
                             <span x-show="!generating">{% trans "生成文件夹" %}</span>
                             <span x-show="generating" x-cloak class="spinner-wrap"><span class="spinner"></span></span>
                         </button>
-                        <button type="button" @click="unlocked = !unlocked" :title="unlocked ? '{% trans "点击锁定" %}' : '{% trans "点击解锁后才能生成" %}'" :style="'border-radius:0 8px 8px 0;margin:0;border:none;padding:4px 10px;cursor:pointer;display:flex;align-items:center;' + (unlocked ? 'background:#2563eb;color:#fff' : 'background:#d1d5db;color:#6b7280')">
+                        <button type="button" @click="unlocked = !unlocked" :title="unlocked ? '{% trans "点击锁定" %}' : '{% trans "点击解锁后才能生成" %}'" :style="'border-radius:0 8px 8px 0;margin:0;border:none;padding:4px 10px;cursor:pointer;display:flex;align-items:center;' + (unlocked ? 'background:var(--fc-primary);color:var(--fc-text-on-primary)' : 'background:var(--fc-border-input);color:var(--fc-text-muted)')">
                             <span x-html="lockIcon"></span>
                         </button>
                     </span>
@@ -221,10 +221,10 @@
                     },
                     _showToast(message, type) {
                         const bg = type === 'success' ? '#4caf50' : '#f44336';
-                        const border = type === 'success' ? '#2e7d32' : '#c62828';
+                        const border = type === 'success' ? 'var(--fc-success-text)' : '#c62828';
                         const icon = type === 'success' ? '✓' : '✗';
                         const toast = document.createElement('div');
-                        toast.style.cssText = `position:fixed;top:20px;right:20px;padding:12px 20px;border-radius:6px;font-size:14px;font-weight:500;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10002;background:${bg};color:white;border-left:4px solid ${border};display:flex;align-items:center;gap:10px;min-width:250px;max-width:400px;word-wrap:break-word;animation:slideInRight 0.3s ease;`;
+                        toast.style.cssText = `position:fixed;top:20px;right:20px;padding:12px 20px;border-radius:6px;font-size:14px;font-weight:500;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10002;background:${bg};color:var(--fc-text-on-primary);border-left:4px solid ${border};display:flex;align-items:center;gap:10px;min-width:250px;max-width:400px;word-wrap:break-word;animation:slideInRight 0.3s ease;`;
                         toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
                         document.body.appendChild(toast);
                         setTimeout(() => {
@@ -248,16 +248,16 @@
         </div>
         <div style="display: flex; flex-direction: column; gap: 16px;">
             <!-- 文件模板 -->
-            <div style="padding: 12px; background: #f9fafb; border-radius: 6px; border-left: 3px solid #3b82f6;">
-                <div style="font-size: 12px; color: #6b7280; font-weight: 600; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">
+            <div style="padding: 12px; background: #f9fafb; border-radius: 6px; border-left: 3px solid var(--fc-primary);">
+                <div style="font-size: 12px; color: var(--fc-text-muted); font-weight: 600; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">
                     <span style="margin-right: 6px;">📄</span>{% trans "文件模板" %}
                 </div>
-                <div style="font-size: 14px; color: #1f2937;">
+                <div style="font-size: 14px; color: var(--fc-text-primary);">
                     {% if grouped_case_file_templates_for_display %}
                         <div style="display: flex; flex-direction: column; gap: 10px;">
                             {% for group_label, templates in grouped_case_file_templates_for_display %}
-                                <div style="padding: 8px 10px; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
-                                    <div style="display: inline-flex; align-items: center; font-size: 12px; color: #1d4ed8; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 999px; padding: 2px 10px; margin-bottom: 8px; font-weight: 600;">
+                                <div style="padding: 8px 10px; background: var(--fc-bg-card); border: 1px solid var(--fc-border); border-radius: 6px;">
+                                    <div style="display: inline-flex; align-items: center; font-size: 12px; color: var(--fc-primary-dark); background: var(--fc-primary-subtle); border: 1px solid #bfdbfe; border-radius: 999px; padding: 2px 10px; margin-bottom: 8px; font-weight: 600;">
                                         {{ group_label }}
                                     </div>
                                     <div style="display: flex; flex-wrap: wrap; gap: 8px;">
@@ -276,7 +276,7 @@
                             {% endfor %}
                         </div>
                     {% else %}
-                        <span style="color: #9ca3af;">{% if case_file_templates_missing_reason %}{{ case_file_templates_missing_reason }}{% else %}{% trans "无匹配模板" %}{% endif %}</span>
+                        <span style="color: var(--fc-text-disabled);">{% if case_file_templates_missing_reason %}{{ case_file_templates_missing_reason }}{% else %}{% trans "无匹配模板" %}{% endif %}</span>
                     {% endif %}
                 </div>
             </div>
@@ -285,33 +285,33 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                 <!-- 文件夹模板 -->
                 <div style="padding: 12px; background: #f9fafb; border-radius: 6px; border-left: 3px solid #10b981;">
-                    <div style="font-size: 12px; color: #6b7280; font-weight: 600; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">
+                    <div style="font-size: 12px; color: var(--fc-text-muted); font-weight: 600; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">
                         <span style="margin-right: 6px;">📁</span>{% trans "文件夹模板" %}
                     </div>
-                    <div style="font-size: 14px; color: #1f2937;">
+                    <div style="font-size: 14px; color: var(--fc-text-primary);">
                         {% if matched_folder_templates_list %}
                             {% for template in matched_folder_templates_list %}
                                 <a href="{% url 'admin:documents_foldertemplate_change' template.id %}" target="_blank" style="color: #059669; text-decoration: none; border-bottom: 1px solid #6ee7b7; margin-right: 12px; padding-bottom: 1px; transition: all 0.2s;">{{ template.name }}</a>{% if not forloop.last %}<span style="color: #d1d5db; margin-right: 12px;">|</span>{% endif %}
                             {% endfor %}
                         {% else %}
-                            <span style="color: #9ca3af;">{% trans "无匹配模板" %}</span>
+                            <span style="color: var(--fc-text-disabled);">{% trans "无匹配模板" %}</span>
                         {% endif %}
                     </div>
                 </div>
 
                 <!-- 文件夹绑定 -->
                 <div style="padding: 12px; background: #f9fafb; border-radius: 6px; border-left: 3px solid #f59e0b;">
-                    <div style="font-size: 12px; color: #6b7280; font-weight: 600; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">
+                    <div style="font-size: 12px; color: var(--fc-text-muted); font-weight: 600; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">
                         <span style="margin-right: 6px;">📁</span>{% trans "文件夹绑定" %}
                     </div>
-                    <div style="font-size: 14px; color: #1f2937;">
+                    <div style="font-size: 14px; color: var(--fc-text-primary);">
                         {% if case.folder_binding %}
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <span style="color: #059669;">✓ {% trans "已绑定" %}</span>
-                                <span style="color: #6b7280; font-size: 13px; word-break: break-all;">{{ case.folder_binding.folder_path }}</span>
+                                <span style="color: var(--fc-text-muted); font-size: 13px; word-break: break-all;">{{ case.folder_binding.folder_path }}</span>
                             </div>
                         {% else %}
-                            <span style="color: #9ca3af;">{% trans "未绑定文件夹" %}</span>
+                            <span style="color: var(--fc-text-disabled);">{% trans "未绑定文件夹" %}</span>
                         {% endif %}
                     </div>
                 </div>

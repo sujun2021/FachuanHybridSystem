@@ -125,8 +125,8 @@
         margin-bottom: 10px;
     }
     .mcp-tag {
-        background: #e2e8f0;
-        color: #334155;
+        background: var(--fc-border);
+        color: var(--fc-text-secondary);
         padding: 2px 8px;
         border-radius: 999px;
         font-size: 12px;
@@ -275,9 +275,9 @@
                     <td><span class="mcp-tool-name">#{{ row.id }}</span></td>
                     <td>
                         {% if row.success %}
-                        <span class="mcp-tag" style="background:#dcfce7;color:#166534;">success</span>
+                        <span class="mcp-tag" style="background:var(--fc-success-bg);color:var(--fc-success-text);">success</span>
                         {% else %}
-                        <span class="mcp-tag" style="background:#fee2e2;color:#b91c1c;">failed</span>
+                        <span class="mcp-tag" style="background:var(--fc-error-bg);color:var(--fc-error-text);">failed</span>
                         {% endif %}
                         {% if row.replay_of_id %}
                         <div class="mcp-small">replay of #{{ row.replay_of_id }}</div>

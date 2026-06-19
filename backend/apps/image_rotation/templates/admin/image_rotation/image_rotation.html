@@ -42,7 +42,7 @@
     .action-btn.danger:hover { background: var(--fc-error-bg); }
     .remove-btn { position: absolute; top: 8px; right: 8px; width: 24px; height: 24px; border-radius: 50%; background: rgba(0,0,0,0.5); color: var(--fc-text-on-primary); border: none; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; }
     .image-item:hover .remove-btn { opacity: 1; }
-    .remove-btn:hover { background: #dc2626; }
+    .remove-btn:hover { background: var(--fc-error-text); }
 
     /* 主操作按钮 */
     .rotation-container .btn-primary {
@@ -79,10 +79,10 @@
     .loading-text { margin-top: 16px; color: var(--fc-text-muted); font-size: 16px; }
 
     /* 提示框 */
-    .hint-box { background: var(--fc-info-bg); border: 1px solid #93c5fd; border-radius: 6px; padding: 12px 16px; margin-bottom: 20px; color: #1e40af; font-size: 14px; }
-    .hint-box.warning { background: var(--fc-warning-bg); border-color: #fcd34d; color: var(--fc-warning-text); }
-    .hint-box.error { background: #fee2e2; border-color: #fca5a5; color: #dc2626; }
-    .hint-box.success { background: var(--fc-success-bg); border-color: #86efac; color: var(--fc-success-text); }
+    .hint-box { background: var(--fc-info-bg); border: 1px solid var(--fc-info-border); border-radius: 6px; padding: 12px 16px; margin-bottom: 20px; color: var(--fc-info-text); font-size: 14px; }
+    .hint-box.warning { background: var(--fc-warning-bg); border-color: var(--fc-warning-border); color: var(--fc-warning-text); }
+    .hint-box.error { background: var(--fc-error-bg); border-color: var(--fc-error-border); color: var(--fc-error-text); }
+    .hint-box.success { background: var(--fc-success-bg); border-color: var(--fc-success-border); color: var(--fc-success-text); }
 
     /* 大图预览模态框 */
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 10000; }
@@ -114,7 +114,7 @@
     .task-name-input:focus { border-color: var(--fc-admin-blue); outline: none; box-shadow: 0 0 0 2px rgba(65,118,144,0.15); }
 
     /* 保存通知 */
-    .save-notification { background: var(--fc-success-bg); border: 1px solid #86efac; border-radius: 6px; padding: 10px 16px; margin-bottom: 16px; color: var(--fc-success-text); font-size: 14px; display: flex; align-items: center; gap: 8px; }
+    .save-notification { background: var(--fc-success-bg); border: 1px solid var(--fc-success-border); border-radius: 6px; padding: 10px 16px; margin-bottom: 16px; color: var(--fc-success-text); font-size: 14px; display: flex; align-items: center; gap: 8px; }
     .save-notification a { color: var(--fc-success-text); font-weight: 600; text-decoration: underline; }
 
     /* 历史列表 */
@@ -165,7 +165,7 @@
             <p style="color: var(--fc-text-muted); margin: 0 0 24px;">删除后将无法恢复，所有文件也将被清除。</p>
             <div style="display: flex; gap: 12px; justify-content: center;">
                 <button class="btn-secondary" @click="showDeleteConfirm = false">取消</button>
-                <button class="btn-primary" style="background: #dc2626 !important;" @click="executeDeleteJob()">确认删除</button>
+                <button class="btn-primary" style="background: var(--fc-error-text) !important;" @click="executeDeleteJob()">确认删除</button>
             </div>
         </div>
     </div>
@@ -232,7 +232,7 @@
                     <span style="font-size: 13px; color: var(--fc-text-disabled);">正在保存...</span>
                 </template>
                 <template x-if="currentJobId && !nameUpdatePending">
-                    <span style="font-size: 13px; color: #16a34a;">已保存</span>
+                    <span style="font-size: 13px; color: var(--fc-success-text);">已保存</span>
                 </template>
             </div>
 
@@ -256,7 +256,7 @@
                 </div>
                 <div class="stat-item" x-show="totalDetectionTimeMs > 0">
                     <span class="stat-label">ONNX 耗时:</span>
-                    <span class="stat-value" x-text="totalDetectionTimeMs >= 1000 ? (totalDetectionTimeMs / 1000).toFixed(1) + 's' : Math.round(totalDetectionTimeMs) + 'ms'" style="color: #16a34a;"></span>
+                    <span class="stat-value" x-text="totalDetectionTimeMs >= 1000 ? (totalDetectionTimeMs / 1000).toFixed(1) + 's' : Math.round(totalDetectionTimeMs) + 'ms'" style="color: var(--fc-success-text);"></span>
                 </div>
                 <div style="flex: 1;"></div>
                 <button class="action-btn" @click="$refs.fileInput.click()">添加更多</button>
@@ -265,9 +265,9 @@
             <!-- OCR 提取文字提示（ONNX 检测完成后显示） -->
             <div class="hint-box success" x-show="showOcrPrompt && !ocrProcessing" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                 <span>方向检测完成（<span x-text="images.length"></span> 张），是否提取文字用于自动重命名？</span>
-                <button class="action-btn" @click="startOcrExtraction('local')" style="background: #fff; border-color: #86efac;">本地 RapidOCR</button>
-                <button class="action-btn" @click="startOcrExtraction('paddleocr_api')" style="background: #fff; border-color: #86efac;">PaddleOCR API</button>
-                <button class="action-btn" @click="showOcrPrompt = false" style="background: #fff;">跳过</button>
+                <button class="action-btn" @click="startOcrExtraction('local')" style="background: var(--fc-bg-card); border-color: var(--fc-success-border);">本地 RapidOCR</button>
+                <button class="action-btn" @click="startOcrExtraction('paddleocr_api')" style="background: var(--fc-bg-card); border-color: var(--fc-success-border);">PaddleOCR API</button>
+                <button class="action-btn" @click="showOcrPrompt = false" style="background: var(--fc-bg-card);">跳过</button>
             </div>
 
             <!-- 图片网格 -->
@@ -281,14 +281,14 @@
                         <div class="image-info">
                             <div class="image-filename" :title="image.suggestedFilename || image.filename">
                                 <span x-text="image.suggestedFilename || image.filename"></span>
-                                <span x-show="image.suggestedFilename" style="color: #22c55e; font-size: 10px; margin-left: 4px;">AI</span>
+                                <span x-show="image.suggestedFilename" style="color: var(--fc-success-text); font-size: 10px; margin-left: 4px;">AI</span>
                             </div>
                             <div class="image-status">
                                 <template x-if="image.sourceType === 'pdf_page'">
                                     <span class="pdf-badge">PDF</span>
                                 </template>
                                 <template x-if="image.status === 'detecting'">
-                                    <span class="rotation-badge" style="background: #e0e7ff; color: #4338ca;">检测中...</span>
+                                    <span class="rotation-badge" style="background: var(--fc-info-bg); color: var(--fc-primary-darker);">检测中...</span>
                                 </template>
                                 <template x-if="image.autoRotation !== 0 && image.status !== 'detecting'">
                                     <span class="rotation-badge auto">自动 <span x-text="image.autoRotation + '°'"></span></span>
@@ -300,7 +300,7 @@
                                     <span style="color: var(--fc-text-disabled); font-size: 12px;">无需旋转</span>
                                 </template>
                                 <template x-if="image.detectionTimeMs > 0">
-                                    <span class="rotation-badge" style="background: #f0fdf4; color: #16a34a; font-size: 10px;"><span x-text="image.detectionTimeMs >= 1000 ? (image.detectionTimeMs / 1000).toFixed(1) + 's' : Math.round(image.detectionTimeMs) + 'ms'"></span></span>
+                                    <span class="rotation-badge" style="background: var(--fc-success-bg); color: var(--fc-success-text); font-size: 10px;"><span x-text="image.detectionTimeMs >= 1000 ? (image.detectionTimeMs / 1000).toFixed(1) + 's' : Math.round(image.detectionTimeMs) + 'ms'"></span></span>
                                 </template>
                             </div>
                         </div>
@@ -365,8 +365,8 @@
                         <div class="history-item-meta">
                             <span x-text="job.total_pages + ' 页'"></span> ·
                             <span x-text="new Date(job.created_at).toLocaleString('zh-CN')"></span>
-                            <span x-show="job.has_export_zip" style="margin-left: 8px; color: #16a34a;">ZIP</span>
-                            <span x-show="job.has_export_pdf" style="margin-left: 4px; color: #16a34a;">PDF</span>
+                            <span x-show="job.has_export_zip" style="margin-left: 8px; color: var(--fc-success-text);">ZIP</span>
+                            <span x-show="job.has_export_pdf" style="margin-left: 4px; color: var(--fc-success-text);">PDF</span>
                         </div>
                     </div>
                     <div class="history-actions">
@@ -437,7 +437,7 @@
                         <div class="image-info">
                             <div class="image-filename" :title="page.suggested_filename || page.original_filename">
                                 <span x-text="page.suggested_filename || page.original_filename"></span>
-                                <span x-show="page.suggested_filename" style="color: #22c55e; font-size: 10px; margin-left: 4px;">AI</span>
+                                <span x-show="page.suggested_filename" style="color: var(--fc-success-text); font-size: 10px; margin-left: 4px;">AI</span>
                             </div>
                             <div class="image-status">
                                 <template x-if="page.source_type === 'pdf_page'">
@@ -447,7 +447,7 @@
                                     <span class="rotation-badge auto">手动 <span x-text="page.detected_rotation + '°'"></span></span>
                                 </template>
                                 <template x-if="page.detection_confidence > 0">
-                                    <span class="rotation-badge" style="background: #f0fdf4; color: #16a34a; font-size: 10px;">
+                                    <span class="rotation-badge" style="background: var(--fc-success-bg); color: var(--fc-success-text); font-size: 10px;">
                                         <span x-text="Math.round(page.detection_confidence * 100) + '%'"></span>
                                     </span>
                                 </template>

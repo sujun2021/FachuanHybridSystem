@@ -12,13 +12,13 @@
 }
 
 .document-recognition-page h1 {
-    color: #333;
+    color: var(--fc-text-secondary);
     margin-bottom: 10px;
     font-size: 24px;
 }
 
 .page-description {
-    color: #666;
+    color: var(--fc-text-muted);
     margin-bottom: 30px;
     font-size: 14px;
     line-height: 1.6;
@@ -26,23 +26,23 @@
 
 /* 拖拽上传区域 */
 .drop-zone {
-    border: 3px dashed #ccc;
+    border: 3px dashed var(--fc-border);
     border-radius: 12px;
     padding: 60px 40px;
     text-align: center;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    background: linear-gradient(135deg, var(--fc-bg-muted) 0%, var(--fc-border) 100%);
     transition: all 0.3s ease;
     cursor: pointer;
 }
 
 .drop-zone:hover {
-    border-color: #417690;
-    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border-color: var(--fc-admin-blue);
+    background: linear-gradient(135deg, var(--fc-primary-subtle) 0%, #bbdefb 100%);
 }
 
 .drop-zone.drag-over {
-    border-color: #417690;
-    background: linear-gradient(135deg, #bbdefb 0%, #90caf9 100%);
+    border-color: var(--fc-admin-blue);
+    background: linear-gradient(135deg, #bbdefb 0%, var(--fc-primary-light) 100%);
     transform: scale(1.02);
 }
 
@@ -58,7 +58,7 @@
 }
 
 .upload-icon {
-    color: #417690;
+    color: var(--fc-admin-blue);
     opacity: 0.8;
 }
 
@@ -69,19 +69,19 @@
 .main-text {
     font-size: 20px;
     font-weight: 600;
-    color: #333;
+    color: var(--fc-text-secondary);
     margin: 0;
 }
 
 .hint-text {
     font-size: 14px;
-    color: #666;
+    color: var(--fc-text-muted);
     margin: 0;
 }
 
 .select-file-btn {
-    background: #417690;
-    color: white;
+    background: var(--fc-admin-blue);
+    color: var(--fc-text-on-primary);
     border: none;
     padding: 12px 24px;
     border-radius: 6px;
@@ -92,7 +92,7 @@
 }
 
 .select-file-btn:hover {
-    background: #205067;
+    background: var(--fc-admin-blue-hover);
 }
 
 /* 加载状态 */
@@ -108,8 +108,8 @@
 .spinner {
     width: 50px;
     height: 50px;
-    border: 4px solid #e9ecef;
-    border-top-color: #417690;
+    border: 4px solid var(--fc-border);
+    border-top-color: var(--fc-admin-blue);
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin: 0 auto 20px;
@@ -122,14 +122,14 @@
 }
 
 .loading p {
-    color: #666;
+    color: var(--fc-text-muted);
     font-size: 16px;
 }
 
 /* 识别结果区域 */
 .result-section {
-    background: white;
-    border: 1px solid #ddd;
+    background: var(--fc-bg-card);
+    border: 1px solid var(--fc-border);
     border-radius: 8px;
     padding: 30px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -140,10 +140,10 @@
 }
 
 .result-section h2 {
-    color: #333;
+    color: var(--fc-text-secondary);
     margin-bottom: 20px;
     padding-bottom: 10px;
-    border-bottom: 2px solid #417690;
+    border-bottom: 2px solid var(--fc-admin-blue);
     font-size: 18px;
 }
 
@@ -158,7 +158,7 @@
     align-items: center;
     gap: 15px;
     padding: 15px 0;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--fc-border);
     min-height: 52px;
 }
 
@@ -168,14 +168,14 @@
 
 .result-item label {
     font-weight: 600;
-    color: #555;
+    color: var(--fc-text-muted);
     margin: 0;
     text-align: left;
     align-self: center;
 }
 
 .result-value {
-    color: #333;
+    color: var(--fc-text-secondary);
     flex: 1;
     min-height: 24px;
     display: flex;
@@ -185,7 +185,7 @@
 
 /* 文书类型样式 */
 .doc-type-summons {
-    color: #1976d2;
+    color: var(--fc-primary-dark);
     font-weight: 600;
 }
 
@@ -205,7 +205,7 @@
 }
 
 .confidence-medium {
-    color: #f57c00;
+    color: var(--fc-warning-text);
     font-weight: 600;
 }
 
@@ -221,7 +221,7 @@
 }
 
 .binding-warning {
-    color: #f57c00;
+    color: var(--fc-warning-text);
 }
 
 .binding-none {
@@ -232,7 +232,7 @@
 .result-actions {
     margin-top: 25px;
     padding-top: 20px;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--fc-border);
     display: flex;
     gap: 12px;
     align-items: center;
@@ -242,11 +242,11 @@
 .extracted-text-section {
     margin-top: 25px;
     padding-top: 20px;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--fc-border);
 }
 
 .extracted-text-section h3 {
-    color: #555;
+    color: var(--fc-text-muted);
     font-size: 15px;
     margin: 0 0 12px 0;
     font-weight: 600;
@@ -260,13 +260,13 @@
 }
 
 .text-length-hint {
-    color: #888;
+    color: var(--fc-text-muted);
     font-size: 13px;
 }
 
 .extracted-text-container {
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
+    background: var(--fc-bg-muted);
+    border: 1px solid var(--fc-border);
     border-radius: 6px;
     overflow: hidden;
     transition: max-height 0.3s ease;
@@ -285,7 +285,7 @@
     left: 0;
     right: 0;
     height: 40px;
-    background: linear-gradient(transparent, #f8f9fa);
+    background: linear-gradient(transparent, var(--fc-bg-muted));
     pointer-events: none;
 }
 
@@ -295,7 +295,7 @@
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
     font-size: 13px;
     line-height: 1.6;
-    color: #333;
+    color: var(--fc-text-secondary);
     white-space: pre-wrap;
     word-wrap: break-word;
     max-height: 400px;
@@ -309,13 +309,13 @@
 
 .btn-outline {
     background: transparent;
-    border: 1px solid #417690;
-    color: #417690;
+    border: 1px solid var(--fc-admin-blue);
+    color: var(--fc-admin-blue);
 }
 
 .btn-outline:hover {
-    background: #417690;
-    color: white;
+    background: var(--fc-admin-blue);
+    color: var(--fc-text-on-primary);
 }
 
 .btn {
@@ -333,12 +333,12 @@
 }
 
 .btn-primary {
-    background: #417690;
-    color: white;
+    background: var(--fc-admin-blue);
+    color: var(--fc-text-on-primary);
 }
 
 .btn-primary:hover {
-    background: #205067;
+    background: var(--fc-admin-blue-hover);
 }
 
 .btn-secondary,
@@ -350,7 +350,7 @@
 }
 
 .btn-secondary:hover {
-    background: #218838;
+    background: var(--fc-success-text);
     color: #ffffff !important;
 }
 
@@ -360,8 +360,8 @@
 
 /* 错误区域 */
 .error-section {
-    background: #fff5f5;
-    border: 1px solid #ffcdd2;
+    background: var(--fc-error-bg);
+    border: 1px solid var(--fc-error-border);
     border-radius: 8px;
     padding: 30px;
 }
@@ -371,7 +371,7 @@
 }
 
 .error-section h2 {
-    color: #c62828;
+    color: var(--fc-error-text);
     margin-bottom: 15px;
     font-size: 18px;
 }
@@ -381,14 +381,14 @@
 }
 
 .error-content p {
-    color: #c62828;
+    color: var(--fc-error-text);
     margin: 0;
     line-height: 1.6;
 }
 
 .error-actions {
     padding-top: 15px;
-    border-top: 1px solid #ffcdd2;
+    border-top: 1px solid var(--fc-error-border);
 }
 
 /* 响应式设计 */
@@ -434,8 +434,8 @@
 .manual-binding-section {
     margin-top: 25px;
     padding: 20px;
-    background: #fff8e1;
-    border: 1px solid #ffcc02;
+    background: var(--fc-warning-bg);
+    border: 1px solid var(--fc-warning-border);
     border-radius: 8px;
 }
 
@@ -444,14 +444,14 @@
 }
 
 .manual-binding-section h3 {
-    color: #f57c00;
+    color: var(--fc-warning-text);
     font-size: 16px;
     margin: 0 0 8px 0;
     font-weight: 600;
 }
 
 .manual-binding-hint {
-    color: #666;
+    color: var(--fc-text-muted);
     font-size: 13px;
     margin: 0 0 15px 0;
 }
@@ -465,7 +465,7 @@
 .search-box input {
     width: 100%;
     padding: 12px 40px 12px 15px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--fc-border);
     border-radius: 6px;
     font-size: 14px;
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
@@ -474,12 +474,12 @@
 
 .search-box input:focus {
     outline: none;
-    border-color: #417690;
+    border-color: var(--fc-admin-blue);
     box-shadow: 0 0 0 3px rgba(65, 118, 144, 0.1);
 }
 
 .search-box input::placeholder {
-    color: #999;
+    color: var(--fc-text-muted);
 }
 
 /* ========================================
@@ -494,26 +494,26 @@
 .combobox-input-wrapper {
     display: flex;
     align-items: center;
-    background: white;
-    border: 2px solid #e0e0e0;
+    background: var(--fc-bg-card);
+    border: 2px solid var(--fc-border);
     border-radius: 8px;
     transition: all 0.25s ease;
     overflow: hidden;
 }
 
 .combobox-input-wrapper:focus-within {
-    border-color: #417690;
+    border-color: var(--fc-admin-blue);
     box-shadow: 0 0 0 4px rgba(65, 118, 144, 0.15);
 }
 
 .combobox-input-wrapper:hover {
-    border-color: #417690;
+    border-color: var(--fc-admin-blue);
 }
 
 .combobox-icon {
     padding: 0 12px;
     font-size: 18px;
-    color: #417690;
+    color: var(--fc-admin-blue);
     flex-shrink: 0;
 }
 
@@ -528,7 +528,7 @@
 }
 
 .combobox-input-wrapper input::placeholder {
-    color: #999;
+    color: var(--fc-text-muted);
 }
 
 .combobox-input-wrapper .search-loading {
@@ -545,19 +545,19 @@
     height: 44px;
     background: transparent;
     border: none;
-    border-left: 1px solid #e0e0e0;
+    border-left: 1px solid var(--fc-border);
     cursor: pointer;
-    color: #417690;
+    color: var(--fc-admin-blue);
     transition: all 0.2s ease;
     flex-shrink: 0;
 }
 
 .combobox-toggle:hover {
-    background: #f5f5f5;
+    background: var(--fc-bg-muted-light);
 }
 
 .combobox-toggle.active {
-    background: #e3f2fd;
+    background: var(--fc-primary-subtle);
 }
 
 .combobox-toggle svg {
@@ -575,8 +575,8 @@
     left: 0;
     right: 0;
     margin-top: 4px;
-    background: white;
-    border: 1px solid #e0e0e0;
+    background: var(--fc-bg-card);
+    border: 1px solid var(--fc-border);
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     z-index: 1000;
@@ -599,7 +599,7 @@
 .dropdown-loading {
     padding: 20px;
     text-align: center;
-    color: #666;
+    color: var(--fc-text-muted);
     font-size: 14px;
     display: flex;
     align-items: center;
@@ -610,7 +610,7 @@
 .dropdown-error {
     padding: 15px;
     text-align: center;
-    color: #c62828;
+    color: var(--fc-error-text);
     font-size: 14px;
 }
 
@@ -630,8 +630,8 @@
     display: inline-block;
     width: 18px;
     height: 18px;
-    border: 2px solid #e9ecef;
-    border-top-color: #417690;
+    border: 2px solid var(--fc-border);
+    border-top-color: var(--fc-admin-blue);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }
@@ -640,7 +640,7 @@
 .case-search-results {
     max-height: 300px;
     overflow-y: auto;
-    background: white;
+    background: var(--fc-bg-card);
 }
 
 .case-search-results:empty {
@@ -650,7 +650,7 @@
 /* 案件项 */
 .case-item {
     padding: 12px 15px;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--fc-bg-muted-light);
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
@@ -660,17 +660,17 @@
 }
 
 .case-item:hover {
-    background: #f8f9fa;
+    background: var(--fc-bg-muted);
 }
 
 .case-item.selected {
-    background: #e3f2fd;
-    border-left: 3px solid #1976d2;
+    background: var(--fc-primary-subtle);
+    border-left: 3px solid var(--fc-primary-dark);
 }
 
 .case-name {
     font-weight: 600;
-    color: #333;
+    color: var(--fc-text-secondary);
     margin-bottom: 5px;
     font-size: 14px;
 }
@@ -680,7 +680,7 @@
     flex-wrap: wrap;
     gap: 15px;
     font-size: 12px;
-    color: #666;
+    color: var(--fc-text-muted);
 }
 
 .case-numbers,
@@ -692,7 +692,7 @@
 .no-results {
     padding: 20px;
     text-align: center;
-    color: #999;
+    color: var(--fc-text-muted);
     font-size: 14px;
 }
 
@@ -704,7 +704,7 @@
 .search-error {
     padding: 15px;
     text-align: center;
-    color: #c62828;
+    color: var(--fc-error-text);
     font-size: 14px;
 }
 
@@ -717,14 +717,14 @@
 }
 
 .selected-case-hint {
-    color: #1976d2;
+    color: var(--fc-primary-dark);
     font-size: 13px;
     font-weight: 500;
 }
 
 /* 确认绑定按钮禁用状态 */
 .binding-actions .btn:disabled {
-    background: #ccc;
+    background: var(--fc-border);
     cursor: not-allowed;
     opacity: 0.7;
 }
@@ -762,20 +762,20 @@
     align-items: center;
     gap: 15px;
     padding: 15px 0;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--fc-border);
     min-height: 52px;
 }
 
 .editable-item label {
     font-weight: 600;
-    color: #555;
+    color: var(--fc-text-muted);
     margin: 0;
     text-align: left;
     align-self: center;
 }
 
 .editable-item .result-value {
-    color: #333;
+    color: var(--fc-text-secondary);
     min-height: 24px;
     display: flex;
     align-items: center;
@@ -783,7 +783,7 @@
 }
 
 .editable-item .edit-input {
-    color: #333;
+    color: var(--fc-text-secondary);
     min-height: 24px;
     display: flex;
     align-items: center;
@@ -793,7 +793,7 @@
 /* 编辑按钮 */
 .btn-edit {
     background: transparent;
-    border: 1px solid #ddd;
+    border: 1px solid var(--fc-border);
     border-radius: 4px;
     padding: 8px 10px;
     cursor: pointer;
@@ -809,15 +809,15 @@
 }
 
 .btn-edit:hover {
-    background: #f5f5f5;
-    border-color: #417690;
+    background: var(--fc-bg-muted-light);
+    border-color: var(--fc-admin-blue);
 }
 
 /* 编辑输入框 */
 .edit-input {
     flex: 1;
     padding: 8px 12px;
-    border: 2px solid #417690;
+    border: 2px solid var(--fc-admin-blue);
     border-radius: 6px;
     font-size: 14px;
     outline: none;
@@ -839,7 +839,7 @@
 .save-edits-section {
     margin-top: 15px;
     padding: 15px;
-    background: #e3f2fd;
+    background: var(--fc-primary-subtle);
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -853,30 +853,30 @@
 /* 保存按钮 */
 .btn-success {
     background: #28a745;
-    color: white;
+    color: var(--fc-text-on-primary);
 }
 
 .btn-success:hover {
-    background: #218838;
+    background: var(--fc-success-text);
 }
 
 .btn-success:disabled {
-    background: #ccc;
+    background: var(--fc-border);
     cursor: not-allowed;
 }
 
 /* 保存状态提示 */
 .save-status {
     font-size: 14px;
-    color: #666;
+    color: var(--fc-text-muted);
 }
 
 .save-status.success {
-    color: #28a745;
+    color: var(--fc-success-text);
     font-weight: 500;
 }
 
 .save-status.error {
-    color: #dc3545;
+    color: var(--fc-error-text);
     font-weight: 500;
 }

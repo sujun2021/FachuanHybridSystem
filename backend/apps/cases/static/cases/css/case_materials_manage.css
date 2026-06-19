@@ -1,12 +1,12 @@
 .case-materials-manage-page {
-  --cm-bg: #f6f7fb;
-  --cm-card: #ffffff;
+  --cm-bg: var(--fc-bg-muted-light);
+  --cm-card: var(--fc-bg-card);
   --cm-border: rgba(15, 23, 42, 0.12);
   --cm-muted: rgba(15, 23, 42, 0.6);
-  --cm-text: #0f172a;
-  --cm-primary: #2563eb;
-  --cm-success: #16a34a;
-  --cm-danger: #dc2626;
+  --cm-text: var(--fc-text-heading);
+  --cm-primary: var(--fc-primary);
+  --cm-success: var(--fc-success-text);
+  --cm-danger: var(--fc-error-text);
   --cm-warn-bg: #fff7ed;
   padding: 16px 12px;
   background: var(--cm-bg);
@@ -103,7 +103,7 @@
   border-radius: 10px;
   border: 1px solid var(--cm-border) !important;
   padding: 6px 10px !important;
-  background: #fff;
+  background: var(--fc-bg-card);
   color: var(--cm-text);
 }
 
@@ -306,7 +306,7 @@
   padding: 10px 12px;
   border-radius: 12px;
   border: 1px solid transparent;
-  background: #fff;
+  background: var(--fc-bg-card);
   position: sticky;
   top: 10px;
   z-index: 30;
@@ -316,13 +316,13 @@
 .materials-manage-message.success {
   background: rgba(22, 163, 74, 0.08);
   border-color: rgba(22, 163, 74, 0.22);
-  color: #14532d;
+  color: var(--fc-success-text);
 }
 
 .materials-manage-message.error {
   background: rgba(220, 38, 38, 0.08);
   border-color: rgba(220, 38, 38, 0.22);
-  color: #7f1d1d;
+  color: var(--fc-error-text);
 }
 
 
@@ -392,13 +392,13 @@
 .status-pill.bound {
   background: rgba(22, 163, 74, 0.1);
   border-color: rgba(22, 163, 74, 0.22);
-  color: #14532d;
+  color: var(--fc-success-text);
 }
 
 .status-pill.unbound {
   background: rgba(220, 38, 38, 0.08);
   border-color: rgba(220, 38, 38, 0.22);
-  color: #7f1d1d;
+  color: var(--fc-error-text);
 }
 
 .type-cell {
@@ -419,7 +419,7 @@
   border: 1px solid var(--cm-border);
   padding: 6px 10px;
   font-size: 13px;
-  background: #fff;
+  background: var(--fc-bg-card);
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
@@ -441,7 +441,7 @@
   border-radius: 6px;
   border: 1px solid var(--cm-border);
   padding: 6px 10px;
-  background: #fff;
+  background: var(--fc-bg-card);
   color: var(--cm-text);
   font-size: 13px;
   transition: border-color 0.15s, box-shadow 0.15s;
@@ -468,7 +468,7 @@
 
 .materials-table select[multiple] option:checked {
   background: linear-gradient(0deg, var(--cm-primary) 0%, var(--cm-primary) 100%);
-  color: #fff;
+  color: var(--fc-text-on-primary);
 }
 
 
@@ -510,7 +510,7 @@
 }
 
 .cm-stat-value--warn {
-  color: #d97706;
+  color: var(--fc-warning-text);
 }
 
 .cm-scan-card {
@@ -543,17 +543,17 @@
 }
 
 .cm-status-pill.is-pending {
-  color: #1d4ed8;
+  color: var(--fc-info-text);
   background: rgba(37, 99, 235, 0.12);
 }
 
 .cm-status-pill.is-success {
-  color: #15803d;
+  color: var(--fc-success-text);
   background: rgba(22, 163, 74, 0.12);
 }
 
 .cm-status-pill.is-error {
-  color: #b91c1c;
+  color: var(--fc-error-text);
   background: rgba(220, 38, 38, 0.12);
 }
 
@@ -594,7 +594,7 @@
   border: 1px solid var(--cm-border);
   border-radius: 8px;
   padding: 4px 8px;
-  background: #fff;
+  background: var(--fc-bg-card);
   color: var(--cm-text);
 }
 
@@ -628,7 +628,7 @@
 
 .cm-progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #1d4ed8, #2563eb);
+  background: linear-gradient(90deg, var(--fc-primary-dark), var(--fc-primary));
   transition: width 0.2s ease;
 }
 

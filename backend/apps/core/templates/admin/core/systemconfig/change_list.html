@@ -19,34 +19,34 @@
         margin-bottom: 20px;
     }
     .config-group {
-        border: 1px solid #e0e0e0;
+        border: 1px solid var(--fc-border);
         border-radius: 8px;
         margin-bottom: 12px;
-        background: #fff;
+        background: var(--fc-bg-card);
         overflow: hidden;
     }
     .config-group-header {
         display: flex;
         align-items: center;
         padding: 12px 16px;
-        background: linear-gradient(to bottom, #f8f9fa, #f1f3f5);
+        background: linear-gradient(to bottom, var(--fc-bg-muted), var(--fc-bg-muted-light));
         cursor: pointer;
         user-select: none;
-        border-bottom: 1px solid #e0e0e0;
+        border-bottom: 1px solid var(--fc-border);
         transition: background-color 0.2s;
     }
     .config-group-header:hover {
-        background: #e9ecef;
+        background: var(--fc-bg-muted-light);
     }
     .config-group-header .group-title {
         font-size: 14px;
         font-weight: 600;
-        color: #333;
+        color: var(--fc-text-secondary);
         flex: 1;
     }
     .config-group-header .group-count {
-        background: #6c757d;
-        color: #fff;
+        background: var(--fc-text-muted);
+        color: var(--fc-text-on-primary);
         padding: 2px 8px;
         border-radius: 10px;
         font-size: 11px;
@@ -54,7 +54,7 @@
     }
     .config-group-header .toggle-icon {
         transition: transform 0.3s;
-        color: #6c757d;
+        color: var(--fc-text-muted);
     }
     .config-group.expanded .config-group-header .toggle-icon {
         transform: rotate(90deg);
@@ -70,26 +70,26 @@
         display: flex;
         align-items: center;
         padding: 10px 16px;
-        border-bottom: 1px solid #f0f0f0;
+        border-bottom: 1px solid var(--fc-border);
         transition: background-color 0.15s;
     }
     .config-item:last-child {
         border-bottom: none;
     }
     .config-item:hover {
-        background: #f8f9fa;
+        background: var(--fc-bg-muted);
     }
     .config-item .item-key {
         font-family: monospace;
         font-size: 13px;
-        color: #495057;
+        color: var(--fc-text-secondary);
         min-width: 250px;
         word-break: break-all;
     }
     .config-item .item-value {
         flex: 1;
         font-size: 13px;
-        color: #666;
+        color: var(--fc-text-muted);
         margin: 0 16px;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -97,10 +97,10 @@
     }
     .config-item .item-value .secret-mask {
         font-family: monospace;
-        color: #999;
+        color: var(--fc-text-disabled);
     }
     .config-item .item-value .not-set {
-        color: #999;
+        color: var(--fc-text-disabled);
         font-style: italic;
     }
     .config-item .item-actions {
@@ -114,7 +114,7 @@
         text-decoration: none;
     }
     .config-item .item-actions .edit-link {
-        background: #e3f2fd;
+        background: var(--fc-primary-subtle);
         color: #1976d2;
     }
     .config-item .item-actions .edit-link:hover {
@@ -122,20 +122,20 @@
     }
     .config-item .item-desc {
         font-size: 11px;
-        color: #999;
+        color: var(--fc-text-disabled);
         margin-top: 2px;
     }
     .secret-badge {
-        background: #fff3cd;
-        color: #856404;
+        background: var(--fc-warning-bg);
+        color: var(--fc-warning-text);
         padding: 1px 6px;
         border-radius: 3px;
         font-size: 10px;
         margin-left: 6px;
     }
     .inactive-badge {
-        background: #f8d7da;
-        color: #721c24;
+        background: var(--fc-error-bg);
+        color: var(--fc-error-text);
         padding: 1px 6px;
         border-radius: 3px;
         font-size: 10px;

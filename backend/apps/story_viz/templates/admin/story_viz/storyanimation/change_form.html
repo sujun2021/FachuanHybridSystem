@@ -14,7 +14,7 @@
 .sv-status-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--fc-text-secondary)}
 .sv-pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600}
 .sv-st-pending{background:var(--fc-warning-bg);color:var(--fc-warning-text)}
-.sv-st-processing{background:var(--fc-info-bg);color:#1e40af}
+.sv-st-processing{background:var(--fc-info-bg);color:var(--fc-info-text)}
 .sv-st-completed{background:var(--fc-success-bg);color:var(--fc-success-text)}
 .sv-st-failed{background:var(--fc-error-bg);color:var(--fc-error-text)}
 .sv-st-cancelled{background:var(--fc-bg-muted-light);color:var(--fc-text-muted)}
@@ -27,19 +27,19 @@
 .sv-stage-line{flex:1;height:2px;background:var(--fc-border);min-width:20px;margin:0 -2px;align-self:flex-start;margin-top:13px;position:relative;z-index:0}
 
 /* Stage states */
-.sv-stage[data-st="done"] .sv-stage-dot{background:#22c55e;border-color:#22c55e;color:var(--fc-text-on-primary)}
-.sv-stage[data-st="done"] .sv-stage-label{color:#16a34a}
+.sv-stage[data-st="done"] .sv-stage-dot{background:var(--fc-success-text);border-color:var(--fc-success-text);color:var(--fc-text-on-primary)}
+.sv-stage[data-st="done"] .sv-stage-label{color:var(--fc-success-text)}
 .sv-stage[data-st="active"] .sv-stage-dot{background:var(--fc-primary);border-color:var(--fc-primary);color:var(--fc-text-on-primary);box-shadow:0 0 0 4px rgba(59,130,246,.2);animation:sv-pulse 2s infinite}
 .sv-stage[data-st="active"] .sv-stage-label{color:var(--fc-primary);font-weight:600}
-.sv-stage[data-st="failed"] .sv-stage-dot{background:#ef4444;border-color:#ef4444;color:var(--fc-text-on-primary)}
+.sv-stage[data-st="failed"] .sv-stage-dot{background:var(--fc-error-text);border-color:var(--fc-error-text);color:var(--fc-text-on-primary)}
 .sv-stage[data-st="failed"] .sv-stage-label{color:var(--fc-error-text)}
 .sv-stage[data-st="cancelled"] .sv-stage-dot{background:var(--fc-text-disabled);border-color:var(--fc-text-disabled);color:var(--fc-text-on-primary)}
-.sv-stage-line[data-st="done"]{background:#22c55e}
+.sv-stage-line[data-st="done"]{background:var(--fc-success-text)}
 @keyframes sv-pulse{0%,100%{box-shadow:0 0 0 4px rgba(59,130,246,.2)}50%{box-shadow:0 0 0 8px rgba(59,130,246,.1)}}
 
 /* Progress bar */
 .sv-progress-track{height:6px;background:var(--fc-border);border-radius:999px;overflow:hidden;margin:4px 0}
-.sv-progress-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--fc-primary),#0ea5e9);border-radius:999px;transition:width .4s}
+.sv-progress-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--fc-primary),var(--fc-primary-light));border-radius:999px;transition:width .4s}
 .sv-progress-text{font-size:12px;color:var(--fc-text-muted);margin-top:2px}
 
 /* Error */

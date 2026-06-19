@@ -13,9 +13,9 @@
 {% endblock %}
 
 {% block content %}
-    <div style="margin-bottom: 16px; padding: 12px 14px; border: 1px solid #ddd; border-radius: 6px; background: #fff;">
+    <div style="margin-bottom: 16px; padding: 12px 14px; border: 1px solid var(--fc-border); border-radius: 6px; background: var(--fc-bg-card);">
         <h3 style="margin: 0 0 8px;">{% trans "案由数据统计" %}</h3>
-        <div style="font-size: 13px; color: #333; line-height: 1.8;">
+        <div style="font-size: 13px; color: var(--fc-text-secondary); line-height: 1.8;">
             <div><strong>{% trans "总数" %}：</strong>{{ statistics.total_count|default:0 }}</div>
             <div><strong>{% trans "有效" %}：</strong>{{ statistics.active_count|default:0 }}</div>
             <div><strong>{% trans "废弃" %}：</strong>{{ statistics.deprecated_count|default:0 }}</div>

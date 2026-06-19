@@ -53,18 +53,18 @@
 }
 
 .status-badge.status-active {
-    background: #dbeafe;
-    color: #1d4ed8;
+    background: var(--fc-info-bg);
+    color: var(--fc-info-text);
 }
 
 .status-badge.status-closed {
-    background: #dcfce7;
-    color: #15803d;
+    background: var(--fc-success-bg);
+    color: var(--fc-success-text);
 }
 
 .status-badge.status-archived {
-    background: #f3f4f6;
-    color: #6b7280;
+    background: var(--fc-bg-muted-light);
+    color: var(--fc-text-muted);
 }
 
 /* 类型标签 */
@@ -74,14 +74,14 @@
     padding: 4px 10px;
     border-radius: 6px;
     font-size: 12px;
-    background: #f3f4f6;
+    background: var(--fc-bg-muted-light);
     color: #374151;
 }
 
 /* 头部元信息 */
 .header-meta {
     font-size: 13px;
-    color: #6b7280;
+    color: var(--fc-text-muted);
     margin-bottom: 16px;
 }
 
@@ -111,23 +111,23 @@
 
 .btn-primary {
     background: var(--unfold-primary, #3b82f6);
-    color: #fff !important;
+    color: var(--fc-text-on-primary) !important;
     border: 1px solid var(--unfold-primary, #3b82f6);
 }
 
 .btn-primary:hover {
     background: var(--unfold-primary-dark, #2563eb);
-    color: #fff !important;
+    color: var(--fc-text-on-primary) !important;
     border-color: var(--unfold-primary-dark, #2563eb);
 }
 
 .btn-secondary {
-    background: #f3f4f6;
+    background: var(--fc-bg-muted-light);
     color: #374151;
 }
 
 .btn-secondary:hover {
-    background: #e5e7eb;
+    background: var(--fc-border);
 }
 
 
@@ -141,7 +141,7 @@
 
 .tab-nav {
     display: flex;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--fc-border);
     padding: 0 16px;
 }
 
@@ -149,7 +149,7 @@
     padding: 16px 20px;
     font-size: 14px;
     font-weight: 500;
-    color: #6b7280;
+    color: var(--fc-text-muted);
     background: none;
     border: none;
     cursor: pointer;
@@ -206,7 +206,7 @@
 
 /* 信息卡片 */
 .info-card {
-    background: #fafafa;
+    background: var(--fc-bg-muted-light);
     border-radius: 8px;
     padding: 20px;
     transition: box-shadow 0.2s ease;
@@ -268,14 +268,14 @@
 .info-item label,
 .info-item dt {
     font-size: 13px;
-    color: #6b7280;
+    color: var(--fc-text-muted);
     flex-shrink: 0;
 }
 
 .info-item span,
 .info-item dd {
     font-size: 13px;
-    color: #1a1a1a;
+    color: var(--fc-text-heading);
     text-align: left;
     margin: 0;
     word-break: break-word;
@@ -283,7 +283,7 @@
 
 /* 空状态 */
 .empty-state {
-    color: #9ca3af;
+    color: var(--fc-text-disabled);
     font-size: 13px;
     text-align: center;
     padding: 20px;
@@ -292,17 +292,17 @@
 
 /* 文本样式 */
 .text-muted {
-    color: #9ca3af;
+    color: var(--fc-text-disabled);
 }
 
 /* 建档状态样式 */
 .archived-yes {
-    color: #15803d;
+    color: var(--fc-success-text);
     font-weight: 500;
 }
 
 .archived-no {
-    color: #6b7280;
+    color: var(--fc-text-muted);
 }
 
 /* 当事人列表 */
@@ -317,7 +317,7 @@
     align-items: center;
     gap: 12px;
     padding: 10px 0;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--fc-border);
 }
 
 .party-item:last-child, .lawyer-item:last-child {
@@ -326,7 +326,7 @@
 
 .party-name, .lawyer-name {
     font-weight: 500;
-    color: #1a1a1a;
+    color: var(--fc-text-heading);
 }
 
 .party-role {
@@ -337,28 +337,28 @@
 }
 
 .party-role.role-principal {
-    background: #dbeafe;
-    color: #1d4ed8;
+    background: var(--fc-info-bg);
+    color: var(--fc-info-text);
 }
 
 .party-role.role-beneficiary {
-    background: #dcfce7;
-    color: #15803d;
+    background: var(--fc-success-bg);
+    color: var(--fc-success-text);
 }
 
 .party-role.role-opposing {
-    background: #fee2e2;
-    color: #dc2626;
+    background: var(--fc-error-bg);
+    color: var(--fc-error-text);
 }
 
 .party-legal-rep {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--fc-text-muted);
 }
 
 .primary-badge {
-    background: #fef3c7;
-    color: #92400e;
+    background: var(--fc-warning-bg);
+    color: var(--fc-warning-text);
     font-size: 11px;
     padding: 2px 6px;
     border-radius: 4px;
@@ -374,7 +374,7 @@
 
 .party-item.clickable:hover,
 .lawyer-item.clickable:hover {
-    background: #f3f4f6;
+    background: var(--fc-bg-muted-light);
     margin: 0 -12px;
     padding: 10px 12px;
     border-radius: 6px;
@@ -382,7 +382,7 @@
 
 .view-detail-icon {
     margin-left: auto;
-    color: #9ca3af;
+    color: var(--fc-text-disabled);
     font-size: 14px;
 }
 
@@ -401,18 +401,18 @@
 }
 
 .fee-mode-tag.fee-mode-fixed {
-    background: #dbeafe;
-    color: #1d4ed8;
+    background: var(--fc-info-bg);
+    color: var(--fc-info-text);
 }
 
 .fee-mode-tag.fee-mode-semi_risk {
-    background: #fef3c7;
-    color: #92400e;
+    background: var(--fc-warning-bg);
+    color: var(--fc-warning-text);
 }
 
 .fee-mode-tag.fee-mode-full_risk {
-    background: #fee2e2;
-    color: #dc2626;
+    background: var(--fc-error-bg);
+    color: var(--fc-error-text);
 }
 
 .fee-mode-tag.fee-mode-custom {
@@ -423,7 +423,7 @@
 /* 金额样式 */
 .amount {
     font-weight: 600;
-    color: #15803d;
+    color: var(--fc-success-text);
 }
 
 /* 收款摘要 */
@@ -431,7 +431,7 @@
     display: flex;
     gap: 30px;
     padding: 12px 16px;
-    background: #f9fafb;
+    background: var(--fc-bg-muted-light);
     border-radius: 6px;
     margin-bottom: 16px;
 }
@@ -444,17 +444,17 @@
 
 .summary-item label {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--fc-text-muted);
 }
 
 .summary-value {
     font-size: 18px;
     font-weight: 600;
-    color: #1a1a1a;
+    color: var(--fc-text-heading);
 }
 
 .summary-value.amount {
-    color: #15803d;
+    color: var(--fc-success-text);
 }
 
 /* 收款记录列表 */
@@ -469,8 +469,8 @@
     align-items: center;
     gap: 12px;
     padding: 10px 12px;
-    background: #fff;
-    border: 1px solid #e5e7eb;
+    background: var(--fc-bg-card);
+    border: 1px solid var(--fc-border);
     border-radius: 6px;
     flex-wrap: wrap;
 }

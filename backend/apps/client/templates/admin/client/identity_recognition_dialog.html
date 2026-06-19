@@ -370,7 +370,7 @@ function highlightFilledFields() {
     ['name', 'id_number', 'address', 'legal_representative'].forEach(function(fieldName) {
         const field = document.getElementById('id_' + fieldName);
         if (field && field.value) {
-            field.style.backgroundColor = '#e8f5e8';
+            field.style.backgroundColor = 'var(--fc-success-bg)';
             field.style.borderColor = '#4caf50';
             setTimeout(function() {
                 field.style.backgroundColor = '';

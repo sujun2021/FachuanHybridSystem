@@ -56,18 +56,18 @@
 }
 
 .status-badge.status-active {
-    background: #dbeafe;
-    color: #1d4ed8;
+    background: var(--fc-info-bg);
+    color: var(--fc-info-text);
 }
 
 .status-badge.status-closed {
-    background: #dcfce7;
-    color: #15803d;
+    background: var(--fc-success-bg);
+    color: var(--fc-success-text);
 }
 
 .status-badge.status-archived {
-    background: #f3f4f6;
-    color: #6b7280;
+    background: var(--fc-bg-muted-light);
+    color: var(--fc-text-muted);
 }
 
 /* 类型和阶段标签 */
@@ -77,14 +77,14 @@
     padding: 4px 10px;
     border-radius: 6px;
     font-size: 12px;
-    background: #f3f4f6;
+    background: var(--fc-bg-muted-light);
     color: #374151;
 }
 
 /* 建档状态 */
 .archived-status {
     font-size: 13px;
-    color: #6b7280;
+    color: var(--fc-text-muted);
 }
 
 .archived-status.archived {
@@ -162,7 +162,7 @@
     padding: 16px 20px;
     font-size: 14px;
     font-weight: 500;
-    color: #6b7280;
+    color: var(--fc-text-muted);
     background: none;
     border: none;
     cursor: pointer;
@@ -274,7 +274,7 @@
 
 .info-item dt {
     font-size: 13px;
-    color: #6b7280;
+    color: var(--fc-text-muted);
     flex-shrink: 0;
 }
 
@@ -329,7 +329,7 @@
 
 .case-number-doc-name {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--fc-text-muted);
     margin-left: 8px;
 }
 
@@ -351,13 +351,13 @@
 
 .case-number-inactive-badge {
     background: #f3f4f6;
-    color: #6b7280;
+    color: var(--fc-text-muted);
 }
 
 .remarks {
     display: block;
     font-size: 12px;
-    color: #6b7280;
+    color: var(--fc-text-muted);
     margin-top: 4px;
 }
 
@@ -414,7 +414,7 @@
 
 .legal-status {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--fc-text-muted);
     background: #f3f4f6;
     padding: 2px 8px;
     border-radius: 4px;
@@ -555,7 +555,7 @@
 
 .attachments-label {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--fc-text-muted);
 }
 
 .attachment-link {
@@ -959,7 +959,7 @@
     background: none;
     border: none;
     font-size: 20px;
-    color: #6b7280;
+    color: var(--fc-text-muted);
     cursor: pointer;
     padding: 4px;
     line-height: 1;
@@ -985,7 +985,7 @@
 
 .detail-label {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--fc-text-muted);
     margin-bottom: 4px;
 }
 

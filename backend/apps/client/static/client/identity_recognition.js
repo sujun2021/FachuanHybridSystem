@@ -500,8 +500,8 @@ class IdentityRecognition {
             // 高亮填充的字段
             const field = document.getElementById('id_legal_representative_id_number');
             if (field && field.value) {
-                field.style.backgroundColor = '#e8f5e8';
-                field.style.borderColor = '#4caf50';
+                field.style.backgroundColor = 'var(--fc-success-bg)';
+                field.style.borderColor = 'var(--fc-success-text)';
                 field.style.transition = 'all 0.3s ease';
                 setTimeout(() => {
                     field.style.backgroundColor = '';
@@ -574,8 +574,8 @@ class IdentityRecognition {
         fieldNames.forEach(fieldName => {
             const field = document.getElementById('id_' + fieldName);
             if (field && field.value) {
-                field.style.backgroundColor = '#e8f5e8';
-                field.style.borderColor = '#4caf50';
+                field.style.backgroundColor = 'var(--fc-success-bg)';
+                field.style.borderColor = 'var(--fc-success-text)';
                 field.style.transition = 'all 0.3s ease';
 
                 // 3秒后恢复原样
