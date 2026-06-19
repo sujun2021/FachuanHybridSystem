@@ -11,7 +11,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("cases", "0027_remove_caselog_cases_caselog_created_idx"),
+        ("cases", "0029_remove_caselog_cases_caselog_created_idx"),
     ]
 
     operations = [
