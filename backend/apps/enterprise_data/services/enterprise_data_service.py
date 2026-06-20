@@ -272,8 +272,32 @@ class EnterpriseDataService:
         started = time.perf_counter()
         try:
             response: ProviderResponse = executor(selected_provider)
-        except Exception:
+        except Exception as exc:
             duration_ms = int((time.perf_counter() - started) * 1000)
+            # Stale cache fallback: return expired cached result when provider fails
+            stale = cache.get(cache_key)
+            if isinstance(stale, dict):
+                stale_meta = dict(stale.get("meta", {}))
+                stale_meta["cached"] = True
+                stale_meta["stale"] = True
+                stale["meta"] = stale_meta
+                self._metrics.record(
+                    provider=selected_provider_name,
+                    capability=capability,
+                    success=False,
+                    duration_ms=duration_ms,
+                    fallback_used=True,
+                )
+                logger.warning(
+                    "MCP 调用失败，返回过期缓存: provider=%s capability=%s error=%s",
+                    selected_provider_name,
+                    capability,
+                    exc,
+                )
+                if not include_raw:
+                    stale = dict(stale)
+                    stale["raw"] = None
+                return stale
             self._metrics.record(
                 provider=selected_provider_name,
                 capability=capability,

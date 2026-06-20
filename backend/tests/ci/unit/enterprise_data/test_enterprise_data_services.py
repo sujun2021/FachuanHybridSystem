@@ -432,3 +432,87 @@ class TestMcpToolClientExtended:
         resp.json.side_effect = Exception()
         exc = httpx.HTTPStatusError("s", request=MagicMock(), response=resp)
         assert McpToolClient._is_auth_like_http_error(exc) is False
+
+
+# ============================================================
+# EnterpriseDataService._execute stale cache fallback 测试
+# ============================================================
+
+
+class TestExecuteStaleCacheFallback:
+    """_execute 中 MCP 调用失败时的过期缓存回退"""
+
+    def _make_service(self):
+        from apps.enterprise_data.services.enterprise_data_service import EnterpriseDataService
+
+        registry = MagicMock()
+        provider = MagicMock()
+        provider.name = "tianyancha"
+        provider.transport = "streamable_http"
+        registry.get_provider.return_value = provider
+        registry.get_cache_ttl_seconds.return_value = 300
+        metrics = MagicMock()
+        return EnterpriseDataService(registry=registry, metrics_service=metrics), provider, metrics
+
+    @patch("apps.enterprise_data.services.enterprise_data_service.cache")
+    def test_stale_cache_returned_on_exception(self, mock_cache):
+        """MCP 调用失败时，若存在过期缓存，应返回 stale 结果而非抛异常"""
+        service, provider, metrics = self._make_service()
+        stale_payload = {"data": {"name": "cached"}, "meta": {"provider": "tianyancha"}, "raw": None}
+        # First call (line 262): cache miss -> returns None
+        # Second call (line 278): stale fallback -> returns stale_payload
+        mock_cache.get.side_effect = [None, stale_payload]
+
+        provider.search_companies.side_effect = ConnectionError("MCP down")
+
+        result = service.search_companies(keyword="test")
+
+        assert result["data"] == {"name": "cached"}
+        assert result["meta"]["cached"] is True
+        assert result["meta"]["stale"] is True
+        metrics.record.assert_called_once()
+        call_kwargs = metrics.record.call_args[1]
+        assert call_kwargs["success"] is False
+        assert call_kwargs["fallback_used"] is True
+
+    @patch("apps.enterprise_data.services.enterprise_data_service.cache")
+    def test_no_stale_cache_raises_original(self, mock_cache):
+        """MCP 调用失败且无过期缓存时，应抛出原始异常"""
+        service, provider, metrics = self._make_service()
+        mock_cache.get.return_value = None
+
+        provider.search_companies.side_effect = ConnectionError("MCP down")
+
+        with pytest.raises(ConnectionError, match="MCP down"):
+            service.search_companies(keyword="test")
+
+        metrics.record.assert_called_once()
+        call_kwargs = metrics.record.call_args[1]
+        assert call_kwargs["success"] is False
+        assert call_kwargs["fallback_used"] is False
+
+    @patch("apps.enterprise_data.services.enterprise_data_service.cache")
+    def test_stale_cache_strips_raw_when_not_requested(self, mock_cache):
+        """stale 回退时，若 include_raw=False，应清除 raw 字段"""
+        service, provider, metrics = self._make_service()
+        stale_payload = {"data": {"name": "cached"}, "meta": {}, "raw": {"some": "data"}}
+        mock_cache.get.side_effect = [None, stale_payload]
+
+        provider.search_companies.side_effect = RuntimeError("timeout")
+
+        result = service.search_companies(keyword="test", include_raw=False)
+
+        assert result["raw"] is None
+
+    @patch("apps.enterprise_data.services.enterprise_data_service.cache")
+    def test_stale_cache_preserves_raw_when_requested(self, mock_cache):
+        """stale 回退时，若 include_raw=True，应保留 raw 字段"""
+        service, provider, metrics = self._make_service()
+        stale_payload = {"data": {"name": "cached"}, "meta": {}, "raw": {"some": "data"}}
+        mock_cache.get.side_effect = [None, stale_payload]
+
+        provider.search_companies.side_effect = RuntimeError("timeout")
+
+        result = service.search_companies(keyword="test", include_raw=True)
+
+        assert result["raw"] == {"some": "data"}

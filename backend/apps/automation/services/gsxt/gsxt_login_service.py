@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 import threading
 from typing import Any, Protocol
 
@@ -48,8 +49,8 @@ class GsxtReportError(Exception):
 
 async def _wait_captcha_success(page: Any, captcha_selector: str, timeout: int) -> bool:  # pragma: no cover
     """轮询等待极验验证码完成。"""
-    deadline = asyncio.get_event_loop().time() + timeout
-    while asyncio.get_event_loop().time() < deadline:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
         await asyncio.sleep(2)
         try:
             done = await page.evaluate(f"""(() => {{
@@ -225,9 +226,9 @@ async def _run_full_flow(credential: GsxtCredentialProtocol, task_id: int) -> No
 
             logger.info("已点击登录，等待用户完成验证码...")
 
-            deadline = asyncio.get_event_loop().time() + LOGIN_CAPTCHA_TIMEOUT
+            deadline = time.monotonic() + LOGIN_CAPTCHA_TIMEOUT
             login_success = False
-            while asyncio.get_event_loop().time() < deadline:
+            while time.monotonic() < deadline:
                 await asyncio.sleep(2)
                 try:
                     if "rllogin" not in page.url:
@@ -266,8 +267,8 @@ async def _run_full_flow(credential: GsxtCredentialProtocol, task_id: int) -> No
             logger.info("已点击搜索，等待用户完成验证码...")
 
             # 等待搜索结果页
-            search_deadline = asyncio.get_event_loop().time() + REPORT_CAPTCHA_TIMEOUT
-            while asyncio.get_event_loop().time() < search_deadline:
+            search_deadline = time.monotonic() + REPORT_CAPTCHA_TIMEOUT
+            while time.monotonic() < search_deadline:
                 await asyncio.sleep(2)
                 try:
                     if "corp-query-search-1" in page.url:

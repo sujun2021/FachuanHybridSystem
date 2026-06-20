@@ -108,16 +108,20 @@ class PreservationQuoteServiceAdapter(IPreservationQuoteService):
 
         return self.service.create_quote(preserve_amount, corp_id, category_id, credential_id)
 
-    def execute_quote(self, quote_id: int, force_refresh_token: bool = False) -> dict[str, Any]:
+    def execute_quote(self, quote_id: int, force_refresh_token: bool = False) -> Any:
         """
         执行询价任务
+
+        注意：返回类型取决于事件循环状态：
+        - 无运行中的事件循环时：返回 dict[str, Any]（直接 await 结果）
+        - 已在事件循环中时：返回 asyncio.Task[dict[str, Any]]（需调用方 await）
 
         Args:
             quote_id: 询价记录ID
             force_refresh_token: 是否强制刷新Token
 
         Returns:
-            询价结果字典
+            询价结果字典，或可 await 的 Task 对象
         """
         import asyncio
 
@@ -133,10 +137,10 @@ class PreservationQuoteServiceAdapter(IPreservationQuoteService):
             loop = None
 
         if loop and loop.is_running():
-            # 如果已经在事件循环中，创建新的任务
-            return cast(dict[str, Any], asyncio.create_task(self.service.execute_quote(quote_id)))
+            # 已在事件循环中：返回 Task，调用方需 await
+            return asyncio.create_task(self.service.execute_quote(quote_id))
         else:
-            # 如果不在事件循环中，直接运行
+            # 无运行中的事件循环：直接运行并返回结果
             return asyncio.run(self.service.execute_quote(quote_id))
 
     def get_quote_by_id(self, quote_id: int) -> Any:
@@ -218,8 +222,11 @@ class PreservationQuoteServiceAdapter(IPreservationQuoteService):
             case_name, target_amount, applicant_name, respondent_name, court_name, case_type, **kwargs
         )
 
-    def execute_quote_internal(self, quote_id: int, force_refresh_token: bool = False) -> dict[str, Any]:
-        """执行询价任务（内部接口，无权限检查）"""
+    def execute_quote_internal(self, quote_id: int, force_refresh_token: bool = False) -> Any:
+        """执行询价任务（内部接口，无权限检查）
+
+        返回类型同 execute_quote()：可能是 dict 或 Task。
+        """
         return self.execute_quote(quote_id, force_refresh_token)
 
     def get_quote_by_id_internal(self, quote_id: int) -> Any:
@@ -380,8 +387,11 @@ class EnhancedPreservationQuoteService(PreservationQuoteService):
             **kwargs,
         )
 
-    def execute_quote_internal(self, quote_id: int, force_refresh_token: bool = False) -> dict[str, Any]:
-        """执行询价任务（内部接口，无权限检查）"""
+    def execute_quote_internal(self, quote_id: int, force_refresh_token: bool = False) -> Any:
+        """执行询价任务（内部接口，无权限检查）
+
+        返回类型同 execute_quote()：可能是 dict 或 Task。
+        """
         return self.execute_quote(quote_id, force_refresh_token)  # type: ignore
 
     def get_quote_by_id_internal(self, quote_id: int) -> Any:
