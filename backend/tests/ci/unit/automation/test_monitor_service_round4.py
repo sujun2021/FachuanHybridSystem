@@ -131,8 +131,10 @@ class TestGetTaskStatisticsServicePath:
 
         task_svc = MagicMock(spec=["get_tasks_since"])
         qs = MagicMock()
-        qs.count.return_value = 5
-        qs.filter.return_value.count.return_value = 1
+        qs.aggregate.return_value = {
+            "total": 5, "pending": 1, "running": 0,
+            "waiting_for_captcha": 0, "success": 3, "failed": 1,
+        }
         qs.values.return_value.values_list.return_value = []
         task_svc.get_tasks_since.return_value = qs
 

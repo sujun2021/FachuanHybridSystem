@@ -13,13 +13,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from apps.automation.services.insurance.court_insurance_client import (
+from plugins.court_automation.preservation_quote.court_insurance_client import (
     CourtInsuranceClient,
     InsuranceCompany,
     PremiumResult,
     parse_insurance_companies,
 )
-from apps.automation.services.insurance._insurance_http_mixin import (
+from plugins.court_automation.preservation_quote.insurance_http_mixin import (
     InsuranceHttpMixin,
     parse_premium_from_response,
     build_premium_request,

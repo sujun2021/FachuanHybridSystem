@@ -20,7 +20,7 @@ import pytest
 
 class TestValidateCreateParams:
     def _repo(self):
-        from apps.automation.services.insurance.preservation_quote.repo import (
+        from plugins.court_automation.preservation_quote.preservation_quote.repo import (
             PreservationQuoteRepository,
         )
         return PreservationQuoteRepository()
@@ -34,7 +34,7 @@ class TestValidateCreateParams:
         )
 
     def test_negative_amount(self):
-        from apps.automation.services.insurance.exceptions import ValidationError
+        from plugins.court_automation.preservation_quote.exceptions import ValidationError
         with pytest.raises(ValidationError):
             self._repo().validate_create_params(
                 preserve_amount=Decimal("-1"),
@@ -44,7 +44,7 @@ class TestValidateCreateParams:
             )
 
     def test_zero_amount(self):
-        from apps.automation.services.insurance.exceptions import ValidationError
+        from plugins.court_automation.preservation_quote.exceptions import ValidationError
         with pytest.raises(ValidationError):
             self._repo().validate_create_params(
                 preserve_amount=Decimal("0"),
@@ -54,7 +54,7 @@ class TestValidateCreateParams:
             )
 
     def test_empty_corp_id(self):
-        from apps.automation.services.insurance.exceptions import ValidationError
+        from plugins.court_automation.preservation_quote.exceptions import ValidationError
         with pytest.raises(ValidationError):
             self._repo().validate_create_params(
                 preserve_amount=Decimal("100"),
@@ -64,7 +64,7 @@ class TestValidateCreateParams:
             )
 
     def test_empty_category_id(self):
-        from apps.automation.services.insurance.exceptions import ValidationError
+        from plugins.court_automation.preservation_quote.exceptions import ValidationError
         with pytest.raises(ValidationError):
             self._repo().validate_create_params(
                 preserve_amount=Decimal("100"),
@@ -74,7 +74,7 @@ class TestValidateCreateParams:
             )
 
     def test_invalid_credential_id(self):
-        from apps.automation.services.insurance.exceptions import ValidationError
+        from plugins.court_automation.preservation_quote.exceptions import ValidationError
         with pytest.raises(ValidationError):
             self._repo().validate_create_params(
                 preserve_amount=Decimal("100"),
@@ -100,13 +100,13 @@ class TestValidateCreateParams:
 class TestGetQuoteWithItems:
     @pytest.mark.django_db
     def test_not_found_raises(self):
-        from apps.automation.services.insurance.preservation_quote.repo import (
+        from plugins.court_automation.preservation_quote.preservation_quote.repo import (
             PreservationQuoteRepository,
         )
         from apps.core.exceptions import NotFoundError
 
         with patch(
-            "apps.automation.services.insurance.preservation_quote.repo.PreservationQuote"
+            "plugins.court_automation.preservation_quote.preservation_quote.repo.PreservationQuote"
         ) as MockModel:
             MockModel.DoesNotExist = type("DoesNotExist", (Exception,), {})
             MockModel.objects.prefetch_related.return_value.get.side_effect = MockModel.DoesNotExist
@@ -122,7 +122,7 @@ class TestGetQuoteWithItems:
 class TestFinalizeQuote:
     @pytest.mark.asyncio
     async def test_all_success(self):
-        from apps.automation.services.insurance.preservation_quote.repo import (
+        from plugins.court_automation.preservation_quote.preservation_quote.repo import (
             PreservationQuoteRepository,
         )
 
@@ -130,7 +130,7 @@ class TestFinalizeQuote:
         quote.save = AsyncMock()
 
         with patch(
-            "apps.automation.services.insurance.preservation_quote.repo._db_sync",
+            "plugins.court_automation.preservation_quote.preservation_quote.repo._db_sync",
             new_callable=AsyncMock,
         ) as mock_sync:
             mock_sync.return_value = None
@@ -142,7 +142,7 @@ class TestFinalizeQuote:
 
     @pytest.mark.asyncio
     async def test_all_failed(self):
-        from apps.automation.services.insurance.preservation_quote.repo import (
+        from plugins.court_automation.preservation_quote.preservation_quote.repo import (
             PreservationQuoteRepository,
         )
 
@@ -150,7 +150,7 @@ class TestFinalizeQuote:
         quote.save = AsyncMock()
 
         with patch(
-            "apps.automation.services.insurance.preservation_quote.repo._db_sync",
+            "plugins.court_automation.preservation_quote.preservation_quote.repo._db_sync",
             new_callable=AsyncMock,
         ) as mock_sync:
             mock_sync.return_value = None
@@ -162,7 +162,7 @@ class TestFinalizeQuote:
 
     @pytest.mark.asyncio
     async def test_all_failed_no_error_message(self):
-        from apps.automation.services.insurance.preservation_quote.repo import (
+        from plugins.court_automation.preservation_quote.preservation_quote.repo import (
             PreservationQuoteRepository,
         )
 
@@ -170,7 +170,7 @@ class TestFinalizeQuote:
         quote.save = AsyncMock()
 
         with patch(
-            "apps.automation.services.insurance.preservation_quote.repo._db_sync",
+            "plugins.court_automation.preservation_quote.preservation_quote.repo._db_sync",
             new_callable=AsyncMock,
         ) as mock_sync:
             mock_sync.return_value = None
@@ -182,7 +182,7 @@ class TestFinalizeQuote:
 
     @pytest.mark.asyncio
     async def test_partial_success(self):
-        from apps.automation.services.insurance.preservation_quote.repo import (
+        from plugins.court_automation.preservation_quote.preservation_quote.repo import (
             PreservationQuoteRepository,
         )
 
@@ -190,7 +190,7 @@ class TestFinalizeQuote:
         quote.save = AsyncMock()
 
         with patch(
-            "apps.automation.services.insurance.preservation_quote.repo._db_sync",
+            "plugins.court_automation.preservation_quote.preservation_quote.repo._db_sync",
             new_callable=AsyncMock,
         ) as mock_sync:
             mock_sync.return_value = None
@@ -211,7 +211,7 @@ class TestFinalizeQuote:
 class TestMarkFailed:
     @pytest.mark.asyncio
     async def test_sets_status(self):
-        from apps.automation.services.insurance.preservation_quote.repo import (
+        from plugins.court_automation.preservation_quote.preservation_quote.repo import (
             PreservationQuoteRepository,
         )
 
@@ -219,7 +219,7 @@ class TestMarkFailed:
         quote.save = AsyncMock()
 
         with patch(
-            "apps.automation.services.insurance.preservation_quote.repo._db_sync",
+            "plugins.court_automation.preservation_quote.preservation_quote.repo._db_sync",
             new_callable=AsyncMock,
         ) as mock_sync:
             mock_sync.return_value = None
@@ -236,7 +236,7 @@ class TestMarkFailed:
 class TestResetForRetry:
     @pytest.mark.asyncio
     async def test_resets_fields(self):
-        from apps.automation.services.insurance.preservation_quote.repo import (
+        from plugins.court_automation.preservation_quote.preservation_quote.repo import (
             PreservationQuoteRepository,
         )
 
@@ -244,7 +244,7 @@ class TestResetForRetry:
         quote.save = AsyncMock()
 
         with patch(
-            "apps.automation.services.insurance.preservation_quote.repo._db_sync",
+            "plugins.court_automation.preservation_quote.preservation_quote.repo._db_sync",
             new_callable=AsyncMock,
         ) as mock_sync:
             mock_sync.return_value = None
@@ -264,7 +264,7 @@ class TestResetForRetry:
 class TestSavePremiumResultsCleanDecimal:
     @pytest.mark.asyncio
     async def test_clean_decimal_none_and_empty(self):
-        from apps.automation.services.insurance.preservation_quote.repo import (
+        from plugins.court_automation.preservation_quote.preservation_quote.repo import (
             PreservationQuoteRepository,
         )
 
@@ -294,10 +294,10 @@ class TestSavePremiumResultsCleanDecimal:
         ]
 
         with patch(
-            "apps.automation.services.insurance.preservation_quote.repo._db_sync",
+            "plugins.court_automation.preservation_quote.preservation_quote.repo._db_sync",
             new_callable=AsyncMock,
         ) as mock_sync, patch(
-            "apps.automation.services.insurance.preservation_quote.repo.InsuranceQuote"
+            "plugins.court_automation.preservation_quote.preservation_quote.repo.InsuranceQuote"
         ) as MockIQ:
             mock_sync.return_value = None
             repo = PreservationQuoteRepository()
@@ -307,7 +307,7 @@ class TestSavePremiumResultsCleanDecimal:
 
     @pytest.mark.asyncio
     async def test_non_dict_response_data(self):
-        from apps.automation.services.insurance.preservation_quote.repo import (
+        from plugins.court_automation.preservation_quote.preservation_quote.repo import (
             PreservationQuoteRepository,
         )
 
@@ -330,10 +330,10 @@ class TestSavePremiumResultsCleanDecimal:
         ]
 
         with patch(
-            "apps.automation.services.insurance.preservation_quote.repo._db_sync",
+            "plugins.court_automation.preservation_quote.preservation_quote.repo._db_sync",
             new_callable=AsyncMock,
         ) as mock_sync, patch(
-            "apps.automation.services.insurance.preservation_quote.repo.InsuranceQuote"
+            "plugins.court_automation.preservation_quote.preservation_quote.repo.InsuranceQuote"
         ) as MockIQ:
             mock_sync.return_value = None
             repo = PreservationQuoteRepository()
@@ -349,11 +349,11 @@ class TestSavePremiumResultsCleanDecimal:
 
 class TestConfigureDbSettings:
     def test_calls_configure(self):
-        from apps.automation.services.insurance.preservation_quote.repo import (
+        from plugins.court_automation.preservation_quote.preservation_quote.repo import (
             _configure_db_settings,
         )
 
-        with patch("apps.automation.services.insurance.preservation_quote.repo.connections") as mock_conn:
+        with patch("plugins.court_automation.preservation_quote.preservation_quote.repo.connections") as mock_conn:
             mock_conn._settings = "raw"
             mock_conn.configure_settings.return_value = "configured"
             _configure_db_settings()

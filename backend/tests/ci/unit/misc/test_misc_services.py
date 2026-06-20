@@ -32,24 +32,24 @@ class TestOaFilingTasks:
 
 class TestResolveProvinceCode:
     def test_exact_match(self):
-        from apps.automation.services.scraper.sites.court_zxfw_filing.service import CourtZxfwFilingService
+        from plugins.court_automation.filing.playwright_filing.service import CourtZxfwFilingService
         assert CourtZxfwFilingService.resolve_province_code("广东省") == "440000"
 
     def test_fuzzy_match_guangxi(self):
-        from apps.automation.services.scraper.sites.court_zxfw_filing.service import CourtZxfwFilingService
+        from plugins.court_automation.filing.playwright_filing.service import CourtZxfwFilingService
         assert CourtZxfwFilingService.resolve_province_code("广西") == "450000"
 
     def test_fuzzy_match_inner_mongolia(self):
-        from apps.automation.services.scraper.sites.court_zxfw_filing.service import CourtZxfwFilingService
+        from plugins.court_automation.filing.playwright_filing.service import CourtZxfwFilingService
         assert CourtZxfwFilingService.resolve_province_code("内蒙古") == "150000"
 
     def test_unsupported_raises(self):
-        from apps.automation.services.scraper.sites.court_zxfw_filing.service import CourtZxfwFilingService
+        from plugins.court_automation.filing.playwright_filing.service import CourtZxfwFilingService
         with pytest.raises(ValueError, match="不支持的省份"):
             CourtZxfwFilingService.resolve_province_code("火星省")
 
     def test_all_provinces_have_codes(self):
-        from apps.automation.services.scraper.sites.court_zxfw_filing.service import CourtZxfwFilingService
+        from plugins.court_automation.filing.playwright_filing.service import CourtZxfwFilingService
         for name, code in CourtZxfwFilingService.PROVINCE_CODES.items():
             assert len(code) == 6, f"{name} code should be 6 digits"
             assert code.isdigit(), f"{name} code should be digits"

@@ -37,7 +37,7 @@ class TestTokenRateLimitMiddleware:
         middleware = TokenRateLimitMiddleware(get_response)
         request = self._make_request()
         with patch("apps.core.middleware.token_rate_limit.cache") as mock_cache:
-            mock_cache.get.return_value = None
+            mock_cache.add.return_value = True  # First request, key created
             result = middleware(request)
             assert result == "ok"
 
@@ -46,7 +46,8 @@ class TestTokenRateLimitMiddleware:
         middleware = TokenRateLimitMiddleware(get_response)
         request = self._make_request()
         with patch("apps.core.middleware.token_rate_limit.cache") as mock_cache:
-            mock_cache.get.return_value = 11  # Over limit
+            mock_cache.add.return_value = False  # Key already exists
+            mock_cache.incr.return_value = 12  # Over limit
             result = middleware(request)
             assert result.status_code == 429
 
@@ -55,17 +56,18 @@ class TestTokenRateLimitMiddleware:
         middleware = TokenRateLimitMiddleware(get_response)
         request = self._make_request()
         with patch("apps.core.middleware.token_rate_limit.cache") as mock_cache:
-            mock_cache.get.return_value = 5
+            mock_cache.add.return_value = False  # Key already exists
+            mock_cache.incr.return_value = 5
             result = middleware(request)
             assert result == "ok"
-            mock_cache.set.assert_called()
+            mock_cache.incr.assert_called()
 
     def test_cache_exception_passes_through(self):
         get_response = MagicMock(return_value="ok")
         middleware = TokenRateLimitMiddleware(get_response)
         request = self._make_request()
         with patch("apps.core.middleware.token_rate_limit.cache") as mock_cache:
-            mock_cache.get.side_effect = Exception("cache down")
+            mock_cache.add.side_effect = Exception("cache down")
             result = middleware(request)
             assert result == "ok"
 
@@ -75,7 +77,7 @@ class TestTokenRateLimitMiddleware:
         request = self._make_request()
         request.META["HTTP_X_FORWARDED_FOR"] = "10.0.0.1, 10.0.0.2"
         with patch("apps.core.middleware.token_rate_limit.cache") as mock_cache:
-            mock_cache.get.return_value = None
+            mock_cache.add.return_value = True
             result = middleware(request)
             assert result == "ok"
 
@@ -85,6 +87,6 @@ class TestTokenRateLimitMiddleware:
         request = self._make_request(ip="192.168.1.1")
         request.META["HTTP_X_FORWARDED_FOR"] = ""
         with patch("apps.core.middleware.token_rate_limit.cache") as mock_cache:
-            mock_cache.get.return_value = None
+            mock_cache.add.return_value = True
             result = middleware(request)
             assert result == "ok"

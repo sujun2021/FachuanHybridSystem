@@ -18,7 +18,7 @@ import pytest
 
 class TestPreservationQuoteCreateSchema:
     def test_valid_data(self) -> None:
-        from apps.automation.schemas.preservation import PreservationQuoteCreateSchema
+        from plugins.court_automation.preservation_quote.schemas import PreservationQuoteCreateSchema
         result = PreservationQuoteCreateSchema(
             preserve_amount=Decimal("100000"),
             corp_id="440100",
@@ -28,7 +28,7 @@ class TestPreservationQuoteCreateSchema:
         assert result.preserve_amount == Decimal("100000")
 
     def test_negative_amount_raises(self) -> None:
-        from apps.automation.schemas.preservation import PreservationQuoteCreateSchema
+        from plugins.court_automation.preservation_quote.schemas import PreservationQuoteCreateSchema
         with pytest.raises(Exception):
             PreservationQuoteCreateSchema(
                 preserve_amount=Decimal("-100"),
@@ -38,7 +38,7 @@ class TestPreservationQuoteCreateSchema:
             )
 
     def test_empty_corp_id_raises(self) -> None:
-        from apps.automation.schemas.preservation import PreservationQuoteCreateSchema
+        from plugins.court_automation.preservation_quote.schemas import PreservationQuoteCreateSchema
         with pytest.raises(Exception):
             PreservationQuoteCreateSchema(
                 preserve_amount=Decimal("100000"),
@@ -48,7 +48,7 @@ class TestPreservationQuoteCreateSchema:
             )
 
     def test_whitespace_corp_id_stripped(self) -> None:
-        from apps.automation.schemas.preservation import PreservationQuoteCreateSchema
+        from plugins.court_automation.preservation_quote.schemas import PreservationQuoteCreateSchema
         result = PreservationQuoteCreateSchema(
             preserve_amount=Decimal("100000"),
             corp_id="  440100  ",
@@ -60,13 +60,13 @@ class TestPreservationQuoteCreateSchema:
 
 class TestInsuranceQuoteSchema:
     def test_config_json_encoders(self) -> None:
-        from apps.automation.schemas.preservation import InsuranceQuoteSchema
+        from plugins.court_automation.preservation_quote.schemas import InsuranceQuoteSchema
         assert InsuranceQuoteSchema.Config.json_encoders is not None
 
 
 class TestPreservationQuoteSchemaFromModel:
     def test_from_model(self) -> None:
-        from apps.automation.schemas.preservation import PreservationQuoteSchema
+        from plugins.court_automation.preservation_quote.schemas import PreservationQuoteSchema
         obj = SimpleNamespace(
             id=1,
             preserve_amount=Decimal("50000"),
@@ -90,7 +90,7 @@ class TestPreservationQuoteSchemaFromModel:
 
 class TestQuoteListItemSchemaFromModel:
     def test_from_model(self) -> None:
-        from apps.automation.schemas.preservation import QuoteListItemSchema
+        from plugins.court_automation.preservation_quote.schemas import QuoteListItemSchema
         obj = SimpleNamespace(
             id=1,
             preserve_amount=Decimal("100000"),

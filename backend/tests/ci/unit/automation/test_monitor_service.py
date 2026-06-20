@@ -70,30 +70,16 @@ class TestGetTaskStatistics:
         task_svc = MagicMock()
         # Chain: .objects.filter() -> qs
         qs = MagicMock()
-        qs.count.return_value = 10
-        qs.filter.return_value.count.return_value = 2
+        qs.aggregate.return_value = {
+            "total": 10,
+            "pending": 2,
+            "running": 3,
+            "waiting_for_captcha": 1,
+            "success": 3,
+            "failed": 1,
+        }
         qs.values.return_value.values_list.return_value = [("type_a", 5)]
         task_svc.objects.filter.return_value = qs
-
-        # Make count return different values per call
-        call_count = 0
-
-        def count_side_effect():
-            nonlocal call_count
-            call_count += 1
-            return [10, 2, 3, 1, 3, 1][call_count - 1]
-
-        qs.count.side_effect = count_side_effect
-
-        # Status filter chains
-        status_qs = MagicMock()
-        status_qs.count.side_effect = count_side_effect
-        qs.filter.return_value = status_qs
-
-        # values chain
-        values_qs = MagicMock()
-        values_qs.values_list.return_value = [("type_a", 5)]
-        qs.values.return_value = values_qs
 
         svc = MonitorService(task_service=task_svc)
         stats = svc.get_task_statistics(hours=24)

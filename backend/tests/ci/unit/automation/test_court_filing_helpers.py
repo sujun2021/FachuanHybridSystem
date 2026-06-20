@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from apps.automation.api.court_filing_helpers import (
+from plugins.court_automation.filing.helpers import (
     _apply_execution_party_fallbacks,
     _build_agent_payloads,
     _build_execution_reason_text,

@@ -10,7 +10,7 @@ import re
 
 import pytest
 
-from apps.automation.services.scraper.sites.court_zxfw_filing.party_info_handler import PartyInfoHandlerMixin
+from plugins.court_automation.filing.playwright_filing.party_info_handler import PartyInfoHandlerMixin
 
 
 # ============================================================

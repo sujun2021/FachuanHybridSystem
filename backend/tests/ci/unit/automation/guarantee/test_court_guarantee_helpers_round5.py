@@ -32,7 +32,7 @@ import pytest
 
 class TestGetCaseNumber:
     def test_from_case_table(self):
-        from apps.automation.api.court_guarantee_helpers import _get_case_number
+        from plugins.court_automation.guarantee.helpers import _get_case_number
 
         qs = MagicMock()
         qs.exclude.return_value.exclude.return_value.values_list.return_value.first.return_value = "(2025)粤01民初1号"
@@ -40,7 +40,7 @@ class TestGetCaseNumber:
         assert _get_case_number(case) == "(2025)粤01民初1号"
 
     def test_fallback_to_filing_number(self):
-        from apps.automation.api.court_guarantee_helpers import _get_case_number
+        from plugins.court_automation.guarantee.helpers import _get_case_number
 
         qs = MagicMock()
         qs.exclude.return_value.exclude.return_value.values_list.return_value.first.return_value = None
@@ -53,7 +53,7 @@ class TestGetCaseNumber:
 
 class TestGetCaseCourtName:
     def test_trial_authority_first(self):
-        from apps.automation.api.court_guarantee_helpers import _get_case_court_name
+        from plugins.court_automation.guarantee.helpers import _get_case_court_name
 
         trial = SimpleNamespace(authority_type="trial", name="天河区")
         # Build mock chain: case.supervising_authorities.all().order_by("id").filter(...).first()
@@ -65,7 +65,7 @@ class TestGetCaseCourtName:
         mock_ordered.exclude.return_value.first.return_value = None
         case = SimpleNamespace(supervising_authorities=MagicMock(all=MagicMock(return_value=mock_all)))
 
-        with patch("apps.automation.api.court_guarantee_helpers._resolve_court_name", return_value="天河区人民法院") as mock_resolve:
+        with patch("plugins.court_automation.guarantee.helpers._resolve_court_name", return_value="天河区人民法院") as mock_resolve:
             result = _get_case_court_name(case)
             assert result == "天河区人民法院"
             mock_resolve.assert_called_once()
@@ -74,7 +74,7 @@ class TestGetCaseCourtName:
     def test_no_authority_returns_none(self):
         """Verify no-authority path. Requires django_db because AuthorityType
         import triggers AppConfig.ready() which queries core_systemconfig."""
-        from apps.automation.api.court_guarantee_helpers import _get_case_court_name
+        from plugins.court_automation.guarantee.helpers import _get_case_court_name
 
         # Build mock chain:
         # case.supervising_authorities.all().order_by("id") -> mock_ordered
@@ -102,7 +102,7 @@ class TestGetCaseCourtName:
         assert _get_case_court_name(case) is None
 
     def test_any_named_authority_fallback(self):
-        from apps.automation.api.court_guarantee_helpers import _get_case_court_name
+        from plugins.court_automation.guarantee.helpers import _get_case_court_name
 
         fallback = SimpleNamespace(name="番禺区")
         mock_all = MagicMock()
@@ -112,7 +112,7 @@ class TestGetCaseCourtName:
         mock_ordered.exclude.return_value.first.return_value = fallback
         case = SimpleNamespace(supervising_authorities=MagicMock(all=MagicMock(return_value=mock_all)))
 
-        with patch("apps.automation.api.court_guarantee_helpers._resolve_court_name", return_value="番禺区人民法院") as mock_resolve:
+        with patch("plugins.court_automation.guarantee.helpers._resolve_court_name", return_value="番禺区人民法院") as mock_resolve:
             result = _get_case_court_name(case)
             assert result == "番禺区人民法院"
 
@@ -130,7 +130,7 @@ class TestListPartyPayloads:
         return SimpleNamespace(id=pid, client=client, legal_status=status, name=f"Party{pid}")
 
     def test_status_match_with_prefer_our(self):
-        from apps.automation.api.court_guarantee_helpers import _list_party_payloads
+        from plugins.court_automation.guarantee.helpers import _list_party_payloads
 
         p1 = self._make_party(1, "plaintiff_side", is_our=True)
         p2 = self._make_party(2, "plaintiff_side", is_our=False)
@@ -142,7 +142,7 @@ class TestListPartyPayloads:
         assert any(r["party_id"] == 1 for r in result)
 
     def test_fallback_to_status_only(self):
-        from apps.automation.api.court_guarantee_helpers import _list_party_payloads
+        from plugins.court_automation.guarantee.helpers import _list_party_payloads
 
         p1 = self._make_party(1, "defendant_side", is_our=True)
         result = _list_party_payloads(
@@ -156,7 +156,7 @@ class TestListPartyPayloads:
         assert len(result) >= 1
 
     def test_fallback_to_first_party(self):
-        from apps.automation.api.court_guarantee_helpers import _list_party_payloads
+        from plugins.court_automation.guarantee.helpers import _list_party_payloads
 
         p1 = self._make_party(1, "unknown_status", is_our=False)
         result = _list_party_payloads(
@@ -180,7 +180,7 @@ class TestPickPartyPayload:
         return SimpleNamespace(id=pid, client=client, legal_status=status, name=f"Party{pid}")
 
     def test_returns_first_payload(self):
-        from apps.automation.api.court_guarantee_helpers import _pick_party_payload
+        from plugins.court_automation.guarantee.helpers import _pick_party_payload
 
         p1 = self._make_party(1, "plaintiff_side", is_our=True)
         result = _pick_party_payload(
@@ -191,7 +191,7 @@ class TestPickPartyPayload:
         assert result["party_id"] == 1
 
     def test_empty_returns_default(self):
-        from apps.automation.api.court_guarantee_helpers import _pick_party_payload
+        from plugins.court_automation.guarantee.helpers import _pick_party_payload
 
         result = _pick_party_payload(
             case_parties=[],
@@ -206,7 +206,7 @@ class TestPickPartyPayload:
 
 class TestListOpponentCaseParties:
     def test_fallback_to_respondent_statuses(self):
-        from apps.automation.api.court_guarantee_helpers import _list_opponent_case_parties
+        from plugins.court_automation.guarantee.helpers import _list_opponent_case_parties
 
         p1 = SimpleNamespace(
             client=SimpleNamespace(is_our_client=True),
@@ -217,7 +217,7 @@ class TestListOpponentCaseParties:
         assert len(result) >= 0  # depends on whether defendant_side is in _RESPONDENT_SIDE_STATUSES
 
     def test_fallback_to_all_when_no_respondent(self):
-        from apps.automation.api.court_guarantee_helpers import _list_opponent_case_parties
+        from plugins.court_automation.guarantee.helpers import _list_opponent_case_parties
 
         p1 = SimpleNamespace(
             client=SimpleNamespace(is_our_client=True),
@@ -227,7 +227,7 @@ class TestListOpponentCaseParties:
         assert len(result) == 1
 
     def test_direct_our_client_exclusion(self):
-        from apps.automation.api.court_guarantee_helpers import _list_opponent_case_parties
+        from plugins.court_automation.guarantee.helpers import _list_opponent_case_parties
 
         p1 = SimpleNamespace(client=SimpleNamespace(is_our_client=True), legal_status="plaintiff")
         p2 = SimpleNamespace(client=SimpleNamespace(is_our_client=False), legal_status="defendant")
@@ -240,7 +240,7 @@ class TestListOpponentCaseParties:
 
 class TestBuildRespondentOptions:
     def test_basic(self):
-        from apps.automation.api.court_guarantee_helpers import _build_respondent_options
+        from plugins.court_automation.guarantee.helpers import _build_respondent_options
 
         p1 = SimpleNamespace(
             id=1,
@@ -258,7 +258,7 @@ class TestBuildRespondentOptions:
 
 class TestBuildPlaintiffAgentPayload:
     def test_no_lawyer_returns_fallback(self):
-        from apps.automation.api.court_guarantee_helpers import _build_plaintiff_agent_payload
+        from plugins.court_automation.guarantee.helpers import _build_plaintiff_agent_payload
 
         # The function does: case.assignments.select_related("lawyer__law_firm").order_by("id").first()
         # We need .first() to return None so lawyer is None
@@ -275,7 +275,7 @@ class TestBuildPlaintiffAgentPayload:
         assert result["name"] == "原告"
 
     def test_lawyer_from_requester(self):
-        from apps.automation.api.court_guarantee_helpers import _build_plaintiff_agent_payload
+        from plugins.court_automation.guarantee.helpers import _build_plaintiff_agent_payload
 
         lawyer = SimpleNamespace(
             real_name="律师A", username="a", id_card="123", phone="12000000000",
@@ -293,9 +293,9 @@ class TestBuildPlaintiffAgentPayload:
 
 class TestBuildPrimaryRespondentPropertyClueEmpty:
     def test_no_parties_returns_default(self):
-        from apps.automation.api.court_guarantee_helpers import _build_primary_respondent_property_clue
+        from plugins.court_automation.guarantee.helpers import _build_primary_respondent_property_clue
 
-        with patch("apps.automation.api.court_guarantee_helpers._build_selected_respondent_property_clues", return_value=[]):
+        with patch("plugins.court_automation.guarantee.helpers._build_selected_respondent_property_clues", return_value=[]):
             result = _build_primary_respondent_property_clue(
                 case_parties=[], selected_respondents=[], preserve_amount=None
             )
@@ -307,16 +307,16 @@ class TestBuildPrimaryRespondentPropertyClueEmpty:
 
 class TestExtractQuoteCompanyOptionsEdge:
     def test_items_not_a_list(self):
-        from apps.automation.api.court_guarantee_helpers import _extract_quote_company_options
+        from plugins.court_automation.guarantee.helpers import _extract_quote_company_options
         assert _extract_quote_company_options(quote_context={"items": "not a list"}) == []
 
     def test_non_dict_items(self):
-        from apps.automation.api.court_guarantee_helpers import _extract_quote_company_options
+        from plugins.court_automation.guarantee.helpers import _extract_quote_company_options
         result = _extract_quote_company_options(quote_context={"items": ["str", 123]})
         assert result == []
 
     def test_empty_company_name(self):
-        from apps.automation.api.court_guarantee_helpers import _extract_quote_company_options
+        from plugins.court_automation.guarantee.helpers import _extract_quote_company_options
         result = _extract_quote_company_options(quote_context={"items": [{"company_name": "", "status": "success"}]})
         assert result == []
 
@@ -326,7 +326,7 @@ class TestExtractQuoteCompanyOptionsEdge:
 
 class TestResolveInsuranceCompanyDefaultsEdge:
     def test_recommended_not_in_options_uses_first(self):
-        from apps.automation.api.court_guarantee_helpers import _resolve_insurance_company_defaults
+        from plugins.court_automation.guarantee.helpers import _resolve_insurance_company_defaults
 
         ctx = {
             "recommended_company": "不存在的公司",
@@ -343,11 +343,11 @@ class TestResolveInsuranceCompanyDefaultsEdge:
 
 class TestNormalizeInsuranceCompanyEdge:
     def test_empty_name_empty_allowed_returns_default(self):
-        from apps.automation.api.court_guarantee_helpers import _normalize_insurance_company, _DEFAULT_INSURANCE_COMPANY
+        from plugins.court_automation.guarantee.helpers import _normalize_insurance_company, _DEFAULT_INSURANCE_COMPANY
         assert _normalize_insurance_company("", allowed_options=[]) == _DEFAULT_INSURANCE_COMPANY
 
     def test_empty_name_with_allowed_returns_first(self):
-        from apps.automation.api.court_guarantee_helpers import _normalize_insurance_company
+        from plugins.court_automation.guarantee.helpers import _normalize_insurance_company
         assert _normalize_insurance_company("", allowed_options=["X", "Y"]) == "X"
 
 
@@ -356,7 +356,7 @@ class TestNormalizeInsuranceCompanyEdge:
 
 class TestBuildCauseCandidatesFullWidthSpace:
     def test_fullwidth_space_replaced(self):
-        from apps.automation.api.court_guarantee_helpers import _build_cause_candidates
+        from plugins.court_automation.guarantee.helpers import _build_cause_candidates
         result = _build_cause_candidates("买卖合同　纠纷")
         # fullwidth space replaced with regular space
         assert any("买卖合同 纠纷" in c for c in result)
@@ -367,16 +367,16 @@ class TestBuildCauseCandidatesFullWidthSpace:
 
 class TestUpdateSessionTaskGuarantee:
     def test_none_session_id_noop(self):
-        from apps.automation.api.court_guarantee_helpers import _update_session_task
+        from plugins.court_automation.guarantee.helpers import _update_session_task
         _update_session_task(session_id=None, status="running")
 
     @pytest.mark.django_db
     def test_set_started_and_finished(self):
-        from apps.automation.api.court_guarantee_helpers import _update_session_task
+        from plugins.court_automation.guarantee.helpers import _update_session_task
 
-        with patch("apps.automation.api.court_guarantee_helpers.timezone") as mock_tz:
+        with patch("plugins.court_automation.guarantee.helpers.timezone") as mock_tz:
             mock_tz.now.return_value = "now"
-            with patch("apps.automation.api.court_guarantee_helpers.asyncio") as mock_asyncio:
+            with patch("plugins.court_automation.guarantee.helpers.asyncio") as mock_asyncio:
                 mock_asyncio.get_running_loop.side_effect = RuntimeError("no loop")
                 _update_session_task(
                     session_id=1, status="running",
@@ -389,7 +389,7 @@ class TestUpdateSessionTaskGuarantee:
 
 class TestGuaranteeSessionStatusPayloadTiming:
     def test_failed_with_timing(self):
-        from apps.automation.api.court_guarantee_helpers import _build_session_status_payload
+        from plugins.court_automation.guarantee.helpers import _build_session_status_payload
         from apps.automation.models import ScraperTaskStatus
 
         task = SimpleNamespace(
@@ -401,7 +401,7 @@ class TestGuaranteeSessionStatusPayloadTiming:
         assert payload["timing"]["overall_start"] == 1.0
 
     def test_failed_without_timing(self):
-        from apps.automation.api.court_guarantee_helpers import _build_session_status_payload
+        from plugins.court_automation.guarantee.helpers import _build_session_status_payload
         from apps.automation.models import ScraperTaskStatus
 
         task = SimpleNamespace(id=1, status=ScraperTaskStatus.FAILED, result={}, error_message="fail")
@@ -409,7 +409,7 @@ class TestGuaranteeSessionStatusPayloadTiming:
         assert "timing" not in payload
 
     def test_result_message_for_failed(self):
-        from apps.automation.api.court_guarantee_helpers import _build_session_status_payload
+        from plugins.court_automation.guarantee.helpers import _build_session_status_payload
         from apps.automation.models import ScraperTaskStatus
 
         task = SimpleNamespace(
@@ -420,7 +420,7 @@ class TestGuaranteeSessionStatusPayloadTiming:
         assert payload["message"] == "result msg"
 
     def test_running_with_result_message(self):
-        from apps.automation.api.court_guarantee_helpers import _build_session_status_payload
+        from plugins.court_automation.guarantee.helpers import _build_session_status_payload
         from apps.automation.models import ScraperTaskStatus
 
         task = SimpleNamespace(
@@ -431,7 +431,7 @@ class TestGuaranteeSessionStatusPayloadTiming:
         assert payload["message"] == "running msg"
 
     def test_success_with_result_message(self):
-        from apps.automation.api.court_guarantee_helpers import _build_session_status_payload
+        from plugins.court_automation.guarantee.helpers import _build_session_status_payload
         from apps.automation.models import ScraperTaskStatus
 
         task = SimpleNamespace(

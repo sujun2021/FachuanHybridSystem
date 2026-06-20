@@ -28,15 +28,15 @@ class TestRunFilingInnerHelpers:
     """Test the inner helper functions of _run_filing by running _run_filing
     with mocked browser and services, then inspecting the session task updates."""
 
-    @patch("apps.automation.api.court_filing_helpers._update_session_task")
-    @patch("apps.automation.services.scraper.sites.court_zxfw_filing.CourtZxfwFilingService")
+    @patch("plugins.court_automation.filing.helpers._update_session_task")
+    @patch("plugins.court_automation.filing.playwright_filing.CourtZxfwFilingService")
     @patch("apps.automation.services.scraper.sites.court_zxfw.CourtZxfwService")
     @patch("apps.core.services.browser.create_browser")
     def test_filing_success_with_fallback(
         self, mock_browser, MockLogin, MockFiling, mock_update
     ):
         """Exercise _record_progress with fallback_used and http_failure_reason."""
-        from apps.automation.api.court_filing_helpers import _run_filing
+        from plugins.court_automation.filing.helpers import _run_filing
 
         page = MagicMock()
         context = MagicMock()
@@ -64,15 +64,15 @@ class TestRunFilingInnerHelpers:
         last_call = mock_update.call_args_list[-1]
         assert "SUCCESS" in str(last_call) or "success" in str(last_call).lower()
 
-    @patch("apps.automation.api.court_filing_helpers._update_session_task")
-    @patch("apps.automation.services.scraper.sites.court_zxfw_filing.CourtZxfwFilingService")
+    @patch("plugins.court_automation.filing.helpers._update_session_task")
+    @patch("plugins.court_automation.filing.playwright_filing.CourtZxfwFilingService")
     @patch("apps.automation.services.scraper.sites.court_zxfw.CourtZxfwService")
     @patch("apps.core.services.browser.create_browser")
     def test_filing_success_with_http_failure_fallback_message(
         self, mock_browser, MockLogin, MockFiling, mock_update
     ):
         """When fallback_used and http_failure_reason, success message is modified."""
-        from apps.automation.api.court_filing_helpers import _run_filing
+        from plugins.court_automation.filing.helpers import _run_filing
 
         page = MagicMock()
         context = MagicMock()
@@ -103,15 +103,15 @@ class TestRunFilingInnerHelpers:
                     assert "HTTP" in result_dict.get("message", "") or "回退" in result_dict.get("message", "")
                     break
 
-    @patch("apps.automation.api.court_filing_helpers._update_session_task")
-    @patch("apps.automation.services.scraper.sites.court_zxfw_filing.CourtZxfwFilingService")
+    @patch("plugins.court_automation.filing.helpers._update_session_task")
+    @patch("plugins.court_automation.filing.playwright_filing.CourtZxfwFilingService")
     @patch("apps.automation.services.scraper.sites.court_zxfw.CourtZxfwService")
     @patch("apps.core.services.browser.create_browser")
     def test_filing_failure_with_fallback_used(
         self, mock_browser, MockLogin, MockFiling, mock_update
     ):
         """When filing fails after fallback, playwright_end timing is set."""
-        from apps.automation.api.court_filing_helpers import _run_filing
+        from plugins.court_automation.filing.helpers import _run_filing
 
         page = MagicMock()
         context = MagicMock()
@@ -148,15 +148,15 @@ class TestRunFilingInnerHelpers:
 
 
 class TestRunFilingProgressReporter:
-    @patch("apps.automation.api.court_filing_helpers._update_session_task")
-    @patch("apps.automation.services.scraper.sites.court_zxfw_filing.CourtZxfwFilingService")
+    @patch("plugins.court_automation.filing.helpers._update_session_task")
+    @patch("plugins.court_automation.filing.playwright_filing.CourtZxfwFilingService")
     @patch("apps.automation.services.scraper.sites.court_zxfw.CourtZxfwService")
     @patch("apps.core.services.browser.create_browser")
     def test_http_start_and_end_timing(
         self, mock_browser, MockLogin, MockFiling, mock_update
     ):
         """Progress reporter records http_start and http_end timing in final payload."""
-        from apps.automation.api.court_filing_helpers import _run_filing
+        from plugins.court_automation.filing.helpers import _run_filing
 
         page = MagicMock()
         context = MagicMock()
@@ -204,7 +204,7 @@ class TestRunFilingProgressReporter:
 
 class TestBuildMaterialsMap:
     def test_empty_materials(self):
-        from apps.automation.api.court_filing_helpers import _build_materials_map
+        from plugins.court_automation.filing.helpers import _build_materials_map
 
         with patch("apps.cases.models.CaseMaterial") as MockCM:
             MockCM.objects.filter.return_value.exists.return_value = False
@@ -215,7 +215,7 @@ class TestBuildMaterialsMap:
 
     @patch("apps.cases.models.CaseMaterial")
     def test_material_without_attachment_skipped(self, MockCM):
-        from apps.automation.api.court_filing_helpers import _build_materials_map
+        from plugins.court_automation.filing.helpers import _build_materials_map
 
         material = MagicMock()
         material.source_attachment_id = None
@@ -240,7 +240,7 @@ class TestMatchSlotExtraBranches:
         the joined_signal fallback path should NOT return slot 0.
         However, the slot rules may give a positive score first.
         We test a material whose type_name only has exclude keywords."""
-        from apps.automation.api.court_filing_helpers import _match_slot, _FILING_TYPE_EXECUTION
+        from plugins.court_automation.filing.helpers import _match_slot, _FILING_TYPE_EXECUTION
 
         # "限制高消费" is in exclude list, "申请执行" is in apply list
         # When only exclude hits via slot rules and no positive score,
@@ -257,7 +257,7 @@ class TestMatchSlotExtraBranches:
 
     def test_guarantee_via_joined_signal(self):
         """When guarantee keywords appear in type_name but not via slot rules, fallback returns slot 5."""
-        from apps.automation.api.court_filing_helpers import _match_slot, _FILING_TYPE_CIVIL
+        from plugins.court_automation.filing.helpers import _match_slot, _FILING_TYPE_CIVIL
 
         material = SimpleNamespace(type_name="保函", type=None, source_attachment=None)
         result = _match_slot(
@@ -268,7 +268,7 @@ class TestMatchSlotExtraBranches:
 
     def test_execution_type_with_no_match_returns_default(self):
         """Execution type with no matching signals returns the default slot."""
-        from apps.automation.api.court_filing_helpers import _match_slot, _FILING_TYPE_EXECUTION, _DEFAULT_SLOT_BY_FILING_TYPE
+        from plugins.court_automation.filing.helpers import _match_slot, _FILING_TYPE_EXECUTION, _DEFAULT_SLOT_BY_FILING_TYPE
 
         material = SimpleNamespace(type_name="其他材料", type=None, source_attachment=None)
         result = _match_slot(
@@ -278,7 +278,7 @@ class TestMatchSlotExtraBranches:
 
     def test_unknown_filing_type_falls_back_to_civil_rules(self):
         """Unknown filing type falls back to civil rules."""
-        from apps.automation.api.court_filing_helpers import _match_slot, _DEFAULT_SLOT_BY_FILING_TYPE
+        from plugins.court_automation.filing.helpers import _match_slot, _DEFAULT_SLOT_BY_FILING_TYPE
 
         material = SimpleNamespace(type_name="民事起诉状", type=None, source_attachment=None)
         result = _match_slot(
@@ -295,7 +295,7 @@ class TestMatchSlotExtraBranches:
 
 class TestScoreSlotDeduplicatedExtra:
     def test_primary_weak_match(self):
-        from apps.automation.api.court_filing_helpers import _score_slot_deduplicated
+        from plugins.court_automation.filing.helpers import _score_slot_deduplicated
 
         score = _score_slot_deduplicated(
             primary_signals=["诉讼请求详情"],
@@ -307,7 +307,7 @@ class TestScoreSlotDeduplicatedExtra:
         assert score == 4  # 2 * 2
 
     def test_secondary_exclude_penalty(self):
-        from apps.automation.api.court_filing_helpers import _score_slot_deduplicated
+        from plugins.court_automation.filing.helpers import _score_slot_deduplicated
 
         score = _score_slot_deduplicated(
             primary_signals=[],
@@ -319,7 +319,7 @@ class TestScoreSlotDeduplicatedExtra:
         assert score == -6
 
     def test_combined_primary_and_secondary(self):
-        from apps.automation.api.court_filing_helpers import _score_slot_deduplicated
+        from plugins.court_automation.filing.helpers import _score_slot_deduplicated
 
         score = _score_slot_deduplicated(
             primary_signals=["身份证复印件"],
@@ -336,7 +336,7 @@ class TestScoreSlotDeduplicatedExtra:
         assert score == 19
 
     def test_empty_primary_non_empty_secondary(self):
-        from apps.automation.api.court_filing_helpers import _score_slot_deduplicated
+        from plugins.court_automation.filing.helpers import _score_slot_deduplicated
 
         score = _score_slot_deduplicated(
             primary_signals=[],
@@ -355,7 +355,7 @@ class TestScoreSlotDeduplicatedExtra:
 
 class TestBuildMaterialSlotSignalsExtra:
     def test_empty_type_name(self):
-        from apps.automation.api.court_filing_helpers import _build_material_slot_signals
+        from plugins.court_automation.filing.helpers import _build_material_slot_signals
 
         material = SimpleNamespace(type_name="", type=None, source_attachment=None)
         primary, secondary = _build_material_slot_signals(
@@ -367,7 +367,7 @@ class TestBuildMaterialSlotSignalsExtra:
         assert len(secondary) >= 4
 
     def test_material_type_name_none(self):
-        from apps.automation.api.court_filing_helpers import _build_material_slot_signals
+        from plugins.court_automation.filing.helpers import _build_material_slot_signals
 
         material = SimpleNamespace(type_name=None, type=None, source_attachment=None)
         primary, secondary = _build_material_slot_signals(
@@ -377,7 +377,7 @@ class TestBuildMaterialSlotSignalsExtra:
         assert len(primary) == 0
 
     def test_attachment_no_file(self):
-        from apps.automation.api.court_filing_helpers import _build_material_slot_signals
+        from plugins.court_automation.filing.helpers import _build_material_slot_signals
 
         attachment = MagicMock()
         attachment.file = None
@@ -392,7 +392,7 @@ class TestBuildMaterialSlotSignalsExtra:
         assert len(secondary) >= 4
 
     def test_attachment_log_none(self):
-        from apps.automation.api.court_filing_helpers import _build_material_slot_signals
+        from plugins.court_automation.filing.helpers import _build_material_slot_signals
 
         attachment = MagicMock()
         attachment.file.name = "test.pdf"
@@ -404,7 +404,7 @@ class TestBuildMaterialSlotSignalsExtra:
         assert len(secondary) >= 4
 
     def test_duplicate_signals_deduped(self):
-        from apps.automation.api.court_filing_helpers import _build_material_slot_signals
+        from plugins.court_automation.filing.helpers import _build_material_slot_signals
 
         material = SimpleNamespace(type_name="合同", type=None, source_attachment=None)
         # file_path.name and file_path.stem are both "合同" for Path("合同.pdf")
@@ -423,9 +423,9 @@ class TestBuildMaterialSlotSignalsExtra:
 class TestUpdateSessionTaskAsyncio:
     def test_asyncio_loop_running_uses_executor(self):
         """When an asyncio loop is running, the update is submitted to executor."""
-        from apps.automation.api.court_filing_helpers import _update_session_task, _SESSION_UPDATE_EXECUTOR
+        from plugins.court_automation.filing.helpers import _update_session_task, _SESSION_UPDATE_EXECUTOR
 
-        with patch("apps.automation.api.court_filing_helpers.asyncio") as mock_asyncio:
+        with patch("plugins.court_automation.filing.helpers.asyncio") as mock_asyncio:
             mock_asyncio.get_running_loop.return_value = MagicMock()  # loop exists
             with patch.object(_SESSION_UPDATE_EXECUTOR, "submit") as mock_submit:
                 _update_session_task(session_id=999, status="running")
@@ -439,7 +439,7 @@ class TestUpdateSessionTaskAsyncio:
 
 class TestBuildSessionStatusPayloadExtra:
     def test_pending_no_result(self):
-        from apps.automation.api.court_filing_helpers import _build_session_status_payload
+        from plugins.court_automation.filing.helpers import _build_session_status_payload
         from apps.automation.models import ScraperTaskStatus
 
         task = SimpleNamespace(id=10, status=ScraperTaskStatus.PENDING, result=None, error_message=None)
@@ -448,7 +448,7 @@ class TestBuildSessionStatusPayloadExtra:
         assert "执行中" in payload["message"]
 
     def test_success_no_message_in_result(self):
-        from apps.automation.api.court_filing_helpers import _build_session_status_payload
+        from plugins.court_automation.filing.helpers import _build_session_status_payload
         from apps.automation.models import ScraperTaskStatus
 
         task = SimpleNamespace(id=11, status=ScraperTaskStatus.SUCCESS, result={}, error_message="")
@@ -456,7 +456,7 @@ class TestBuildSessionStatusPayloadExtra:
         assert payload["message"] == "立案流程执行完成（已到预览页，未提交）"
 
     def test_failed_non_dict_result(self):
-        from apps.automation.api.court_filing_helpers import _build_session_status_payload
+        from plugins.court_automation.filing.helpers import _build_session_status_payload
         from apps.automation.models import ScraperTaskStatus
 
         task = SimpleNamespace(id=12, status=ScraperTaskStatus.FAILED, result="string result", error_message="")
@@ -464,7 +464,7 @@ class TestBuildSessionStatusPayloadExtra:
         assert payload["message"] == "立案失败"
 
     def test_pending_timing_none(self):
-        from apps.automation.api.court_filing_helpers import _build_session_status_payload
+        from plugins.court_automation.filing.helpers import _build_session_status_payload
         from apps.automation.models import ScraperTaskStatus
 
         task = SimpleNamespace(id=13, status=ScraperTaskStatus.PENDING, result={"timing": None}, error_message=None)

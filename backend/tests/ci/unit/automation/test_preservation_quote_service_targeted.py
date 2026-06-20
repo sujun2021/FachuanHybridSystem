@@ -17,7 +17,7 @@ from apps.automation.models import InsuranceQuote, PreservationQuote, QuoteItemS
 
 @pytest.fixture
 def quote_service():
-    from apps.automation.services.insurance.preservation_quote_service import PreservationQuoteService
+    from plugins.court_automation.preservation_quote.service import PreservationQuoteService
 
     return PreservationQuoteService(
         token_service=MagicMock(),
@@ -48,7 +48,7 @@ class TestPreservationQuoteServiceCreate:
         assert quote.credential_id == 42
 
     def test_negative_amount_raises(self, quote_service):
-        from apps.automation.services.insurance.exceptions import ValidationError
+        from plugins.court_automation.preservation_quote.exceptions import ValidationError
 
         with pytest.raises(ValidationError):
             quote_service.create_quote(
@@ -58,7 +58,7 @@ class TestPreservationQuoteServiceCreate:
             )
 
     def test_empty_corp_id_raises(self, quote_service):
-        from apps.automation.services.insurance.exceptions import ValidationError
+        from plugins.court_automation.preservation_quote.exceptions import ValidationError
 
         with pytest.raises(ValidationError):
             quote_service.create_quote(
@@ -68,7 +68,7 @@ class TestPreservationQuoteServiceCreate:
             )
 
     def test_empty_category_id_raises(self, quote_service):
-        from apps.automation.services.insurance.exceptions import ValidationError
+        from plugins.court_automation.preservation_quote.exceptions import ValidationError
 
         with pytest.raises(ValidationError):
             quote_service.create_quote(
@@ -125,7 +125,7 @@ class TestPreservationQuoteServiceList:
         assert all(q.status == QuoteStatus.PENDING for q in quotes)
 
     def test_list_invalid_page(self, quote_service):
-        from apps.automation.services.insurance.exceptions import ValidationError
+        from plugins.court_automation.preservation_quote.exceptions import ValidationError
 
         with pytest.raises(ValidationError):
             quote_service.list_quotes(page=0)
@@ -154,7 +154,7 @@ class TestPreservationQuoteServiceRetry:
 
 class TestValidateCreateParams:
     def _make_service(self):
-        from apps.automation.services.insurance.preservation_quote_service import PreservationQuoteService
+        from plugins.court_automation.preservation_quote.service import PreservationQuoteService
 
         return PreservationQuoteService()
 
@@ -164,28 +164,28 @@ class TestValidateCreateParams:
 
     def test_negative_amount(self):
         svc = self._make_service()
-        from apps.automation.services.insurance.exceptions import ValidationError
+        from plugins.court_automation.preservation_quote.exceptions import ValidationError
 
         with pytest.raises(ValidationError):
             svc._validate_create_params(Decimal("-1"), "2550", "127000", None)
 
     def test_empty_corp(self):
         svc = self._make_service()
-        from apps.automation.services.insurance.exceptions import ValidationError
+        from plugins.court_automation.preservation_quote.exceptions import ValidationError
 
         with pytest.raises(ValidationError):
             svc._validate_create_params(Decimal("100"), "", "127000", None)
 
     def test_empty_category(self):
         svc = self._make_service()
-        from apps.automation.services.insurance.exceptions import ValidationError
+        from plugins.court_automation.preservation_quote.exceptions import ValidationError
 
         with pytest.raises(ValidationError):
             svc._validate_create_params(Decimal("100"), "2550", "", None)
 
     def test_invalid_credential(self):
         svc = self._make_service()
-        from apps.automation.services.insurance.exceptions import ValidationError
+        from plugins.court_automation.preservation_quote.exceptions import ValidationError
 
         with pytest.raises(ValidationError):
             svc._validate_create_params(Decimal("100"), "2550", "127000", -1)

@@ -143,7 +143,7 @@ class TestRetryConfig:
 
 class TestBaoquanTokenProvider:
     def _make_provider(self, **kwargs):
-        from apps.automation.services.insurance.preservation_quote.token_provider import BaoquanTokenProvider
+        from plugins.court_automation.preservation_quote.preservation_quote.token_provider import BaoquanTokenProvider
 
         return BaoquanTokenProvider(**kwargs)
 
@@ -165,7 +165,7 @@ class TestBaoquanTokenProvider:
         mock_token_service.get_token.return_value = None
         provider = self._make_provider(token_service=mock_token_service)
 
-        from apps.automation.services.insurance.exceptions import TokenError
+        from plugins.court_automation.preservation_quote.exceptions import TokenError
 
         with pytest.raises(TokenError, match="Token 不存在"):
             asyncio.run(provider.get_token())
@@ -197,7 +197,7 @@ class TestBaoquanTokenProvider:
         mock_baoquan.get_valid_baoquan_token = AsyncMock(side_effect=Exception("API error"))
         provider = self._make_provider(baoquan_token_service=mock_baoquan)
 
-        from apps.automation.services.insurance.exceptions import TokenError
+        from plugins.court_automation.preservation_quote.exceptions import TokenError
 
         with pytest.raises(TokenError, match="保全系统 Token 获取失败"):
             asyncio.run(provider.get_token())

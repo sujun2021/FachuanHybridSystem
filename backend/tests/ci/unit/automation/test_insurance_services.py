@@ -7,13 +7,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from apps.automation.services.insurance._insurance_http_mixin import InsuranceHttpMixin
-from apps.automation.services.insurance.court_insurance_client import (
+from plugins.court_automation.preservation_quote.insurance_http_mixin import InsuranceHttpMixin
+from plugins.court_automation.preservation_quote.court_insurance_client import (
     CourtInsuranceClient,
     InsuranceCompany,
     PremiumResult,
 )
-from apps.automation.services.insurance.exceptions import (
+from plugins.court_automation.preservation_quote.exceptions import (
     PreservationQuoteError,
     TokenError,
     APIError,

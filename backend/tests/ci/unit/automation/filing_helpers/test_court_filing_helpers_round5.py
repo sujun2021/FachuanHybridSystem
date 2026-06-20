@@ -31,7 +31,7 @@ class TestInferFilingType:
 
     @patch("apps.cases.models.CaseMaterial")
     def test_execution_from_party_statuses(self, mock_cm):
-        from apps.automation.api.court_filing_helpers import _infer_filing_type, _FILING_TYPE_EXECUTION
+        from plugins.court_automation.filing.helpers import _infer_filing_type, _FILING_TYPE_EXECUTION
 
         party = SimpleNamespace(legal_status="applicant")
         case = SimpleNamespace(name="", cause_of_action="")
@@ -40,7 +40,7 @@ class TestInferFilingType:
 
     @patch("apps.cases.models.CaseMaterial")
     def test_execution_from_case_name(self, mock_cm):
-        from apps.automation.api.court_filing_helpers import _infer_filing_type, _FILING_TYPE_EXECUTION
+        from plugins.court_automation.filing.helpers import _infer_filing_type, _FILING_TYPE_EXECUTION
 
         case = SimpleNamespace(name="申请执行案", cause_of_action="")
         result = _infer_filing_type(case=case, parties=[])
@@ -48,7 +48,7 @@ class TestInferFilingType:
 
     @patch("apps.cases.models.CaseMaterial")
     def test_execution_from_cause(self, mock_cm):
-        from apps.automation.api.court_filing_helpers import _infer_filing_type, _FILING_TYPE_EXECUTION
+        from plugins.court_automation.filing.helpers import _infer_filing_type, _FILING_TYPE_EXECUTION
 
         case = SimpleNamespace(name="", cause_of_action="强制执行")
         result = _infer_filing_type(case=case, parties=[])
@@ -56,7 +56,7 @@ class TestInferFilingType:
 
     @patch("apps.cases.models.CaseMaterial")
     def test_execution_from_material_type_name(self, mock_cm):
-        from apps.automation.api.court_filing_helpers import _infer_filing_type, _FILING_TYPE_EXECUTION
+        from plugins.court_automation.filing.helpers import _infer_filing_type, _FILING_TYPE_EXECUTION
 
         mock_qs = MagicMock()
         # The function iterates over `type_names` (a queryset), so we need to make it iterable
@@ -69,7 +69,7 @@ class TestInferFilingType:
 
     @patch("apps.cases.models.CaseMaterial")
     def test_civil_default(self, mock_cm):
-        from apps.automation.api.court_filing_helpers import _infer_filing_type, _FILING_TYPE_CIVIL
+        from plugins.court_automation.filing.helpers import _infer_filing_type, _FILING_TYPE_CIVIL
 
         # patch the queryset to return no material type names
         mock_cm.objects.filter.return_value.values_list.return_value.__iter__ = MagicMock(return_value=iter([]))
@@ -83,7 +83,7 @@ class TestInferFilingType:
 
 class TestResolveOriginalCaseNumberFallback:
     def test_fallback_when_no_active(self):
-        from apps.automation.api.court_filing_helpers import _resolve_original_case_number
+        from plugins.court_automation.filing.helpers import _resolve_original_case_number
 
         qs = MagicMock()
         # active returns None
@@ -95,7 +95,7 @@ class TestResolveOriginalCaseNumberFallback:
         assert result == "(2023)粤01民初99号"
 
     def test_empty_when_no_numbers_at_all(self):
-        from apps.automation.api.court_filing_helpers import _resolve_original_case_number
+        from plugins.court_automation.filing.helpers import _resolve_original_case_number
 
         qs = MagicMock()
         qs.filter.return_value.order_by.return_value.values_list.return_value.first.return_value = None
@@ -111,7 +111,7 @@ class TestResolveOriginalCaseNumberFallback:
 class TestBuildPartyPayloadsThirdParty:
     @patch("apps.core.utils.id_card_utils.IdCardUtils.extract_gender", return_value="女")
     def test_third_party(self, _mock_gender):
-        from apps.automation.api.court_filing_helpers import _build_party_payloads
+        from plugins.court_automation.filing.helpers import _build_party_payloads
 
         client = SimpleNamespace(
             client_type="natural", name="王五", address="", phone="",
@@ -124,7 +124,7 @@ class TestBuildPartyPayloadsThirdParty:
 
     @patch("apps.core.utils.id_card_utils.IdCardUtils.extract_gender", return_value="男")
     def test_empty_status_goes_to_nothing(self, _mock_gender):
-        from apps.automation.api.court_filing_helpers import _build_party_payloads
+        from plugins.court_automation.filing.helpers import _build_party_payloads
 
         client = SimpleNamespace(
             client_type="natural", name="赵六", address="", phone="",
@@ -142,7 +142,7 @@ class TestBuildPartyPayloadsThirdParty:
 
 class TestApplyExecutionPartyFallbacksEdge:
     def test_no_fallback_phone(self):
-        from apps.automation.api.court_filing_helpers import _apply_execution_party_fallbacks
+        from plugins.court_automation.filing.helpers import _apply_execution_party_fallbacks
 
         plaintiffs = [{"client_type": "natural", "phone": "", "address": ""}]
         agents = [{"phone": ""}]
@@ -150,7 +150,7 @@ class TestApplyExecutionPartyFallbacksEdge:
         assert plaintiffs[0]["phone"] == ""
 
     def test_address_trimmed(self):
-        from apps.automation.api.court_filing_helpers import _apply_execution_party_fallbacks
+        from plugins.court_automation.filing.helpers import _apply_execution_party_fallbacks
 
         plaintiffs = [{"client_type": "natural", "phone": "12000000001", "address": "  广州天河  "}]
         agents = []
@@ -163,7 +163,7 @@ class TestApplyExecutionPartyFallbacksEdge:
 
 class TestBuildAgentPayloadsEdge:
     def test_requester_id_added(self):
-        from apps.automation.api.court_filing_helpers import _build_agent_payloads
+        from plugins.court_automation.filing.helpers import _build_agent_payloads
 
         assignment_lawyer = SimpleNamespace(
             id=1, real_name="", username="lawyer1", phone="12000000000",
@@ -187,7 +187,7 @@ class TestBuildAgentPayloadsEdge:
         assert "请求律师" in names
 
     def test_lawyer_with_no_name_skipped(self):
-        from apps.automation.api.court_filing_helpers import _build_agent_payloads
+        from plugins.court_automation.filing.helpers import _build_agent_payloads
 
         lawyer = SimpleNamespace(
             id=1, real_name="", username="", phone="",
@@ -206,7 +206,7 @@ class TestBuildAgentPayloadsEdge:
 
 class TestScoreSlotDeduplicatedEdge:
     def test_primary_exclude_penalty(self):
-        from apps.automation.api.court_filing_helpers import _score_slot_deduplicated
+        from plugins.court_automation.filing.helpers import _score_slot_deduplicated
 
         score = _score_slot_deduplicated(
             primary_signals=["证据目录"],
@@ -218,7 +218,7 @@ class TestScoreSlotDeduplicatedEdge:
         assert score < 0
 
     def test_secondary_weak_and_exclude(self):
-        from apps.automation.api.court_filing_helpers import _score_slot_deduplicated
+        from plugins.court_automation.filing.helpers import _score_slot_deduplicated
 
         score = _score_slot_deduplicated(
             primary_signals=[],
@@ -236,21 +236,21 @@ class TestScoreSlotDeduplicatedEdge:
 
 class TestMatchSlotEdge:
     def test_execution_apply_hits_returns_slot_0(self):
-        from apps.automation.api.court_filing_helpers import _match_slot, _FILING_TYPE_EXECUTION
+        from plugins.court_automation.filing.helpers import _match_slot, _FILING_TYPE_EXECUTION
 
         material = SimpleNamespace(type_name="执行申请书", type=None, source_attachment=None)
         result = _match_slot(material=material, file_path=Path("/tmp/执行申请书.pdf"), filing_type=_FILING_TYPE_EXECUTION)
         assert result == "0"
 
     def test_delivery_address_returns_slot_4(self):
-        from apps.automation.api.court_filing_helpers import _match_slot, _FILING_TYPE_CIVIL
+        from plugins.court_automation.filing.helpers import _match_slot, _FILING_TYPE_CIVIL
 
         material = SimpleNamespace(type_name="送达地址确认书", type=None, source_attachment=None)
         result = _match_slot(material=material, file_path=Path("/tmp/送达地址.pdf"), filing_type=_FILING_TYPE_CIVIL)
         assert result == "4"
 
     def test_guarantee_returns_slot_5(self):
-        from apps.automation.api.court_filing_helpers import _match_slot, _FILING_TYPE_CIVIL
+        from plugins.court_automation.filing.helpers import _match_slot, _FILING_TYPE_CIVIL
 
         material = SimpleNamespace(type_name="保全申请", type=None, source_attachment=None)
         result = _match_slot(material=material, file_path=Path("/tmp/保全申请.pdf"), filing_type=_FILING_TYPE_CIVIL)
@@ -262,7 +262,7 @@ class TestMatchSlotEdge:
 
 class TestBuildMaterialSlotSignalsWithAttachments:
     def test_with_material_type(self):
-        from apps.automation.api.court_filing_helpers import _build_material_slot_signals
+        from plugins.court_automation.filing.helpers import _build_material_slot_signals
 
         mat_type = SimpleNamespace(name="起诉状类型")
         attachment_log = SimpleNamespace(content="some log")
@@ -280,20 +280,20 @@ class TestBuildMaterialSlotSignalsWithAttachments:
 
 class TestResolveCourtNameFiling:
     def test_already_has_renmin(self):
-        from apps.automation.api.court_filing_helpers import _resolve_court_name
+        from plugins.court_automation.filing.helpers import _resolve_court_name
 
         assert _resolve_court_name("广州市天河区人民法院") == "广州市天河区人民法院"
 
     @patch("apps.core.models.Court")
     def test_not_found_appends_renmin(self, MockCourt):
-        from apps.automation.api.court_filing_helpers import _resolve_court_name
+        from plugins.court_automation.filing.helpers import _resolve_court_name
 
         MockCourt.objects.filter.return_value.first.return_value = None
         assert _resolve_court_name("天河区") == "天河区人民法院"
 
     @patch("apps.core.models.Court")
     def test_court_found_returns_name(self, MockCourt):
-        from apps.automation.api.court_filing_helpers import _resolve_court_name
+        from plugins.court_automation.filing.helpers import _resolve_court_name
 
         MockCourt.objects.filter.return_value.first.return_value = SimpleNamespace(name="广州市天河区人民法院")
         assert _resolve_court_name("天河") == "广州市天河区人民法院"
@@ -304,7 +304,7 @@ class TestResolveCourtNameFiling:
 
 class TestBuildSessionStatusPayloadNoTiming:
     def test_failed_no_timing(self):
-        from apps.automation.api.court_filing_helpers import _build_session_status_payload
+        from plugins.court_automation.filing.helpers import _build_session_status_payload
         from apps.automation.models import ScraperTaskStatus
 
         task = SimpleNamespace(id=1, status=ScraperTaskStatus.FAILED, result={}, error_message="err")
@@ -312,7 +312,7 @@ class TestBuildSessionStatusPayloadNoTiming:
         assert "timing" not in payload
 
     def test_success_with_timing(self):
-        from apps.automation.api.court_filing_helpers import _build_session_status_payload
+        from plugins.court_automation.filing.helpers import _build_session_status_payload
         from apps.automation.models import ScraperTaskStatus
 
         task = SimpleNamespace(
@@ -328,17 +328,17 @@ class TestBuildSessionStatusPayloadNoTiming:
 
 class TestUpdateSessionTaskFlags:
     def test_none_session_id_noop(self):
-        from apps.automation.api.court_filing_helpers import _update_session_task
+        from plugins.court_automation.filing.helpers import _update_session_task
         # session_id=None is a noop, no DB access
         _update_session_task(session_id=None, status="running", set_started=True, set_finished=True)
 
     @pytest.mark.django_db
     def test_set_started_and_finished(self):
-        from apps.automation.api.court_filing_helpers import _update_session_task
+        from plugins.court_automation.filing.helpers import _update_session_task
 
-        with patch("apps.automation.api.court_filing_helpers.timezone") as mock_tz:
+        with patch("plugins.court_automation.filing.helpers.timezone") as mock_tz:
             mock_tz.now.return_value = "now"
-            with patch("apps.automation.api.court_filing_helpers.asyncio") as mock_asyncio:
+            with patch("plugins.court_automation.filing.helpers.asyncio") as mock_asyncio:
                 mock_asyncio.get_running_loop.side_effect = RuntimeError("no loop")
                 _update_session_task(
                     session_id=1,
@@ -356,7 +356,7 @@ class TestUpdateSessionTaskFlags:
 class TestBuildExecutionRequestTextNewlineCleanup:
     @patch("apps.documents.services.placeholders.litigation.execution_request_service.ExecutionRequestService")
     def test_newlines_cleaned(self, mock_svc_cls):
-        from apps.automation.api.court_filing_helpers import _build_execution_request_text
+        from plugins.court_automation.filing.helpers import _build_execution_request_text
 
         mock_svc = MagicMock()
         mock_svc.generate.return_value = {"申请执行事项": "line1\aline2\r\nline3\rline4"}
@@ -369,7 +369,7 @@ class TestBuildExecutionRequestTextNewlineCleanup:
 
     @patch("apps.documents.services.placeholders.litigation.execution_request_service.ExecutionRequestService")
     def test_service_raises_type_error_uses_fallback(self, mock_svc_cls):
-        from apps.automation.api.court_filing_helpers import _build_execution_request_text
+        from plugins.court_automation.filing.helpers import _build_execution_request_text
 
         mock_svc = MagicMock()
         mock_svc.generate.side_effect = TypeError("bad")

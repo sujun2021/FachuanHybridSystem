@@ -114,7 +114,7 @@ class TestExecutePreservationQuoteTask:
             assert result["status"] == "skipped"
 
     def test_token_error(self):
-        from apps.automation.services.insurance.exceptions import TokenError
+        from plugins.court_automation.preservation_quote.exceptions import TokenError
 
         with patch("apps.automation.models.PreservationQuote") as MockQuote:
             MockQuote.objects.filter.return_value.exists.return_value = True

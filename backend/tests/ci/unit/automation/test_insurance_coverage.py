@@ -8,45 +8,45 @@ from decimal import Decimal
 
 class TestInsuranceExceptions:
     def test_preservation_quote_error(self):
-        from apps.automation.services.insurance.exceptions import PreservationQuoteError
+        from plugins.court_automation.preservation_quote.exceptions import PreservationQuoteError
         err = PreservationQuoteError("test error")
         assert err.message == "test error"
         assert err.code == "PRESERVATION_QUOTE_ERROR"
 
     def test_token_error(self):
-        from apps.automation.services.insurance.exceptions import TokenError
+        from plugins.court_automation.preservation_quote.exceptions import TokenError
         err = TokenError("token expired")
         assert err.code == "TOKEN_ERROR"
 
     def test_api_error_with_status(self):
-        from apps.automation.services.insurance.exceptions import APIError
+        from plugins.court_automation.preservation_quote.exceptions import APIError
         err = APIError("bad gateway", status_code=502)
         assert "502" in err.code
 
     def test_validation_error_with_errors(self):
-        from apps.automation.services.insurance.exceptions import ValidationError
+        from plugins.court_automation.preservation_quote.exceptions import ValidationError
         err = ValidationError("invalid input", errors={"field": "required"})
         assert err.errors == {"field": "required"}
 
     def test_company_list_empty_error(self):
-        from apps.automation.services.insurance.exceptions import CompanyListEmptyError
+        from plugins.court_automation.preservation_quote.exceptions import CompanyListEmptyError
         err = CompanyListEmptyError()
         assert "保险公司" in err.message
 
     def test_quote_execution_error(self):
-        from apps.automation.services.insurance.exceptions import QuoteExecutionError
+        from plugins.court_automation.preservation_quote.exceptions import QuoteExecutionError
         err = QuoteExecutionError("failed", quote_id=42)
         assert err.quote_id == 42
 
     def test_retry_limit_exceeded_error(self):
-        from apps.automation.services.insurance.exceptions import RetryLimitExceededError
+        from plugins.court_automation.preservation_quote.exceptions import RetryLimitExceededError
         err = RetryLimitExceededError("too many retries", max_retries=3)
         assert err.max_retries == 3
 
 
 class TestInsuranceHttpMixin:
     def test_build_premium_request(self):
-        from apps.automation.services.insurance._insurance_http_mixin import InsuranceHttpMixin
+        from plugins.court_automation.preservation_quote.insurance_http_mixin import InsuranceHttpMixin
         mixin = InsuranceHttpMixin()
         # Mock the premium_query_url property
         type(mixin).premium_query_url = property(lambda self: "https://example.com/api")
@@ -62,19 +62,19 @@ class TestInsuranceHttpMixin:
         assert params["preserveAmount"] == "100000"
 
     def test_parse_premium_from_response_valid(self):
-        from apps.automation.services.insurance._insurance_http_mixin import InsuranceHttpMixin
+        from plugins.court_automation.preservation_quote.insurance_http_mixin import InsuranceHttpMixin
         mixin = InsuranceHttpMixin()
         result = mixin._parse_premium_from_response({"data": {"minPremium": "1234.56"}}, "inst", 1.0)
         assert result == Decimal("1234.56")
 
     def test_parse_premium_from_response_empty(self):
-        from apps.automation.services.insurance._insurance_http_mixin import InsuranceHttpMixin
+        from plugins.court_automation.preservation_quote.insurance_http_mixin import InsuranceHttpMixin
         mixin = InsuranceHttpMixin()
         result = mixin._parse_premium_from_response({}, "inst", 1.0)
         assert result is None
 
     def test_parse_premium_from_response_no_data(self):
-        from apps.automation.services.insurance._insurance_http_mixin import InsuranceHttpMixin
+        from plugins.court_automation.preservation_quote.insurance_http_mixin import InsuranceHttpMixin
         mixin = InsuranceHttpMixin()
         result = mixin._parse_premium_from_response({"data": None}, "inst", 1.0)
         assert result is None
@@ -83,7 +83,7 @@ class TestInsuranceHttpMixin:
 class TestBaoquanTokenProvider:
     @pytest.mark.asyncio
     async def test_get_token_with_token_service(self):
-        from apps.automation.services.insurance.preservation_quote.token_provider import BaoquanTokenProvider
+        from plugins.court_automation.preservation_quote.preservation_quote.token_provider import BaoquanTokenProvider
         token_svc = MagicMock()
         token_svc.get_token.return_value = "valid-token"
         provider = BaoquanTokenProvider(token_service=token_svc)
@@ -92,8 +92,8 @@ class TestBaoquanTokenProvider:
 
     @pytest.mark.asyncio
     async def test_get_token_raises_when_no_token(self):
-        from apps.automation.services.insurance.preservation_quote.token_provider import BaoquanTokenProvider
-        from apps.automation.services.insurance.exceptions import TokenError
+        from plugins.court_automation.preservation_quote.preservation_quote.token_provider import BaoquanTokenProvider
+        from plugins.court_automation.preservation_quote.exceptions import TokenError
         token_svc = MagicMock()
         token_svc.get_token.return_value = None
         provider = BaoquanTokenProvider(token_service=token_svc)

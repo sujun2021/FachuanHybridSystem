@@ -9,6 +9,6 @@ if TYPE_CHECKING:
 
 
 def build_preservation_quote_service() -> IPreservationQuoteService:
-    from apps.automation.services.insurance.preservation_quote_service_adapter import PreservationQuoteServiceAdapter
+    from plugins.court_automation.preservation_quote.service_adapter import PreservationQuoteServiceAdapter
 
     return PreservationQuoteServiceAdapter()

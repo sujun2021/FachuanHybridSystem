@@ -393,8 +393,11 @@ class TestContractsSignals:
         instance.file_path = test_file.name
         instance.pk = 1
 
-        with patch("apps.contracts.signals.settings") as mock_settings:
+        with patch("apps.contracts.signals.settings") as mock_settings, \
+             patch("apps.contracts.signals.transaction") as mock_txn:
             mock_settings.MEDIA_ROOT = str(tmp_path)
+            # Execute on_commit callback immediately for testing
+            mock_txn.on_commit.side_effect = lambda fn: fn()
             _cleanup_finalized_material_file(None, instance)
 
         assert not test_file.exists()  # File should be deleted
@@ -415,8 +418,10 @@ class TestContractsSignals:
         instance.file_path = "nonexistent/file.pdf"
         instance.pk = 2
 
-        with patch("apps.contracts.signals.settings") as mock_settings:
+        with patch("apps.contracts.signals.settings") as mock_settings, \
+             patch("apps.contracts.signals.transaction") as mock_txn:
             mock_settings.MEDIA_ROOT = str(tmp_path)
+            mock_txn.on_commit.side_effect = lambda fn: fn()
             _cleanup_finalized_material_file(None, instance)
         # No exception raised
 
@@ -431,8 +436,10 @@ class TestContractsSignals:
         instance.file_path = "error.pdf"
         instance.pk = 3
 
-        with patch("apps.contracts.signals.settings") as mock_settings:
+        with patch("apps.contracts.signals.settings") as mock_settings, \
+             patch("apps.contracts.signals.transaction") as mock_txn:
             mock_settings.MEDIA_ROOT = str(tmp_path)
+            mock_txn.on_commit.side_effect = lambda fn: fn()
             with patch("pathlib.Path.unlink", side_effect=OSError("Permission denied")):
                 # Should not raise
                 _cleanup_finalized_material_file(None, instance)

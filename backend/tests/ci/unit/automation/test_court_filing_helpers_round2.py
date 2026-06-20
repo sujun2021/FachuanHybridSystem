@@ -14,12 +14,12 @@ class TestMatchSlotExecutionFallback:
     """Cover execution-specific fallback in _match_slot."""
 
     def _fn(self):
-        from apps.automation.api.court_filing_helpers import _match_slot
+        from plugins.court_automation.filing.helpers import _match_slot
         return _match_slot
 
     def test_execution_apply_hits_returns_slot_0(self):
         """When filing_type=execution and signals contain execution keywords."""
-        from apps.automation.api.court_filing_helpers import _FILING_TYPE_EXECUTION
+        from plugins.court_automation.filing.helpers import _FILING_TYPE_EXECUTION
 
         material = MagicMock()
         material.type_name = "执行申请书"
@@ -31,7 +31,7 @@ class TestMatchSlotExecutionFallback:
 
     def test_execution_excluded_keywords_still_match_slot_rules(self):
         """When execution keywords are present alongside excluded keywords, slot rules may still match."""
-        from apps.automation.api.court_filing_helpers import _FILING_TYPE_EXECUTION
+        from plugins.court_automation.filing.helpers import _FILING_TYPE_EXECUTION
 
         material = MagicMock()
         material.type_name = "限制高消费 纳入失信"
@@ -43,7 +43,7 @@ class TestMatchSlotExecutionFallback:
         assert result == "4"
 
     def test_delivery_address_returns_slot_4(self):
-        from apps.automation.api.court_filing_helpers import _FILING_TYPE_CIVIL
+        from plugins.court_automation.filing.helpers import _FILING_TYPE_CIVIL
 
         material = MagicMock()
         material.type_name = "送达地址确认"
@@ -54,7 +54,7 @@ class TestMatchSlotExecutionFallback:
         assert result == "4"
 
     def test_preservation_returns_slot_5(self):
-        from apps.automation.api.court_filing_helpers import _FILING_TYPE_CIVIL
+        from plugins.court_automation.filing.helpers import _FILING_TYPE_CIVIL
 
         material = MagicMock()
         material.type_name = "保全申请"
@@ -69,7 +69,7 @@ class TestBuildMaterialSlotSignals:
     """Cover additional _build_material_slot_signals branches."""
 
     def _fn(self):
-        from apps.automation.api.court_filing_helpers import _build_material_slot_signals
+        from plugins.court_automation.filing.helpers import _build_material_slot_signals
         return _build_material_slot_signals
 
     def test_with_material_type_name(self):
@@ -119,7 +119,7 @@ class TestScoreSlotDeduplicated:
     """Cover _score_slot_deduplicated with no signals."""
 
     def _fn(self):
-        from apps.automation.api.court_filing_helpers import _score_slot_deduplicated
+        from plugins.court_automation.filing.helpers import _score_slot_deduplicated
         return _score_slot_deduplicated
 
     def test_no_signals_returns_zero(self):
@@ -137,11 +137,11 @@ class TestInferFilingTypeMaterialKeywords:
     """Cover material keyword matching in _infer_filing_type."""
 
     def _fn(self):
-        from apps.automation.api.court_filing_helpers import _infer_filing_type
+        from plugins.court_automation.filing.helpers import _infer_filing_type
         return _infer_filing_type
 
     def test_material_has_execution_keyword(self):
-        from apps.automation.api.court_filing_helpers import _FILING_TYPE_EXECUTION
+        from plugins.court_automation.filing.helpers import _FILING_TYPE_EXECUTION
 
         case = MagicMock()
         case.name = "test"
@@ -160,7 +160,7 @@ class TestBuildExecutionRequestTextBranches:
     """Cover branches in _build_execution_request_text."""
 
     def _fn(self):
-        from apps.automation.api.court_filing_helpers import _build_execution_request_text
+        from plugins.court_automation.filing.helpers import _build_execution_request_text
         return _build_execution_request_text
 
     def test_generated_text_with_bell_char(self):
@@ -207,7 +207,7 @@ class TestBuildAgentPayloadsEdgeCases:
     """Cover edge cases in _build_agent_payloads."""
 
     def _fn(self):
-        from apps.automation.api.court_filing_helpers import _build_agent_payloads
+        from plugins.court_automation.filing.helpers import _build_agent_payloads
         return _build_agent_payloads
 
     def test_lawyer_with_no_name_skipped(self):
@@ -285,7 +285,7 @@ class TestBuildMaterialsMapNoMaterials:
     """Cover _build_materials_map fallback to all materials."""
 
     def _fn(self):
-        from apps.automation.api.court_filing_helpers import _build_materials_map
+        from plugins.court_automation.filing.helpers import _build_materials_map
         return _build_materials_map
 
     def test_no_party_materials_fallback(self):
@@ -327,7 +327,7 @@ class TestBuildMaterialsMapNoMaterials:
 
             mock_cm.objects.filter.side_effect = [party_filter1, all_filter]
 
-            with patch("apps.automation.api.court_filing_helpers._match_slot", return_value="5"), \
+            with patch("plugins.court_automation.filing.helpers._match_slot", return_value="5"), \
                  patch("pathlib.Path.exists", return_value=True):
                 result = self._fn()(case=case, filing_type="civil")
             assert isinstance(result, dict)
@@ -425,7 +425,7 @@ class TestBuildMaterialsMapNoMaterials:
             qs = self._build_qs_chain(materials)
             mock_cm.objects.filter.return_value = qs
 
-            with patch("apps.automation.api.court_filing_helpers._match_slot", return_value="5"), \
+            with patch("plugins.court_automation.filing.helpers._match_slot", return_value="5"), \
                  patch("pathlib.Path.exists", return_value=True):
                 result = self._fn()(case=case, filing_type="civil")
             # Should only have 1 entry despite 2 materials
@@ -436,7 +436,7 @@ class TestScoreSlotForSignalEdgeCases:
     """Cover additional _score_slot_for_signal branches."""
 
     def _fn(self):
-        from apps.automation.api.court_filing_helpers import _score_slot_for_signal
+        from plugins.court_automation.filing.helpers import _score_slot_for_signal
         return _score_slot_for_signal
 
     def test_exclude_keywords_reduce_score(self):

@@ -70,25 +70,25 @@ class TestChatProviderBase:
 
 class TestInsuranceExceptions:
     def test_token_error(self):
-        from apps.automation.services.insurance.exceptions import TokenError
+        from plugins.court_automation.preservation_quote.exceptions import TokenError
 
         exc = TokenError("token无效")
         assert "token" in str(exc).lower()
 
     def test_api_error(self):
-        from apps.automation.services.insurance.exceptions import APIError
+        from plugins.court_automation.preservation_quote.exceptions import APIError
 
         exc = APIError(message="API调用失败")
         assert "API" in str(exc)
 
     def test_validation_error(self):
-        from apps.automation.services.insurance.exceptions import ValidationError
+        from plugins.court_automation.preservation_quote.exceptions import ValidationError
 
         exc = ValidationError(message="验证失败", errors={"field": "error"})
         assert exc.errors == {"field": "error"}
 
     def test_company_list_empty_error(self):
-        from apps.automation.services.insurance.exceptions import CompanyListEmptyError
+        from plugins.court_automation.preservation_quote.exceptions import CompanyListEmptyError
 
         exc = CompanyListEmptyError(message="列表为空")
         assert "空" in str(exc)

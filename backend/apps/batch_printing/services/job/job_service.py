@@ -256,8 +256,15 @@ class BatchPrintJobService:
         success = 0
         failed = 0
 
-        for item in items:
-            job.refresh_from_db(fields=["cancel_requested"])
+        total = len(items)
+        _CANCEL_CHECK_INTERVAL = 10
+        _PROGRESS_UPDATE_INTERVAL = 10
+
+        for index, item in enumerate(items):
+            # Throttle cancel check: every N items instead of every item
+            if index % _CANCEL_CHECK_INTERVAL == 0:
+                job.refresh_from_db(fields=["cancel_requested"])
+
             if job.cancel_requested:
                 BatchPrintItem.objects.filter(id=item.id, status=BatchPrintItemStatus.PENDING).update(
                     status=BatchPrintItemStatus.CANCELLED,
@@ -298,13 +305,16 @@ class BatchPrintJobService:
                 logger.exception("batch_print_item_failed", extra={"job_id": str(job.id), "item_id": item.id})
 
             processed += 1
-            progress = int((processed / max(1, len(items))) * 100)
-            BatchPrintJob.objects.filter(id=job.id).update(
-                processed_count=processed,
-                success_count=success,
-                failed_count=failed,
-                progress=progress,
-            )
+
+            # Batch progress update: every N items or on the last item
+            if index % _PROGRESS_UPDATE_INTERVAL == 0 or index == total - 1:
+                progress = int((processed / max(1, total)) * 100)
+                BatchPrintJob.objects.filter(id=job.id).update(
+                    processed_count=processed,
+                    success_count=success,
+                    failed_count=failed,
+                    progress=progress,
+                )
 
         job.refresh_from_db(fields=["cancel_requested"])
         if job.cancel_requested:

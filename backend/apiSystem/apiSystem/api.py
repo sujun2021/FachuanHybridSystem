@@ -152,8 +152,19 @@ register_exception_handlers(api_v1)
 
 def _register_app_routers() -> None:
     from apps.automation.api import router as automation_router
-    from apps.automation.api.court_filing_api import router as court_filing_router
-    from apps.automation.api.court_guarantee_api import router as court_guarantee_router
+
+    from ninja import Router
+
+    court_filing_router: Router | None = None
+    court_guarantee_router: Router | None = None
+    try:
+        from plugins.court_automation.filing.api_endpoint import router as court_filing_router
+    except ImportError:
+        pass
+    try:
+        from plugins.court_automation.guarantee.api_endpoint import router as court_guarantee_router
+    except ImportError:
+        pass
     from apps.batch_printing.api import router as batch_printing_router
     from apps.cases.api import router as cases_router
     from apps.chat_records.api import router as chat_records_router
@@ -280,8 +291,10 @@ def _register_app_routers() -> None:
 
     api_v1.add_router("/doc-converter", doc_converter_router, auth=JWTOrSessionAuth(), tags=["DOC 转 DOCX"])
 
-    api_v1.add_router("/court-filing", court_filing_router, auth=JWTOrSessionAuth(), tags=["一张网立案"])
-    api_v1.add_router("/court-guarantee", court_guarantee_router, auth=JWTOrSessionAuth(), tags=["一张网担保"])
+    if court_filing_router is not None:
+        api_v1.add_router("/court-filing", court_filing_router, auth=JWTOrSessionAuth(), tags=["一张网立案"])
+    if court_guarantee_router is not None:
+        api_v1.add_router("/court-guarantee", court_guarantee_router, auth=JWTOrSessionAuth(), tags=["一张网担保"])
 
     # POI 文档生成服务（Apache POI microservice）
     from apps.core.api.poi_api import router as poi_router

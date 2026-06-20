@@ -1,6 +1,6 @@
 """文档解析 API Schema"""
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ninja import Schema
 
@@ -26,6 +26,12 @@ class ParseDocumentResponse(Schema):
 
     success: bool
     """是否成功"""
+
+    task_id: str | None = None
+    """异步任务 ID（异步模式下返回）"""
+
+    status: str = "completed"
+    """任务状态：pending / completed / failed"""
 
     text: str | None = None
     """纯文本内容"""
@@ -59,6 +65,12 @@ class ExtractTextResponse(Schema):
     success: bool
     """是否成功"""
 
+    task_id: str | None = None
+    """异步任务 ID（异步模式下返回）"""
+
+    status: str = "completed"
+    """任务状态：pending / completed / failed"""
+
     text: str
     """提取的文本"""
 
@@ -70,3 +82,22 @@ class ExtractTextResponse(Schema):
 
     error: str | None = None
     """错误信息（如果失败）"""
+
+
+class TaskStatusResponse(Schema):
+    """异步任务状态查询响应"""
+
+    task_id: str
+    """任务 ID"""
+
+    status: str
+    """任务状态：pending / running / success / failure / not_found"""
+
+    result: dict[str, Any] | None = None
+    """任务结果（成功时包含解析结果）"""
+
+    started_at: str | None = None
+    """开始时间"""
+
+    finished_at: str | None = None
+    """完成时间"""

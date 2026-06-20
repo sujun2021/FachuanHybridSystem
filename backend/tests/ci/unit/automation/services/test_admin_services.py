@@ -85,7 +85,7 @@ class TestPreservationQuoteAdminService:
     """Tests for PreservationQuoteAdminService."""
 
     def _make_service(self):
-        from apps.automation.services.admin.preservation_quote_admin_service import PreservationQuoteAdminService
+        from plugins.court_automation.preservation_quote.admin_service import PreservationQuoteAdminService
         return PreservationQuoteAdminService()
 
     @pytest.mark.django_db

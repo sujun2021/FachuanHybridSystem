@@ -11,7 +11,7 @@ import pytest
 from django.utils import timezone
 
 from apps.automation.models import InsuranceQuote, PreservationQuote, QuoteItemStatus, QuoteStatus
-from apps.automation.services.admin.preservation_quote_admin_service import PreservationQuoteAdminService
+from plugins.court_automation.preservation_quote.admin_service import PreservationQuoteAdminService
 from apps.core.exceptions import BusinessException, NotFoundError, ValidationException
 
 

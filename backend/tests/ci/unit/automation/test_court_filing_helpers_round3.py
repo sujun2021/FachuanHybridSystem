@@ -23,7 +23,7 @@ import pytest
 
 class TestInferFilingTypeExecutionHints:
     def _fn(self):
-        from apps.automation.api.court_filing_helpers import _infer_filing_type
+        from plugins.court_automation.filing.helpers import _infer_filing_type
         return _infer_filing_type
 
     def test_applicant_status_returns_execution(self):
@@ -68,7 +68,7 @@ class TestInferFilingTypeExecutionHints:
 
 class TestResolveOriginalCaseNumber:
     def _fn(self):
-        from apps.automation.api.court_filing_helpers import _resolve_original_case_number
+        from plugins.court_automation.filing.helpers import _resolve_original_case_number
         return _resolve_original_case_number
 
     def test_no_case_numbers(self):
@@ -114,7 +114,7 @@ class TestResolveOriginalCaseNumber:
 
 class TestBuildPartyPayloadsLegal:
     def _fn(self):
-        from apps.automation.api.court_filing_helpers import _build_party_payloads
+        from plugins.court_automation.filing.helpers import _build_party_payloads
         return _build_party_payloads
 
     def test_legal_person(self):
@@ -171,7 +171,7 @@ class TestBuildPartyPayloadsLegal:
 
 class TestToValidMobile:
     def _fn(self):
-        from apps.automation.api.court_filing_helpers import _to_valid_mobile
+        from plugins.court_automation.filing.helpers import _to_valid_mobile
         return _to_valid_mobile
 
     def test_valid_mobile(self):
@@ -197,7 +197,7 @@ class TestToValidMobile:
 
 class TestApplyExecutionPartyFallbacks:
     def _fn(self):
-        from apps.automation.api.court_filing_helpers import _apply_execution_party_fallbacks
+        from plugins.court_automation.filing.helpers import _apply_execution_party_fallbacks
         return _apply_execution_party_fallbacks
 
     def test_fills_phone_from_agent(self):
@@ -231,7 +231,7 @@ class TestApplyExecutionPartyFallbacks:
 
 class TestBuildExecutionReasonText:
     def _fn(self):
-        from apps.automation.api.court_filing_helpers import _build_execution_reason_text
+        from plugins.court_automation.filing.helpers import _build_execution_reason_text
         return _build_execution_reason_text
 
     def test_with_cause(self):
@@ -260,7 +260,7 @@ class TestBuildExecutionReasonText:
 
 class TestNormalizeText:
     def _fn(self):
-        from apps.automation.api.court_filing_helpers import _normalize_text
+        from plugins.court_automation.filing.helpers import _normalize_text
         return _normalize_text
 
     def test_strips_special_chars(self):
@@ -278,7 +278,7 @@ class TestNormalizeText:
 
 class TestScoreSlotForSignal:
     def _fn(self):
-        from apps.automation.api.court_filing_helpers import _score_slot_for_signal
+        from plugins.court_automation.filing.helpers import _score_slot_for_signal
         return _score_slot_for_signal
 
     def test_empty_signal(self):
@@ -301,7 +301,7 @@ class TestScoreSlotForSignal:
 
 class TestScoreSlotDeduplicated:
     def _fn(self):
-        from apps.automation.api.court_filing_helpers import _score_slot_deduplicated
+        from plugins.court_automation.filing.helpers import _score_slot_deduplicated
         return _score_slot_deduplicated
 
     def test_empty_signals(self):
@@ -336,7 +336,7 @@ class TestScoreSlotDeduplicated:
 
 class TestMatchSlotFallback:
     def _fn(self):
-        from apps.automation.api.court_filing_helpers import _match_slot
+        from plugins.court_automation.filing.helpers import _match_slot
         return _match_slot
 
     def test_execution_apply_fallback(self):
@@ -352,11 +352,11 @@ class TestMatchSlotFallback:
         file_path = Path("/test/执行申请书.pdf")
 
         with patch(
-            "apps.automation.api.court_filing_helpers._build_material_slot_signals",
+            "plugins.court_automation.filing.helpers._build_material_slot_signals",
             return_value=(["执行申请书"], ["/test/执行申请书.pdf"]),
         ):
             with patch(
-                "apps.automation.api.court_filing_helpers._score_slot_deduplicated",
+                "plugins.court_automation.filing.helpers._score_slot_deduplicated",
                 return_value=0,
             ):
                 result = self._fn()(material=material, file_path=file_path, filing_type="execution")
@@ -367,11 +367,11 @@ class TestMatchSlotFallback:
         file_path = Path("/test/送达地址确认书.pdf")
 
         with patch(
-            "apps.automation.api.court_filing_helpers._build_material_slot_signals",
+            "plugins.court_automation.filing.helpers._build_material_slot_signals",
             return_value=([], ["送达地址确认书"]),
         ):
             with patch(
-                "apps.automation.api.court_filing_helpers._score_slot_deduplicated",
+                "plugins.court_automation.filing.helpers._score_slot_deduplicated",
                 return_value=0,
             ):
                 result = self._fn()(material=material, file_path=file_path, filing_type="civil")
@@ -382,11 +382,11 @@ class TestMatchSlotFallback:
         file_path = Path("/test/保全申请书.pdf")
 
         with patch(
-            "apps.automation.api.court_filing_helpers._build_material_slot_signals",
+            "plugins.court_automation.filing.helpers._build_material_slot_signals",
             return_value=([], ["保全申请书"]),
         ):
             with patch(
-                "apps.automation.api.court_filing_helpers._score_slot_deduplicated",
+                "plugins.court_automation.filing.helpers._score_slot_deduplicated",
                 return_value=0,
             ):
                 result = self._fn()(material=material, file_path=file_path, filing_type="civil")
@@ -400,7 +400,7 @@ class TestMatchSlotFallback:
 
 class TestBuildSessionStatusPayload:
     def _fn(self):
-        from apps.automation.api.court_filing_helpers import _build_session_status_payload
+        from plugins.court_automation.filing.helpers import _build_session_status_payload
         return _build_session_status_payload
 
     def test_pending_status(self):
@@ -456,7 +456,7 @@ class TestBuildSessionStatusPayload:
 
 class TestUpdateSessionTask:
     def _fn(self):
-        from apps.automation.api.court_filing_helpers import _update_session_task
+        from plugins.court_automation.filing.helpers import _update_session_task
         return _update_session_task
 
     def test_none_session_id(self):

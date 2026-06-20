@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import pytest
 
-from apps.automation.services.insurance.exceptions import (
+from plugins.court_automation.preservation_quote.exceptions import (
     APIError,
     CompanyListEmptyError,
     NetworkError,

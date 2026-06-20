@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from apps.automation.api.court_filing_helpers import (
+from plugins.court_automation.filing.helpers import (
     _apply_execution_party_fallbacks,
     _build_execution_reason_text,
     _build_material_slot_signals,
@@ -26,7 +26,7 @@ from apps.automation.api.court_filing_helpers import (
     _to_valid_mobile,
     _update_session_task,
 )
-from apps.automation.api.court_filing_schemas import (
+from plugins.court_automation.filing.schemas import (
     _FILING_ENGINE_API,
     _FILING_TYPE_CIVIL,
     _FILING_TYPE_EXECUTION,
@@ -62,14 +62,14 @@ class TestNormalizeFilingTypeR3:
         result = _normalize_filing_type(requested_filing_type="execution", case=case, parties=[])
         assert result == "execution"
 
-    @patch("apps.automation.api.court_filing_helpers._infer_filing_type", return_value="civil")
+    @patch("plugins.court_automation.filing.helpers._infer_filing_type", return_value="civil")
     def test_invalid_falls_back_to_infer(self, mock_infer):
         case = MagicMock()
         result = _normalize_filing_type(requested_filing_type="invalid", case=case, parties=[])
         assert result == "civil"
         mock_infer.assert_called_once()
 
-    @patch("apps.automation.api.court_filing_helpers._infer_filing_type", return_value="execution")
+    @patch("plugins.court_automation.filing.helpers._infer_filing_type", return_value="execution")
     def test_none_falls_back_to_infer(self, mock_infer):
         case = MagicMock()
         result = _normalize_filing_type(requested_filing_type=None, case=case, parties=[])

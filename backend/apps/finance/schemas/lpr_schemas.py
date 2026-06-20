@@ -43,6 +43,7 @@ class LPRSyncResponse(Schema):
     created: int = Field(0, description="新增记录数")
     updated: int = Field(0, description="更新记录数")
     skipped: int = Field(0, description="跳过记录数")
+    task_id: str | None = Field(None, description="后台任务ID（异步模式下返回）")
 
 
 class LPRSyncStatusResponse(Schema):

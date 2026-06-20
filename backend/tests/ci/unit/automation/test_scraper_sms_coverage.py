@@ -39,42 +39,42 @@ class TestSMSCaseBindingMixin:
 
 class TestProgressReporter:
     def test_resolve_filing_engine_api(self):
-        from apps.automation.services.scraper.sites.court_zxfw_filing.progress_reporter import ProgressReporterMixin
+        from plugins.court_automation.filing.playwright_filing.progress_reporter import ProgressReporterMixin
 
         result = ProgressReporterMixin._resolve_filing_engine({"filing_engine": "api"})
         assert result == "api"
 
     def test_resolve_filing_engine_playwright(self):
-        from apps.automation.services.scraper.sites.court_zxfw_filing.progress_reporter import ProgressReporterMixin
+        from plugins.court_automation.filing.playwright_filing.progress_reporter import ProgressReporterMixin
 
         result = ProgressReporterMixin._resolve_filing_engine({"filing_engine": "playwright"})
         assert result == "playwright"
 
     def test_resolve_filing_engine_use_api_flag(self):
-        from apps.automation.services.scraper.sites.court_zxfw_filing.progress_reporter import ProgressReporterMixin
+        from plugins.court_automation.filing.playwright_filing.progress_reporter import ProgressReporterMixin
 
         result = ProgressReporterMixin._resolve_filing_engine({"use_api_for_execution": True})
         assert result == "api"
 
     @patch.dict("sys.modules", {"plugins": None})
     def test_resolve_filing_engine_default(self):
-        from apps.automation.services.scraper.sites.court_zxfw_filing.progress_reporter import ProgressReporterMixin
+        from plugins.court_automation.filing.playwright_filing.progress_reporter import ProgressReporterMixin
 
         result = ProgressReporterMixin._resolve_filing_engine({})
         assert result == "playwright"
 
     def test_allow_playwright_fallback_true(self):
-        from apps.automation.services.scraper.sites.court_zxfw_filing.progress_reporter import ProgressReporterMixin
+        from plugins.court_automation.filing.playwright_filing.progress_reporter import ProgressReporterMixin
 
         assert ProgressReporterMixin._allow_playwright_fallback({}) is True
 
     def test_allow_playwright_fallback_false(self):
-        from apps.automation.services.scraper.sites.court_zxfw_filing.progress_reporter import ProgressReporterMixin
+        from plugins.court_automation.filing.playwright_filing.progress_reporter import ProgressReporterMixin
 
         assert ProgressReporterMixin._allow_playwright_fallback({"playwright_fallback": False}) is False
 
     def test_allow_playwright_fallback_string(self):
-        from apps.automation.services.scraper.sites.court_zxfw_filing.progress_reporter import ProgressReporterMixin
+        from plugins.court_automation.filing.playwright_filing.progress_reporter import ProgressReporterMixin
 
         assert ProgressReporterMixin._allow_playwright_fallback({"playwright_fallback": "false"}) is False
 

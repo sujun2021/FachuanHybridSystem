@@ -12,7 +12,7 @@ import pytest
 
 class TestResolveCourtName:
     def _import_func(self):
-        from apps.automation.api.court_filing_helpers import _resolve_court_name
+        from plugins.court_automation.filing.helpers import _resolve_court_name
         return _resolve_court_name
 
     def test_already_has_renmfy(self):
@@ -31,33 +31,33 @@ class TestResolveCourtName:
 
 class TestNormalizeFilingEngine:
     def _import_func(self):
-        from apps.automation.api.court_filing_helpers import _normalize_filing_engine
+        from plugins.court_automation.filing.helpers import _normalize_filing_engine
         return _normalize_filing_engine
 
     def test_valid_engine(self):
         func = self._import_func()
-        with patch("apps.automation.api.court_filing_helpers._VALID_FILING_ENGINES", {"api", "web"}):
+        with patch("plugins.court_automation.filing.helpers._VALID_FILING_ENGINES", {"api", "web"}):
             result = func("api")
             assert result == "api"
 
     def test_invalid_engine_returns_default(self):
         func = self._import_func()
-        with patch("apps.automation.api.court_filing_helpers._VALID_FILING_ENGINES", {"api", "web"}):
-            with patch("apps.automation.api.court_filing_helpers._FILING_ENGINE_API", "api"):
+        with patch("plugins.court_automation.filing.helpers._VALID_FILING_ENGINES", {"api", "web"}):
+            with patch("plugins.court_automation.filing.helpers._FILING_ENGINE_API", "api"):
                 result = func("invalid")
                 assert result == "api"
 
     def test_none_engine_returns_default(self):
         func = self._import_func()
-        with patch("apps.automation.api.court_filing_helpers._VALID_FILING_ENGINES", {"api", "web"}):
-            with patch("apps.automation.api.court_filing_helpers._FILING_ENGINE_API", "api"):
+        with patch("plugins.court_automation.filing.helpers._VALID_FILING_ENGINES", {"api", "web"}):
+            with patch("plugins.court_automation.filing.helpers._FILING_ENGINE_API", "api"):
                 result = func(None)
                 assert result == "api"
 
     def test_empty_engine_returns_default(self):
         func = self._import_func()
-        with patch("apps.automation.api.court_filing_helpers._VALID_FILING_ENGINES", {"api", "web"}):
-            with patch("apps.automation.api.court_filing_helpers._FILING_ENGINE_API", "api"):
+        with patch("plugins.court_automation.filing.helpers._VALID_FILING_ENGINES", {"api", "web"}):
+            with patch("plugins.court_automation.filing.helpers._FILING_ENGINE_API", "api"):
                 result = func("")
                 assert result == "api"
 
@@ -66,33 +66,33 @@ class TestNormalizeFilingEngine:
 
 class TestNormalizeFilingType:
     def _import_func(self):
-        from apps.automation.api.court_filing_helpers import _normalize_filing_type
+        from plugins.court_automation.filing.helpers import _normalize_filing_type
         return _normalize_filing_type
 
     def test_valid_type(self):
         func = self._import_func()
-        with patch("apps.automation.api.court_filing_helpers._VALID_FILING_TYPES", {"civil", "execution"}):
+        with patch("plugins.court_automation.filing.helpers._VALID_FILING_TYPES", {"civil", "execution"}):
             result = func(requested_filing_type="civil", case=MagicMock(), parties=[])
             assert result == "civil"
 
     def test_case_insensitive(self):
         func = self._import_func()
-        with patch("apps.automation.api.court_filing_helpers._VALID_FILING_TYPES", {"civil", "execution"}):
+        with patch("plugins.court_automation.filing.helpers._VALID_FILING_TYPES", {"civil", "execution"}):
             result = func(requested_filing_type="Civil", case=MagicMock(), parties=[])
             assert result == "civil"
 
     def test_invalid_type_infers(self):
         func = self._import_func()
-        with patch("apps.automation.api.court_filing_helpers._VALID_FILING_TYPES", {"civil", "execution"}):
-            with patch("apps.automation.api.court_filing_helpers._infer_filing_type") as mock_infer:
+        with patch("plugins.court_automation.filing.helpers._VALID_FILING_TYPES", {"civil", "execution"}):
+            with patch("plugins.court_automation.filing.helpers._infer_filing_type") as mock_infer:
                 mock_infer.return_value = "civil"
                 result = func(requested_filing_type="invalid", case=MagicMock(), parties=[])
                 assert result == "civil"
 
     def test_none_type_infers(self):
         func = self._import_func()
-        with patch("apps.automation.api.court_filing_helpers._VALID_FILING_TYPES", {"civil", "execution"}):
-            with patch("apps.automation.api.court_filing_helpers._infer_filing_type") as mock_infer:
+        with patch("plugins.court_automation.filing.helpers._VALID_FILING_TYPES", {"civil", "execution"}):
+            with patch("plugins.court_automation.filing.helpers._infer_filing_type") as mock_infer:
                 mock_infer.return_value = "execution"
                 result = func(requested_filing_type=None, case=MagicMock(), parties=[])
                 assert result == "execution"
@@ -102,7 +102,7 @@ class TestNormalizeFilingType:
 
 class TestResolveOriginalCaseNumber:
     def _import_func(self):
-        from apps.automation.api.court_filing_helpers import _resolve_original_case_number
+        from plugins.court_automation.filing.helpers import _resolve_original_case_number
         return _resolve_original_case_number
 
     def test_no_case_numbers(self):
@@ -140,7 +140,7 @@ class TestResolveOriginalCaseNumber:
 
 class TestInferFilingType:
     def _import_func(self):
-        from apps.automation.api.court_filing_helpers import _infer_filing_type
+        from plugins.court_automation.filing.helpers import _infer_filing_type
         return _infer_filing_type
 
     @pytest.mark.django_db
@@ -148,7 +148,7 @@ class TestInferFilingType:
         func = self._import_func()
         party = MagicMock()
         party.legal_status = "被执行人"
-        with patch("apps.automation.api.court_filing_helpers._EXECUTION_HINT_STATUSES", {"被执行人"}):
+        with patch("plugins.court_automation.filing.helpers._EXECUTION_HINT_STATUSES", {"被执行人"}):
             result = func(case=MagicMock(), parties=[party])
             assert result == "execution"
 
@@ -158,7 +158,7 @@ class TestInferFilingType:
         case = MagicMock()
         case.name = "张三申请执行案"
         case.cause_of_action = ""
-        with patch("apps.automation.api.court_filing_helpers._EXECUTION_HINT_STATUSES", set()):
+        with patch("plugins.court_automation.filing.helpers._EXECUTION_HINT_STATUSES", set()):
             with patch("apps.cases.models.CaseMaterial") as mock_cm:
                 mock_cm.objects.filter.return_value.values_list.return_value = []
                 result = func(case=case, parties=[])
@@ -170,7 +170,7 @@ class TestInferFilingType:
         case = MagicMock()
         case.name = "张三诉李四买卖合同纠纷"
         case.cause_of_action = "买卖合同纠纷"
-        with patch("apps.automation.api.court_filing_helpers._EXECUTION_HINT_STATUSES", set()):
+        with patch("plugins.court_automation.filing.helpers._EXECUTION_HINT_STATUSES", set()):
             with patch("apps.cases.models.CaseMaterial") as mock_cm:
                 mock_cm.objects.filter.return_value.values_list.return_value = []
                 result = func(case=case, parties=[])
@@ -181,7 +181,7 @@ class TestInferFilingType:
 
 class TestBuildPartyPayloads:
     def _import_func(self):
-        from apps.automation.api.court_filing_helpers import _build_party_payloads
+        from plugins.court_automation.filing.helpers import _build_party_payloads
         return _build_party_payloads
 
     def test_basic_plaintiff(self):
@@ -194,9 +194,9 @@ class TestBuildPartyPayloads:
         party.client.id_number = "110101199001011234"
         party.legal_status = "plaintiff"
 
-        with patch("apps.automation.api.court_filing_helpers._PLAINTIFF_SIDE_STATUSES", {"plaintiff"}):
-            with patch("apps.automation.api.court_filing_helpers._DEFENDANT_SIDE_STATUSES", set()):
-                with patch("apps.automation.api.court_filing_helpers._THIRD_SIDE_STATUSES", set()):
+        with patch("plugins.court_automation.filing.helpers._PLAINTIFF_SIDE_STATUSES", {"plaintiff"}):
+            with patch("plugins.court_automation.filing.helpers._DEFENDANT_SIDE_STATUSES", set()):
+                with patch("plugins.court_automation.filing.helpers._THIRD_SIDE_STATUSES", set()):
                     with patch("apps.core.utils.id_card_utils.IdCardUtils.extract_gender", return_value="男"):
                         plaintiffs, defendants, third_parties = func([party])
                         assert len(plaintiffs) == 1
@@ -212,9 +212,9 @@ class TestBuildPartyPayloads:
         party.client.id_number = "91110000MA12345678"
         party.legal_status = "defendant"
 
-        with patch("apps.automation.api.court_filing_helpers._PLAINTIFF_SIDE_STATUSES", set()):
-            with patch("apps.automation.api.court_filing_helpers._DEFENDANT_SIDE_STATUSES", {"defendant"}):
-                with patch("apps.automation.api.court_filing_helpers._THIRD_SIDE_STATUSES", set()):
+        with patch("plugins.court_automation.filing.helpers._PLAINTIFF_SIDE_STATUSES", set()):
+            with patch("plugins.court_automation.filing.helpers._DEFENDANT_SIDE_STATUSES", {"defendant"}):
+                with patch("plugins.court_automation.filing.helpers._THIRD_SIDE_STATUSES", set()):
                     plaintiffs, defendants, third_parties = func([party])
                     assert len(defendants) == 1
                     assert defendants[0]["name"] == "某公司"
@@ -229,9 +229,9 @@ class TestBuildPartyPayloads:
         party.client.id_number = ""
         party.legal_status = "third_party"
 
-        with patch("apps.automation.api.court_filing_helpers._PLAINTIFF_SIDE_STATUSES", set()):
-            with patch("apps.automation.api.court_filing_helpers._DEFENDANT_SIDE_STATUSES", set()):
-                with patch("apps.automation.api.court_filing_helpers._THIRD_SIDE_STATUSES", {"third_party"}):
+        with patch("plugins.court_automation.filing.helpers._PLAINTIFF_SIDE_STATUSES", set()):
+            with patch("plugins.court_automation.filing.helpers._DEFENDANT_SIDE_STATUSES", set()):
+                with patch("plugins.court_automation.filing.helpers._THIRD_SIDE_STATUSES", {"third_party"}):
                     plaintiffs, defendants, third_parties = func([party])
                     assert len(third_parties) == 1
 
@@ -240,7 +240,7 @@ class TestBuildPartyPayloads:
 
 class TestExecutor:
     def test_executor_exists(self):
-        from apps.automation.api.court_filing_helpers import _SESSION_UPDATE_EXECUTOR
+        from plugins.court_automation.filing.helpers import _SESSION_UPDATE_EXECUTOR
         assert _SESSION_UPDATE_EXECUTOR is not None
 
 
@@ -248,5 +248,5 @@ class TestExecutor:
 
 class TestGetOrganizationService:
     def test_is_callable(self):
-        from apps.automation.api.court_filing_helpers import _get_organization_service
+        from plugins.court_automation.filing.helpers import _get_organization_service
         assert callable(_get_organization_service)

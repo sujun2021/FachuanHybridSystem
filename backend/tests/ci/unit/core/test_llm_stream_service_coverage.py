@@ -38,6 +38,7 @@ async def _collect_stream(gen):  # type: ignore[no-untyped-def]
     return results
 
 
+@pytest.mark.django_db
 class TestBuildChatStream:
     """测试 build_chat_stream SSE 生成器。"""
 

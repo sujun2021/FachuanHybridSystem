@@ -12,37 +12,37 @@ import pytest
 
 class TestCourtFilingHelpers:
     def test_normalize_filing_type_valid(self):
-        from apps.automation.api.court_filing_helpers import _normalize_filing_type
+        from plugins.court_automation.filing.helpers import _normalize_filing_type
 
         result = _normalize_filing_type(requested_filing_type="civil", case=None, parties=[])
         assert result == "civil"
 
     def test_normalize_filing_type_invalid(self):
-        from apps.automation.api.court_filing_helpers import _normalize_filing_type
+        from plugins.court_automation.filing.helpers import _normalize_filing_type
 
-        with patch("apps.automation.api.court_filing_helpers._infer_filing_type", return_value="civil"):
+        with patch("plugins.court_automation.filing.helpers._infer_filing_type", return_value="civil"):
             result = _normalize_filing_type(requested_filing_type="unknown", case=MagicMock(), parties=[])
             assert result == "civil"
 
     def test_normalize_filing_engine_valid(self):
-        from apps.automation.api.court_filing_helpers import _normalize_filing_engine
+        from plugins.court_automation.filing.helpers import _normalize_filing_engine
 
         assert _normalize_filing_engine("api") == "api"
 
     def test_normalize_filing_engine_invalid(self):
-        from apps.automation.api.court_filing_helpers import _normalize_filing_engine
+        from plugins.court_automation.filing.helpers import _normalize_filing_engine
 
         result = _normalize_filing_engine("unknown")
         assert result == "api"
 
     def test_normalize_filing_engine_none(self):
-        from apps.automation.api.court_filing_helpers import _normalize_filing_engine
+        from plugins.court_automation.filing.helpers import _normalize_filing_engine
 
         result = _normalize_filing_engine(None)
         assert result == "api"
 
     def test_to_valid_mobile(self):
-        from apps.automation.api.court_filing_helpers import _to_valid_mobile
+        from plugins.court_automation.filing.helpers import _to_valid_mobile
 
         assert _to_valid_mobile("12000000000") == "12000000000"
         assert _to_valid_mobile("abc") == ""
@@ -50,18 +50,18 @@ class TestCourtFilingHelpers:
         assert _to_valid_mobile("123") == ""
 
     def test_normalize_text(self):
-        from apps.automation.api.court_filing_helpers import _normalize_text
+        from plugins.court_automation.filing.helpers import _normalize_text
 
         result = _normalize_text("Hello World")
         assert isinstance(result, str)
 
     def test_resolve_court_name_with_people_court(self):
-        from apps.automation.api.court_filing_helpers import _resolve_court_name
+        from plugins.court_automation.filing.helpers import _resolve_court_name
 
         assert _resolve_court_name("广州市天河区人民法院") == "广州市天河区人民法院"
 
     def test_resolve_court_name_short(self):
-        from apps.automation.api.court_filing_helpers import _resolve_court_name
+        from plugins.court_automation.filing.helpers import _resolve_court_name
 
         with patch("apps.core.models.Court") as MockCourt:
             MockCourt.objects.filter.return_value.first.return_value = None
@@ -69,20 +69,20 @@ class TestCourtFilingHelpers:
             assert "人民法院" in result
 
     def test_resolve_original_case_number_no_case_numbers(self):
-        from apps.automation.api.court_filing_helpers import _resolve_original_case_number
+        from plugins.court_automation.filing.helpers import _resolve_original_case_number
 
         case = SimpleNamespace(case_numbers=None)
         assert _resolve_original_case_number(case) == ""
 
     def test_build_execution_reason_text(self):
-        from apps.automation.api.court_filing_helpers import _build_execution_reason_text
+        from plugins.court_automation.filing.helpers import _build_execution_reason_text
 
         case = SimpleNamespace(cause_of_action="借款纠纷")
         result = _build_execution_reason_text(case=case, original_case_number="2025粤01民初1号")
         assert "被执行人" in result
 
     def test_build_execution_reason_text_no_cause(self):
-        from apps.automation.api.court_filing_helpers import _build_execution_reason_text
+        from plugins.court_automation.filing.helpers import _build_execution_reason_text
 
         case = SimpleNamespace(cause_of_action="")
         result = _build_execution_reason_text(case=case, original_case_number="")
@@ -90,12 +90,12 @@ class TestCourtFilingHelpers:
         assert len(result) > 0
 
     def test_score_slot_for_signal_empty(self):
-        from apps.automation.api.court_filing_helpers import _score_slot_for_signal
+        from plugins.court_automation.filing.helpers import _score_slot_for_signal
 
         assert _score_slot_for_signal(signal="", strong=(), weak=(), exclude=()) == 0
 
     def test_apply_execution_party_fallbacks(self):
-        from apps.automation.api.court_filing_helpers import _apply_execution_party_fallbacks
+        from plugins.court_automation.filing.helpers import _apply_execution_party_fallbacks
 
         plaintiffs = [{"client_type": "natural", "phone": "", "address": "北京市"}]
         agents = [{"phone": "12000000000"}]
@@ -103,7 +103,7 @@ class TestCourtFilingHelpers:
         assert plaintiffs[0]["phone"] == "12000000000"
 
     def test_build_session_status_pending(self):
-        from apps.automation.api.court_filing_helpers import _build_session_status_payload
+        from plugins.court_automation.filing.helpers import _build_session_status_payload
 
         task = MagicMock()
         task.status = "pending"
@@ -122,76 +122,76 @@ class TestCourtFilingHelpers:
 
 class TestCourtGuaranteeHelpers:
     def test_normalize_insurance_company_valid(self):
-        from apps.automation.api.court_guarantee_helpers import _normalize_insurance_company
+        from plugins.court_automation.guarantee.helpers import _normalize_insurance_company
 
-        with patch("apps.automation.api.court_guarantee_helpers._GUARANTEE_INSURANCE_COMPANY_OPTIONS", ["阳光财险"]):
+        with patch("plugins.court_automation.guarantee.helpers._GUARANTEE_INSURANCE_COMPANY_OPTIONS", ["阳光财险"]):
             result = _normalize_insurance_company("阳光财险")
             assert result == "阳光财险"
 
     def test_normalize_insurance_company_empty(self):
-        from apps.automation.api.court_guarantee_helpers import _normalize_insurance_company
+        from plugins.court_automation.guarantee.helpers import _normalize_insurance_company
 
-        with patch("apps.automation.api.court_guarantee_helpers._DEFAULT_INSURANCE_COMPANY", "默认公司"):
+        with patch("plugins.court_automation.guarantee.helpers._DEFAULT_INSURANCE_COMPANY", "默认公司"):
             result = _normalize_insurance_company("")
             assert result == "默认公司"
 
     def test_parse_preserve_amount_none(self):
-        from apps.automation.api.court_guarantee_helpers import _parse_preserve_amount
+        from plugins.court_automation.guarantee.helpers import _parse_preserve_amount
 
         assert _parse_preserve_amount(None) is None
 
     def test_parse_preserve_amount_decimal(self):
         from decimal import Decimal
 
-        from apps.automation.api.court_guarantee_helpers import _parse_preserve_amount
+        from plugins.court_automation.guarantee.helpers import _parse_preserve_amount
 
         assert _parse_preserve_amount(Decimal("10000")) == Decimal("10000")
 
     def test_parse_preserve_amount_string(self):
         from decimal import Decimal
 
-        from apps.automation.api.court_guarantee_helpers import _parse_preserve_amount
+        from plugins.court_automation.guarantee.helpers import _parse_preserve_amount
 
         assert _parse_preserve_amount("50000") == Decimal("50000")
 
     def test_parse_preserve_amount_invalid(self):
-        from apps.automation.api.court_guarantee_helpers import _parse_preserve_amount
+        from plugins.court_automation.guarantee.helpers import _parse_preserve_amount
 
         assert _parse_preserve_amount("abc") is None
 
     def test_normalize_property_clue_content(self):
-        from apps.automation.api.court_guarantee_helpers import _normalize_property_clue_content
+        from plugins.court_automation.guarantee.helpers import _normalize_property_clue_content
 
         assert _normalize_property_clue_content("线索1\n线索2") == "线索1；线索2"
         assert _normalize_property_clue_content("") == ""
 
     def test_normalize_property_value(self):
-        from apps.automation.api.court_guarantee_helpers import _normalize_property_value
+        from plugins.court_automation.guarantee.helpers import _normalize_property_value
 
         assert _normalize_property_value(None) == ""
         assert _normalize_property_value("10000.50") == "10000.5"
         assert _normalize_property_value("10,000") == "10000"
 
     def test_build_property_clue_info(self):
-        from apps.automation.api.court_guarantee_helpers import _build_property_clue_info
+        from plugins.court_automation.guarantee.helpers import _build_property_clue_info
 
         result = _build_property_clue_info(clue_type="bank_account", raw_content="某某银行账户")
         assert "银行" in result or "某某" in result
 
     def test_build_cause_candidates(self):
-        from apps.automation.api.court_guarantee_helpers import _build_cause_candidates
+        from plugins.court_automation.guarantee.helpers import _build_cause_candidates
 
         result = _build_cause_candidates("买卖合同纠纷、借款合同纠纷")
         assert len(result) > 0
         assert any("合同纠纷" in c for c in result)
 
     def test_build_cause_candidates_empty(self):
-        from apps.automation.api.court_guarantee_helpers import _build_cause_candidates
+        from plugins.court_automation.guarantee.helpers import _build_cause_candidates
 
         assert _build_cause_candidates("") == []
 
     def test_normalize_party_type(self):
-        from apps.automation.api.court_guarantee_helpers import _normalize_party_type
+        from plugins.court_automation.guarantee.helpers import _normalize_party_type
 
         assert _normalize_party_type("natural") == "natural"
         assert _normalize_party_type("legal") == "legal"
@@ -200,13 +200,13 @@ class TestCourtGuaranteeHelpers:
         assert _normalize_party_type(None) == "natural"
 
     def test_normalize_selected_party_ids(self):
-        from apps.automation.api.court_guarantee_helpers import _normalize_selected_party_ids
+        from plugins.court_automation.guarantee.helpers import _normalize_selected_party_ids
 
         assert _normalize_selected_party_ids(None) is None
         assert _normalize_selected_party_ids([1, 2, 0]) == {1, 2}
 
     def test_extract_quote_company_options(self):
-        from apps.automation.api.court_guarantee_helpers import _extract_quote_company_options
+        from plugins.court_automation.guarantee.helpers import _extract_quote_company_options
 
         quote_context = {
             "items": [
@@ -218,19 +218,19 @@ class TestCourtGuaranteeHelpers:
         assert "阳光财险" in result
 
     def test_extract_quote_company_options_empty(self):
-        from apps.automation.api.court_guarantee_helpers import _extract_quote_company_options
+        from plugins.court_automation.guarantee.helpers import _extract_quote_company_options
 
         assert _extract_quote_company_options(quote_context=None) == []
 
     def test_resolve_insurance_company_defaults(self):
-        from apps.automation.api.court_guarantee_helpers import _resolve_insurance_company_defaults
+        from plugins.court_automation.guarantee.helpers import _resolve_insurance_company_defaults
 
         result = _resolve_insurance_company_defaults(quote_context=None)
         assert isinstance(result, tuple)
         assert len(result) == 2
 
     def test_build_session_status_guarantee_success(self):
-        from apps.automation.api.court_guarantee_helpers import _build_session_status_payload
+        from plugins.court_automation.guarantee.helpers import _build_session_status_payload
 
         task = MagicMock()
         task.status = "success"

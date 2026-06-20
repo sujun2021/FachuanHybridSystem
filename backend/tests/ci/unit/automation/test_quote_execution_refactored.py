@@ -13,8 +13,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from apps.automation.services.insurance._quote_execution_mixin import QuoteExecutionMixin
-from apps.automation.services.insurance.court_insurance_client import InsuranceCompany, PremiumResult
+from plugins.court_automation.preservation_quote.execution_mixin import QuoteExecutionMixin
+from plugins.court_automation.preservation_quote.court_insurance_client import InsuranceCompany, PremiumResult
 
 
 # ---------------------------------------------------------------------------

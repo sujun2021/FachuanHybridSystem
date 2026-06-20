@@ -13,8 +13,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from apps.automation.services.insurance.preservation_quote_service import PreservationQuoteService
-from apps.automation.services.insurance.exceptions import ValidationError
+from plugins.court_automation.preservation_quote.service import PreservationQuoteService
+from plugins.court_automation.preservation_quote.exceptions import ValidationError
 
 
 # ---------------------------------------------------------------------------

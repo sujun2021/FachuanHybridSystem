@@ -14,7 +14,7 @@ class TestBuildGuaranteeMaterialPaths:
     """Cover _build_guarantee_material_paths branches."""
 
     def _fn(self):
-        from apps.automation.api.court_guarantee_helpers import _build_guarantee_material_paths
+        from plugins.court_automation.guarantee.helpers import _build_guarantee_material_paths
         return _build_guarantee_material_paths
 
     def _make_qs(self, materials):
@@ -201,7 +201,7 @@ class TestBuildCauseCandidates:
     """Cover _build_cause_candidates edge cases."""
 
     def _fn(self):
-        from apps.automation.api.court_guarantee_helpers import _build_cause_candidates
+        from plugins.court_automation.guarantee.helpers import _build_cause_candidates
         return _build_cause_candidates
 
     def test_empty_input(self):
@@ -230,7 +230,7 @@ class TestNormalizePartyType:
     """Cover _normalize_party_type."""
 
     def _fn(self):
-        from apps.automation.api.court_guarantee_helpers import _normalize_party_type
+        from plugins.court_automation.guarantee.helpers import _normalize_party_type
         return _normalize_party_type
 
     def test_person(self):
@@ -280,7 +280,7 @@ class TestBuildPartyPayloadFromCaseParty:
     """Cover _build_party_payload_from_case_party edge cases."""
 
     def _fn(self):
-        from apps.automation.api.court_guarantee_helpers import _build_party_payload_from_case_party
+        from plugins.court_automation.guarantee.helpers import _build_party_payload_from_case_party
         return _build_party_payload_from_case_party
 
     def test_natural_party_defaults(self):
@@ -327,7 +327,7 @@ class TestListPartyPayloads:
     """Cover _list_party_payloads fallbacks."""
 
     def _fn(self):
-        from apps.automation.api.court_guarantee_helpers import _list_party_payloads
+        from plugins.court_automation.guarantee.helpers import _list_party_payloads
         return _list_party_payloads
 
     def test_status_and_side_match(self):
@@ -419,7 +419,7 @@ class TestPickPartyPayload:
     """Cover _pick_party_payload empty case."""
 
     def _fn(self):
-        from apps.automation.api.court_guarantee_helpers import _pick_party_payload
+        from plugins.court_automation.guarantee.helpers import _pick_party_payload
         return _pick_party_payload
 
     def test_empty_parties_returns_default(self):
@@ -435,7 +435,7 @@ class TestListOpponentCaseParties:
     """Cover _list_opponent_case_parties fallbacks."""
 
     def _fn(self):
-        from apps.automation.api.court_guarantee_helpers import _list_opponent_case_parties
+        from plugins.court_automation.guarantee.helpers import _list_opponent_case_parties
         return _list_opponent_case_parties
 
     def test_opponents_found(self):
@@ -469,7 +469,7 @@ class TestExtractQuoteCompanyOptions:
     """Cover _extract_quote_company_options branches."""
 
     def _fn(self):
-        from apps.automation.api.court_guarantee_helpers import _extract_quote_company_options
+        from plugins.court_automation.guarantee.helpers import _extract_quote_company_options
         return _extract_quote_company_options
 
     def test_none_context(self):
@@ -517,7 +517,7 @@ class TestResolveInsuranceCompanyDefaults:
     """Cover _resolve_insurance_company_defaults branches."""
 
     def _fn_import(self):
-        from apps.automation.api.court_guarantee_helpers import _resolve_insurance_company_defaults
+        from plugins.court_automation.guarantee.helpers import _resolve_insurance_company_defaults
         return _resolve_insurance_company_defaults
 
     def test_no_quote_returns_defaults(self):
@@ -550,7 +550,7 @@ class TestNormalizePropertyClueContent:
     """Cover _normalize_property_clue_content edge cases."""
 
     def _fn_import(self):
-        from apps.automation.api.court_guarantee_helpers import _normalize_property_clue_content
+        from plugins.court_automation.guarantee.helpers import _normalize_property_clue_content
         return _normalize_property_clue_content
 
     def test_multiline_joins_with_semicolon(self):
@@ -570,7 +570,7 @@ class TestBuildPropertyClueInfo:
     """Cover _build_property_clue_info edge cases."""
 
     def _fn_import(self):
-        from apps.automation.api.court_guarantee_helpers import _build_property_clue_info
+        from plugins.court_automation.guarantee.helpers import _build_property_clue_info
         return _build_property_clue_info
 
     def test_known_type_with_content(self):
@@ -594,7 +594,7 @@ class TestNormalizePropertyValue:
     """Cover _normalize_property_value edge cases."""
 
     def _fn_import(self):
-        from apps.automation.api.court_guarantee_helpers import _normalize_property_value
+        from plugins.court_automation.guarantee.helpers import _normalize_property_value
         return _normalize_property_value
 
     def test_none(self):
@@ -617,7 +617,7 @@ class TestParsePreserveAmount:
     """Cover _parse_preserve_amount edge cases."""
 
     def _fn_import(self):
-        from apps.automation.api.court_guarantee_helpers import _parse_preserve_amount
+        from plugins.court_automation.guarantee.helpers import _parse_preserve_amount
         return _parse_preserve_amount
 
     def test_none(self):
@@ -640,7 +640,7 @@ class TestGetCaseCourtNameBranches:
     """Cover _get_case_court_name branches."""
 
     def _fn_import(self):
-        from apps.automation.api.court_guarantee_helpers import _get_case_court_name
+        from plugins.court_automation.guarantee.helpers import _get_case_court_name
         return _get_case_court_name
 
     def test_trial_authority_found(self):
@@ -655,7 +655,7 @@ class TestGetCaseCourtNameBranches:
 
         with patch("apps.core.models.enums.AuthorityType") as mock_enum:
             mock_enum.TRIAL = "trial"
-            with patch("apps.automation.api.court_guarantee_helpers._resolve_court_name", return_value="广州市天河区人民法院"):
+            with patch("plugins.court_automation.guarantee.helpers._resolve_court_name", return_value="广州市天河区人民法院"):
                 result = self._fn_import()(case=case)
         assert result == "广州市天河区人民法院"
 
@@ -672,7 +672,7 @@ class TestGetCaseCourtNameBranches:
 
         with patch("apps.core.models.enums.AuthorityType") as mock_enum:
             mock_enum.TRIAL = "trial"
-            with patch("apps.automation.api.court_guarantee_helpers._resolve_court_name", return_value="广州市海珠区人民法院"):
+            with patch("plugins.court_automation.guarantee.helpers._resolve_court_name", return_value="广州市海珠区人民法院"):
                 result = self._fn_import()(case=case)
         assert result == "广州市海珠区人民法院"
 
@@ -693,7 +693,7 @@ class TestResolveCourtNameGuarantee:
     """Cover guarantee _resolve_court_name edge cases."""
 
     def _fn_import(self):
-        from apps.automation.api.court_guarantee_helpers import _resolve_court_name
+        from plugins.court_automation.guarantee.helpers import _resolve_court_name
         return _resolve_court_name
 
     def test_court_not_found_appends(self):
@@ -707,7 +707,7 @@ class TestNormalizeConsultantCode:
     """Cover _normalize_consultant_code."""
 
     def _fn_import(self):
-        from apps.automation.api.court_guarantee_helpers import _normalize_consultant_code
+        from plugins.court_automation.guarantee.helpers import _normalize_consultant_code
         return _normalize_consultant_code
 
     def test_sunshine_default_code(self):
@@ -736,7 +736,7 @@ class TestNormalizeInsuranceCompany:
     """Cover _normalize_insurance_company."""
 
     def _fn_import(self):
-        from apps.automation.api.court_guarantee_helpers import _normalize_insurance_company
+        from plugins.court_automation.guarantee.helpers import _normalize_insurance_company
         return _normalize_insurance_company
 
     def test_empty_with_allowed_options(self):
@@ -768,7 +768,7 @@ class TestNormalizeSelectedPartyIds:
     """Cover _normalize_selected_party_ids."""
 
     def _fn_import(self):
-        from apps.automation.api.court_guarantee_helpers import _normalize_selected_party_ids
+        from plugins.court_automation.guarantee.helpers import _normalize_selected_party_ids
         return _normalize_selected_party_ids
 
     def test_none_returns_none(self):

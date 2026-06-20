@@ -143,7 +143,7 @@ class TestCaseNumberExtractorService:
 
 class TestInsuranceClientFacade:
     def test_init(self):
-        from apps.automation.services.insurance.preservation_quote.client_facade import InsuranceClientFacade
+        from plugins.court_automation.preservation_quote.preservation_quote.client_facade import InsuranceClientFacade
 
         mock_client = MagicMock()
         facade = InsuranceClientFacade(client=mock_client)

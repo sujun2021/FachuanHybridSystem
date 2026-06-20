@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from apps.automation.api import court_guarantee_helpers as helpers
+from plugins.court_automation.guarantee import helpers
 from apps.core.dto.client import PropertyClueDTO
 
 

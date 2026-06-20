@@ -15,7 +15,7 @@ from pydantic import ValidationError
 
 class TestCaseFilingInfoOut:
     def test_valid_data(self):
-        from apps.automation.api.court_filing_schemas import CaseFilingInfoOut
+        from plugins.court_automation.filing.schemas import CaseFilingInfoOut
         data = CaseFilingInfoOut(
             case_id=1, case_name="测试", cause_of_action="借款",
             court_name="天河区人民法院", target_amount="10000",
@@ -25,7 +25,7 @@ class TestCaseFilingInfoOut:
         assert data.plugin_available is True
 
     def test_defaults(self):
-        from apps.automation.api.court_filing_schemas import CaseFilingInfoOut
+        from plugins.court_automation.filing.schemas import CaseFilingInfoOut
         data = CaseFilingInfoOut(case_id=1, case_name="测试", cause_of_action="", court_name=None, target_amount=None, plaintiff_name=None, defendant_name=None)
         assert data.our_party_is_plaintiff_side is False
         assert data.has_court_credential is False
@@ -34,25 +34,25 @@ class TestCaseFilingInfoOut:
 
 class TestExecuteCourtFilingIn:
     def test_required_case_id(self):
-        from apps.automation.api.court_filing_schemas import ExecuteCourtFilingIn
+        from plugins.court_automation.filing.schemas import ExecuteCourtFilingIn
         data = ExecuteCourtFilingIn(case_id=42)
         assert data.case_id == 42
         assert data.filing_type is None
 
     def test_with_optional(self):
-        from apps.automation.api.court_filing_schemas import ExecuteCourtFilingIn
+        from plugins.court_automation.filing.schemas import ExecuteCourtFilingIn
         data = ExecuteCourtFilingIn(case_id=1, filing_type="civil", filing_engine="api")
         assert data.filing_type == "civil"
 
 
 class TestExecuteCourtFilingOut:
     def test_success(self):
-        from apps.automation.api.court_filing_schemas import ExecuteCourtFilingOut
+        from plugins.court_automation.filing.schemas import ExecuteCourtFilingOut
         data = ExecuteCourtFilingOut(success=True, message="ok", session_id=1, status="completed")
         assert data.success is True
 
     def test_timing(self):
-        from apps.automation.api.court_filing_schemas import ExecuteCourtFilingOut
+        from plugins.court_automation.filing.schemas import ExecuteCourtFilingOut
         data = ExecuteCourtFilingOut(
             success=True, message="ok", timing={"overall_start": 1.0}
         )
@@ -65,13 +65,13 @@ class TestExecuteCourtFilingOut:
 
 class TestCaseGuaranteeInfoOut:
     def test_valid(self):
-        from apps.automation.api.court_guarantee_schemas import CaseGuaranteeInfoOut
+        from plugins.court_automation.guarantee.schemas import CaseGuaranteeInfoOut
         data = CaseGuaranteeInfoOut(case_id=1, case_name="测试", court_name=None, cause_of_action="", preserve_amount=None, preserve_category="诉讼保全", has_case_number=False)
         assert data.case_id == 1
         assert data.plugin_available is True
 
     def test_defaults(self):
-        from apps.automation.api.court_guarantee_schemas import CaseGuaranteeInfoOut
+        from plugins.court_automation.guarantee.schemas import CaseGuaranteeInfoOut
         data = CaseGuaranteeInfoOut(case_id=1, case_name="测试", court_name=None, cause_of_action="", preserve_amount=None, preserve_category="诉前保全", has_case_number=False)
         assert data.has_court_credential is False
         assert data.our_party_is_plaintiff_side is False
@@ -79,7 +79,7 @@ class TestCaseGuaranteeInfoOut:
 
 class TestExecuteCourtGuaranteeIn:
     def test_defaults(self):
-        from apps.automation.api.court_guarantee_schemas import ExecuteCourtGuaranteeIn
+        from plugins.court_automation.guarantee.schemas import ExecuteCourtGuaranteeIn
         data = ExecuteCourtGuaranteeIn(case_id=1)
         assert data.insurance_company_name is None
         assert data.selected_respondent_ids is None
@@ -87,7 +87,7 @@ class TestExecuteCourtGuaranteeIn:
 
 class TestCaseQuoteOperationIn:
     def test_required(self):
-        from apps.automation.api.court_guarantee_schemas import CaseQuoteOperationIn
+        from plugins.court_automation.guarantee.schemas import CaseQuoteOperationIn
         data = CaseQuoteOperationIn(case_id=10)
         assert data.case_id == 10
 

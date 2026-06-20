@@ -37,7 +37,7 @@ import pytest
 
 class TestResolveCourtName:
     def _fn(self):
-        from apps.automation.api.court_filing_helpers import _resolve_court_name
+        from plugins.court_automation.filing.helpers import _resolve_court_name
         return _resolve_court_name
 
     def test_already_has_renfayuan(self):
@@ -73,7 +73,7 @@ class TestResolveCourtName:
 
 class TestNormalizeFilingType:
     def _fn(self):
-        from apps.automation.api.court_filing_helpers import _normalize_filing_type
+        from plugins.court_automation.filing.helpers import _normalize_filing_type
         return _normalize_filing_type
 
     def test_valid_requested(self):
@@ -83,7 +83,7 @@ class TestNormalizeFilingType:
         case = MagicMock()
         case.name = "普通案件"
         case.cause_of_action = ""
-        with patch("apps.automation.api.court_filing_helpers._infer_filing_type", return_value="civil"):
+        with patch("plugins.court_automation.filing.helpers._infer_filing_type", return_value="civil"):
             result = self._fn()(requested_filing_type="invalid", case=case, parties=[])
         assert result == "civil"
 
@@ -91,7 +91,7 @@ class TestNormalizeFilingType:
         case = MagicMock()
         case.name = "普通案件"
         case.cause_of_action = ""
-        with patch("apps.automation.api.court_filing_helpers._infer_filing_type", return_value="civil"):
+        with patch("plugins.court_automation.filing.helpers._infer_filing_type", return_value="civil"):
             result = self._fn()(requested_filing_type=None, case=case, parties=[])
         assert result == "civil"
 
@@ -103,7 +103,7 @@ class TestNormalizeFilingType:
 
 class TestNormalizeFilingEngine:
     def _fn(self):
-        from apps.automation.api.court_filing_helpers import _normalize_filing_engine
+        from plugins.court_automation.filing.helpers import _normalize_filing_engine
         return _normalize_filing_engine
 
     def test_valid_playwright(self):
@@ -126,7 +126,7 @@ class TestNormalizeFilingEngine:
 
 class TestInferFilingTypeCauseKeyword:
     def test_cause_contains_zhixing(self):
-        from apps.automation.api.court_filing_helpers import _infer_filing_type
+        from plugins.court_automation.filing.helpers import _infer_filing_type
         case = MagicMock()
         case.name = "张三案件"
         case.cause_of_action = "申请执行"
@@ -135,7 +135,7 @@ class TestInferFilingTypeCauseKeyword:
             assert _infer_filing_type(case=case, parties=[]) == "execution"
 
     def test_name_contains_zhixing(self):
-        from apps.automation.api.court_filing_helpers import _infer_filing_type
+        from plugins.court_automation.filing.helpers import _infer_filing_type
         case = MagicMock()
         case.name = "执行案件"
         case.cause_of_action = ""
@@ -151,7 +151,7 @@ class TestInferFilingTypeCauseKeyword:
 
 class TestResolveOriginalCaseNumberNoFallback:
     def test_no_numbers_at_all(self):
-        from apps.automation.api.court_filing_helpers import _resolve_original_case_number
+        from plugins.court_automation.filing.helpers import _resolve_original_case_number
         case = MagicMock()
         case.case_numbers.filter.return_value.order_by.return_value.values_list.return_value.first.return_value = None
         case.case_numbers.order_by.return_value.values_list.return_value.first.return_value = None
@@ -165,7 +165,7 @@ class TestResolveOriginalCaseNumberNoFallback:
 
 class TestBuildPartyPayloadsDefendant:
     def test_defendant_natural(self):
-        from apps.automation.api.court_filing_helpers import _build_party_payloads
+        from plugins.court_automation.filing.helpers import _build_party_payloads
         party = MagicMock()
         party.client.client_type = "natural"
         party.client.name = "被告"
@@ -188,7 +188,7 @@ class TestBuildPartyPayloadsDefendant:
 
 class TestApplyExecutionPartyFallbacksEdge:
     def test_address_already_set_preserved(self):
-        from apps.automation.api.court_filing_helpers import _apply_execution_party_fallbacks
+        from plugins.court_automation.filing.helpers import _apply_execution_party_fallbacks
         plaintiffs = [{"client_type": "natural", "phone": "", "address": "已有地址"}]
         agents = [{"phone": "13800138000"}]
         _apply_execution_party_fallbacks(plaintiffs=plaintiffs, agents=agents)
@@ -196,7 +196,7 @@ class TestApplyExecutionPartyFallbacksEdge:
         assert plaintiffs[0]["phone"] == "13800138000"
 
     def test_agent_no_valid_phone(self):
-        from apps.automation.api.court_filing_helpers import _apply_execution_party_fallbacks
+        from plugins.court_automation.filing.helpers import _apply_execution_party_fallbacks
         plaintiffs = [{"client_type": "natural", "phone": "", "address": ""}]
         agents = [{"phone": "invalid"}]
         _apply_execution_party_fallbacks(plaintiffs=plaintiffs, agents=agents)
@@ -210,7 +210,7 @@ class TestApplyExecutionPartyFallbacksEdge:
 
 class TestBuildAgentPayloadsEdge:
     def _fn(self):
-        from apps.automation.api.court_filing_helpers import _build_agent_payloads
+        from plugins.court_automation.filing.helpers import _build_agent_payloads
         return _build_agent_payloads
 
     def test_lawyer_empty_name_skipped(self):
@@ -235,7 +235,7 @@ class TestBuildAgentPayloadsEdge:
         assert result == []
 
     def test_requester_already_in_seen_ids(self):
-        from apps.automation.api.court_filing_helpers import _build_agent_payloads
+        from plugins.court_automation.filing.helpers import _build_agent_payloads
         lawyer = MagicMock()
         lawyer.id = 1
         lawyer.real_name = "张律师"
@@ -261,7 +261,7 @@ class TestBuildAgentPayloadsEdge:
         assert len(result) == 1
 
     def test_fallback_phone_from_party(self):
-        from apps.automation.api.court_filing_helpers import _build_agent_payloads
+        from plugins.court_automation.filing.helpers import _build_agent_payloads
         lawyer = MagicMock()
         lawyer.id = 1
         lawyer.real_name = "张律师"
@@ -295,7 +295,7 @@ class TestBuildAgentPayloadsEdge:
 
 class TestBuildExecutionRequestText:
     def _fn(self):
-        from apps.automation.api.court_filing_helpers import _build_execution_request_text
+        from plugins.court_automation.filing.helpers import _build_execution_request_text
         return _build_execution_request_text
 
     def test_success_with_generated_text(self):
@@ -349,7 +349,7 @@ class TestBuildExecutionRequestText:
 
 class TestScoreSlotForSignalMultiple:
     def test_combined_strong_weak_exclude(self):
-        from apps.automation.api.court_filing_helpers import _score_slot_for_signal
+        from plugins.court_automation.filing.helpers import _score_slot_for_signal
         score = _score_slot_for_signal(
             signal="起诉状与证据材料",
             strong=("起诉状",),
@@ -366,7 +366,7 @@ class TestScoreSlotForSignalMultiple:
 
 class TestBuildMaterialSlotSignalsWithAttachment:
     def _fn(self):
-        from apps.automation.api.court_filing_helpers import _build_material_slot_signals
+        from plugins.court_automation.filing.helpers import _build_material_slot_signals
         return _build_material_slot_signals
 
     def test_with_material_type_and_attachment(self):
@@ -402,7 +402,7 @@ class TestBuildMaterialSlotSignalsWithAttachment:
 
 class TestScoreSlotDeduplicatedSecondaryExclude:
     def test_secondary_exclude_penalty(self):
-        from apps.automation.api.court_filing_helpers import _score_slot_deduplicated
+        from plugins.court_automation.filing.helpers import _score_slot_deduplicated
         score = _score_slot_deduplicated(
             primary_signals=[],
             secondary_signals=["执行申请书.pdf"],
@@ -420,16 +420,16 @@ class TestScoreSlotDeduplicatedSecondaryExclude:
 
 class TestMatchSlotDefault:
     def test_no_signals_returns_default(self):
-        from apps.automation.api.court_filing_helpers import _match_slot
+        from plugins.court_automation.filing.helpers import _match_slot
         material = MagicMock()
         file_path = Path("/test/unknown.pdf")
 
         with patch(
-            "apps.automation.api.court_filing_helpers._build_material_slot_signals",
+            "plugins.court_automation.filing.helpers._build_material_slot_signals",
             return_value=([], []),
         ):
             with patch(
-                "apps.automation.api.court_filing_helpers._score_slot_deduplicated",
+                "plugins.court_automation.filing.helpers._score_slot_deduplicated",
                 return_value=0,
             ):
                 result = _match_slot(material=material, file_path=file_path, filing_type="civil")
@@ -437,16 +437,16 @@ class TestMatchSlotDefault:
         assert result == "5"
 
     def test_execution_no_match_returns_default(self):
-        from apps.automation.api.court_filing_helpers import _match_slot
+        from plugins.court_automation.filing.helpers import _match_slot
         material = MagicMock()
         file_path = Path("/test/unknown.pdf")
 
         with patch(
-            "apps.automation.api.court_filing_helpers._build_material_slot_signals",
+            "plugins.court_automation.filing.helpers._build_material_slot_signals",
             return_value=([], []),
         ):
             with patch(
-                "apps.automation.api.court_filing_helpers._score_slot_deduplicated",
+                "plugins.court_automation.filing.helpers._score_slot_deduplicated",
                 return_value=0,
             ):
                 result = _match_slot(material=material, file_path=file_path, filing_type="execution")
@@ -461,7 +461,7 @@ class TestMatchSlotDefault:
 
 class TestBuildSessionStatusPayloadRunning:
     def test_running_with_non_dict_result(self):
-        from apps.automation.api.court_filing_helpers import _build_session_status_payload
+        from plugins.court_automation.filing.helpers import _build_session_status_payload
         task = MagicMock()
         task.status = "running"
         task.id = 1
@@ -471,7 +471,7 @@ class TestBuildSessionStatusPayloadRunning:
         assert result["message"] == "立案任务执行中..."
 
     def test_success_with_non_dict_result(self):
-        from apps.automation.api.court_filing_helpers import _build_session_status_payload
+        from plugins.court_automation.filing.helpers import _build_session_status_payload
         task = MagicMock()
         task.status = "success"
         task.id = 2
@@ -481,7 +481,7 @@ class TestBuildSessionStatusPayloadRunning:
         assert "timing" not in result
 
     def test_failed_with_non_dict_result(self):
-        from apps.automation.api.court_filing_helpers import _build_session_status_payload
+        from plugins.court_automation.filing.helpers import _build_session_status_payload
         task = MagicMock()
         task.status = "failed"
         task.id = 3
@@ -499,12 +499,12 @@ class TestBuildSessionStatusPayloadRunning:
 
 class TestUpdateSessionTaskWithEventLoop:
     def test_runs_in_executor_when_loop_exists(self):
-        from apps.automation.api.court_filing_helpers import _update_session_task
+        from plugins.court_automation.filing.helpers import _update_session_task
 
         # Simulate an event loop running
-        with patch("apps.automation.api.court_filing_helpers.asyncio") as mock_asyncio:
+        with patch("plugins.court_automation.filing.helpers.asyncio") as mock_asyncio:
             mock_asyncio.get_running_loop.return_value = MagicMock()  # loop exists
-            with patch("apps.automation.api.court_filing_helpers._SESSION_UPDATE_EXECUTOR") as mock_executor:
+            with patch("plugins.court_automation.filing.helpers._SESSION_UPDATE_EXECUTOR") as mock_executor:
                 _update_session_task(
                     session_id=1,
                     status="running",
@@ -520,7 +520,7 @@ class TestUpdateSessionTaskWithEventLoop:
 
 class TestBuildMaterialsMap:
     def _fn(self):
-        from apps.automation.api.court_filing_helpers import _build_materials_map
+        from plugins.court_automation.filing.helpers import _build_materials_map
         return _build_materials_map
 
     def test_no_materials_returns_empty(self):
@@ -539,7 +539,7 @@ class TestBuildMaterialsMap:
 
     def test_skips_non_pdf_files(self):
         """Non-.pdf files are skipped in _build_materials_map."""
-        from apps.automation.api.court_filing_helpers import _build_materials_map
+        from plugins.court_automation.filing.helpers import _build_materials_map
 
         case = MagicMock()
         attachment = MagicMock()
@@ -581,6 +581,6 @@ class TestBuildMaterialsMap:
 
 class TestGetOrganizationService:
     def test_delegates_to_build(self):
-        from apps.automation.api.court_filing_helpers import _get_organization_service
+        from plugins.court_automation.filing.helpers import _get_organization_service
         with patch("apps.core.dependencies.build_organization_service", return_value="svc"):
             assert _get_organization_service() == "svc"

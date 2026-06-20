@@ -4,11 +4,14 @@ import pytest
 from unittest.mock import MagicMock
 
 
+@pytest.mark.django_db
 class TestCleanupEvidenceItemFile:
     """Test cleanup_evidence_item_file signal handler."""
 
     def test_deletes_file_on_evidence_item_delete(self):
         """Signal handler deletes EvidenceItem file."""
+        from unittest.mock import patch as _patch
+
         from apps.evidence.signals import cleanup_evidence_item_file
         from apps.evidence.models import EvidenceItem
 
@@ -18,10 +21,12 @@ class TestCleanupEvidenceItemFile:
         instance = MagicMock()
         instance.file = mock_file
 
-        cleanup_evidence_item_file(
-            sender=EvidenceItem,
-            instance=instance,
-        )
+        with _patch("apps.evidence.signals.transaction") as mock_txn:
+            mock_txn.on_commit.side_effect = lambda fn: fn()
+            cleanup_evidence_item_file(
+                sender=EvidenceItem,
+                instance=instance,
+            )
         mock_file.delete.assert_called_once_with(save=False)
 
     def test_handles_no_file(self):
@@ -75,11 +80,14 @@ class TestCleanupEvidenceItemFile:
         mock_file.delete.assert_not_called()
 
 
+@pytest.mark.django_db
 class TestCleanupEvidenceListMergedPdf:
     """Test cleanup_evidence_list_merged_pdf signal handler."""
 
     def test_deletes_merged_pdf_on_evidence_list_delete(self):
         """Signal handler deletes EvidenceList merged_pdf."""
+        from unittest.mock import patch as _patch
+
         from apps.evidence.signals import cleanup_evidence_list_merged_pdf
         from apps.evidence.models import EvidenceList
 
@@ -89,10 +97,12 @@ class TestCleanupEvidenceListMergedPdf:
         instance = MagicMock()
         instance.merged_pdf = mock_pdf
 
-        cleanup_evidence_list_merged_pdf(
-            sender=EvidenceList,
-            instance=instance,
-        )
+        with _patch("apps.evidence.signals.transaction") as mock_txn:
+            mock_txn.on_commit.side_effect = lambda fn: fn()
+            cleanup_evidence_list_merged_pdf(
+                sender=EvidenceList,
+                instance=instance,
+            )
         mock_pdf.delete.assert_called_once_with(save=False)
 
     def test_handles_no_merged_pdf(self):
@@ -128,6 +138,7 @@ class TestCleanupEvidenceListMergedPdf:
         mock_pdf.delete.assert_not_called()
 
 
+@pytest.mark.django_db
 class TestDeleteFileHelper:
     """Test _delete_file helper."""
 

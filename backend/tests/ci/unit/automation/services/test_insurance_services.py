@@ -17,7 +17,7 @@ class TestInsuranceCompany:
     """InsuranceCompany dataclass tests."""
 
     def test_create_insurance_company(self):
-        from apps.automation.services.insurance.court_insurance_client import InsuranceCompany
+        from plugins.court_automation.preservation_quote.court_insurance_client import InsuranceCompany
         c = InsuranceCompany(c_id="1", c_code="PICC", c_name="人保")
         assert c.c_id == "1"
         assert c.c_code == "PICC"
@@ -28,7 +28,7 @@ class TestPremiumResult:
     """PremiumResult dataclass tests."""
 
     def test_success_result(self):
-        from apps.automation.services.insurance.court_insurance_client import InsuranceCompany, PremiumResult
+        from plugins.court_automation.preservation_quote.court_insurance_client import InsuranceCompany, PremiumResult
         company = InsuranceCompany(c_id="1", c_code="PICC", c_name="人保")
         result = PremiumResult(
             company=company,
@@ -42,7 +42,7 @@ class TestPremiumResult:
         assert result.request_info is None
 
     def test_failed_result(self):
-        from apps.automation.services.insurance.court_insurance_client import InsuranceCompany, PremiumResult
+        from plugins.court_automation.preservation_quote.court_insurance_client import InsuranceCompany, PremiumResult
         company = InsuranceCompany(c_id="1", c_code="PICC", c_name="人保")
         result = PremiumResult(
             company=company,
@@ -58,13 +58,13 @@ class TestPremiumResult:
 class TestParseInsuranceCompanies:
     """Tests for _parse_insurance_companies."""
 
-    @patch("apps.automation.services.insurance.court_insurance_client.get_config")
-    @patch("apps.automation.services.insurance.court_insurance_client.httpx")
+    @patch("plugins.court_automation.preservation_quote.court_insurance_client.get_config")
+    @patch("plugins.court_automation.preservation_quote.court_insurance_client.httpx")
     def _make_client(self, mock_httpx, mock_config):
         mock_config.return_value = 60.0
         mock_httpx.AsyncClient.return_value = AsyncMock()
         mock_httpx.Limits.return_value = MagicMock()
-        from apps.automation.services.insurance.court_insurance_client import CourtInsuranceClient
+        from plugins.court_automation.preservation_quote.court_insurance_client import CourtInsuranceClient
         return CourtInsuranceClient.__new__(CourtInsuranceClient)
 
     def test_parse_dict_with_data_key(self):
@@ -119,13 +119,13 @@ class TestParseInsuranceCompanies:
 class TestFetchAllPremiumsEmpty:
     """Test fetch_all_premiums with empty companies."""
 
-    @patch("apps.automation.services.insurance.court_insurance_client.get_config")
-    @patch("apps.automation.services.insurance.court_insurance_client.httpx")
+    @patch("plugins.court_automation.preservation_quote.court_insurance_client.get_config")
+    @patch("plugins.court_automation.preservation_quote.court_insurance_client.httpx")
     def _make_client(self, mock_httpx, mock_config):
         mock_config.return_value = 60.0
         mock_httpx.AsyncClient.return_value = AsyncMock()
         mock_httpx.Limits.return_value = MagicMock()
-        from apps.automation.services.insurance.court_insurance_client import CourtInsuranceClient
+        from plugins.court_automation.preservation_quote.court_insurance_client import CourtInsuranceClient
         return CourtInsuranceClient.__new__(CourtInsuranceClient)
 
     @pytest.mark.asyncio
@@ -148,7 +148,7 @@ class TestValidateCreateParams:
     """Tests for PreservationQuoteService._validate_create_params."""
 
     def _make_service(self):
-        from apps.automation.services.insurance.preservation_quote_service import PreservationQuoteService
+        from plugins.court_automation.preservation_quote.service import PreservationQuoteService
         svc = PreservationQuoteService.__new__(PreservationQuoteService)
         return svc
 
@@ -163,7 +163,7 @@ class TestValidateCreateParams:
 
     def test_negative_amount_raises(self):
         svc = self._make_service()
-        from apps.automation.services.insurance.exceptions import ValidationError
+        from plugins.court_automation.preservation_quote.exceptions import ValidationError
         with pytest.raises(ValidationError):
             svc._validate_create_params(
                 preserve_amount=Decimal("-100"),
@@ -174,7 +174,7 @@ class TestValidateCreateParams:
 
     def test_zero_amount_raises(self):
         svc = self._make_service()
-        from apps.automation.services.insurance.exceptions import ValidationError
+        from plugins.court_automation.preservation_quote.exceptions import ValidationError
         with pytest.raises(ValidationError):
             svc._validate_create_params(
                 preserve_amount=Decimal("0"),
@@ -185,7 +185,7 @@ class TestValidateCreateParams:
 
     def test_empty_corp_id_raises(self):
         svc = self._make_service()
-        from apps.automation.services.insurance.exceptions import ValidationError
+        from plugins.court_automation.preservation_quote.exceptions import ValidationError
         with pytest.raises(ValidationError):
             svc._validate_create_params(
                 preserve_amount=Decimal("10000"),
@@ -196,7 +196,7 @@ class TestValidateCreateParams:
 
     def test_empty_category_id_raises(self):
         svc = self._make_service()
-        from apps.automation.services.insurance.exceptions import ValidationError
+        from plugins.court_automation.preservation_quote.exceptions import ValidationError
         with pytest.raises(ValidationError):
             svc._validate_create_params(
                 preserve_amount=Decimal("10000"),
@@ -207,7 +207,7 @@ class TestValidateCreateParams:
 
     def test_negative_credential_id_raises(self):
         svc = self._make_service()
-        from apps.automation.services.insurance.exceptions import ValidationError
+        from plugins.court_automation.preservation_quote.exceptions import ValidationError
         with pytest.raises(ValidationError):
             svc._validate_create_params(
                 preserve_amount=Decimal("10000"),
@@ -234,7 +234,7 @@ class TestRepoValidateCreateParams:
     """Tests for PreservationQuoteRepository.validate_create_params."""
 
     def _make_repo(self):
-        from apps.automation.services.insurance.preservation_quote.repo import PreservationQuoteRepository
+        from plugins.court_automation.preservation_quote.preservation_quote.repo import PreservationQuoteRepository
         return PreservationQuoteRepository()
 
     def test_valid_params(self):
@@ -248,7 +248,7 @@ class TestRepoValidateCreateParams:
 
     def test_negative_amount_raises(self):
         repo = self._make_repo()
-        from apps.automation.services.insurance.exceptions import ValidationError
+        from plugins.court_automation.preservation_quote.exceptions import ValidationError
         with pytest.raises(ValidationError):
             repo.validate_create_params(
                 preserve_amount=Decimal("-1"),
@@ -259,7 +259,7 @@ class TestRepoValidateCreateParams:
 
     def test_empty_corp_id_raises(self):
         repo = self._make_repo()
-        from apps.automation.services.insurance.exceptions import ValidationError
+        from plugins.court_automation.preservation_quote.exceptions import ValidationError
         with pytest.raises(ValidationError):
             repo.validate_create_params(
                 preserve_amount=Decimal("100"),
@@ -270,7 +270,7 @@ class TestRepoValidateCreateParams:
 
     def test_empty_category_id_raises(self):
         repo = self._make_repo()
-        from apps.automation.services.insurance.exceptions import ValidationError
+        from plugins.court_automation.preservation_quote.exceptions import ValidationError
         with pytest.raises(ValidationError):
             repo.validate_create_params(
                 preserve_amount=Decimal("100"),
@@ -288,37 +288,37 @@ class TestInsuranceExceptions:
     """Tests for insurance exception classes."""
 
     def test_token_error(self):
-        from apps.automation.services.insurance.exceptions import TokenError
+        from plugins.court_automation.preservation_quote.exceptions import TokenError
         e = TokenError("expired")
         assert e.message == "expired"
         assert e.code == "TOKEN_ERROR"
 
     def test_api_error(self):
-        from apps.automation.services.insurance.exceptions import APIError
+        from plugins.court_automation.preservation_quote.exceptions import APIError
         e = APIError("bad response", status_code=500)
         assert "500" in e.code
 
     def test_network_error(self):
-        from apps.automation.services.insurance.exceptions import NetworkError
+        from plugins.court_automation.preservation_quote.exceptions import NetworkError
         e = NetworkError("timeout")
         assert e.code == "NETWORK_ERROR"
 
     def test_validation_error_with_errors(self):
-        from apps.automation.services.insurance.exceptions import ValidationError
+        from plugins.court_automation.preservation_quote.exceptions import ValidationError
         e = ValidationError("bad data", errors={"field": "error"})
         assert e.errors == {"field": "error"}
 
     def test_company_list_empty_error(self):
-        from apps.automation.services.insurance.exceptions import CompanyListEmptyError
+        from plugins.court_automation.preservation_quote.exceptions import CompanyListEmptyError
         e = CompanyListEmptyError()
         assert e.code == "COMPANY_LIST_EMPTY"
 
     def test_quote_execution_error(self):
-        from apps.automation.services.insurance.exceptions import QuoteExecutionError
+        from plugins.court_automation.preservation_quote.exceptions import QuoteExecutionError
         e = QuoteExecutionError("failed", quote_id=42)
         assert e.quote_id == 42
 
     def test_retry_limit_exceeded(self):
-        from apps.automation.services.insurance.exceptions import RetryLimitExceededError
+        from plugins.court_automation.preservation_quote.exceptions import RetryLimitExceededError
         e = RetryLimitExceededError("too many", max_retries=3)
         assert e.max_retries == 3

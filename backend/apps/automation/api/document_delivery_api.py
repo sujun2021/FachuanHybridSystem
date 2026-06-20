@@ -62,6 +62,7 @@ class DocumentDeliveryQueryOut(BaseModel):
     success: bool = Field(..., description="是否成功")
     data: dict[str, Any] = Field(..., description="查询结果")
     message: str = Field(..., description="响应消息")
+    task_id: str | None = Field(None, description="后台任务ID（Playwright 降级时返回）")
 
     class Config:
         json_schema_extra: ClassVar[dict[str, str]] = {
@@ -76,6 +77,7 @@ class DocumentDeliveryQueryOut(BaseModel):
                     "errors": [],
                 },
                 "message": "查询完成，处理了3个文书",
+                "task_id": None,
             }
         }
 
@@ -172,27 +174,62 @@ def manual_query(request: Any, payload: DocumentDeliveryQueryIn) -> DocumentDeli
     """
     手动触发文书查询
 
-    立即执行文书查询和下载，返回处理结果
+    快速路径：尝试 API 方式（秒级返回结果）
+    慢速路径：API 失败时，将 Playwright 浏览器查询提交到后台任务，立即返回 task_id
     """
-    service = _get_document_delivery_service()
+    import logging
+
+    from apps.automation.services.document_delivery.document_delivery_service import DocumentDeliveryService
+
+    logger = logging.getLogger("apps.automation")
+
+    service = DocumentDeliveryService()
 
     # 计算截止时间
     cutoff_time = timezone.now() - timedelta(hours=payload.cutoff_hours)
 
-    # 执行查询
-    result = service.query_and_download(credential_id=payload.credential_id, cutoff_time=cutoff_time, tab=payload.tab)
+    # === 快速路径：尝试 API 方式（同步，秒级） ===
+    api_result = service._try_api_approach(payload.credential_id, cutoff_time)
+    if api_result is not None:
+        return DocumentDeliveryQueryOut(
+            success=True,
+            data={
+                "total_found": api_result.total_found,
+                "processed_count": api_result.processed_count,
+                "skipped_count": api_result.skipped_count,
+                "failed_count": api_result.failed_count,
+                "case_log_ids": api_result.case_log_ids,
+                "errors": api_result.errors,
+            },
+            message=f"查询完成（API方式），处理了{api_result.processed_count}个文书",
+        )
+
+    # === 慢速路径：API 失败，提交 Playwright 后台任务 ===
+    logger.info("API 方式失败，提交 Playwright 后台任务: credential_id=%d", payload.credential_id)
+
+    from apps.core.tasking import submit_task
+
+    task_id = submit_task(
+        "apps.automation.tasks.query_document_delivery_via_playwright",
+        payload.credential_id,
+        cutoff_time.isoformat(),
+        payload.tab,
+        task_name=f"doc_delivery_playwright_{payload.credential_id}",
+        timeout=300,
+    )
 
     return DocumentDeliveryQueryOut(
         success=True,
         data={
-            "total_found": result.total_found,
-            "processed_count": result.processed_count,
-            "skipped_count": result.skipped_count,
-            "failed_count": result.failed_count,
-            "case_log_ids": result.case_log_ids,
-            "errors": result.errors,
+            "total_found": 0,
+            "processed_count": 0,
+            "skipped_count": 0,
+            "failed_count": 0,
+            "case_log_ids": [],
+            "errors": [],
         },
-        message=f"查询完成，处理了{result.processed_count}个文书",
+        message="API方式不可用，已提交Playwright后台查询任务，预计1-2分钟完成",
+        task_id=task_id,
     )
 
 

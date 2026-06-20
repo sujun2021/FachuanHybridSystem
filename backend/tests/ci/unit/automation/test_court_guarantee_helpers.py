@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from apps.automation.api.court_guarantee_helpers import (
+from plugins.court_automation.guarantee.helpers import (
     _build_cause_candidates,
     _build_party_payload_from_case_party,
     _build_property_clue_info,
@@ -28,7 +28,7 @@ from apps.automation.api.court_guarantee_helpers import (
     _pick_party_payload,
     _resolve_insurance_company_defaults,
 )
-from apps.automation.api.court_guarantee_schemas import (
+from plugins.court_automation.guarantee.schemas import (
     _DEFAULT_INSURANCE_COMPANY,
     _GUARANTEE_INSURANCE_COMPANY_OPTIONS,
     _SUNSHINE_DEFAULT_CONSULTANT_CODE,

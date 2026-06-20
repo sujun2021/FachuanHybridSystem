@@ -40,17 +40,20 @@ from .document_delivery import DocumentDeliveryRecord, DocumentProcessResult, Do
 # Performance Monitoring
 from .performance import HealthCheckOut, PerformanceMetricsOut, ResourceUsageOut, StatisticsReportOut
 
-# Preservation Quote
-from .preservation import (
-    InsuranceQuoteSchema,
-    PreservationQuoteCreateSchema,
-    PreservationQuoteSchema,
-    QuoteExecuteResponseSchema,
-    QuoteListItemSchema,
-    QuoteListSchema,
-)
+# Preservation Quote (已迁移到 plugin)
+try:
+    from plugins.court_automation.preservation_quote.schemas import (
+        InsuranceQuoteSchema,
+        PreservationQuoteCreateSchema,
+        PreservationQuoteSchema,
+        QuoteExecuteResponseSchema,
+        QuoteListItemSchema,
+        QuoteListSchema,
+    )
+except ImportError:
+    pass
 
-__all__ = [
+_schema_all = [
     # Document Processing
     "DocumentProcessIn",
     "DocumentProcessOut",
@@ -63,13 +66,6 @@ __all__ = [
     # Captcha
     "CaptchaRecognizeIn",
     "CaptchaRecognizeOut",
-    # Preservation
-    "PreservationQuoteCreateSchema",
-    "InsuranceQuoteSchema",
-    "PreservationQuoteSchema",
-    "QuoteListItemSchema",
-    "QuoteListSchema",
-    "QuoteExecuteResponseSchema",
     # Court Document
     "APIInterceptResponseSchema",
     "CourtDocumentSchema",
@@ -93,3 +89,18 @@ __all__ = [
     "DocumentQueryResult",
     "DocumentProcessResult",
 ]
+
+# Conditionally add preservation schema names
+_preservation_schemas = [
+    "PreservationQuoteCreateSchema",
+    "InsuranceQuoteSchema",
+    "PreservationQuoteSchema",
+    "QuoteListItemSchema",
+    "QuoteListSchema",
+    "QuoteExecuteResponseSchema",
+]
+for _name in _preservation_schemas:
+    if _name in dir():
+        _schema_all.append(_name)
+
+__all__ = _schema_all

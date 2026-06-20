@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch, AsyncMock
 
 import pytest
 
-from apps.automation.services.insurance.court_insurance_client import (
+from plugins.court_automation.preservation_quote.court_insurance_client import (
     CourtInsuranceClient,
     InsuranceCompany,
     PremiumResult,
