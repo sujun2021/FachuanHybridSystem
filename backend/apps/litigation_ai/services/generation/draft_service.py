@@ -50,14 +50,7 @@ class DraftService:  # pragma: no cover
 
         chain = LitigationDraftChain()
 
-        # 同步执行异步方法
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-
-        result = loop.run_until_complete(
+        result = asyncio.run(
             chain.arun(
                 case_info=case_info,
                 document_type=document_type,
