@@ -252,7 +252,7 @@ class CaseNumber(models.Model):
         ordering: ClassVar = ["created_at"]
         indexes: ClassVar = [
             models.Index(fields=["number"]),
-            GinIndex(name="cases_casenumber_number_gin_trgm", fields=["number"], opclasses=["gin_trgm_ops"]),
+            GinIndex(name="caseno_gin_trgm", fields=["number"], opclasses=["gin_trgm_ops"]),
         ]
 
     def __str__(self) -> str:
