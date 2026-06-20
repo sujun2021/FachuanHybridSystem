@@ -791,7 +791,7 @@ class TestScoreSlotDeduplicated:
 
 class TestRunFiling:
     @patch("plugins.court_automation.filing.helpers._update_session_task")
-    @patch("plugins.court_automation.filing.playwright_filing.CourtZxfwFilingService")
+    @patch("plugins.court_automation.filing.playwright_filing.service.CourtZxfwFilingService")
     @patch("apps.automation.services.scraper.sites.court_zxfw.CourtZxfwService")
     @patch("apps.core.services.browser.create_browser")
     def test_successful_filing(self, mock_browser, MockLogin, MockFiling, mock_update):
@@ -809,7 +809,7 @@ class TestRunFiling:
         filing_svc.file_case.return_value = {"success": True, "message": "立案成功"}
         MockFiling.return_value = filing_svc
 
-        _run_filing("acc", "pwd", {"case_id": 1}, session_id=1)
+        _run_filing("acc", "pwd", {"case_id": 1, "court_name": "广州市天河区人民法院", "cause_of_action": "合同纠纷"}, session_id=1)
         assert mock_update.call_count >= 1
 
     @patch("plugins.court_automation.filing.helpers._update_session_task")
@@ -826,7 +826,7 @@ class TestRunFiling:
         login_svc.login.return_value = {"success": False, "message": "密码错误"}
         MockLogin.return_value = login_svc
 
-        _run_filing("acc", "pwd", {"case_id": 1}, session_id=2)
+        _run_filing("acc", "pwd", {"case_id": 1, "court_name": "广州市天河区人民法院", "cause_of_action": "合同纠纷"}, session_id=2)
         # Should have called update with FAILED
         last_call = mock_update.call_args_list[-1]
         assert "FAILED" in str(last_call) or "failed" in str(last_call).lower()
@@ -845,12 +845,12 @@ class TestRunFiling:
         login_svc.login.side_effect = RuntimeError("browser crash")
         MockLogin.return_value = login_svc
 
-        _run_filing("acc", "pwd", {"case_id": 1}, session_id=3)
+        _run_filing("acc", "pwd", {"case_id": 1, "court_name": "广州市天河区人民法院", "cause_of_action": "合同纠纷"}, session_id=3)
         last_call = mock_update.call_args_list[-1]
         assert "FAILED" in str(last_call) or "failed" in str(last_call).lower()
 
     @patch("plugins.court_automation.filing.helpers._update_session_task")
-    @patch("plugins.court_automation.filing.playwright_filing.CourtZxfwFilingService")
+    @patch("plugins.court_automation.filing.playwright_filing.service.CourtZxfwFilingService")
     @patch("apps.automation.services.scraper.sites.court_zxfw.CourtZxfwService")
     @patch("apps.core.services.browser.create_browser")
     def test_execution_filing_type(self, mock_browser, MockLogin, MockFiling, mock_update):
@@ -868,11 +868,11 @@ class TestRunFiling:
         filing_svc.file_execution.return_value = {"success": True, "message": "执行立案成功"}
         MockFiling.return_value = filing_svc
 
-        _run_filing("acc", "pwd", {"case_id": 1}, filing_type="execution", session_id=4)
+        _run_filing("acc", "pwd", {"case_id": 1, "court_name": "广州市天河区人民法院", "cause_of_action": "合同纠纷"}, filing_type="execution", session_id=4)
         filing_svc.file_execution.assert_called_once()
 
     @patch("plugins.court_automation.filing.helpers._update_session_task")
-    @patch("plugins.court_automation.filing.playwright_filing.CourtZxfwFilingService")
+    @patch("plugins.court_automation.filing.playwright_filing.service.CourtZxfwFilingService")
     @patch("apps.automation.services.scraper.sites.court_zxfw.CourtZxfwService")
     @patch("apps.core.services.browser.create_browser")
     def test_filing_failure(self, mock_browser, MockLogin, MockFiling, mock_update):
@@ -890,6 +890,6 @@ class TestRunFiling:
         filing_svc.file_case.return_value = {"success": False, "message": "立案失败"}
         MockFiling.return_value = filing_svc
 
-        _run_filing("acc", "pwd", {"case_id": 1}, session_id=5)
+        _run_filing("acc", "pwd", {"case_id": 1, "court_name": "广州市天河区人民法院", "cause_of_action": "合同纠纷"}, session_id=5)
         last_call = mock_update.call_args_list[-1]
         assert "FAILED" in str(last_call) or "failed" in str(last_call).lower()
