@@ -314,3 +314,7 @@ backend/apps/documents/services/document_template/custom_defaults.json
 
 # User custom docx template files (private, do not commit)
 backend/apps/documents/docx_templates/0101*/
+
+# Custom plugins archive (private, used during Docker build)
+plugins_custom.zip
+backend/plugins_custom_backup/
