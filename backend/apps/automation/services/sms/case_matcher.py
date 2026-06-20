@@ -338,29 +338,42 @@ class CaseMatcher:
         return [c for c in all_cases if c.status == CaseStatus.ACTIVE]
 
     def _find_all_matching_cases(self, matched_clients: list[Any]) -> list[Any]:
-        """根据匹配的客户查找所有关联的在办案件（双向严格匹配）"""
+        """根据匹配的客户查找所有关联的在办案件（单向匹配 + 评分排序）
+
+        匹配策略：短信当事人 ⊆ 案件当事人（短信中的名字在案件中都存在）
+        评分：匹配比例越高，分数越高
+        多个候选时按分数排名返回，不丢失候选
+        """
         from apps.core.models.enums import CaseStatus
 
         input_party_names = set(client.name.strip() for client in matched_clients)
         client_names = list(input_party_names)
 
-        all_cases = self.case_service.search_cases_by_party_internal(client_names, status=CaseStatus.ACTIVE.value)
+        all_cases_tuples = self.case_service.search_cases_by_party_internal(
+            client_names, status=CaseStatus.ACTIVE.value
+        )
 
-        if not all_cases:
+        if not all_cases_tuples:
             return []
 
-        all_cases_dict = {case.id: case for case in all_cases}
-        exactly_matched_cases = []
+        # 转 dict 去重
+        all_cases_dict = {case.id: case for case in all_cases_tuples}
+        scored_cases: list[tuple[Any, float]] = []
 
         for case_id, case in all_cases_dict.items():
             case_party_names = self.case_service.get_case_party_names_internal(case_id)
             case_party_set = set(name.strip() for name in case_party_names if name)
 
-            # 双向匹配检查
-            if case_party_set.issubset(input_party_names) and input_party_names.issubset(case_party_set):
-                exactly_matched_cases.append(case)
+            # 短信当事人 ⊆ 案件当事人？（单向匹配）
+            if input_party_names.issubset(case_party_set):
+                # 计算匹配比例：短信当事人数 / 案件当事人数
+                # 比例越高 → 匹配越精确
+                match_ratio = len(input_party_names) / max(len(case_party_set), 1)
+                scored_cases.append((case, match_ratio))
 
-        return exactly_matched_cases
+        # 按匹配比例降序排列（比例高=更精确）
+        scored_cases.sort(key=lambda x: (-x[1], -x[0].id))
+        return [case for case, _ in scored_cases]
 
     def _detect_case_type_from_number(self, case_number: str) -> str | None:
         """

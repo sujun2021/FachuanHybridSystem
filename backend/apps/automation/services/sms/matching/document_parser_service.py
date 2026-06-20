@@ -8,6 +8,8 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional
 
+from apps.automation.utils.text_utils import TextUtils
+
 if TYPE_CHECKING:
     from apps.core.interfaces import IClientService, ILawyerService
 
@@ -82,7 +84,9 @@ class DocumentParserService:
 
             # 删除换行符，便于匹配
             content = result["text"].replace("\n", "").replace("\r", "")
-            logger.info(f"从文书中提取到 {len(result['text'])} 字符的内容，删除换行符后为 {len(content)} 字符")
+            # OCR 文本清理：合并多余空白、移除控制字符
+            content = TextUtils.clean_text(content)
+            logger.info(f"从文书中提取到 {len(result['text'])} 字符的内容，清理后为 {len(content)} 字符")
 
             # 在现有客户数据库中匹配当事人（不使用 Ollama）
             return self.match_parties_from_content(content)

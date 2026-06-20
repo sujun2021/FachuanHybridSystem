@@ -20,7 +20,7 @@ class TaskRecoveryService:
     """任务恢复服务"""
 
     def __init__(self) -> None:
-        self.stuck_timeout_minutes = 30  # 任务卡住超时时间（分钟）
+        self.stuck_timeout_minutes = 5  # 任务卡住超时时间（分钟）v26.53.5 改从30→5
         self.max_retry_count = 3  # 最大重试次数
         self.recovery_max_age_hours = 24  # 恢复任务的最大年龄（小时）
 
@@ -291,7 +291,7 @@ class TaskRecoveryService:
 
         return True
 
-    def schedule_periodic_recovery(self, interval_minutes: int = 60) -> None:
+    def schedule_periodic_recovery(self, interval_minutes: int = 3) -> None:
         """
         安排定期恢复任务
 
