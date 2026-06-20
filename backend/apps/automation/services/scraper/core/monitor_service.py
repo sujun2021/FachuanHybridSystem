@@ -6,7 +6,7 @@ import logging
 from datetime import timedelta
 from typing import Any
 
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.utils import timezone
 
 from apps.automation.models import ScraperTask, ScraperTaskStatus
@@ -72,14 +72,14 @@ class MonitorService:
             # 如果是通过ServiceLocator获取的服务，调用其方法
             tasks = self.task_service.get_tasks_since(since)
 
-        stats = {
-            "total": tasks.count(),
-            "pending": tasks.filter(status=ScraperTaskStatus.PENDING).count(),
-            "running": tasks.filter(status=ScraperTaskStatus.RUNNING).count(),
-            "waiting_for_captcha": tasks.filter(status=ScraperTaskStatus.WAITING_FOR_CAPTCHA).count(),
-            "success": tasks.filter(status=ScraperTaskStatus.SUCCESS).count(),
-            "failed": tasks.filter(status=ScraperTaskStatus.FAILED).count(),
-        }
+        stats = tasks.aggregate(
+            total=Count("id"),
+            pending=Count("id", filter=Q(status=ScraperTaskStatus.PENDING)),
+            running=Count("id", filter=Q(status=ScraperTaskStatus.RUNNING)),
+            waiting_for_captcha=Count("id", filter=Q(status=ScraperTaskStatus.WAITING_FOR_CAPTCHA)),
+            success=Count("id", filter=Q(status=ScraperTaskStatus.SUCCESS)),
+            failed=Count("id", filter=Q(status=ScraperTaskStatus.FAILED)),
+        )
 
         # 计算成功率
         completed = stats["success"] + stats["failed"]

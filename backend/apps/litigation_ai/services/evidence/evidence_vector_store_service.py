@@ -6,9 +6,18 @@ from apps.litigation_ai.models import EvidenceChunk
 
 
 class EvidenceVectorStoreService:
-    def upsert_embeddings(self, chunk_ids: list[int], embeddings: list[list[float]]) -> None:  # pragma: no cover
-        for chunk_id, emb in zip(chunk_ids, embeddings, strict=False):
-            EvidenceChunk.objects.filter(id=chunk_id).update(embedding=emb)
+    def upsert_embeddings(self, chunk_ids: list[int], embeddings: list[list[float]]) -> None:
+        """批量更新 chunk 的 embedding 向量。"""
+        chunks = EvidenceChunk.objects.filter(id__in=chunk_ids)
+        chunk_map = {c.pk: c for c in chunks}
+        to_update = []
+        for chunk_id, emb in zip(chunk_ids, embeddings):
+            chunk = chunk_map.get(chunk_id)
+            if chunk is not None:
+                chunk.embedding = emb
+                to_update.append(chunk)
+        if to_update:
+            EvidenceChunk.objects.bulk_update(to_update, ["embedding"], batch_size=500)
 
     def cosine_similarity(self, a: list[float], b: list[float]) -> float:
         if not a or not b or len(a) != len(b):

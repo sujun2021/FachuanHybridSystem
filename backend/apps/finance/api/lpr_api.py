@@ -131,24 +131,25 @@ def sync_lpr_rates(  # pragma: no cover
     logger.info(f"[LPRSync] User {user.id} triggered manual LPR sync")
 
     try:
-        from apps.finance.services.lpr import LPRSyncService
+        from apps.core.tasking import submit_task
 
-        service = LPRSyncService()
-        result = service.sync_latest()
+        task_id = submit_task(
+            "apps.finance.tasks.sync_lpr_rates",
+            task_name=f"lpr_manual_sync_user_{user.id}",
+            timeout=300,
+        )
 
         return LPRSyncResponse(
             success=True,
-            message="LPR数据同步成功",
-            created=result.get("created", 0),
-            updated=result.get("updated", 0),
-            skipped=result.get("skipped", 0),
+            message="LPR数据同步任务已提交，请稍后查看结果",
+            task_id=task_id,
         )
 
     except Exception as e:
-        logger.error(f"[LPRSync] Manual sync failed: {e}")
+        logger.error(f"[LPRSync] Failed to submit sync task: {e}")
         return LPRSyncResponse(
             success=False,
-            message=f"同步失败: {e!s}",
+            message=f"提交同步任务失败: {e!s}",
         )
 
 

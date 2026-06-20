@@ -317,16 +317,13 @@ class TestDashboardService:
         svc = DashboardService()
         with patch.object(svc, "_client_count", return_value=10), \
              patch.object(svc, "_contract_count", return_value=5), \
-             patch.object(svc, "_active_case_count", return_value=3), \
-             patch.object(svc, "_monthly_fee", return_value=Decimal("1000")), \
+             patch.object(svc, "_case_type_stats", return_value=([{"type": "CIVIL", "label": "民事", "count": 3}], 3)), \
              patch.object(svc, "_case_trend", return_value=[]), \
+             patch.object(svc, "_case_status_distribution", return_value={"ACTIVE": 3}), \
+             patch.object(svc, "_fee_stats", return_value=(Decimal("1000"), [])), \
              patch.object(svc, "_contract_trend", return_value=[]), \
-             patch.object(svc, "_fee_trend", return_value=[]), \
-             patch.object(svc, "_case_type_distribution", return_value=[]), \
-             patch.object(svc, "_case_status_distribution", return_value={}), \
-             patch.object(svc, "_upcoming_reminders", return_value=[]), \
-             patch.object(svc, "_overdue_count", return_value=0), \
-             patch.object(svc, "_today_count", return_value=0):
+             patch.object(svc, "_reminder_counts", return_value={"overdue_count": 0, "today_count": 0}), \
+             patch.object(svc, "_upcoming_reminders", return_value=[]):
             result = svc.get_stats()
             assert result["client_count"] == 10
             assert result["contract_count"] == 5
