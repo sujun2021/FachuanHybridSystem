@@ -77,18 +77,17 @@ def sync_all_sources(*_args: object) -> None:  # pragma: no cover
 
 
 def _register_schedule() -> None:
-    """注册定时任务（每3小时）。"""
+    """注册定时任务（每30分钟）。"""
     try:
         from apps.core.tasking import ScheduleQueryService
 
         schedule_svc = ScheduleQueryService()
-        # 先删除旧调度，确保间隔值更新生效
-        schedule_svc.delete_schedules(func=TASK_FUNC)
-        schedule_svc.create_interval_schedule(
-            func=TASK_FUNC,
-            name=TASK_NAME,
-            minutes=180,
-        )
+        if not schedule_svc.schedule_exists(TASK_NAME):
+            schedule_svc.create_interval_schedule(
+                func=TASK_FUNC,
+                name=TASK_NAME,
+                minutes=30,
+            )
             logger.info("已注册定时任务: %s", TASK_NAME)
     except Exception:
         logger.debug("定时任务注册跳过（未就绪）")
