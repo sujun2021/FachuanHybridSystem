@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, ClassVar
 
 from django.core.exceptions import ValidationError
+from django.contrib.postgres.indexes import GinIndex
 from django.db import models
 from simple_history.models import HistoricalRecords
 
@@ -67,4 +68,5 @@ class Client(models.Model):
             models.Index(fields=["client_type"]),
             models.Index(fields=["phone"]),
             models.Index(fields=["is_our_client"]),
+            GinIndex(name="client_client_name_gin_trgm", fields=["name"], opclasses=["gin_trgm_ops"]),
         ]

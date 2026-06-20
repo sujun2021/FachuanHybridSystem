@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date
 from typing import TYPE_CHECKING, ClassVar
 
+from django.contrib.postgres.indexes import GinIndex
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from simple_history.models import HistoricalRecords
@@ -251,6 +252,7 @@ class CaseNumber(models.Model):
         ordering: ClassVar = ["created_at"]
         indexes: ClassVar = [
             models.Index(fields=["number"]),
+            GinIndex(name="cases_casenumber_number_gin_trgm", fields=["number"], opclasses=["gin_trgm_ops"]),
         ]
 
     def __str__(self) -> str:
