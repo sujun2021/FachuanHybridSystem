@@ -60,13 +60,13 @@ class CourtSMSRecommendationService:
             Case.objects.filter(q, status=CaseStatus.ACTIVE)
             .distinct()
             .prefetch_related("case_numbers", "parties__client", "supervising_authorities")
-        )
+        )[:50]
 
         results = self._score_and_rank(candidates, normalized_numbers, year_court_prefixes, court_name, party_names)
         logger.info(
             "推荐关联案件: SMS ID=%s, 候选=%d, 返回=%d",
             sms.id,
-            candidates.count(),
+            len(candidates),
             len(results),
         )
         return results
