@@ -154,14 +154,18 @@ register_exception_handlers(api_v1)
 def _register_app_routers() -> None:
     from apps.automation.api import router as automation_router
 
+    from ninja import Router
+
+    court_filing_router: Router | None = None
+    court_guarantee_router: Router | None = None
     try:
         from plugins.court_automation.filing.api_endpoint import router as court_filing_router
     except ImportError:
-        court_filing_router = None
+        pass
     try:
         from plugins.court_automation.guarantee.api_endpoint import router as court_guarantee_router
     except ImportError:
-        court_guarantee_router = None
+        pass
     from apps.batch_printing.api import router as batch_printing_router
     from apps.cases.api import router as cases_router
     from apps.chat_records.api import router as chat_records_router
