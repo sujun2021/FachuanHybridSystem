@@ -15,7 +15,7 @@ from django.db.models import Q, QuerySet
 
 from apps.automation.models.court_sms import CourtSMS
 from apps.automation.utils.text_utils import TextUtils
-from apps.cases.models.case import Case
+from apps.cases.models.case import Case, CaseNumber
 from apps.core.models.enums import CaseStatus
 
 logger = logging.getLogger("apps.automation")
@@ -46,12 +46,64 @@ class CourtSMSRecommendationService:
     """法院短信推荐关联案件服务"""
 
     def get_recommendations(self, sms: CourtSMS) -> list[RecommendationResult]:
-        """获取推荐关联案件列表"""
+        """获取推荐关联案件列表（分步查询，精确优先）"""
         normalized_numbers = [TextUtils.normalize_case_number(n) for n in (sms.case_numbers or []) if n.strip()]
         year_court_prefixes = self._collect_year_court_prefixes(normalized_numbers)
         court_name = self._extract_court_name(sms)
         party_names = [p.strip() for p in (sms.party_names or []) if p.strip()]
 
+        results: list[RecommendationResult] = []
+
+        # Step 1: 精确案号匹配（走 B-tree 索引，微秒级）
+        if normalized_numbers:
+            exact_candidates = (
+                Case.objects.filter(
+                    case_numbers__number__in=normalized_numbers,
+                    status=CaseStatus.ACTIVE,
+                )
+                .distinct()
+                .prefetch_related("case_numbers", "parties__client", "supervising_authorities")
+            )
+            if exact_candidates.exists():
+                results = self._score_and_rank(
+                    exact_candidates, normalized_numbers, year_court_prefixes, court_name, party_names
+                )
+                logger.info(
+                    "精确案号匹配: SMS ID=%s, 候选=%d, 返回=%d",
+                    sms.id, exact_candidates.count(), len(results),
+                )
+                return results
+
+        # Step 2: 模糊案号前缀匹配（pg_trgm 索引，毫秒级）
+        # 只查 CaseNumber 表，不走多表 JOIN
+        if year_court_prefixes:
+            number_q = Q()
+            for prefix in year_court_prefixes:
+                number_q |= Q(number__icontains=prefix)
+            matched_numbers = (
+                CaseNumber.objects.filter(number_q)
+                .select_related("case")
+                .values_list("case_id", flat=True)
+                .distinct()
+            )
+            prefix_candidates = (
+                Case.objects.filter(
+                    id__in=list(matched_numbers[:100]),
+                    status=CaseStatus.ACTIVE,
+                )
+                .prefetch_related("case_numbers", "parties__client", "supervising_authorities")
+            )
+            results = self._score_and_rank(
+                prefix_candidates, normalized_numbers, year_court_prefixes, court_name, party_names
+            )
+            if results:
+                logger.info(
+                    "模糊案号匹配: SMS ID=%s, 返回=%d",
+                    sms.id, len(results),
+                )
+                return results
+
+        # Step 3: 多维度联合模糊搜索（pg_trgm 索引，仅当前两步无结果时走）
         q = self._build_query(normalized_numbers, year_court_prefixes, court_name, party_names)
         if not q:
             return []
@@ -64,10 +116,8 @@ class CourtSMSRecommendationService:
 
         results = self._score_and_rank(candidates, normalized_numbers, year_court_prefixes, court_name, party_names)
         logger.info(
-            "推荐关联案件: SMS ID=%s, 候选=%d, 返回=%d",
-            sms.id,
-            candidates.count(),
-            len(results),
+            "多维度联合搜索: SMS ID=%s, 候选=%d, 返回=%d",
+            sms.id, candidates.count(), len(results),
         )
         return results
 
