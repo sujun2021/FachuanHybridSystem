@@ -5,11 +5,13 @@ from __future__ import annotations
 from typing import Any
 
 from django.http import HttpRequest
-from ninja import Router, Schema
+from ninja import Router
+
+from apps.core.security.auth import JWTOrSessionAuth, Schema
 
 from apps.express_query.models import ExpressQueryTask
 
-router = Router()
+router = Router(auth=JWTOrSessionAuth())
 
 
 class ExpressQueryTaskOut(Schema):
