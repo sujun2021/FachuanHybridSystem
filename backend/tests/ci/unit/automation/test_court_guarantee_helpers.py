@@ -456,12 +456,12 @@ class TestPickPartyPayload:
         assert result["name"] == "张三"
 
     def test_empty_returns_default(self):
-        result = _pick_party_payload(
-            case_parties=[],
-            preferred_statuses={"plaintiff"},
-            prefer_our=True,
-        )
-        assert result["name"] == "张三"  # default fallback
+        with pytest.raises(ValueError, match="客户姓名不能为空"):
+            _pick_party_payload(
+                case_parties=[],
+                preferred_statuses={"plaintiff"},
+                prefer_our=True,
+            )
 
 
 # ---------------------------------------------------------------------------

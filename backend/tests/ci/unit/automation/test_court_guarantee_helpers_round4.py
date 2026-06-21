@@ -420,8 +420,8 @@ class TestListPartyPayloadsFallback:
         party.client.client_type = "natural"
         party.client.name = "张三"
         party.client.id_number = "110101199003077715"
-        party.client.phone = ""
-        party.client.address = ""
+        party.client.phone = "13800138000"
+        party.client.address = "北京市"
         party.client.is_our_client = True
         party.client.legal_representative = ""
         party.client.legal_representative_id_number = ""
@@ -450,8 +450,8 @@ class TestPickPartyPayloadWithPayloads:
         party.client.client_type = "natural"
         party.client.name = "原告"
         party.client.id_number = "110101199003077715"
-        party.client.phone = ""
-        party.client.address = ""
+        party.client.phone = "13800138000"
+        party.client.address = "北京市"
         party.client.is_our_client = True
         party.client.legal_representative = ""
         party.client.legal_representative_id_number = ""

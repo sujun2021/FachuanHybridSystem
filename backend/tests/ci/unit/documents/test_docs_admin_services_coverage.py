@@ -275,11 +275,11 @@ class TestExpressQuery:
 
 class TestMessageHub:
     def test_imap_fetcher_import(self):
-        from apps.message_hub.services.imap.imap_fetcher import ImapFetcher
+        from plugins.message_hub.services.imap.imap_fetcher import ImapFetcher
 
         assert ImapFetcher is not None
 
     def test_inbox_message_admin_import(self):
-        from apps.message_hub.admin.inbox_message_admin import InboxMessageAdmin
+        from plugins.message_hub.admin.inbox_message_admin import InboxMessageAdmin
 
         assert InboxMessageAdmin is not None

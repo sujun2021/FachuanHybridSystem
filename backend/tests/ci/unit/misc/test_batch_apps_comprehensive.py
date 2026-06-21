@@ -38,7 +38,7 @@ class TestMessageHub:
         assert ms_mod is not None
 
     def test_schemas_module(self):
-        from apps.message_hub import schemas
+        from plugins.message_hub import schemas
 
         assert schemas is not None
 

@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from apps.message_hub.services.imap.imap_fetcher import (
+from plugins.message_hub.services.imap.imap_fetcher import (
     _decode_header_value,
     _extract_body,
     _parse_date,
@@ -20,7 +20,7 @@ from apps.message_hub.services.imap.imap_fetcher import (
     _extract_imap_host,
     _build_imap_host_candidates,
 )
-from apps.message_hub.services.court.court_schedule_fetcher import (
+from plugins.message_hub.services.court.court_schedule_fetcher import (
     _parse_datetime as court_parse_datetime,
     _extract_party_names as court_extract_party_names,
     _strip_case_cause_suffix as court_strip_case_cause_suffix,

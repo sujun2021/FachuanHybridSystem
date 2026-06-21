@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from apps.message_hub.services.court.court_fetcher import (
+from plugins.message_hub.services.court.court_fetcher import (
     CourtInboxFetcher,
     _api_post,
     _build_body,
@@ -75,7 +75,7 @@ class TestRunWithCallableTimeout:
 
 
 class TestApiPost:
-    @patch("apps.message_hub.services.court.court_fetcher.httpx.Client")
+    @patch("plugins.message_hub.services.court.court_fetcher.httpx.Client")
     def test_api_post_success(self, mock_client_cls):
         mock_client = MagicMock()
         mock_resp = MagicMock()
@@ -90,7 +90,7 @@ class TestApiPost:
         result = _api_post("https://example.com/api", "token123", {"pageNum": 1})
         assert result["code"] == 200
 
-    @patch("apps.message_hub.services.court.court_fetcher.httpx.Client")
+    @patch("plugins.message_hub.services.court.court_fetcher.httpx.Client")
     def test_api_post_unauthorized(self, mock_client_cls):
         mock_client = MagicMock()
         mock_resp = MagicMock()

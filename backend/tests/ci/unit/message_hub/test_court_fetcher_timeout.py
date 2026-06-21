@@ -6,7 +6,7 @@ import time
 
 import pytest
 
-from apps.message_hub.services.court.court_fetcher import _run_callable_with_timeout
+from plugins.message_hub.services.court.court_fetcher import _run_callable_with_timeout
 
 
 class TestRunCallableWithTimeout:

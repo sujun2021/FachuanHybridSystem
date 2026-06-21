@@ -739,43 +739,40 @@ class TestBuildPartyPayloadFromCaseParty:
         assert result["name"] == "张三"
         assert result["id_number"] == "110101199001011234"
 
-    def test_legal_party(self):
+    def test_legal_party_raises_on_empty_id_number(self):
+        """Empty id_number should raise ValueError."""
         party = MagicMock()
         party.id = 2
         party.client.client_type = "legal"
         party.client.name = "公司A"
         party.client.id_number = ""
         party.client.phone = ""
-        party.client.address = ""
+        party.client.address = "广州市"
         party.client.legal_representative = "王五"
         party.client.legal_representative_id_number = "110101199001011236"
 
-        from plugins.court_automation.guarantee.schemas import _DEFAULT_LEGAL_ID_NUMBER
-        result = self._fn()(party=party)
-        assert result["party_type"] == "legal"
-        assert result["id_number"] == _DEFAULT_LEGAL_ID_NUMBER
+        with pytest.raises(ValueError, match="客户证件号不能为空"):
+            self._fn()(party=party)
 
-    def test_natural_party_default_id_number(self):
+    def test_natural_party_empty_id_number_raises(self):
+        """Empty id_number should raise ValueError."""
         party = MagicMock()
         party.id = 3
         party.client.client_type = "natural"
         party.client.name = "李四"
         party.client.id_number = ""
         party.client.phone = ""
-        party.client.address = ""
+        party.client.address = "北京市"
 
-        from plugins.court_automation.guarantee.schemas import _DEFAULT_NATURAL_ID_NUMBER
-        result = self._fn()(party=party)
-        assert result["id_number"] == _DEFAULT_NATURAL_ID_NUMBER
+        with pytest.raises(ValueError, match="客户证件号不能为空"):
+            self._fn()(party=party)
 
-    def test_no_client_uses_defaults(self):
+    def test_no_client_raises_value_error(self):
         party = MagicMock()
         party.id = 0
         party.client = None
-        # getattr will return defaults
-        result = self._fn()(party=party)
-        assert result["party_type"] == "natural"
-        assert result["name"] == "张三"
+        with pytest.raises(ValueError, match="客户姓名不能为空"):
+            self._fn()(party=party)
 
 
 # ---------------------------------------------------------------------------
@@ -794,9 +791,9 @@ class TestListPartyPayloads:
         party.client.is_our_client = is_our
         party.client.client_type = "natural"
         party.client.name = name
-        party.client.id_number = ""
-        party.client.phone = ""
-        party.client.address = ""
+        party.client.id_number = "110101199001011234"
+        party.client.phone = "13800138000"
+        party.client.address = "地址A"
         party.client.legal_representative = ""
         party.client.legal_representative_id_number = ""
         party.id = 1
@@ -842,8 +839,8 @@ class TestPickPartyPayload:
     @patch("plugins.court_automation.guarantee.helpers._list_party_payloads")
     def test_empty_returns_default(self, mock_list):
         mock_list.return_value = []
-        result = self._fn()(case_parties=[], preferred_statuses=set(), prefer_our=True)
-        assert result["name"] == "张三"
+        with pytest.raises(ValueError, match="客户姓名不能为空"):
+            self._fn()(case_parties=[], preferred_statuses=set(), prefer_our=True)
 
 
 # ---------------------------------------------------------------------------

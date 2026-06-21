@@ -9,7 +9,7 @@ import pytest
 from django.utils import timezone
 
 from apps.message_hub.models import InboxMessage, MessageSource, SourceType
-from apps.message_hub.services.court.court_fetcher import CourtInboxFetcher
+from plugins.message_hub.services.court.court_fetcher import CourtInboxFetcher
 from apps.organization.models import AccountCredential, Lawyer
 
 
@@ -61,9 +61,9 @@ class TestCourtFetcherDedup:
             sync_since=timezone.now(),
         )
 
-    @patch("apps.message_hub.services.court.court_fetcher._acquire_token", return_value="fake-token")
-    @patch("apps.message_hub.services.court.court_fetcher._fetch_attachments_meta")
-    @patch("apps.message_hub.services.court.court_fetcher._api_post")
+    @patch("plugins.message_hub.services.court.court_fetcher._acquire_token", return_value="fake-token")
+    @patch("plugins.message_hub.services.court.court_fetcher._fetch_attachments_meta")
+    @patch("plugins.message_hub.services.court.court_fetcher._api_post")
     @patch("apps.automation.services.sms.court_sms_dedup_service.CourtSMSDedupService.should_skip_document_delivery")
     def test_same_event_keeps_two_inbox_messages_but_triggers_main_flow_once(
         self,

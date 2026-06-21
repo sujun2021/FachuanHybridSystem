@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from apps.message_hub.services.imap.imap_fetcher import (
+from plugins.message_hub.services.imap.imap_fetcher import (
     ImapFetcher,
     _build_imap_host_candidates,
     _decode_header_value,
@@ -124,7 +124,7 @@ class TestSenderFilter:
 
 
 class TestImapFetcherConnect:
-    @patch("apps.message_hub.services.imap.imap_fetcher.imaplib.IMAP4_SSL")
+    @patch("plugins.message_hub.services.imap.imap_fetcher.imaplib.IMAP4_SSL")
     def test_connect_success(self, mock_imap):
         mock_conn = MagicMock()
         mock_imap.return_value = mock_conn
@@ -142,7 +142,7 @@ class TestImapFetcherConnect:
         assert result == mock_conn
         mock_conn.login.assert_called_once()
 
-    @patch("apps.message_hub.services.imap.imap_fetcher.imaplib.IMAP4_SSL")
+    @patch("plugins.message_hub.services.imap.imap_fetcher.imaplib.IMAP4_SSL")
     def test_connect_login_failure(self, mock_imap):
         import imaplib
 

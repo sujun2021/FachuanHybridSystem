@@ -10,8 +10,8 @@ from django.contrib.auth import get_user_model
 from django.test import RequestFactory
 from django.utils import timezone
 
-from apps.message_hub.admin.inbox_message_admin import InboxMessageAdmin
-from apps.message_hub.admin.message_source_admin import MessageSourceAdmin
+from plugins.message_hub.admin.inbox_message_admin import InboxMessageAdmin
+from plugins.message_hub.admin.message_source_admin import MessageSourceAdmin
 from apps.message_hub.models import InboxMessage, MessageSource
 from apps.organization.models import AccountCredential, LawFirm, Lawyer
 

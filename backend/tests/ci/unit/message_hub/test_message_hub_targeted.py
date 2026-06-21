@@ -14,7 +14,7 @@ import pytest
 
 class TestMessageHubSchemas:
     def test_attachment_meta_schema(self):
-        from apps.message_hub.schemas import AttachmentMeta
+        from plugins.message_hub.schemas import AttachmentMeta
 
         meta = AttachmentMeta(
             filename="test.pdf",
@@ -28,19 +28,19 @@ class TestMessageHubSchemas:
         assert meta.size == 1024
 
     def test_inbox_message_out_resolve_attachment_count(self):
-        from apps.message_hub.schemas import InboxMessageOut
+        from plugins.message_hub.schemas import InboxMessageOut
 
         obj = SimpleNamespace(attachments_meta=[{"filename": "a.pdf"}, {"filename": "b.pdf"}])
         assert InboxMessageOut.resolve_attachment_count(obj) == 2
 
     def test_inbox_message_out_attachment_count_empty(self):
-        from apps.message_hub.schemas import InboxMessageOut
+        from plugins.message_hub.schemas import InboxMessageOut
 
         assert InboxMessageOut.resolve_attachment_count(SimpleNamespace(attachments_meta=None)) == 0
         assert InboxMessageOut.resolve_attachment_count(SimpleNamespace(attachments_meta=[])) == 0
 
     def test_inbox_message_detail_out_resolve_attachments(self):
-        from apps.message_hub.schemas import InboxMessageDetailOut
+        from plugins.message_hub.schemas import InboxMessageDetailOut
 
         obj = SimpleNamespace(
             get_public_attachments_meta=lambda: [
@@ -58,7 +58,7 @@ class TestMessageHubSchemas:
 
 class TestMessageHubServicesInit:
     def test_get_fetcher_invalid_type(self):
-        from apps.message_hub.services import get_fetcher
+        from plugins.message_hub.services import get_fetcher
 
         with pytest.raises(ValueError, match="未知来源类型"):
             get_fetcher("invalid_type")
@@ -71,6 +71,6 @@ class TestMessageHubServicesInit:
 
 class TestMessageHubApiInit:
     def test_api_init(self):
-        from apps.message_hub.api import __init__ as api_init
+        from plugins.message_hub.api import __init__ as api_init
 
         assert api_init is not None

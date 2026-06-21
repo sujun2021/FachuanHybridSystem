@@ -8,7 +8,7 @@ import pytest
 from django.utils import timezone
 
 from apps.message_hub.models import MessageSource, SourceType, SyncStatus
-from apps.message_hub.services.court.court_schedule_fetcher import (
+from plugins.message_hub.services.court.court_schedule_fetcher import (
     CourtScheduleFetcher,
     ParsedHearing,
     _extract_party_names,
@@ -250,8 +250,8 @@ class TestCourtScheduleFetcher:
         )
         self.fetcher = CourtScheduleFetcher()
 
-    @patch("apps.message_hub.services.court.court_schedule_fetcher._api_post")
-    @patch("apps.message_hub.services.court.court_schedule_fetcher._acquire_token")
+    @patch("plugins.message_hub.services.court.court_schedule_fetcher._api_post")
+    @patch("plugins.message_hub.services.court.court_schedule_fetcher._acquire_token")
     def test_fetch_empty_data(self, mock_token, mock_api):
         """空数据返回 0。"""
         mock_token.return_value = "fake_token"
@@ -262,8 +262,8 @@ class TestCourtScheduleFetcher:
         self.source.refresh_from_db()
         assert self.source.last_sync_status == SyncStatus.SUCCESS
 
-    @patch("apps.message_hub.services.court.court_schedule_fetcher._api_post")
-    @patch("apps.message_hub.services.court.court_schedule_fetcher._acquire_token")
+    @patch("plugins.message_hub.services.court.court_schedule_fetcher._api_post")
+    @patch("plugins.message_hub.services.court.court_schedule_fetcher._acquire_token")
     def test_fetch_creates_reminders(self, mock_token, mock_api):
         """正常数据创建 Reminder。"""
         mock_token.return_value = "fake_token"
@@ -295,8 +295,8 @@ class TestCourtScheduleFetcher:
             == 1
         )
 
-    @patch("apps.message_hub.services.court.court_schedule_fetcher._api_post")
-    @patch("apps.message_hub.services.court.court_schedule_fetcher._acquire_token")
+    @patch("plugins.message_hub.services.court.court_schedule_fetcher._api_post")
+    @patch("plugins.message_hub.services.court.court_schedule_fetcher._acquire_token")
     def test_fetch_dedup_same_bh(self, mock_token, mock_api):
         """相同 bh 去重，不重复创建。"""
         mock_token.return_value = "fake_token"
@@ -338,8 +338,8 @@ class TestCourtScheduleFetcher:
         reminder.refresh_from_db()
         assert reminder.updated_at == first_updated_at
 
-    @patch("apps.message_hub.services.court.court_schedule_fetcher._api_post")
-    @patch("apps.message_hub.services.court.court_schedule_fetcher._acquire_token")
+    @patch("plugins.message_hub.services.court.court_schedule_fetcher._api_post")
+    @patch("plugins.message_hub.services.court.court_schedule_fetcher._acquire_token")
     def test_fetch_skips_no_time_record(self, mock_token, mock_api):
         """无 kssj 的记录跳过。"""
         mock_token.return_value = "fake_token"
@@ -367,8 +367,8 @@ class TestCourtScheduleFetcher:
         count = self.fetcher.fetch_new_messages(self.source)
         assert count == 0
 
-    @patch("apps.message_hub.services.court.court_schedule_fetcher._api_post")
-    @patch("apps.message_hub.services.court.court_schedule_fetcher._acquire_token")
+    @patch("plugins.message_hub.services.court.court_schedule_fetcher._api_post")
+    @patch("plugins.message_hub.services.court.court_schedule_fetcher._acquire_token")
     def test_fetch_pagination(self, mock_token, mock_api):
         """多页数据完整拉取。"""
         mock_token.return_value = "fake_token"
@@ -421,23 +421,23 @@ class TestCourtScheduleFetcher:
         assert count == 25
         assert mock_api.call_count == 2
 
-    @patch("apps.message_hub.services.court.court_schedule_fetcher._acquire_token")
+    @patch("plugins.message_hub.services.court.court_schedule_fetcher._acquire_token")
     def test_fetch_token_expired_retry(self, mock_token):
         """Token 过期重试逻辑。"""
         mock_token.return_value = "new_token"
 
-        with patch("apps.message_hub.services.court.court_schedule_fetcher._api_post") as mock_api:
+        with patch("plugins.message_hub.services.court.court_schedule_fetcher._api_post") as mock_api:
             # 第一次调用抛出 PermissionError（Token 过期）
             mock_api.side_effect = [PermissionError("Token expired"), {"data": [], "totalRows": 0}]
 
-            with patch("apps.message_hub.services.court.court_schedule_fetcher._invalidate_token"):
+            with patch("plugins.message_hub.services.court.court_schedule_fetcher._invalidate_token"):
                 count = self.fetcher.fetch_new_messages(self.source)
 
         assert count == 0
         assert mock_token.call_count == 2  # 初始 + 重试
 
     @pytest.mark.timeout(60)
-    @patch("apps.message_hub.services.court.court_schedule_fetcher._acquire_token")
+    @patch("plugins.message_hub.services.court.court_schedule_fetcher._acquire_token")
     def test_fetch_server_error_retry_with_token_refresh(self, mock_token):
         """5xx 场景应刷新 Token 并重试一次。"""
         mock_token.side_effect = ["old_token", "new_token"]
@@ -446,10 +446,10 @@ class TestCourtScheduleFetcher:
         response = httpx.Response(500, request=request)
         server_error = httpx.HTTPStatusError("Server error", request=request, response=response)
 
-        with patch("apps.message_hub.services.court.court_schedule_fetcher._api_post") as mock_api:
+        with patch("plugins.message_hub.services.court.court_schedule_fetcher._api_post") as mock_api:
             mock_api.side_effect = [server_error, {"data": [], "totalRows": 0}]
 
-            with patch("apps.message_hub.services.court.court_schedule_fetcher._invalidate_token") as mock_invalidate:
+            with patch("plugins.message_hub.services.court.court_schedule_fetcher._invalidate_token") as mock_invalidate:
                 count = self.fetcher.fetch_new_messages(self.source)
 
         assert count == 0
@@ -457,8 +457,8 @@ class TestCourtScheduleFetcher:
         mock_invalidate.assert_called_once()
 
     @pytest.mark.timeout(60)
-    @patch("apps.message_hub.services.court.court_schedule_fetcher._api_post")
-    @patch("apps.message_hub.services.court.court_schedule_fetcher._acquire_token")
+    @patch("plugins.message_hub.services.court.court_schedule_fetcher._api_post")
+    @patch("plugins.message_hub.services.court.court_schedule_fetcher._acquire_token")
     def test_fetch_marks_failed_on_token_error(self, mock_token, mock_api):
         """Token 获取失败标记同步失败。"""
         mock_token.side_effect = RuntimeError("凭证不存在")
@@ -469,8 +469,8 @@ class TestCourtScheduleFetcher:
         self.source.refresh_from_db()
         assert self.source.last_sync_status == SyncStatus.FAILED
 
-    @patch("apps.message_hub.services.court.court_schedule_fetcher._api_post")
-    @patch("apps.message_hub.services.court.court_schedule_fetcher._acquire_token")
+    @patch("plugins.message_hub.services.court.court_schedule_fetcher._api_post")
+    @patch("plugins.message_hub.services.court.court_schedule_fetcher._acquire_token")
     def test_metadata_contains_match_strategy(self, mock_token, mock_api):
         """metadata 包含 match_strategy 字段。"""
         mock_token.return_value = "fake_token"
@@ -501,8 +501,8 @@ class TestCourtScheduleFetcher:
         assert reminder.metadata["source_type"] == "court_schedule"
         assert reminder.metadata["lawyer_name"] == "测试律师"
 
-    @patch("apps.message_hub.services.court.court_schedule_fetcher._api_post")
-    @patch("apps.message_hub.services.court.court_schedule_fetcher._acquire_token")
+    @patch("plugins.message_hub.services.court.court_schedule_fetcher._api_post")
+    @patch("plugins.message_hub.services.court.court_schedule_fetcher._acquire_token")
     def test_metadata_contains_lawyer_name(self, mock_token, mock_api):
         """metadata 包含律师姓名。"""
         mock_token.return_value = "fake_token"
@@ -531,8 +531,8 @@ class TestCourtScheduleFetcher:
         reminder = Reminder.objects.get(metadata__source_id="lawyer-test-id")
         assert reminder.metadata["lawyer_name"] == "测试律师"
 
-    @patch("apps.message_hub.services.court.court_schedule_fetcher._api_post")
-    @patch("apps.message_hub.services.court.court_schedule_fetcher._acquire_token")
+    @patch("plugins.message_hub.services.court.court_schedule_fetcher._api_post")
+    @patch("plugins.message_hub.services.court.court_schedule_fetcher._acquire_token")
     def test_same_hearing_different_lawyers_creates_separate_reminders(self, mock_token, mock_api):
         """同一庭审、不同律师各自创建独立的 Reminder，不互相覆盖。"""
         from apps.organization.models import AccountCredential, Lawyer
