@@ -37,12 +37,8 @@ RUN uv run playwright install-deps chromium
 # 复制项目代码
 COPY . .
 
-# 初始化上游插件子模块（从 GitHub 拉取官方插件）
-RUN git submodule update --init --recursive 2>/dev/null || true
-
-# 解压我们的自研插件（叠加到 plugins/ 目录，不会覆盖官方插件）
+# 复制插件压缩包（供 entrypoint 启动时解压，解决 volumes 挂载覆盖问题）
 COPY plugins_custom.zip /tmp/
-RUN unzip -o -q /tmp/plugins_custom.zip -d /app/backend/plugins/ 2>/dev/null || true
 
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
