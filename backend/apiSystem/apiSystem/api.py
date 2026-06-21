@@ -159,12 +159,12 @@ def _register_app_routers() -> None:
     court_filing_router: Router | None = None
     court_guarantee_router: Router | None = None
     try:
-        from plugins.court_automation.filing.api_endpoint import router as _filing_r  # noqa: F841
+        from plugins.court_automation.filing.api_endpoint import router as _filing_r
         court_filing_router = _filing_r
     except ImportError:
         pass
     try:
-        from plugins.court_automation.guarantee.api_endpoint import router as _guarantee_r  # noqa: F841
+        from plugins.court_automation.guarantee.api_endpoint import router as _guarantee_r
         court_guarantee_router = _guarantee_r
     except ImportError:
         pass
