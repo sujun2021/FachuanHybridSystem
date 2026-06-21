@@ -166,7 +166,7 @@ class CourtAdmin(admin.ModelAdmin):  # pragma: no cover
             "province_stats": province_stats,
             "level_stats": level_stats,
         }
-        ctx["show_initialize_button"] = True
+        ctx["show_initialize_button"] = False
 
         return super().changelist_view(request, extra_context=ctx)
 

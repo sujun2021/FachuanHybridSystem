@@ -189,7 +189,7 @@ class CauseOfActionAdmin(admin.ModelAdmin):  # pragma: no cover
         )
 
         extra_context["statistics"] = stats
-        extra_context["show_initialize_button"] = True
+        extra_context["show_initialize_button"] = False
 
         return super().changelist_view(request, extra_context=extra_context)
 
