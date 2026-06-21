@@ -31,13 +31,16 @@ assert _SERVER_PY.exists(), f"server.py not found at {_SERVER_PY}"
 
 
 def _parse_all_from_init() -> list[str]:
-    """Extract the __all__ list from mcp_server/tools/__init__.py by AST-free
-    regex parsing (avoids importing the module which triggers Django/HTTP)."""
+    """Extract all __all__ entries from mcp_server/tools/__init__.py by AST-free
+    regex parsing (avoids importing the module which triggers Django/HTTP).
+
+    Handles both ``__all__ = [...]`` and conditional ``__all__ += [...]`` blocks."""
     source = _TOOLS_INIT.read_text()
-    # Grab everything between __all__ = [ ... ]
-    m = re.search(r"__all__\s*=\s*\[(.*?)\]", source, re.DOTALL)
-    assert m, "Could not find __all__ in tools/__init__.py"
-    return re.findall(r'"(\w+)"', m.group(1))
+    names: list[str] = []
+    for m in re.finditer(r"__all__\s*[\+]?=\s*\[(.*?)\]", source, re.DOTALL):
+        names.extend(re.findall(r'"(\w+)"', m.group(1)))
+    assert names, "Could not find __all__ in tools/__init__.py"
+    return names
 
 
 def _parse_registered_from_server() -> set[str]:
@@ -47,11 +50,14 @@ def _parse_registered_from_server() -> set[str]:
 
 
 def _parse_imports_from_server() -> set[str]:
-    """Extract all function names imported in server.py's from-import block."""
+    """Extract all function names imported in server.py (both unconditional
+    and conditional import blocks)."""
     source = _SERVER_PY.read_text()
-    m = re.search(r"from mcp_server\.tools import \((.*?)\)", source, re.DOTALL)
-    assert m, "Could not find 'from mcp_server.tools import (...)' in server.py"
-    return set(re.findall(r"^\s*(\w+)\s*(?:,|$)", m.group(1), re.MULTILINE))
+    imports: set[str] = set()
+    for m in re.finditer(r"from mcp_server\.tools import \((.*?)\)", source, re.DOTALL):
+        imports.update(re.findall(r"^\s*(\w+)\s*(?:,|$)", m.group(1), re.MULTILINE))
+    assert imports, "Could not find 'from mcp_server.tools import (...)' in server.py"
+    return imports
 
 
 # Eagerly parse once so every test can reuse the results.
