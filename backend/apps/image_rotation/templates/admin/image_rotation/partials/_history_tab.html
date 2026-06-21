@@ -1,0 +1,120 @@
+{# ==================== 历史记录 Tab ==================== #}
+<div x-show="currentView === 'history'">
+    {# 历史列表 #}
+    <div class="rotation-card" x-show="!historyDetail">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 class="rotation-title" style="margin-bottom: 0;">历史记录</h2>
+            <button class="action-btn" @click="loadHistory()">刷新</button>
+        </div>
+
+        <div x-show="historyLoading" style="text-align: center; padding: 40px;">
+            <div class="loading-spinner" style="margin: 0 auto;"></div>
+        </div>
+
+        <div class="history-empty" x-show="!historyLoading && historyJobs.length === 0">
+            暂无历史记录
+        </div>
+
+        <template x-for="job in historyJobs" :key="job.id">
+            <div class="history-item">
+                <div>
+                    <div class="history-item-name" x-text="job.display_name"></div>
+                    <div class="history-item-meta">
+                        <span x-text="job.total_pages + ' 页'"></span> ·
+                        <span x-text="new Date(job.created_at).toLocaleString('zh-CN')"></span>
+                        <span x-show="job.has_export_zip" style="margin-left: 8px; color: var(--fc-success-text);">ZIP</span>
+                        <span x-show="job.has_export_pdf" style="margin-left: 4px; color: var(--fc-success-text);">PDF</span>
+                    </div>
+                </div>
+                <div class="history-actions">
+                    <button class="action-btn" @click="viewJobDetail(job.id)">查看</button>
+                    <button class="action-btn" @click="renameJobFromHistory(job.id)">重命名</button>
+                    <button class="action-btn" @click="reOcrJob(job.id, 'local')" :disabled="reOcrProcessing && reOcrJobId === job.id">
+                        <span x-show="!(reOcrProcessing && reOcrJobId === job.id)">RapidOCR</span>
+                        <span x-show="reOcrProcessing && reOcrJobId === job.id">处理中...</span>
+                    </button>
+                    <button class="action-btn" @click="reOcrJob(job.id, 'paddleocr_api')" :disabled="reOcrProcessing && reOcrJobId === job.id">PaddleOCR</button>
+                    <button class="action-btn" @click="downloadJobFile(job.id, 'zip')" x-show="job.has_export_zip">ZIP</button>
+                    <button class="action-btn" @click="downloadJobFile(job.id, 'pdf')" x-show="job.has_export_pdf">PDF</button>
+                    <button class="action-btn danger" @click="confirmDeleteJob(job.id)">删除</button>
+                </div>
+            </div>
+        </template>
+
+        {# 分页 #}
+        <div class="pagination" x-show="historyTotalCount > 20">
+            <button class="action-btn" @click="loadHistory(historyPage - 1)" :disabled="historyPage <= 1">上一页</button>
+            <span x-text="historyPage + ' / ' + Math.ceil(historyTotalCount / 20)" style="color: var(--fc-text-muted);"></span>
+            <button class="action-btn" @click="loadHistory(historyPage + 1)" :disabled="historyPage >= Math.ceil(historyTotalCount / 20)">下一页</button>
+        </div>
+    </div>
+
+    {# 任务详情面板 #}
+    <div class="rotation-card" x-show="historyDetail">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h2 class="rotation-title" style="margin-bottom: 0;" x-text="historyDetail?.display_name"></h2>
+            <div style="display: flex; gap: 8px;">
+                <button class="btn-primary" style="padding: 8px 16px !important; font-size: 13px !important;" @click="loadJobToTool()">加载到工具</button>
+                <button class="action-btn" @click="historyDetail = null; historyDetailPages = []">← 返回列表</button>
+            </div>
+        </div>
+        <div style="font-size: 13px; color: var(--fc-text-muted); margin-bottom: 12px;">
+            <span x-text="historyDetail?.total_pages + ' 页'"></span> ·
+            <span x-text="new Date(historyDetail?.created_at).toLocaleString('zh-CN')"></span>
+        </div>
+
+        {# 导出操作栏 #}
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding: 12px 16px; background: var(--fc-bg-muted); border-radius: 8px;">
+            <span style="font-size: 14px; color: var(--fc-text-muted);">导出：</span>
+            <select x-model="historyPaperSize" style="padding: 6px 12px; border: 1px solid var(--fc-border); border-radius: 4px; font-size: 13px;">
+                <option value="original">原始尺寸</option>
+                <option value="a4">A4</option>
+                <option value="a3">A3</option>
+                <option value="letter">Letter</option>
+            </select>
+            <button class="btn-primary" style="padding: 8px 16px !important; font-size: 13px !important;" @click="exportFromHistory('zip')" :disabled="historyExporting">
+                <span x-show="!historyExporting">ZIP</span>
+                <span x-show="historyExporting">导出中...</span>
+            </button>
+            <button class="btn-primary" style="padding: 8px 16px !important; font-size: 13px !important;" @click="exportFromHistory('pdf')" :disabled="historyExporting">
+                <span x-show="!historyExporting">PDF</span>
+                <span x-show="historyExporting">导出中...</span>
+            </button>
+        </div>
+
+        <div class="image-grid">
+            <template x-for="page in historyDetailPages" :key="page.id">
+                <div class="image-item">
+                    <div class="image-preview" @click="openHistoryPreview(page)"
+                         :style="(((page.onnx_rotation || 0) + (page.detected_rotation || 0)) % 360) !== 0 && (((page.onnx_rotation || 0) + (page.detected_rotation || 0)) % 180 !== 0) ? 'aspect-ratio: 1/1' : ''">
+                        <img :src="page.source_image_url"
+                             :style="'transform: rotate(' + (((page.onnx_rotation || 0) + (page.detected_rotation || 0)) % 360) + 'deg); max-width: 100%; max-height: 100%; object-fit: contain;'"
+                             loading="lazy">
+                    </div>
+                    <div class="image-info">
+                        <div class="image-filename" :title="page.suggested_filename || page.original_filename">
+                            <span x-text="page.suggested_filename || page.original_filename"></span>
+                            <span x-show="page.suggested_filename" style="color: var(--fc-success-text); font-size: 10px; margin-left: 4px;">AI</span>
+                        </div>
+                        <div class="image-status">
+                            <template x-if="page.source_type === 'pdf_page'">
+                                <span class="pdf-badge">PDF</span>
+                            </template>
+                            <template x-if="page.detected_rotation !== 0">
+                                <span class="rotation-badge auto">手动 <span x-text="page.detected_rotation + '°'"></span></span>
+                            </template>
+                            <template x-if="page.detection_confidence > 0">
+                                <span class="rotation-badge" style="background: var(--fc-success-bg); color: var(--fc-success-text); font-size: 10px;">
+                                    <span x-text="Math.round(page.detection_confidence * 100) + '%'"></span>
+                                </span>
+                            </template>
+                        </div>
+                        <div x-show="page.ocr_text" style="font-size: 11px; color: var(--fc-text-muted); margin-top: 6px; max-height: 50px; overflow: hidden; line-height: 1.4;"
+                             x-text="page.ocr_text.length > 80 ? page.ocr_text.substring(0, 80) + '...' : page.ocr_text">
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+</div><!-- x-show="currentView === 'history'" -->
