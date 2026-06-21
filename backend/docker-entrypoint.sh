@@ -1,12 +1,6 @@
 #!/bin/sh
 set -e
 
-# 解压自研插件（因 volumes 挂载会覆盖构建时的解压结果，每次启动需重新提取）
-if [ -f /tmp/plugins_custom.zip ]; then
-    mkdir -p /app/backend/plugins
-    unzip -o -q /tmp/plugins_custom.zip -d /app/backend/plugins/ 2>/dev/null || true
-fi
-
 cd /app/apiSystem
 
 if [ "${DB_ENGINE:-postgresql}" = "postgres" ] || [ "${DB_ENGINE:-postgresql}" = "postgresql" ] || [ "${DB_ENGINE:-postgresql}" = "django.db.backends.postgresql" ]; then

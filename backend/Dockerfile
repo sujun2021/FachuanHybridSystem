@@ -15,7 +15,7 @@ RUN sed -i 's|deb.debian.org|mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.li
 
 # 基础工具 + 字体 + xvfb + OpenCV 依赖（CloakBrowser 系统依赖）
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl ca-certificates unzip \
+    curl ca-certificates \
     fonts-liberation fonts-noto-color-emoji \
     xvfb \
     libgl1 libglib2.0-0t64 \
@@ -36,9 +36,6 @@ RUN uv run playwright install-deps chromium
 
 # 复制项目代码
 COPY . .
-
-# 复制插件压缩包（供 entrypoint 启动时解压，解决 volumes 挂载覆盖问题）
-COPY plugins_custom.zip /tmp/
 
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
