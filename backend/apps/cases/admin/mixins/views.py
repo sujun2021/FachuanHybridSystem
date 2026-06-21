@@ -32,12 +32,31 @@ def _get_case_stage_choices() -> list[tuple[str, str]]:
 
 
 def _has_court_filing_plugin() -> bool:
+    """检测一张网立案插件是否可用。
+
+    优先检测 plugins 子模块中的 court_automation 插件；
+    若插件不可用，降级检测本地模板（已恢复至 apps/cases/templates/）。
+    """
     try:
         from plugins import has_court_automation_plugin  # type: ignore[attr-defined]
 
         return has_court_automation_plugin()  # type: ignore[no-any-return]
     except ImportError:
-        return False
+        # plugins 子模块不可用时（仓库未公开），降级检测本地模板
+        import os
+
+        template_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "..",
+            "..",
+            "templates",
+            "admin",
+            "cases",
+            "case",
+            "partials",
+            "court_filing.html",
+        )
+        return os.path.isfile(template_path)
 
 
 def _log_inline_formset(inline_formset: object, logger: logging.Logger) -> None:
