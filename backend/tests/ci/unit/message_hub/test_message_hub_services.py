@@ -6,6 +6,15 @@ from __future__ import annotations
 
 import pytest
 
+pytestmark = pytest.mark.skipif(not _HAS_MH, reason="message_hub plugin not installed")
+
+try:
+    from plugins import has_message_hub_plugin
+    _HAS_MH = has_message_hub_plugin()
+except ImportError:
+    _HAS_MH = False
+
+
 
 class TestMessageHubModules:
     """消息中心模块可导入性测试"""
