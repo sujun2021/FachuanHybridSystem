@@ -4,6 +4,8 @@
 - apps/message_hub/models/*.py, schemas.py
 - apps/express_query/models.py
 - apps/image_rotation/models.py
+pytestmark = pytest.mark.skipif(not _HAS_MH, reason="message_hub plugin not installed")
+
 - apps/pdf_splitting/models.py
 - apps/invoice_recognition/models.py
 - apps/legal_solution/models/*.py
@@ -23,6 +25,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
+try:
+    from plugins import has_message_hub_plugin
+    _HAS_MH = has_message_hub_plugin()
+except ImportError:
+    _HAS_MH = False
+
+
 
 # ==================== message_hub ====================
 
@@ -38,7 +47,7 @@ class TestMessageHub:
         assert ms_mod is not None
 
     def test_schemas_module(self):
-        from apps.message_hub import schemas
+        from plugins.message_hub import schemas
 
         assert schemas is not None
 

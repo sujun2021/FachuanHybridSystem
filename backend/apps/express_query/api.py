@@ -7,9 +7,11 @@ from typing import Any
 from django.http import HttpRequest
 from ninja import Router, Schema
 
+from apps.core.security.auth import JWTOrSessionAuth
+
 from apps.express_query.models import ExpressQueryTask
 
-router = Router()
+router = Router(auth=JWTOrSessionAuth())
 
 
 class ExpressQueryTaskOut(Schema):

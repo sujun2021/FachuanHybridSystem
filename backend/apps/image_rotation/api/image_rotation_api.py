@@ -9,6 +9,8 @@ import time
 from types import SimpleNamespace
 from typing import Any, cast
 
+from apps.core.security.auth import JWTOrSessionAuth
+
 from django.core.files.uploadedfile import UploadedFile
 from django.http import HttpRequest
 from ninja import Router
@@ -17,7 +19,7 @@ from apps.core.infrastructure.throttling import rate_limit_from_settings
 
 logger = logging.getLogger("apps.image_rotation")
 
-router = Router(tags=["图片旋转"])
+router = Router(tags=["图片旋转"], auth=JWTOrSessionAuth())
 
 _ALLOWED_IMAGE_TYPES = frozenset({"image/jpeg", "image/png", "image/webp", "image/tiff"})
 _MAX_UPLOAD_SIZE = 20 * 1024 * 1024  # 20MB

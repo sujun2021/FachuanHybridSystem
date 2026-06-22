@@ -305,7 +305,7 @@ performance:
     # 认证用户请求限制（每窗口期）
     # 取值范围：1-100000
     # 环境变量：RATE_LIMIT_AUTH_REQUESTS
-    auth_requests: ${RATE_LIMIT_AUTH_REQUESTS:1000}
+    auth_requests: ${RATE_LIMIT_AUTH_REQUESTS:5}
 
     # 认证用户限流窗口期（秒）
     # 取值范围：1-3600

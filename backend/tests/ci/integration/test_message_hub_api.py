@@ -7,8 +7,16 @@ from datetime import datetime, timezone, UTC
 
 import pytest
 
+try:
+    from plugins import has_message_hub_plugin
+    _HAS_MH = has_message_hub_plugin()
+except ImportError:
+    _HAS_MH = False
+
 from apps.message_hub.models import InboxMessage, MessageSource
 from apps.organization.models import AccountCredential, Lawyer
+
+pytestmark = pytest.mark.skipif(not _HAS_MH, reason="message_hub plugin not installed")
 
 
 def _make_source(cred, name="测试邮箱"):

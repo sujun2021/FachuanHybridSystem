@@ -34,7 +34,7 @@ STEP_CATEGORIES: list[dict[str, Any]] = [
                 "description": "等待外部事件触发后继续（如法院短信、邮件回复）",
                 "icon": "Clock",
                 "config_schema": {
-                    "event_type": {"type": "select", "required": True, "label": "事件类型", "options": ["court_sms", "email_reply", "document_delivery", "custom"]},
+                    "event_type": {"type": "select", "required": True, "label": "事件类型", "options": ["court_sms", "email_reply", "custom"]},
                     "timeout_hours": {"type": "number", "required": False, "label": "超时(小时)", "default": 168},
                 },
             },
@@ -428,7 +428,7 @@ STEP_CATEGORIES: list[dict[str, Any]] = [
 
 # ── 条件性步骤：court_automation 插件可用时才注册 ────────────────
 try:
-    from plugins.court_automation.filing.helpers import _run_filing  # noqa: F401
+    from plugins.court_automation.filing.helpers import _run_filing
 
     _HAS_COURT_FILING = True
 except ImportError:

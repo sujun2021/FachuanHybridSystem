@@ -7,12 +7,14 @@ import logging
 from django.http import FileResponse, HttpRequest
 from ninja import File, Form, Router, UploadedFile
 
+from apps.core.security.auth import JWTOrSessionAuth
+
 from apps.docspace import config
 from apps.docspace.models import DocSpaceDocument
 from apps.docspace.schemas import DocSpaceConfigOut, DocSpaceDocumentOut, DocSpaceUploadOut
 from apps.docspace.services.docspace_client import DocSpaceClient
 
-router = Router()
+router = Router(auth=JWTOrSessionAuth())
 
 logger = logging.getLogger(__name__)
 

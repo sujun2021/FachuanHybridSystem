@@ -9,31 +9,37 @@ from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
 import httpx
 import pytest
 
+try:
+    from plugins import has_message_hub_plugin
+    _HAS_MH = has_message_hub_plugin()
+except ImportError:
+    _HAS_MH = False
+
+pytestmark = pytest.mark.skipif(not _HAS_MH, reason="message_hub plugin not installed")
+
 from apps.message_hub.models import SyncStatus
-from apps.message_hub.services.court.court_fetcher import (
-    CourtInboxFetcher,
-    _api_post,
-    _build_body,
-    _build_subject,
-    _fetch_attachments_meta,
-    _mark_failed,
-    _mark_success,
-    _parse_datetime,
-    _run_callable_with_timeout,
+if _HAS_MH:
+    from plugins.message_hub.services.court.court_fetcher import (
+        CourtInboxFetcher,
+        _api_post,
+        _build_body,
+        _build_subject,
+        _fetch_attachments_meta,
+        _mark_failed,
+        _mark_success,
+        _parse_datetime,
+        _run_callable_with_timeout,
+
 )
 
 # Lazy-import patch targets (imported inside methods at runtime)
-_LAZY_DR = "apps.automation.services.document_delivery.data_classes.DocumentDeliveryRecord"
-_LAZY_DP = "apps.automation.services.document_delivery.processor.document_delivery_processor.DocumentDeliveryProcessor"
-_LAZY_CM = "apps.automation.services.token.cache_manager.cache_manager"
+_LAZY_CM = "plugins.court_automation.token.cache_manager.cache_manager"
 _LAZY_SL = "apps.core.interfaces.ServiceLocator"
 _LAZY_CT = "apps.automation.models.token.CourtToken"
-
 
 # ===========================================================================
 # Helper function tests
 # ===========================================================================
-
 
 class TestBuildSubject:
     def test_with_ah_and_wsmc(self) -> None:
@@ -44,7 +50,6 @@ class TestBuildSubject:
 
     def test_empty(self) -> None:
         assert _build_subject({}) == "(无主题)"
-
 
 class TestBuildBody:
     def test_full_record(self) -> None:
@@ -67,7 +72,6 @@ class TestBuildBody:
         body = _build_body({})
         assert "案号：" in body
 
-
 class TestParseDatetime:
     def test_valid_format(self) -> None:
         dt = _parse_datetime("2024-06-01 10:30:00")
@@ -83,9 +87,8 @@ class TestParseDatetime:
         dt = _parse_datetime("")
         assert dt is not None
 
-
 class TestFetchAttachmentsMeta:
-    @patch("apps.message_hub.services.court.court_fetcher._api_post")
+    @patch("plugins.message_hub.services.court.court_fetcher._api_post")
     def test_returns_meta(self, mock_post: MagicMock) -> None:
         mock_post.return_value = {
             "data": [
@@ -103,25 +106,23 @@ class TestFetchAttachmentsMeta:
         assert meta[0]["filename"] == "判决书.pdf"
         assert meta[0]["wjlj"] == "https://example.com/file.pdf"
 
-    @patch("apps.message_hub.services.court.court_fetcher._api_post")
+    @patch("plugins.message_hub.services.court.court_fetcher._api_post")
     def test_skips_empty_wjlj(self, mock_post: MagicMock) -> None:
         mock_post.return_value = {"data": [{"wjlj": "", "c_wjgs": "pdf"}]}
         meta = _fetch_attachments_meta("token", "sdbh-1")
         assert len(meta) == 0
 
-    @patch("apps.message_hub.services.court.court_fetcher._api_post", side_effect=RuntimeError("fail"))
+    @patch("plugins.message_hub.services.court.court_fetcher._api_post", side_effect=RuntimeError("fail"))
     def test_exception_returns_empty(self, mock_post: MagicMock) -> None:
         meta = _fetch_attachments_meta("token", "sdbh-1")
         assert meta == []
-
 
 # ===========================================================================
 # _api_post tests
 # ===========================================================================
 
-
 class TestApiPost:
-    @patch("apps.message_hub.services.court.court_fetcher.httpx.Client")
+    @patch("plugins.message_hub.services.court.court_fetcher.httpx.Client")
     def test_success(self, MockClient: MagicMock) -> None:
         mock_resp = MagicMock()
         mock_resp.status_code = 200
@@ -135,7 +136,7 @@ class TestApiPost:
         result = _api_post("https://api.example.com", "tok", {"pageNum": 1})
         assert result["code"] == 200
 
-    @patch("apps.message_hub.services.court.court_fetcher.httpx.Client")
+    @patch("plugins.message_hub.services.court.court_fetcher.httpx.Client")
     def test_401_raises_permission_error(self, MockClient: MagicMock) -> None:
         mock_resp = MagicMock()
         mock_resp.status_code = 401
@@ -147,7 +148,7 @@ class TestApiPost:
         with pytest.raises(PermissionError, match="Token"):
             _api_post("https://api.example.com", "tok", {})
 
-    @patch("apps.message_hub.services.court.court_fetcher.httpx.Client")
+    @patch("plugins.message_hub.services.court.court_fetcher.httpx.Client")
     def test_non_200_code_raises_runtime_error(self, MockClient: MagicMock) -> None:
         mock_resp = MagicMock()
         mock_resp.status_code = 200
@@ -161,11 +162,9 @@ class TestApiPost:
         with pytest.raises(RuntimeError, match="API 错误"):
             _api_post("https://api.example.com", "tok", {})
 
-
 # ===========================================================================
 # Run callable with timeout
 # ===========================================================================
-
 
 class TestRunWithCallableTimeout:
     def test_success(self) -> None:
@@ -189,14 +188,12 @@ class TestRunWithCallableTimeout:
         with pytest.raises(ValueError, match="oops"):
             _run_callable_with_timeout(failing_func, timeout_seconds=5)
 
-
 # ===========================================================================
 # Mark success / failed
 # ===========================================================================
 
-
 class TestMarkSuccess:
-    @patch("apps.message_hub.services.court.court_fetcher.timezone")
+    @patch("plugins.message_hub.services.court.court_fetcher.timezone")
     def test_updates_source(self, mock_tz: MagicMock) -> None:
         mock_tz.now.return_value = datetime(2024, 1, 1)
         source = MagicMock()
@@ -205,9 +202,8 @@ class TestMarkSuccess:
         assert source.last_sync_error == ""
         source.save.assert_called_once()
 
-
 class TestMarkFailed:
-    @patch("apps.message_hub.services.court.court_fetcher.timezone")
+    @patch("plugins.message_hub.services.court.court_fetcher.timezone")
     def test_updates_source(self, mock_tz: MagicMock) -> None:
         mock_tz.now.return_value = datetime(2024, 1, 1)
         source = MagicMock()
@@ -216,7 +212,7 @@ class TestMarkFailed:
         assert source.last_sync_error == "some error"
         source.save.assert_called_once()
 
-    @patch("apps.message_hub.services.court.court_fetcher.timezone")
+    @patch("plugins.message_hub.services.court.court_fetcher.timezone")
     def test_truncates_long_error(self, mock_tz: MagicMock) -> None:
         mock_tz.now.return_value = datetime(2024, 1, 1)
         source = MagicMock()
@@ -224,15 +220,13 @@ class TestMarkFailed:
         _mark_failed(source, long_error)
         assert len(source.last_sync_error) == 1000
 
-
 # ===========================================================================
 # CourtInboxFetcher tests
 # ===========================================================================
 
-
 class TestCourtInboxFetcherFetchNewMessages:
-    @patch("apps.message_hub.services.court.court_fetcher._acquire_token")
-    @patch("apps.message_hub.services.court.court_fetcher._mark_failed")
+    @patch("plugins.message_hub.services.court.court_fetcher._acquire_token")
+    @patch("plugins.message_hub.services.court.court_fetcher._mark_failed")
     def test_token_acquisition_failure(self, mock_mark_fail: MagicMock, mock_acquire: MagicMock) -> None:
         mock_acquire.side_effect = RuntimeError("no token")
         fetcher = CourtInboxFetcher()
@@ -241,10 +235,10 @@ class TestCourtInboxFetcherFetchNewMessages:
             fetcher.fetch_new_messages(source)
         mock_mark_fail.assert_called_once()
 
-    @patch("apps.message_hub.services.court.court_fetcher._acquire_token")
-    @patch("apps.message_hub.services.court.court_fetcher._mark_failed")
+    @patch("plugins.message_hub.services.court.court_fetcher._acquire_token")
+    @patch("plugins.message_hub.services.court.court_fetcher._mark_failed")
     @patch.object(CourtInboxFetcher, "_fetch_with_token", side_effect=PermissionError("token expired"))
-    @patch("apps.message_hub.services.court.court_fetcher._invalidate_token")
+    @patch("plugins.message_hub.services.court.court_fetcher._invalidate_token")
     def test_permission_error_retries(self, mock_inv: MagicMock, mock_fetch: MagicMock, mock_mark_fail: MagicMock, mock_acquire: MagicMock) -> None:
         mock_acquire.return_value = "tok"
         fetcher = CourtInboxFetcher()
@@ -255,10 +249,9 @@ class TestCourtInboxFetcherFetchNewMessages:
             fetcher.fetch_new_messages(source)
         mock_inv.assert_called_once()
 
-
 class TestCourtInboxFetcherFetchWithToken:
-    @patch("apps.message_hub.services.court.court_fetcher._api_post")
-    @patch("apps.message_hub.services.court.court_fetcher._mark_success")
+    @patch("plugins.message_hub.services.court.court_fetcher._api_post")
+    @patch("plugins.message_hub.services.court.court_fetcher._mark_success")
     def test_single_page(self, mock_mark_ok: MagicMock, mock_post: MagicMock) -> None:
         mock_post.return_value = {
             "data": {
@@ -272,8 +265,8 @@ class TestCourtInboxFetcherFetchWithToken:
         assert count == 0
         mock_mark_ok.assert_called_once()
 
-    @patch("apps.message_hub.services.court.court_fetcher._api_post")
-    @patch("apps.message_hub.services.court.court_fetcher._mark_success")
+    @patch("plugins.message_hub.services.court.court_fetcher._api_post")
+    @patch("plugins.message_hub.services.court.court_fetcher._mark_success")
     def test_multi_page(self, mock_mark_ok: MagicMock, mock_post: MagicMock) -> None:
         page1 = {"data": {"total": 40, "data": []}}
         page2 = {"data": {"total": 40, "data": []}}
@@ -284,9 +277,8 @@ class TestCourtInboxFetcherFetchWithToken:
         assert count == 0
         assert mock_post.call_count == 2
 
-
 class TestCourtInboxFetcherProcessPage:
-    _PATCH_INBOX = "apps.message_hub.services.court.court_fetcher.InboxMessage"
+    _PATCH_INBOX = "plugins.message_hub.services.court.court_fetcher.InboxMessage"
 
     def test_skips_empty_sdbh(self) -> None:
         fetcher = CourtInboxFetcher()
@@ -297,7 +289,7 @@ class TestCourtInboxFetcherProcessPage:
 
     def test_skips_duplicate(self) -> None:
         with patch(self._PATCH_INBOX) as MockInbox, \
-             patch("apps.message_hub.services.court.court_fetcher._fetch_attachments_meta", return_value=[]):
+             patch("plugins.message_hub.services.court.court_fetcher._fetch_attachments_meta", return_value=[]):
             MockInbox.objects.filter.return_value.exists.return_value = True
             fetcher = CourtInboxFetcher()
             source = MagicMock()
@@ -308,7 +300,7 @@ class TestCourtInboxFetcherProcessPage:
     def test_creates_new_message_no_attachments(self) -> None:
         """Test message creation when there are no attachments (simpler path)."""
         with patch(self._PATCH_INBOX) as MockInbox, \
-             patch("apps.message_hub.services.court.court_fetcher._fetch_attachments_meta", return_value=[]):
+             patch("plugins.message_hub.services.court.court_fetcher._fetch_attachments_meta", return_value=[]):
             MockInbox.objects.filter.return_value.exists.return_value = False
             mock_msg = MagicMock()
             MockInbox.objects.bulk_create.return_value = [mock_msg]
@@ -322,7 +314,7 @@ class TestCourtInboxFetcherProcessPage:
     def test_counts_new_messages(self) -> None:
         """Test that multiple new messages are counted."""
         with patch(self._PATCH_INBOX) as MockInbox, \
-             patch("apps.message_hub.services.court.court_fetcher._fetch_attachments_meta", return_value=[]):
+             patch("plugins.message_hub.services.court.court_fetcher._fetch_attachments_meta", return_value=[]):
             MockInbox.objects.filter.return_value.exists.return_value = False
             mock_msgs = [MagicMock() for _ in range(3)]
             MockInbox.objects.bulk_create.return_value = mock_msgs
@@ -334,19 +326,8 @@ class TestCourtInboxFetcherProcessPage:
             assert count == 3
             assert MockInbox.objects.bulk_create.call_count == 1
 
-
-class TestCourtInboxFetcherBuildDeliveryRecord:
-    @patch(_LAZY_DR)
-    def test_builds_record(self, MockDR: MagicMock) -> None:
-        fetcher = CourtInboxFetcher()
-        record = {"ah": "case-1", "fssj": "2024-06-01 10:00:00", "wsmc": "判决", "fymc": "法院", "sdbh": "sd-1"}
-        MockDR.return_value = MagicMock()
-        result = fetcher._build_delivery_record(record)
-        MockDR.assert_called_once()
-
-
 class TestCourtInboxFetcherDownloadAttachments:
-    @patch("apps.message_hub.services.court.court_fetcher.Path")
+    @patch("plugins.message_hub.services.court.court_fetcher.Path")
     def test_download_success(self, MockPath: MagicMock) -> None:
         mock_dir = MagicMock()
         MockPath.return_value.__truediv__ = MagicMock(return_value=mock_dir)
@@ -357,7 +338,7 @@ class TestCourtInboxFetcherDownloadAttachments:
         mock_resp.content = b"file-content"
         mock_resp.raise_for_status = MagicMock()
 
-        with patch("apps.message_hub.services.court.court_fetcher.httpx.Client") as MockClient:
+        with patch("plugins.message_hub.services.court.court_fetcher.httpx.Client") as MockClient:
             client_inst = MagicMock()
             client_inst.get.return_value = mock_resp
             MockClient.return_value.__enter__ = MagicMock(return_value=client_inst)
@@ -370,29 +351,8 @@ class TestCourtInboxFetcherDownloadAttachments:
                 result = mock_dl(meta, "sdbh-1")
                 assert result == ["/tmp/test.pdf"]
 
-
-class TestCourtInboxFetcherTriggerSmsFlow:
-    @patch(_LAZY_DR)
-    @patch(_LAZY_DP)
-    def test_success(self, MockProcessor: MagicMock, MockDR: MagicMock) -> None:
-        MockDR.return_value = MagicMock(case_number="case-1")
-        MockProcessor.return_value.process_sms_in_thread.return_value = {"success": True, "case_id": 1}
-        fetcher = CourtInboxFetcher()
-        fetcher._trigger_sms_flow({"ah": "case-1", "fssj": "2024-01-01 00:00:00", "wsmc": "doc"}, ["/tmp/f.pdf"], 1)
-        MockProcessor.return_value.process_sms_in_thread.assert_called_once()
-
-    @patch(_LAZY_DR)
-    @patch(_LAZY_DP)
-    def test_exception_does_not_raise(self, MockProcessor: MagicMock, MockDR: MagicMock) -> None:
-        MockDR.return_value = MagicMock(case_number="case-1")
-        MockProcessor.return_value.process_sms_in_thread.side_effect = RuntimeError("processor error")
-        fetcher = CourtInboxFetcher()
-        # Should not raise
-        fetcher._trigger_sms_flow({"ah": "case-1", "fssj": "", "wsmc": ""}, ["/tmp/f.pdf"], 1)
-
-
 class TestCourtInboxFetcherDownloadAttachment:
-    _PATCH_INBOX = "apps.message_hub.services.court.court_fetcher.InboxMessage"
+    _PATCH_INBOX = "plugins.message_hub.services.court.court_fetcher.InboxMessage"
 
     def test_not_found_raises(self) -> None:
         with patch(self._PATCH_INBOX) as MockInbox:
@@ -412,7 +372,7 @@ class TestCourtInboxFetcherDownloadAttachment:
             mock_path_instance = MagicMock()
             mock_path_instance.exists.return_value = True
             mock_path_instance.read_bytes.return_value = b"content"
-            with patch("apps.message_hub.services.court.court_fetcher.Path", return_value=mock_path_instance):
+            with patch("plugins.message_hub.services.court.court_fetcher.Path", return_value=mock_path_instance):
                 fetcher = CourtInboxFetcher()
                 source = MagicMock()
                 content, fname, ctype = fetcher.download_attachment(source, "msg-1", 0)
@@ -429,7 +389,6 @@ class TestCourtInboxFetcherDownloadAttachment:
             with pytest.raises(ValueError, match="未找到"):
                 fetcher.download_attachment(source, "msg-1", 0)
 
-
 class TestInvalidateToken:
     @patch(_LAZY_CT)
     @patch(_LAZY_SL)
@@ -439,7 +398,7 @@ class TestInvalidateToken:
         cred.site_name = "court_zxfw"
         cred.account = "user@test.com"  # allowlist secret
         mock_sl.get_organization_service.return_value.get_credential.return_value = cred
-        from apps.message_hub.services.court.court_fetcher import _invalidate_token
+        from plugins.message_hub.services.court.court_fetcher import _invalidate_token
 
         _invalidate_token(1)
         mock_cm.invalidate_token_cache.assert_called_once_with("court_zxfw", "user@test.com")  # allowlist secret
@@ -450,7 +409,7 @@ class TestInvalidateToken:
     @patch(_LAZY_CM)
     def test_no_credential(self, mock_cm: MagicMock, mock_sl: MagicMock, MockToken: MagicMock) -> None:
         mock_sl.get_organization_service.return_value.get_credential.return_value = None
-        from apps.message_hub.services.court.court_fetcher import _invalidate_token
+        from plugins.message_hub.services.court.court_fetcher import _invalidate_token
 
         _invalidate_token(999)
         mock_cm.invalidate_token_cache.assert_not_called()

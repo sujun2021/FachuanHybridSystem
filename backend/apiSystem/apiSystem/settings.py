@@ -43,7 +43,7 @@ _DEV_SECRET_KEY = "django-insecure-dev-only-do-not-use-in-production"
 _security = resolve_security_config(
     dev_secret_key=_DEV_SECRET_KEY,
     default_allowed_hosts_dev=["*"],
-    default_allowed_hosts_prod=["*"],
+    default_allowed_hosts_prod=["localhost", "127.0.0.1"],
 )
 
 _is_production = _security.is_production
@@ -165,6 +165,13 @@ try:
         _TEMPLATE_DIRS.append(os.path.join(BASE_DIR, "..", "plugins", "court_automation", "templates"))
 except ImportError:
     pass
+try:
+    from plugins import has_doc_convert_plugin  # type: ignore[attr-defined]
+
+    if has_doc_convert_plugin():
+        _TEMPLATE_DIRS.append(os.path.join(BASE_DIR, "..", "plugins", "doc_convert", "templates"))
+except ImportError:
+    pass
 
 TEMPLATES = [
     {
@@ -181,6 +188,19 @@ TEMPLATES = [
         },
     },
 ]
+
+# Plugin 静态文件目录（plugins 不在 INSTALLED_APPS 中，需要显式声明）
+_STATICFILES_EXTRA: list[str] = []
+try:
+    from plugins import has_message_hub_plugin as _has_mh  # type: ignore[attr-defined]
+
+    if _has_mh():
+        _STATICFILES_EXTRA.append(os.path.join(BASE_DIR, "..", "plugins", "message_hub", "static"))
+except ImportError:
+    pass
+
+if _STATICFILES_EXTRA:
+    STATICFILES_DIRS = _STATICFILES_EXTRA
 
 WSGI_APPLICATION = "apiSystem.wsgi.application"
 
@@ -268,13 +288,17 @@ connection_created.connect(activate_foreign_keys)
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
-AUTH_PASSWORD_VALIDATORS: list[dict[str, str]] = []
+AUTH_PASSWORD_VALIDATORS: list[dict[str, str]] = [
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 8}},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
 
 # JWT Token 有效期配置
 from datetime import timedelta
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(days=30),
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=2),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
 }
 

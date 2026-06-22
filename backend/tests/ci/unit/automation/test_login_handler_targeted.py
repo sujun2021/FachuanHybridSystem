@@ -9,6 +9,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+try:
+    from plugins import has_court_login_plugin
+    _HAS_LOGIN = has_court_login_plugin()
+except ImportError:
+    _HAS_LOGIN = False
+
 from apps.core.exceptions import (
     LoginFailedError,
     NoAvailableAccountError,
@@ -21,9 +27,11 @@ from apps.core.interfaces import (
     TokenAcquisitionResult,
 )
 
+pytestmark = pytest.mark.skipif(not _HAS_LOGIN, reason="court_login plugin not installed")
+
 
 def _make_handler():
-    from apps.automation.services.token._login_handler import LoginHandler
+    from plugins.court_automation.token._login_handler import LoginHandler
 
     account_strategy = AsyncMock()
     auto_login = AsyncMock()
@@ -136,7 +144,7 @@ class TestAcquireTokenByLogin:
         handler._token_service.save_token_internal = AsyncMock()
         handler._account_selection_strategy.update_account_statistics = AsyncMock()
 
-        with patch("apps.automation.services.token._login_handler.cache_manager") as mock_cache:
+        with patch("plugins.court_automation.token._login_handler.cache_manager") as mock_cache:
             result = await handler.acquire_token_by_login(
                 acquisition_id="acq1", site_name="court", credential_id=None,
             )

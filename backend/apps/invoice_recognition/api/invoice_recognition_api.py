@@ -13,11 +13,13 @@ from ninja import File, Router
 from ninja.errors import HttpError
 from ninja.files import UploadedFile
 
+from apps.core.security.auth import JWTOrSessionAuth
+
 from apps.core.infrastructure.throttling import rate_limit_from_settings
 
 logger = logging.getLogger("apps.invoice_recognition")
 
-router = Router(tags=["发票识别"])
+router = Router(tags=["发票识别"], auth=JWTOrSessionAuth())
 
 
 @router.post("/quick-recognize")

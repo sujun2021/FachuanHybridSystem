@@ -1,0 +1,164 @@
+{# ==================== 旋转工具 Tab ==================== #}
+<div x-show="currentView === 'tool'">
+
+    {# 保存成功通知 #}
+    <div class="save-notification" x-show="showSaveNotification">
+        任务已保存到历史记录
+        <a href="#" @click.prevent="currentView = 'history'; loadHistory()">查看</a>
+        <button style="margin-left: auto; background: none; border: none; cursor: pointer; color: var(--fc-success-text); font-size: 16px;" @click="showSaveNotification = false">×</button>
+    </div>
+
+<div class="rotation-card">
+    <div class="rotation-header">
+        <div>
+            <h1 class="rotation-title">图片/PDF 自动旋转</h1>
+            <p class="rotation-subtitle">上传图片或 PDF 后自动识别方向并旋转，支持手动调整，最终导出为 PDF</p>
+        </div>
+        <a href="{% url 'admin:automation_testtoolshub_changelist' %}" class="back-link">← 返回工具列表</a>
+    </div>
+
+    {# 提示信息 #}
+    <div class="hint-box" x-show="images.length === 0">
+        支持 JPG、JPEG、PNG、PDF 格式，图片最大 20MB，PDF 最大 50MB
+    </div>
+
+    {# 错误提示 #}
+    <template x-for="error in errors" :key="error">
+        <div class="hint-box error" x-text="error"></div>
+    </template>
+
+    {# 上传区域 #}
+    <div class="upload-box"
+         :class="{ 'dragover': isDragging }"
+         @click="$refs.fileInput.click()"
+         @dragover.prevent="isDragging = true"
+         @dragleave.prevent="isDragging = false"
+         @drop.prevent="handleDrop($event)"
+         x-show="images.length === 0">
+        <div class="upload-box-icon"></div>
+        <div class="upload-box-title">点击或拖拽上传图片/PDF</div>
+        <div class="upload-box-hint">支持多选</div>
+        <input type="file" x-ref="fileInput" @change="handleFileSelect($event)" accept="image/jpeg,image/jpg,image/png,.pdf" multiple style="display:none">
+    </div>
+
+    {# 已上传图片区域 #}
+    <div x-show="images.length > 0">
+        {# 任务名称输入 #}
+        <div style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <label style="font-size: 14px; color: var(--fc-text-muted); white-space: nowrap;">任务名称：</label>
+            <input type="text" class="task-name-input" x-model="taskName" placeholder="留空则显示为「未命名任务」">
+            <template x-if="currentJobId">
+                <button class="action-btn" @click="updateJobName()" style="white-space: nowrap;">更新名称</button>
+            </template>
+            <template x-if="!currentJobId && onnxComplete">
+                <span style="font-size: 13px; color: var(--fc-text-disabled);">正在保存...</span>
+            </template>
+            <template x-if="currentJobId && !nameUpdatePending">
+                <span style="font-size: 13px; color: var(--fc-success-text);">已保存</span>
+            </template>
+        </div>
+
+        {# 统计栏 #}
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-label">图片数量:</span>
+                <span class="stat-value" x-text="images.length"></span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">需要旋转:</span>
+                <span class="stat-value" x-text="images.filter(i => i.rotation !== 0).length"></span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">自动检测:</span>
+                <span class="stat-value" x-text="images.filter(i => i.autoRotation !== 0).length"></span>
+            </div>
+            <div class="stat-item" x-show="images.filter(i => i.suggestedFilename).length > 0">
+                <span class="stat-label">已重命名:</span>
+                <span class="stat-value" x-text="images.filter(i => i.suggestedFilename).length"></span>
+            </div>
+            <div class="stat-item" x-show="totalDetectionTimeMs > 0">
+                <span class="stat-label">ONNX 耗时:</span>
+                <span class="stat-value" x-text="totalDetectionTimeMs >= 1000 ? (totalDetectionTimeMs / 1000).toFixed(1) + 's' : Math.round(totalDetectionTimeMs) + 'ms'" style="color: var(--fc-success-text);"></span>
+            </div>
+            <div style="flex: 1;"></div>
+            <button class="action-btn" @click="$refs.fileInput.click()">添加更多</button>
+        </div>
+
+        {# OCR 提取文字提示 #}
+        <div class="hint-box success" x-show="showOcrPrompt && !ocrProcessing" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <span>方向检测完成（<span x-text="images.length"></span> 张），是否提取文字用于自动重命名？</span>
+            <button class="action-btn" @click="startOcrExtraction('local')" style="background: var(--fc-bg-card); border-color: var(--fc-success-border);">本地 RapidOCR</button>
+            <button class="action-btn" @click="startOcrExtraction('paddleocr_api')" style="background: var(--fc-bg-card); border-color: var(--fc-success-border);">PaddleOCR API</button>
+            <button class="action-btn" @click="showOcrPrompt = false" style="background: var(--fc-bg-card);">跳过</button>
+        </div>
+
+        {# 图片网格 #}
+        <div class="image-grid">
+            <template x-for="image in images" :key="image.id">
+                <div class="image-item">
+                    <button class="remove-btn" @click.stop="removeImage(image.id)" title="删除">×</button>
+                    <div class="image-preview" @click="openPreview(image)">
+                        <canvas :id="'canvas-' + image.id" width="180" height="180"></canvas>
+                    </div>
+                    <div class="image-info">
+                        <div class="image-filename" :title="image.suggestedFilename || image.filename">
+                            <span x-text="image.suggestedFilename || image.filename"></span>
+                            <span x-show="image.suggestedFilename" style="color: var(--fc-success-text); font-size: 10px; margin-left: 4px;">AI</span>
+                        </div>
+                        <div class="image-status">
+                            <template x-if="image.sourceType === 'pdf_page'">
+                                <span class="pdf-badge">PDF</span>
+                            </template>
+                            <template x-if="image.status === 'detecting'">
+                                <span class="rotation-badge" style="background: var(--fc-info-bg); color: var(--fc-primary-darker);">检测中...</span>
+                            </template>
+                            <template x-if="image.autoRotation !== 0 && image.status !== 'detecting'">
+                                <span class="rotation-badge auto">自动 <span x-text="image.autoRotation + '°'"></span></span>
+                            </template>
+                            <template x-if="image.rotation !== 0 && image.status !== 'detecting'">
+                                <span class="rotation-badge">总计 <span x-text="image.rotation + '°'"></span></span>
+                            </template>
+                            <template x-if="image.rotation === 0 && image.autoRotation === 0 && image.sourceType !== 'pdf_page' && image.status !== 'detecting'">
+                                <span style="color: var(--fc-text-disabled); font-size: 12px;">无需旋转</span>
+                            </template>
+                            <template x-if="image.detectionTimeMs > 0">
+                                <span class="rotation-badge" style="background: var(--fc-success-bg); color: var(--fc-success-text); font-size: 10px;"><span x-text="image.detectionTimeMs >= 1000 ? (image.detectionTimeMs / 1000).toFixed(1) + 's' : Math.round(image.detectionTimeMs) + 'ms'"></span></span>
+                            </template>
+                        </div>
+                    </div>
+                    <div class="image-actions">
+                        <button class="action-btn" @click="rotateLeft(image.id)" title="左转90°">←</button>
+                        <button class="action-btn" @click="rotateRight(image.id)" title="右转90°">→</button>
+                        <button class="action-btn" @click="rotate180(image.id)" title="旋转180°">180</button>
+                        <button class="action-btn" @click="resetRotation(image.id)" title="恢复原始">复位</button>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        {# 操作按钮 #}
+        <div class="form-actions">
+            <button class="btn-secondary" @click="resetAllRotations()">全部恢复</button>
+            <button class="btn-secondary" @click="clearAll()">清除全部</button>
+
+            {# 尺寸选择 #}
+            <select x-model="paperSize" class="paper-size-select" style="padding: 10px 16px; border: 1px solid var(--fc-border); border-radius: 6px; font-size: 14px; background: var(--fc-bg-card); cursor: pointer; height: 44px; line-height: 1.4;">
+                <option value="original">原始尺寸</option>
+                <option value="a4">A4 尺寸</option>
+                <option value="a3">A3 尺寸</option>
+                <option value="letter">Letter 尺寸</option>
+            </select>
+
+            <button class="btn-primary" @click="exportZip()" :disabled="images.length === 0 || processing">
+                <span x-show="!processing">导出 ZIP</span>
+                <span x-show="processing">处理中...</span>
+            </button>
+            <button class="btn-primary" @click="exportPdf()" :disabled="images.length === 0 || processing">
+                <span x-show="!processing">导出 PDF</span>
+                <span x-show="processing">处理中...</span>
+            </button>
+        </div>
+    </div>
+</div><!-- .rotation-card -->
+
+</div><!-- x-show="currentView === 'tool'" -->

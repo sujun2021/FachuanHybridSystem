@@ -26,7 +26,6 @@ from mcp_server.tools.automation import (
     optimize_concurrency,
     process_document,
     process_document_by_path,
-    query_document_delivery,
     reset_performance_metrics,
     retry_sms_processing,
     submit_captcha_answer,
@@ -344,20 +343,26 @@ from mcp_server.tools.legal_research import (
     get_research_task,
     list_research_results,
 )
-from mcp_server.tools.message_hub import (
-    create_message_source,
-    delete_message_source,
-    download_inbox_attachment,
-    get_inbox_message,
-    get_message_source,
-    list_inbox_messages,
-    list_message_sources,
-    preview_inbox_attachment,
-    rename_inbox_attachment,
-    sync_all_message_sources,
-    sync_message_source,
-    update_message_source,
-)
+# 条件导入：信息中转站
+_HAS_MESSAGE_HUB = False
+try:
+    from mcp_server.tools.message_hub import (
+        create_message_source,
+        delete_message_source,
+        download_inbox_attachment,
+        get_inbox_message,
+        get_message_source,
+        list_inbox_messages,
+        list_message_sources,
+        preview_inbox_attachment,
+        rename_inbox_attachment,
+        sync_all_message_sources,
+        sync_message_source,
+        update_message_source,
+    )
+    _HAS_MESSAGE_HUB = True
+except ImportError:
+    pass
 from mcp_server.tools.oa_filing import (
     batch_create_cases,
     batch_create_clients,
@@ -651,7 +656,6 @@ __all__ = [
     "delete_court_sms",
     "download_sms_documents",
     "download_sms_document",
-    "query_document_delivery",
     "list_delivery_schedules",
     "create_delivery_schedule",
     "get_delivery_schedule",
@@ -823,20 +827,6 @@ __all__ = [
     "detect_single_page_orientation",
     "export_rotated_pdf",
     "export_rotated_images",
-    # 收件箱 - 消息
-    "list_inbox_messages",
-    "get_inbox_message",
-    "rename_inbox_attachment",
-    "download_inbox_attachment",
-    "preview_inbox_attachment",
-    # 收件箱 - 来源
-    "list_message_sources",
-    "get_message_source",
-    "create_message_source",
-    "update_message_source",
-    "delete_message_source",
-    "sync_message_source",
-    "sync_all_message_sources",
     # 核心
     # LLM 服务
     "chat_with_context",
@@ -916,4 +906,21 @@ if _HAS_QUOTE:
         "get_preservation_quote",
         "execute_preservation_quote",
         "retry_preservation_quote",
+    ]
+
+# 条件导出：信息中转站
+if _HAS_MESSAGE_HUB:
+    __all__ += [
+        "list_inbox_messages",
+        "get_inbox_message",
+        "rename_inbox_attachment",
+        "download_inbox_attachment",
+        "preview_inbox_attachment",
+        "list_message_sources",
+        "get_message_source",
+        "create_message_source",
+        "update_message_source",
+        "delete_message_source",
+        "sync_message_source",
+        "sync_all_message_sources",
     ]

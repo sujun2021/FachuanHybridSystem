@@ -2,7 +2,12 @@
 爬虫核心服务
 """
 
-from .captcha_recognizer import CaptchaRecognizer, ManualCaptchaRecognizer, get_captcha_recognizer
+try:
+    from .captcha_recognizer import CaptchaRecognizer, ManualCaptchaRecognizer, get_captcha_recognizer
+except ImportError:
+    CaptchaRecognizer = None  # type: ignore[assignment,misc]
+    ManualCaptchaRecognizer = None  # type: ignore[assignment,misc]
+    get_captcha_recognizer = None  # type: ignore[assignment]
 from .exceptions import (
     BrowserConfigurationError,
     BrowserCreationError,

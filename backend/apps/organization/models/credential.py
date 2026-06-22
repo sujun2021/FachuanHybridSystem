@@ -4,6 +4,8 @@ from typing import ClassVar
 
 from django.db import models
 
+from apps.core.model_fields.encrypted import EncryptedTextField
+
 from .lawyer import Lawyer
 
 
@@ -16,7 +18,7 @@ class AccountCredential(models.Model):
     site_name = models.CharField(max_length=255, verbose_name="网站名称")
     url = models.URLField(blank=True, verbose_name="URL")
     account = models.CharField(max_length=255, verbose_name="账号")
-    password = models.CharField(max_length=255, verbose_name="密码")
+    password = EncryptedTextField(verbose_name="密码")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
 

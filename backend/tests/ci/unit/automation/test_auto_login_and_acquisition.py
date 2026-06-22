@@ -7,10 +7,22 @@ from unittest.mock import MagicMock, patch, AsyncMock
 
 import pytest
 
-from apps.automation.services.token.auto_login_service import (
-    AutoLoginService,
-    RetryConfig,
-)
+try:
+    from plugins import has_court_login_plugin
+    _HAS_LOGIN = has_court_login_plugin()
+except ImportError:
+    _HAS_LOGIN = False
+
+if _HAS_LOGIN:
+    from plugins.court_automation.token.auto_login_service import (
+        AutoLoginService,
+        RetryConfig,
+    )
+else:
+    AutoLoginService = None  # type: ignore[assignment,misc]
+    RetryConfig = None  # type: ignore[assignment,misc]
+
+pytestmark = pytest.mark.skipif(not _HAS_LOGIN, reason="court_login plugin not installed")
 
 
 class TestRetryConfigAutoLogin:
@@ -83,14 +95,14 @@ class TestAutoTokenAcquisitionService:
     """AutoTokenAcquisitionService 关键方法测试。"""
 
     def test_init_defaults(self) -> None:
-        from apps.automation.services.token.auto_token_acquisition_service import AutoTokenAcquisitionService
+        from plugins.court_automation.token.auto_token_acquisition_service import AutoTokenAcquisitionService
         svc = AutoTokenAcquisitionService()
         assert svc._acquisition_count == 0
         assert svc._success_count == 0
         assert svc._failure_count == 0
 
     def test_init_with_deps(self) -> None:
-        from apps.automation.services.token.auto_token_acquisition_service import AutoTokenAcquisitionService
+        from plugins.court_automation.token.auto_token_acquisition_service import AutoTokenAcquisitionService
         mock_strategy = MagicMock()
         mock_login = MagicMock()
         mock_token = MagicMock()

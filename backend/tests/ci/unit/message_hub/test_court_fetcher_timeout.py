@@ -6,8 +6,16 @@ import time
 
 import pytest
 
-from apps.message_hub.services.court.court_fetcher import _run_callable_with_timeout
+try:
+    from plugins import has_message_hub_plugin
+    _HAS_MH = has_message_hub_plugin()
+except ImportError:
+    _HAS_MH = False
 
+pytestmark = pytest.mark.skipif(not _HAS_MH, reason="message_hub plugin not installed")
+
+if _HAS_MH:
+    from plugins.message_hub.services.court.court_fetcher import _run_callable_with_timeout
 
 class TestRunCallableWithTimeout:
     """验证 Token 登录超时控制不会阻塞 worker。"""

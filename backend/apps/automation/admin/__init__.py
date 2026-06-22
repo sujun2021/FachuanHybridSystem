@@ -6,9 +6,6 @@ Admin模块主文件
 # 文档处理 Admin
 from .document import DocumentProcessorAdmin
 
-# 文书送达 Admin
-from .document_delivery import DocumentDeliveryScheduleAdmin, DocumentQueryHistoryAdmin
-
 # 财产保全询价 Admin（已迁移到 plugin）
 try:
     from plugins.court_automation.preservation_quote.admin import PreservationQuoteAdmin
@@ -24,8 +21,11 @@ from .sms import CourtSMSAdmin
 # 测试工具 Admin
 from .tools_hub_admin import TestToolsHubAdmin
 
-# Token 管理 Admin
-from .token import CourtTokenAdmin
+# Token 管理 Admin（已迁移到 plugin）
+try:
+    from .token import CourtTokenAdmin
+except ImportError:
+    pass
 
 _admin_all = [
     # 文档处理
@@ -35,16 +35,13 @@ _admin_all = [
     "QuickDownloadAdmin",
     "CourtDocumentAdmin",
     "TestCourtAdmin",
-    # Token 管理
-    "CourtTokenAdmin",
     # 法院短信
     "CourtSMSAdmin",
-    # 文书送达
-    "DocumentDeliveryScheduleAdmin",
-    "DocumentQueryHistoryAdmin",
     # 测试工具
     "TestToolsHubAdmin",
 ]
 if "PreservationQuoteAdmin" in dir():
     _admin_all.append("PreservationQuoteAdmin")
+if "CourtTokenAdmin" in dir():
+    _admin_all.append("CourtTokenAdmin")
 __all__ = _admin_all

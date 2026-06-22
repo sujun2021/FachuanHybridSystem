@@ -5,11 +5,26 @@ from __future__ import annotations
 from datetime import datetime
 from unittest.mock import MagicMock, patch, PropertyMock
 
-from apps.automation.services.token.performance_monitor import (
-    AlertThresholds,
-    PerformanceMetrics,
-    PerformanceMonitor,
-)
+import pytest
+
+try:
+    from plugins import has_court_login_plugin
+    _HAS_LOGIN = has_court_login_plugin()
+except ImportError:
+    _HAS_LOGIN = False
+
+if _HAS_LOGIN:
+    from plugins.court_automation.token.performance_monitor import (
+        AlertThresholds,
+        PerformanceMetrics,
+        PerformanceMonitor,
+    )
+else:
+    AlertThresholds = None  # type: ignore[assignment,misc]
+    PerformanceMetrics = None  # type: ignore[assignment,misc]
+    PerformanceMonitor = None  # type: ignore[assignment,misc]
+
+pytestmark = pytest.mark.skipif(not _HAS_LOGIN, reason="court_login plugin not installed")
 
 
 class TestPerformanceMetrics:
@@ -71,7 +86,7 @@ class TestPerformanceMonitor:
 
     # ─── record_acquisition_start ───
 
-    @patch("apps.automation.services.token.performance_monitor.cache")
+    @patch("plugins.court_automation.token.performance_monitor.cache")
     def test_record_acquisition_start(self, mock_cache: MagicMock) -> None:
         pm = self._make_monitor()
         pm.record_acquisition_start("id1", "site", "acct")
@@ -79,7 +94,7 @@ class TestPerformanceMonitor:
 
     # ─── record_acquisition_end ───
 
-    @patch("apps.automation.services.token.performance_monitor.cache")
+    @patch("plugins.court_automation.token.performance_monitor.cache")
     def test_record_acquisition_end_success(self, mock_cache: MagicMock) -> None:
         pm = self._make_monitor()
         # Mock _update_counters and _decrement_concurrent_count to avoid complex cache.get sequencing
@@ -90,7 +105,7 @@ class TestPerformanceMonitor:
             pm.record_acquisition_end("id1", success=True, duration=5.0, login_duration=2.0)
             mock_cache.set.assert_called()  # updated acquisition data
 
-    @patch("apps.automation.services.token.performance_monitor.cache")
+    @patch("plugins.court_automation.token.performance_monitor.cache")
     def test_record_acquisition_end_failure(self, mock_cache: MagicMock) -> None:
         pm = self._make_monitor()
         with patch.object(pm, "_update_counters"), \
@@ -99,7 +114,7 @@ class TestPerformanceMonitor:
             mock_cache.get.return_value = None
             pm.record_acquisition_end("id1", success=False, duration=5.0, error_type="timeout")
 
-    @patch("apps.automation.services.token.performance_monitor.cache")
+    @patch("plugins.court_automation.token.performance_monitor.cache")
     def test_record_acquisition_end_high_duration_alert(self, mock_cache: MagicMock) -> None:
         pm = self._make_monitor()
         with patch.object(pm, "_update_counters"), \
@@ -111,9 +126,9 @@ class TestPerformanceMonitor:
 
     # ─── get_real_time_metrics ───
 
-    @patch("apps.automation.services.token.performance_monitor.performance_monitor._get_average_durations", return_value=(10.0, 5.0))
-    @patch("apps.automation.services.token.performance_monitor.performance_monitor._get_concurrent_count", return_value=2)
-    @patch("apps.automation.services.token.performance_monitor.cache")
+    @patch("plugins.court_automation.token.performance_monitor.performance_monitor._get_average_durations", return_value=(10.0, 5.0))
+    @patch("plugins.court_automation.token.performance_monitor.performance_monitor._get_concurrent_count", return_value=2)
+    @patch("plugins.court_automation.token.performance_monitor.cache")
     def test_get_real_time_metrics(self, mock_cache: MagicMock, mock_conc: MagicMock, mock_dur: MagicMock) -> None:
         pm = self._make_monitor()
         pm._cache_stats = {"hits": 5, "misses": 5, "total_requests": 10}
@@ -129,7 +144,7 @@ class TestPerformanceMonitor:
 
     # ─── check_health ───
 
-    @patch("apps.automation.services.token.performance_monitor.timezone")
+    @patch("plugins.court_automation.token.performance_monitor.timezone")
     def test_check_health_healthy(self, mock_tz: MagicMock) -> None:
         pm = self._make_monitor()
         mock_tz.now.return_value = datetime(2025, 1, 1)
@@ -141,7 +156,7 @@ class TestPerformanceMonitor:
             result = pm.check_health()
             assert result["status"] == "healthy"
 
-    @patch("apps.automation.services.token.performance_monitor.timezone")
+    @patch("plugins.court_automation.token.performance_monitor.timezone")
     def test_check_health_unhealthy_low_success(self, mock_tz: MagicMock) -> None:
         pm = self._make_monitor()
         mock_tz.now.return_value = datetime(2025, 1, 1)
@@ -153,7 +168,7 @@ class TestPerformanceMonitor:
             result = pm.check_health()
             assert result["status"] == "unhealthy"
 
-    @patch("apps.automation.services.token.performance_monitor.timezone")
+    @patch("plugins.court_automation.token.performance_monitor.timezone")
     def test_check_health_degraded_high_duration(self, mock_tz: MagicMock) -> None:
         pm = self._make_monitor()
         mock_tz.now.return_value = datetime(2025, 1, 1)
@@ -165,7 +180,7 @@ class TestPerformanceMonitor:
             result = pm.check_health()
             assert result["status"] == "degraded"
 
-    @patch("apps.automation.services.token.performance_monitor.timezone")
+    @patch("plugins.court_automation.token.performance_monitor.timezone")
     def test_check_health_warning_low_cache(self, mock_tz: MagicMock) -> None:
         pm = self._make_monitor()
         mock_tz.now.return_value = datetime(2025, 1, 1)
@@ -177,7 +192,7 @@ class TestPerformanceMonitor:
             result = pm.check_health()
             assert result["status"] == "warning"
 
-    @patch("apps.automation.services.token.performance_monitor.timezone")
+    @patch("plugins.court_automation.token.performance_monitor.timezone")
     def test_check_health_high_timeout_rate(self, mock_tz: MagicMock) -> None:
         pm = self._make_monitor()
         mock_tz.now.return_value = datetime(2025, 1, 1)
@@ -191,7 +206,7 @@ class TestPerformanceMonitor:
 
     # ─── reset_metrics ───
 
-    @patch("apps.automation.services.token.performance_monitor.cache")
+    @patch("plugins.court_automation.token.performance_monitor.cache")
     def test_reset_metrics(self, mock_cache: MagicMock) -> None:
         pm = self._make_monitor()
         pm._cache_stats = {"hits": 100, "misses": 50, "total_requests": 150}
@@ -200,8 +215,8 @@ class TestPerformanceMonitor:
 
     # ─── _update_counters ───
 
-    @patch("apps.automation.services.token.performance_monitor.timezone")
-    @patch("apps.automation.services.token.performance_monitor.cache")
+    @patch("plugins.court_automation.token.performance_monitor.timezone")
+    @patch("plugins.court_automation.token.performance_monitor.cache")
     def test_update_counters_success(self, mock_cache: MagicMock, mock_tz: MagicMock) -> None:
         pm = self._make_monitor()
         mock_tz.localdate.return_value = datetime(2025, 1, 1).date()
@@ -209,8 +224,8 @@ class TestPerformanceMonitor:
         pm._update_counters(True, None, site_name="site")
         assert mock_cache.set.call_count == 2  # total + success
 
-    @patch("apps.automation.services.token.performance_monitor.timezone")
-    @patch("apps.automation.services.token.performance_monitor.cache")
+    @patch("plugins.court_automation.token.performance_monitor.timezone")
+    @patch("plugins.court_automation.token.performance_monitor.cache")
     def test_update_counters_failure_with_error_type(self, mock_cache: MagicMock, mock_tz: MagicMock) -> None:
         pm = self._make_monitor()
         mock_tz.localdate.return_value = datetime(2025, 1, 1).date()
@@ -220,7 +235,7 @@ class TestPerformanceMonitor:
 
     # ─── _get_average_durations ───
 
-    @patch("apps.automation.services.token.performance_monitor.timezone")
+    @patch("plugins.court_automation.token.performance_monitor.timezone")
     @patch("apps.automation.models.TokenAcquisitionHistory")
     def test_get_average_durations_success(self, mock_model: MagicMock, mock_tz: MagicMock) -> None:
         pm = self._make_monitor()
@@ -232,7 +247,7 @@ class TestPerformanceMonitor:
         assert total == 15.0
         assert login == 5.0
 
-    @patch("apps.automation.services.token.performance_monitor.timezone")
+    @patch("plugins.court_automation.token.performance_monitor.timezone")
     @patch("apps.automation.models.TokenAcquisitionHistory")
     def test_get_average_durations_no_data(self, mock_model: MagicMock, mock_tz: MagicMock) -> None:
         pm = self._make_monitor()
@@ -244,7 +259,7 @@ class TestPerformanceMonitor:
         assert total == 0.0
         assert login == 0.0
 
-    @patch("apps.automation.services.token.performance_monitor.timezone")
+    @patch("plugins.court_automation.token.performance_monitor.timezone")
     @patch("apps.automation.models.TokenAcquisitionHistory")
     def test_get_average_durations_exception(self, mock_model: MagicMock, mock_tz: MagicMock) -> None:
         pm = self._make_monitor()
@@ -256,7 +271,7 @@ class TestPerformanceMonitor:
 
     # ─── get_statistics_report ───
 
-    @patch("apps.automation.services.token.performance_monitor.timezone")
+    @patch("plugins.court_automation.token.performance_monitor.timezone")
     @patch("apps.automation.models.TokenAcquisitionHistory")
     def test_get_statistics_report(self, mock_model: MagicMock, mock_tz: MagicMock) -> None:
         pm = self._make_monitor()

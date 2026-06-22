@@ -8,18 +8,27 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from apps.message_hub.services.imap.imap_fetcher import (
-    ImapFetcher,
-    _build_imap_host_candidates,
-    _decode_header_value,
-    _extract_body,
-    _extract_imap_host,
-    _looks_like_valid_host,
-    _parse_date,
-    _parse_filter_lines,
-    _sender_allowed,
-)
+try:
+    from plugins import has_message_hub_plugin
+    _HAS_MH = has_message_hub_plugin()
+except ImportError:
+    _HAS_MH = False
 
+pytestmark = pytest.mark.skipif(not _HAS_MH, reason="message_hub plugin not installed")
+
+if _HAS_MH:
+    from plugins.message_hub.services.imap.imap_fetcher import (
+        ImapFetcher,
+        _build_imap_host_candidates,
+        _decode_header_value,
+        _extract_body,
+        _extract_imap_host,
+        _looks_like_valid_host,
+        _parse_date,
+        _parse_filter_lines,
+        _sender_allowed,
+
+)
 
 class TestDecodeHeaderValue:
     def test_decode_plain_ascii(self):
@@ -30,7 +39,6 @@ class TestDecodeHeaderValue:
 
     def test_decode_empty(self):
         assert _decode_header_value("") == ""
-
 
 class TestExtractBody:
     def test_extract_body_plain_text(self):
@@ -44,7 +52,6 @@ class TestExtractBody:
         text, html = _extract_body(msg)
         assert text == ""
         assert "<p>" in html
-
 
 class TestImapHostExtraction:
     def test_extract_imap_host_from_url(self):
@@ -65,7 +72,6 @@ class TestImapHostExtraction:
         candidates = _build_imap_host_candidates("", "")
         assert candidates == []
 
-
 class TestLooksLikeValidHost:
     def test_valid_host(self):
         assert _looks_like_valid_host("imap.example.com") is True
@@ -82,7 +88,6 @@ class TestLooksLikeValidHost:
     def test_invalid_host_dot_start(self):
         assert _looks_like_valid_host(".example.com") is False
 
-
 class TestParseDate:
     def test_parse_date_valid(self):
         dt = _parse_date("Mon, 1 Jan 2024 12:00:00 +0800")
@@ -91,7 +96,6 @@ class TestParseDate:
 
     def test_parse_date_invalid(self):
         assert _parse_date("not a date") is None
-
 
 class TestSenderFilter:
     def test_sender_allowed_no_filter(self):
@@ -122,9 +126,8 @@ class TestSenderFilter:
         result = _parse_filter_lines("line1\nline2\n\nline3")
         assert result == ["line1", "line2", "line3"]
 
-
 class TestImapFetcherConnect:
-    @patch("apps.message_hub.services.imap.imap_fetcher.imaplib.IMAP4_SSL")
+    @patch("plugins.message_hub.services.imap.imap_fetcher.imaplib.IMAP4_SSL")
     def test_connect_success(self, mock_imap):
         mock_conn = MagicMock()
         mock_imap.return_value = mock_conn
@@ -142,7 +145,7 @@ class TestImapFetcherConnect:
         assert result == mock_conn
         mock_conn.login.assert_called_once()
 
-    @patch("apps.message_hub.services.imap.imap_fetcher.imaplib.IMAP4_SSL")
+    @patch("plugins.message_hub.services.imap.imap_fetcher.imaplib.IMAP4_SSL")
     def test_connect_login_failure(self, mock_imap):
         import imaplib
 

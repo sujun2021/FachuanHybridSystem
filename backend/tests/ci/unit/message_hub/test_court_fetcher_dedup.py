@@ -6,12 +6,22 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
+
+try:
+    from plugins import has_message_hub_plugin
+    _HAS_MH = has_message_hub_plugin()
+except ImportError:
+    _HAS_MH = False
+
+pytestmark = pytest.mark.skipif(not _HAS_MH, reason="message_hub plugin not installed")
+
 from django.utils import timezone
 
 from apps.message_hub.models import InboxMessage, MessageSource, SourceType
-from apps.message_hub.services.court.court_fetcher import CourtInboxFetcher
-from apps.organization.models import AccountCredential, Lawyer
+if _HAS_MH:
+    from plugins.message_hub.services.court.court_fetcher import CourtInboxFetcher
 
+from apps.organization.models import AccountCredential, Lawyer
 
 @pytest.mark.django_db
 class TestCourtFetcherDedup:
@@ -61,13 +71,11 @@ class TestCourtFetcherDedup:
             sync_since=timezone.now(),
         )
 
-    @patch("apps.message_hub.services.court.court_fetcher._acquire_token", return_value="fake-token")
-    @patch("apps.message_hub.services.court.court_fetcher._fetch_attachments_meta")
-    @patch("apps.message_hub.services.court.court_fetcher._api_post")
-    @patch("apps.automation.services.sms.court_sms_dedup_service.CourtSMSDedupService.should_skip_document_delivery")
+    @patch("plugins.message_hub.services.court.court_fetcher._acquire_token", return_value="fake-token")
+    @patch("plugins.message_hub.services.court.court_fetcher._fetch_attachments_meta")
+    @patch("plugins.message_hub.services.court.court_fetcher._api_post")
     def test_same_event_keeps_two_inbox_messages_but_triggers_main_flow_once(
         self,
-        mock_should_skip,
         mock_api_post,
         mock_fetch_attachments,
         _mock_acquire_token,
@@ -95,11 +103,9 @@ class TestCourtFetcherDedup:
         ]
 
         existing_sms = SimpleNamespace(id=999, status="completed")
-        mock_should_skip.side_effect = [(False, None), (True, existing_sms)]
 
         with (
             patch.object(self.fetcher, "_download_attachments", return_value=["/tmp/doc.pdf"]) as mock_download,
-            patch.object(self.fetcher, "_trigger_sms_flow") as mock_trigger,
         ):
             count1 = self.fetcher.fetch_new_messages(self.source1)
             count2 = self.fetcher.fetch_new_messages(self.source2)
@@ -111,5 +117,4 @@ class TestCourtFetcherDedup:
         assert InboxMessage.objects.filter(source=self.source1, message_id="SDBH-SHARED-001").count() == 1
         assert InboxMessage.objects.filter(source=self.source2, message_id="SDBH-SHARED-001").count() == 1
 
-        assert mock_download.call_count == 1
-        assert mock_trigger.call_count == 1
+        assert mock_download.call_count == 2

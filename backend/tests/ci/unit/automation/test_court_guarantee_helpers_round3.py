@@ -376,7 +376,7 @@ class TestBuildPartyPayloadFromCaseParty:
         assert result["party_type"] == "natural"
         assert result["name"] == "张三"
 
-    def test_legal_person_defaults(self):
+    def test_legal_person_raises_on_empty_fields(self):
         from plugins.court_automation.guarantee.helpers import _build_party_payload_from_case_party
 
         party = MagicMock()
@@ -389,15 +389,14 @@ class TestBuildPartyPayloadFromCaseParty:
         party.client.legal_representative = "李四"
         party.client.legal_representative_id_number = ""
 
-        result = _build_party_payload_from_case_party(party=party)
-        assert result["party_type"] == "legal"
-        assert result["id_number"] == "91440101MA59TEST8X"
+        with pytest.raises(ValueError, match="客户证件号不能为空"):
+            _build_party_payload_from_case_party(party=party)
 
     def test_none_party(self):
         from plugins.court_automation.guarantee.helpers import _build_party_payload_from_case_party
 
-        result = _build_party_payload_from_case_party(party=None)
-        assert result["name"] == "张三"
+        with pytest.raises(ValueError, match="客户姓名不能为空"):
+            _build_party_payload_from_case_party(party=None)
 
 
 # ---------------------------------------------------------------------------
@@ -415,8 +414,8 @@ class TestListAndPickPartyPayloads:
         party.client.client_type = "natural"
         party.client.name = "张三"
         party.client.id_number = "110101199003077715"
-        party.client.phone = ""
-        party.client.address = ""
+        party.client.phone = "13800138000"
+        party.client.address = "北京市"
         party.client.is_our_client = True
         party.client.legal_representative = ""
         party.client.legal_representative_id_number = ""
@@ -431,12 +430,12 @@ class TestListAndPickPartyPayloads:
     def test_pick_fallback(self):
         from plugins.court_automation.guarantee.helpers import _pick_party_payload
 
-        result = _pick_party_payload(
-            case_parties=[],
-            preferred_statuses={"plaintiff"},
-            prefer_our=True,
-        )
-        assert result["name"] == "张三"  # fallback
+        with pytest.raises(ValueError, match="客户姓名不能为空"):
+            _pick_party_payload(
+                case_parties=[],
+                preferred_statuses={"plaintiff"},
+                prefer_our=True,
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -505,9 +504,9 @@ class TestListOpponentPartyPayloads:
         party.id = 1
         party.client.client_type = "natural"
         party.client.name = "被告"
-        party.client.id_number = ""
-        party.client.phone = ""
-        party.client.address = ""
+        party.client.id_number = "440100199001010001"
+        party.client.phone = "13800138000"
+        party.client.address = "广州市"
         party.client.legal_representative = ""
         party.client.legal_representative_id_number = ""
 

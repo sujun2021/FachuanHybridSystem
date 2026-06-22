@@ -289,6 +289,7 @@ class TestBuildPartyPayloadFromCaseParty:
         return _build_party_payload_from_case_party
 
     def test_natural_party_defaults(self):
+        """Empty name should raise ValueError."""
         party = MagicMock()
         party.id = 1
         client = MagicMock()
@@ -301,12 +302,11 @@ class TestBuildPartyPayloadFromCaseParty:
         client.legal_representative_id_number = ""
         party.client = client
 
-        result = self._fn()(party=party)
-        assert result["name"] == "张三"
-        assert result["id_number"] == "110101199003077715"
-        assert result["party_type"] == "natural"
+        with pytest.raises(ValueError, match="客户姓名不能为空"):
+            self._fn()(party=party)
 
-    def test_legal_party_defaults(self):
+    def test_legal_party_raises_on_empty_fields(self):
+        """Empty id_number and address should raise ValueError."""
         party = MagicMock()
         party.id = 2
         client = MagicMock()
@@ -319,13 +319,12 @@ class TestBuildPartyPayloadFromCaseParty:
         client.legal_representative_id_number = ""
         party.client = client
 
-        result = self._fn()(party=party)
-        assert result["id_number"] == "91440101MA59TEST8X"
-        assert result["party_type"] == "legal"
+        with pytest.raises(ValueError, match="客户证件号不能为空"):
+            self._fn()(party=party)
 
     def test_none_party(self):
-        result = self._fn()(party=None)
-        assert result["name"] == "张三"
+        with pytest.raises(ValueError, match="客户姓名不能为空"):
+            self._fn()(party=None)
 
 
 class TestListPartyPayloads:
@@ -362,9 +361,9 @@ class TestListPartyPayloads:
         client = MagicMock()
         client.client_type = "natural"
         client.name = "被告"
-        client.id_number = ""
-        client.phone = ""
-        client.address = ""
+        client.id_number = "440100199001010001"
+        client.phone = "13800138000"
+        client.address = "广州市"
         client.is_our_client = True  # wrong side
         client.legal_representative = ""
         client.legal_representative_id_number = ""
@@ -383,9 +382,9 @@ class TestListPartyPayloads:
         client = MagicMock()
         client.client_type = "natural"
         client.name = "原告"
-        client.id_number = ""
-        client.phone = ""
-        client.address = ""
+        client.id_number = "440100199001010002"
+        client.phone = "13800138001"
+        client.address = "深圳市"
         client.is_our_client = False
         client.legal_representative = ""
         client.legal_representative_id_number = ""
@@ -404,9 +403,9 @@ class TestListPartyPayloads:
         client = MagicMock()
         client.client_type = "natural"
         client.name = "原告"
-        client.id_number = ""
-        client.phone = ""
-        client.address = ""
+        client.id_number = "440100199001010003"
+        client.phone = "13800138002"
+        client.address = "佛山市"
         client.is_our_client = True
         client.legal_representative = ""
         client.legal_representative_id_number = ""
@@ -427,13 +426,13 @@ class TestPickPartyPayload:
         from plugins.court_automation.guarantee.helpers import _pick_party_payload
         return _pick_party_payload
 
-    def test_empty_parties_returns_default(self):
-        result = self._fn()(
-            case_parties=[],
-            preferred_statuses={"defendant"},
-            prefer_our=False,
-        )
-        assert result["name"] == "张三"
+    def test_empty_parties_raises_value_error(self):
+        with pytest.raises(ValueError, match="客户姓名不能为空"):
+            self._fn()(
+                case_parties=[],
+                preferred_statuses={"defendant"},
+                prefer_our=False,
+            )
 
 
 class TestListOpponentCaseParties:

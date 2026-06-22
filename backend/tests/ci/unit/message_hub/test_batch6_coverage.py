@@ -7,16 +7,25 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+try:
+    from plugins import has_message_hub_plugin
+    _HAS_MH = has_message_hub_plugin()
+except ImportError:
+    _HAS_MH = False
+
+pytestmark = pytest.mark.skipif(not _HAS_MH, reason="message_hub plugin not installed")
+
+
 
 class TestMessageFetcher:
     def test_abstract_class(self):
-        from apps.message_hub.services.base import MessageFetcher
+        from plugins.message_hub.services.base import MessageFetcher
 
         with pytest.raises(TypeError):
             MessageFetcher()
 
     def test_download_attachment_not_implemented(self):
-        from apps.message_hub.services.base import MessageFetcher
+        from plugins.message_hub.services.base import MessageFetcher
 
         class ConcreteFetcher(MessageFetcher):
             def fetch_new_messages(self, source):
@@ -30,19 +39,19 @@ class TestMessageFetcher:
 @pytest.mark.django_db
 class TestInboxQuery:
     def test_get_base_queryset(self):
-        from apps.message_hub.services.inbox_query import get_base_queryset
+        from plugins.message_hub.services.inbox_query import get_base_queryset
 
         qs = get_base_queryset()
         assert qs is not None
 
     def test_list_sources(self):
-        from apps.message_hub.services.inbox_query import list_sources
+        from plugins.message_hub.services.inbox_query import list_sources
 
         result = list_sources()
         assert isinstance(result, list)
 
     def test_get_enabled_sources(self):
-        from apps.message_hub.services.inbox_query import get_enabled_sources
+        from plugins.message_hub.services.inbox_query import get_enabled_sources
 
         qs = get_enabled_sources()
         assert qs is not None

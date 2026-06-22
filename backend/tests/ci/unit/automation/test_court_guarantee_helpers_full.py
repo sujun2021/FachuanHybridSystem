@@ -332,19 +332,18 @@ class TestBuildPartyPayloadFromCaseParty:
         assert result["party_type"] == "legal"
         assert result["legal_representative"] == "李四"
 
-    def test_missing_name_defaults_to_zhangsan(self):
+    def test_missing_name_raises_error(self):
         client = SimpleNamespace(
-            id=1, client_type="natural", name="", id_number="", phone="",
-            address="", is_our_client=False, legal_representative="", legal_representative_id_number="",
+            id=1, client_type="natural", name="", id_number="110101199003077715", phone="",
+            address="广州市天河区", is_our_client=False, legal_representative="", legal_representative_id_number="",
         )
         party = SimpleNamespace(id=1, legal_status="defendant", client=client)
-        result = helpers._build_party_payload_from_case_party(party=party)
-        assert result["name"] == "张三"
+        with pytest.raises(ValueError, match="客户姓名不能为空"):
+            helpers._build_party_payload_from_case_party(party=party)
 
     def test_none_party(self):
-        result = helpers._build_party_payload_from_case_party(party=None)
-        assert result["name"] == "张三"
-        assert result["party_type"] == "natural"
+        with pytest.raises(ValueError, match="客户姓名不能为空"):
+            helpers._build_party_payload_from_case_party(party=None)
 
 
 # ======================================================================
@@ -398,12 +397,12 @@ class TestListAndPickPartyPayloads:
         assert result["name"] == "张三"
 
     def test_pick_empty_returns_default(self):
-        result = helpers._pick_party_payload(
-            case_parties=[],
-            preferred_statuses=set(),
-            prefer_our=False,
-        )
-        assert result["name"] == "张三"
+        with pytest.raises(ValueError, match="客户姓名不能为空"):
+            helpers._pick_party_payload(
+                case_parties=[],
+                preferred_statuses=set(),
+                prefer_our=False,
+            )
 
 
 # ======================================================================

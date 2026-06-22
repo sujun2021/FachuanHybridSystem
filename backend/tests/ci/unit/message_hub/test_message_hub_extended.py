@@ -6,10 +6,19 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+try:
+    from plugins import has_message_hub_plugin
+    _HAS_MH = has_message_hub_plugin()
+except ImportError:
+    _HAS_MH = False
+
+pytestmark = pytest.mark.skipif(not _HAS_MH, reason="message_hub plugin not installed")
+
+
 
 class TestInboxQuery:
     def test_import(self):
-        from apps.message_hub.services.inbox_query import (
+        from plugins.message_hub.services.inbox_query import (
             get_base_queryset,
             get_message_or_none,
             list_sources,
@@ -27,14 +36,14 @@ class TestInboxQuery:
 
 class TestMessageHubBase:
     def test_import_base(self):
-        from apps.message_hub.services import base
+        from plugins.message_hub.services import base
 
         assert base is not None
 
 
 class TestMessageHubCourt:
     def test_import_court(self):
-        from apps.message_hub.services import court
+        from plugins.message_hub.services import court
 
         assert court is not None
 

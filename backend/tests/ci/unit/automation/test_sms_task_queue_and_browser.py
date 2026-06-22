@@ -6,7 +6,15 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+try:
+    from plugins import has_court_login_plugin
+    _HAS_LOGIN = has_court_login_plugin()
+except ImportError:
+    _HAS_LOGIN = False
+
 from apps.automation.services.sms.task_queue import DjangoQTaskQueue, TaskQueue
+
+pytestmark = pytest.mark.skipif(not _HAS_LOGIN, reason="court_login plugin not installed")
 
 
 # ── TaskQueue protocol ──
@@ -41,7 +49,7 @@ class TestTaskQueueProtocol:
 
 class TestBrowserContextFactory:
     def test_playwright_factory_with_create_context(self):
-        from apps.automation.services.token.browser_context_factory import PlaywrightBrowserContextFactory
+        from plugins.court_automation.token.browser_context_factory import PlaywrightBrowserContextFactory
 
         mock_browser_service = MagicMock()
         mock_browser_service.create_context.return_value = "context"
@@ -57,7 +65,7 @@ class TestBrowserContextFactory:
         mock_browser_service.create_context.assert_called_once()
 
     def test_playwright_factory_with_get_browser(self):
-        from apps.automation.services.token.browser_context_factory import PlaywrightBrowserContextFactory
+        from plugins.court_automation.token.browser_context_factory import PlaywrightBrowserContextFactory
 
         mock_browser_service = MagicMock(spec=[])  # No create_context method
         mock_browser = MagicMock()
@@ -74,7 +82,7 @@ class TestBrowserContextFactory:
         assert result == "context_from_browser"
 
     def test_playwright_factory_exception_raises_network_error(self):
-        from apps.automation.services.token.browser_context_factory import PlaywrightBrowserContextFactory
+        from plugins.court_automation.token.browser_context_factory import PlaywrightBrowserContextFactory
         from apps.core.exceptions import NetworkError
 
         mock_browser_service = MagicMock()
@@ -90,7 +98,7 @@ class TestBrowserContextFactory:
             factory.new_context()
 
     def test_default_anti_detection_provider(self):
-        from apps.automation.services.token.browser_context_factory import DefaultAntiDetectionOptionsProvider
+        from plugins.court_automation.token.browser_context_factory import DefaultAntiDetectionOptionsProvider
 
         provider = DefaultAntiDetectionOptionsProvider()
         assert provider is not None

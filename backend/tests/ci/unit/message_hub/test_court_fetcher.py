@@ -6,15 +6,24 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from apps.message_hub.services.court.court_fetcher import (
-    CourtInboxFetcher,
-    _api_post,
-    _build_body,
-    _build_subject,
-    _parse_datetime,
-    _run_callable_with_timeout,
-)
+try:
+    from plugins import has_message_hub_plugin
+    _HAS_MH = has_message_hub_plugin()
+except ImportError:
+    _HAS_MH = False
 
+pytestmark = pytest.mark.skipif(not _HAS_MH, reason="message_hub plugin not installed")
+
+if _HAS_MH:
+    from plugins.message_hub.services.court.court_fetcher import (
+        CourtInboxFetcher,
+        _api_post,
+        _build_body,
+        _build_subject,
+        _parse_datetime,
+        _run_callable_with_timeout,
+
+)
 
 class TestBuildSubject:
     def test_build_subject_with_ah(self):
@@ -28,14 +37,12 @@ class TestBuildSubject:
     def test_build_subject_empty(self):
         assert _build_subject({}) == "(无主题)"
 
-
 class TestBuildBody:
     def test_build_body(self):
         record = {"ah": "2024京123", "fymc": "朝阳法院", "wsmc": "判决书", "fqr": "张三", "sdzt": "已送达", "qdzt": "已签收", "fssj": "2024-01-01 12:00:00"}
         body = _build_body(record)
         assert "2024京123" in body
         assert "朝阳法院" in body
-
 
 class TestParseDatetime:
     def test_parse_datetime_valid(self):
@@ -49,7 +56,6 @@ class TestParseDatetime:
         dt = _parse_datetime("invalid")
         # Should return timezone.now() as fallback
         assert dt is not None
-
 
 class TestRunWithCallableTimeout:
     def test_success(self):
@@ -73,9 +79,8 @@ class TestRunWithCallableTimeout:
         with pytest.raises(ValueError, match="oops"):
             _run_callable_with_timeout(fail, timeout_seconds=5)
 
-
 class TestApiPost:
-    @patch("apps.message_hub.services.court.court_fetcher.httpx.Client")
+    @patch("plugins.message_hub.services.court.court_fetcher.httpx.Client")
     def test_api_post_success(self, mock_client_cls):
         mock_client = MagicMock()
         mock_resp = MagicMock()
@@ -90,7 +95,7 @@ class TestApiPost:
         result = _api_post("https://example.com/api", "token123", {"pageNum": 1})
         assert result["code"] == 200
 
-    @patch("apps.message_hub.services.court.court_fetcher.httpx.Client")
+    @patch("plugins.message_hub.services.court.court_fetcher.httpx.Client")
     def test_api_post_unauthorized(self, mock_client_cls):
         mock_client = MagicMock()
         mock_resp = MagicMock()
@@ -103,7 +108,6 @@ class TestApiPost:
 
         with pytest.raises(PermissionError):
             _api_post("https://example.com/api", "expired", {})
-
 
 class TestCourtInboxFetcher:
     def test_fetcher_class_exists(self):

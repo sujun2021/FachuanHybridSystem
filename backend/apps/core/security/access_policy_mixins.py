@@ -20,7 +20,14 @@ class AuthzUserMixin:
         return self.is_authenticated(user)
 
     def is_superuser(self, user: Any | None) -> bool:
-        return bool(user and (getattr(user, "is_superuser", False) or getattr(user, "is_staff", False)))
+        return bool(
+            user
+            and (
+                getattr(user, "is_superuser", False)
+                or getattr(user, "is_staff", False)
+                or getattr(user, "is_admin", False)
+            )
+        )
 
     def get_user_id(self, user: Any | None) -> int | None:
         return getattr(user, "id", None) if user else None
@@ -51,7 +58,7 @@ class DjangoPermsMixin(AuthzUserMixin):
         if perm_open_access:
             return
         self.ensure_authenticated(user)
-        if self.is_authenticated_user(user) or self.is_superuser(user):
+        if self.is_superuser(user):
             return
         raise ForbiddenError(str(message))
 
@@ -59,7 +66,7 @@ class DjangoPermsMixin(AuthzUserMixin):
         return bool(
             user
             and self.is_authenticated(user)
-            and (user.has_perm(perm) or self.is_authenticated_user(user) or self.is_superuser(user))
+            and (user.has_perm(perm) or self.is_superuser(user))
         )
 
     def ensure_has_perm(self, user: Any | None, perm: str, message: _StrOrPromise) -> None:

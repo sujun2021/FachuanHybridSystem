@@ -8,6 +8,15 @@ from unittest.mock import MagicMock
 
 import pytest
 
+try:
+    from plugins import has_message_hub_plugin
+    _HAS_MH = has_message_hub_plugin()
+except ImportError:
+    _HAS_MH = False
+
+pytestmark = pytest.mark.skipif(not _HAS_MH, reason="message_hub plugin not installed")
+
+
 
 class TestDocumentRecognitionModules:
     """文档识别模块可导入性测试"""
@@ -202,27 +211,27 @@ class TestMessageHubServices:
     """消息中心服务测试"""
 
     def test_base_importable(self) -> None:
-        from apps.message_hub.services import base
+        from plugins.message_hub.services import base
 
         assert base is not None
 
     def test_inbox_query_importable(self) -> None:
-        from apps.message_hub.services import inbox_query
+        from plugins.message_hub.services import inbox_query
 
         assert inbox_query is not None
 
     def test_court_fetcher_importable(self) -> None:
-        from apps.message_hub.services.court import court_fetcher
+        from plugins.message_hub.services.court import court_fetcher
 
         assert court_fetcher is not None
 
     def test_court_schedule_fetcher_importable(self) -> None:
-        from apps.message_hub.services.court import court_schedule_fetcher
+        from plugins.message_hub.services.court import court_schedule_fetcher
 
         assert court_schedule_fetcher is not None
 
     def test_imap_fetcher_importable(self) -> None:
-        from apps.message_hub.services.imap import imap_fetcher
+        from plugins.message_hub.services.imap import imap_fetcher
 
         assert imap_fetcher is not None
 

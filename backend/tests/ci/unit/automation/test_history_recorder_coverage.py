@@ -8,7 +8,18 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from apps.automation.services.token.history_recorder import TokenHistoryRecorder
+try:
+    from plugins import has_court_login_plugin
+    _HAS_LOGIN = has_court_login_plugin()
+except ImportError:
+    _HAS_LOGIN = False
+
+if _HAS_LOGIN:
+    from plugins.court_automation.token.history_recorder import TokenHistoryRecorder
+else:
+    TokenHistoryRecorder = None  # type: ignore[assignment,misc]
+
+pytestmark = pytest.mark.skipif(not _HAS_LOGIN, reason="court_login plugin not installed")
 
 
 class TestTokenHistoryRecorderInit:
@@ -26,7 +37,7 @@ class TestTokenHistoryRecorderInit:
 class TestGetRecentStatistics:
     async def test_exception_returns_empty(self) -> None:
         recorder = TokenHistoryRecorder()
-        with patch("apps.automation.services.token.history_recorder.TokenAcquisitionHistory") as mock_hist:
+        with patch("plugins.court_automation.token.history_recorder.TokenAcquisitionHistory") as mock_hist:
             mock_hist.objects.filter.side_effect = Exception("db error")
             result = await recorder.get_recent_statistics(site_name="court")
             assert result["total_acquisitions"] == 0
@@ -34,7 +45,7 @@ class TestGetRecentStatistics:
 
     async def test_no_filter(self) -> None:
         recorder = TokenHistoryRecorder()
-        with patch("apps.automation.services.token.history_recorder.TokenAcquisitionHistory") as mock_hist:
+        with patch("plugins.court_automation.token.history_recorder.TokenAcquisitionHistory") as mock_hist:
             mock_qs = MagicMock()
             mock_qs.count.return_value = 5
             mock_hist.objects.filter.return_value = mock_qs
@@ -43,7 +54,7 @@ class TestGetRecentStatistics:
 
     async def test_with_filter(self) -> None:
         recorder = TokenHistoryRecorder()
-        with patch("apps.automation.services.token.history_recorder.TokenAcquisitionHistory") as mock_hist:
+        with patch("plugins.court_automation.token.history_recorder.TokenAcquisitionHistory") as mock_hist:
             mock_qs = MagicMock()
             mock_qs.count.return_value = 3
             mock_hist.objects.filter.return_value = mock_qs
@@ -55,14 +66,14 @@ class TestGetRecentStatistics:
 class TestGetAccountPerformance:
     async def test_exception_returns_empty(self) -> None:
         recorder = TokenHistoryRecorder()
-        with patch("apps.automation.services.token.history_recorder.TokenAcquisitionHistory") as mock_hist:
+        with patch("plugins.court_automation.token.history_recorder.TokenAcquisitionHistory") as mock_hist:
             mock_hist.objects.filter.side_effect = Exception("db error")
             result = await recorder.get_account_performance("test@test.com", "court")
             assert result["total_attempts"] == 0
 
     async def test_success(self) -> None:
         recorder = TokenHistoryRecorder()
-        with patch("apps.automation.services.token.history_recorder.TokenAcquisitionHistory") as mock_hist:
+        with patch("plugins.court_automation.token.history_recorder.TokenAcquisitionHistory") as mock_hist:
             mock_qs = MagicMock()
             mock_qs.count.return_value = 10
             mock_hist.objects.filter.return_value = mock_qs

@@ -7,6 +7,15 @@ from __future__ import annotations
 from unittest.mock import MagicMock
 
 import pytest
+
+try:
+    from plugins import has_message_hub_plugin
+    _HAS_MH = has_message_hub_plugin()
+except ImportError:
+    _HAS_MH = False
+
+pytestmark = pytest.mark.skipif(not _HAS_MH, reason="message_hub plugin not installed")
+
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory
@@ -108,14 +117,14 @@ class TestOaFilingAdmin:
 @pytest.mark.django_db
 class TestMessageHubAdmin:
     def test_inbox_message_admin_list_display(self):
-        from apps.message_hub.admin import InboxMessageAdmin
+        from plugins.message_hub.admin import InboxMessageAdmin
         from apps.message_hub.models import InboxMessage
 
         admin_obj = InboxMessageAdmin(InboxMessage, AdminSite())
         assert len(admin_obj.list_display) > 0
 
     def test_message_source_admin_list_display(self):
-        from apps.message_hub.admin import MessageSourceAdmin
+        from plugins.message_hub.admin import MessageSourceAdmin
         from apps.message_hub.models import MessageSource
 
         admin_obj = MessageSourceAdmin(MessageSource, AdminSite())

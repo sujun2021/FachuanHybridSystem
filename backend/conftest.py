@@ -73,6 +73,14 @@ def pytest_configure(config: Any) -> None:
     This avoids the race condition of modifying ``DATABASES`` after settings
     are already cached.
     """
+    # macOS 26 EXC_GUARD workaround: pytest-xdist's execnet uses FD 3 for
+    # inter-process communication, but macOS 26 guards FD 3 (LaunchServices).
+    # When xdist tries dup2() on this guarded FD, the process crashes with
+    # EXC_GUARD. Disable xdist parallelism on macOS 26+ to avoid this.
+    if sys.platform == "darwin" and int(os.uname().release.split(".")[0]) >= 25:
+        config.option.numprocesses = 0
+        config.option.dist = "no"
+
     test_db_name = os.environ.get("TEST_DB_NAME")
     if test_db_name:
         os.environ["DB_NAME"] = test_db_name
@@ -90,9 +98,13 @@ def pytest_configure(config: Any) -> None:
             or lowered_name == "fachuan_ci_test"
         )
         if not is_test_db:
-            import warnings
+            import pytest
 
-            warnings.warn(f"⚠️ 测试正在使用非测试数据库: {db_name}", stacklevel=1)
+            pytest.fail(
+                f"🚨 DANGER: 测试正在使用非测试数据库 '{db_name}'！"
+                f"请设置 DB_NAME 环境变量为测试数据库名称（如 test_fachuan_dev）。",
+                pytrace=False,
+            )
 
 
 @pytest.fixture

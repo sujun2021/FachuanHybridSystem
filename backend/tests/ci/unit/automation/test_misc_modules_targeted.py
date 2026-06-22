@@ -6,10 +6,14 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+
 try:
-    from plugins.court_automation import filing  # noqa: F401
+    from plugins import has_court_login_plugin
+    _HAS_LOGIN = has_court_login_plugin()
 except ImportError:
-    pytest.skip("court_automation plugin not installed", allow_module_level=True)
+    _HAS_LOGIN = False
+
+pytestmark = pytest.mark.skipif(not _HAS_LOGIN, reason="court_login plugin not installed")
 
 
 
@@ -179,13 +183,13 @@ class TestFileUtils:
 
 class TestConcurrencyOptimizerModule:
     def test_import(self):
-        from apps.automation.services.token.concurrency_optimizer import ConcurrencyOptimizer, ConcurrencyConfig
+        from plugins.court_automation.token.concurrency_optimizer import ConcurrencyOptimizer, ConcurrencyConfig
 
         assert ConcurrencyOptimizer is not None
         assert ConcurrencyConfig is not None
 
     def test_concurrency_config_defaults(self):
-        from apps.automation.services.token.concurrency_optimizer import ConcurrencyConfig
+        from plugins.court_automation.token.concurrency_optimizer import ConcurrencyConfig
 
         config = ConcurrencyConfig()
         assert config is not None
@@ -196,7 +200,7 @@ class TestConcurrencyOptimizerModule:
 
 class TestCacheManager:
     def test_import(self):
-        from apps.automation.services.token.cache_manager import TokenCacheManager
+        from plugins.court_automation.token.cache_manager import TokenCacheManager
 
         assert TokenCacheManager is not None
 
@@ -206,7 +210,7 @@ class TestCacheManager:
 
 class TestPerformanceMonitor:
     def test_import(self):
-        from apps.automation.services.token.performance_monitor import PerformanceMonitor
+        from plugins.court_automation.token.performance_monitor import PerformanceMonitor
 
         assert PerformanceMonitor is not None
 
@@ -216,7 +220,7 @@ class TestPerformanceMonitor:
 
 class TestHistoryRecorder:
     def test_import(self):
-        from apps.automation.services.token.history_recorder import TokenHistoryRecorder
+        from plugins.court_automation.token.history_recorder import TokenHistoryRecorder
 
         assert TokenHistoryRecorder is not None
 
@@ -261,56 +265,9 @@ class TestCaptchaService:
 
 class TestBrowserContextFactory:
     def test_import(self):
-        from apps.automation.services.token.browser_context_factory import BrowserContextFactory
+        from plugins.court_automation.token.browser_context_factory import BrowserContextFactory
 
         assert BrowserContextFactory is not None
-
-
-# ── Document delivery services ────────────────────────────────────
-
-
-class TestDocumentDeliveryServices:
-    def test_delivery_import(self):
-        from apps.automation.services.document_delivery.delivery import api_delivery_service
-
-        assert api_delivery_service is not None
-
-    def test_playwright_delivery(self):
-        from apps.automation.services.document_delivery.delivery.playwright_delivery_service import (
-            PlaywrightDeliveryService,
-        )
-
-        assert PlaywrightDeliveryService is not None
-
-    def test_court_api(self):
-        from apps.automation.services.document_delivery.court_api import court_document_api_coordinator
-
-        assert court_document_api_coordinator is not None
-
-    def test_token_service(self):
-        from apps.automation.services.document_delivery.token import document_delivery_token_service
-
-        assert document_delivery_token_service is not None
-
-
-# ── Document delivery data classes ────────────────────────────────
-
-
-class TestDataClasses:
-    def test_import(self):
-        from apps.automation.services.document_delivery.data_classes import DocumentDeliveryRecord
-
-        assert DocumentDeliveryRecord is not None
-
-
-# ── Document delivery query service ───────────────────────────────
-
-
-class TestDocumentDeliveryQueryService:
-    def test_importable(self):
-        import apps.automation.services.document_delivery.query_service as m
-
-        assert m is not None
 
 
 # ── Automation exceptions ─────────────────────────────────────────

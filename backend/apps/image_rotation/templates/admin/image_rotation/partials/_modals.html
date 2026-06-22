@@ -1,0 +1,51 @@
+{# 加载遮罩 #}
+<div class="loading-overlay" x-show="loading">
+    <div style="text-align: center;">
+        <div class="loading-spinner"></div>
+        <div class="loading-text" x-text="loadingText">处理中...</div>
+        <div class="progress-bar" x-show="progress > 0" style="width: 200px; margin-top: 12px;">
+            <div class="progress-fill" :style="'width: ' + progress + '%'"></div>
+        </div>
+    </div>
+</div>
+
+{# 大图预览模态框 #}
+<div class="modal-overlay" x-show="selectedImage" @click.self="selectedImage = null" x-cloak>
+    <div class="modal-content" x-show="selectedImage">
+        <div class="modal-header">
+            <span class="modal-title" x-text="selectedImage?.filename"></span>
+            <button class="modal-close" @click="selectedImage = null">×</button>
+        </div>
+        <canvas x-ref="modalCanvas" class="modal-image"></canvas>
+        <div class="modal-actions">
+            <button class="action-btn" @click="rotateLeft(selectedImage?.id)">左转90°</button>
+            <button class="action-btn" @click="rotateRight(selectedImage?.id)">右转90°</button>
+            <button class="action-btn" @click="rotate180(selectedImage?.id)">旋转180°</button>
+            <button class="action-btn" @click="resetRotation(selectedImage?.id)">恢复原始</button>
+        </div>
+    </div>
+</div>
+
+{# 删除确认弹窗 #}
+<div class="modal-overlay" x-show="showDeleteConfirm" x-cloak>
+    <div class="modal-content" style="max-width: 420px; text-align: center; padding: 32px;">
+        <h3 style="margin: 0 0 12px;">确认删除</h3>
+        <p style="color: var(--fc-text-muted); margin: 0 0 24px;">删除后将无法恢复，所有文件也将被清除。</p>
+        <div style="display: flex; gap: 12px; justify-content: center;">
+            <button class="btn-secondary" @click="showDeleteConfirm = false">取消</button>
+            <button class="btn-primary" style="background: var(--fc-error-text) !important;" @click="executeDeleteJob()">确认删除</button>
+        </div>
+    </div>
+</div>
+
+{# 历史图片预览模态框 #}
+<div class="modal-overlay" x-show="historyPreviewPage" @click.self="historyPreviewPage = null" x-cloak>
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="modal-title" x-text="historyPreviewPage?.suggested_filename || historyPreviewPage?.original_filename"></span>
+            <button class="modal-close" @click="historyPreviewPage = null">×</button>
+        </div>
+        <img :src="historyPreviewPage?.source_image_url" class="modal-image"
+             :style="'transform: rotate(' + (((historyPreviewPage?.onnx_rotation || 0) + (historyPreviewPage?.detected_rotation || 0)) % 360) + 'deg)'">
+    </div>
+</div>

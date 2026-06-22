@@ -141,15 +141,26 @@ _OTHER_TOOLS_APPS = [
             {"name": _("LPR计算器"), "url": "/admin/finance/calculator/"},
         ],
     },
-    {"app_label": "core", "name": _("Valkey 任务队列"), "url": "/admin/core/redisqueuetool/"},
     {"app_label": "organization", "name": _("组织管理"), "url": "/admin/organization/"},
     {"app_label": "auth", "name": _("用户与权限"), "url": "/admin/auth/"},
     {"app_label": "core", "name": _("核心系统"), "url": "/admin/core/"},
     {"app_label": "reminders", "name": _("重要日期提醒"), "url": "/admin/reminders/"},
-    {"app_label": "message_hub", "name": _("信息中转站"), "url": "/admin/message_hub/"},
     {"app_label": "workbench", "name": _("工作台"), "url": "/admin/workbench/"},
     {"app_label": "workflow", "name": _("工作流引擎"), "url": "/admin/workflow/"},
 ]
+
+
+def _build_other_tools_list() -> list[dict[str, Any]]:
+    """构建「其他工具」列表，按 plugin 可用性动态追加条目。"""
+    tools = list(_OTHER_TOOLS_APPS)
+    try:
+        from plugins import has_message_hub_plugin  # type: ignore[attr-defined]
+
+        if has_message_hub_plugin():
+            tools.append({"app_label": "message_hub", "name": _("信息中转站"), "url": "/admin/message_hub/"})
+    except ImportError:
+        pass
+    return tools
 
 # 新用户默认收藏的子工具 URL（首次访问「其他工具」页时自动创建）
 _DEFAULT_FAV_URLS = [
@@ -253,7 +264,7 @@ def _sorted_get_app_list(self: admin.AdminSite, request: HttpRequest, app_label:
             fav_urls = set(_DEFAULT_FAV_URLS)
 
         virtual_models: list[dict[str, Any]] = []
-        for item in _OTHER_TOOLS_APPS:
+        for item in _build_other_tools_list():
             item_label = str(item.get("app_label", ""))
             manual_children = item.get("children")
 
@@ -536,6 +547,15 @@ def _get_urls_with_calculator() -> list[URLResolver | URLPattern]:
             name="automation_tool_favorite_toggle",
         ),
     ]
+    # doc_convert 无 plugin 时跳转肇庆中院官网
+    if not _has_doc_convert_plugin:
+
+        def _doc_convert_redirect(request: HttpRequest) -> HttpResponseRedirect:
+            return HttpResponseRedirect("https://www.gdzqfy.gov.cn")
+
+        custom_urls.append(
+            path("doc_convert/", admin.site.admin_view(_doc_convert_redirect), name="doc_convert_external_redirect"),
+        )
     return custom_urls + urls
 
 
@@ -548,3 +568,55 @@ def _admin_index_redirect(request: HttpRequest) -> HttpResponseRedirect:
 
 
 admin.site.index = admin.site.admin_view(_admin_index_redirect)  # type: ignore[method-assign]
+
+
+# ============================================================
+# Plugin admin 注册（admin_customization.py 在 Django ready 之后导入，可安全使用）
+# ============================================================
+
+_has_message_hub_plugin = False
+try:
+    from plugins import has_message_hub_plugin as _check_mh  # type: ignore[attr-defined]
+
+    if _check_mh():
+        _has_message_hub_plugin = True
+        import plugins.message_hub.admin
+except ImportError:
+    pass
+
+_has_court_token_admin = False
+try:
+    from plugins import has_court_login_plugin as _check_cl  # type: ignore[attr-defined]
+
+    if _check_cl():
+        _has_court_token_admin = True
+        import plugins.court_automation.token_admin
+except ImportError:
+    pass
+
+_has_doc_convert_plugin = False
+try:
+    from plugins import has_doc_convert_plugin as _check_dc  # type: ignore[attr-defined]
+
+    if _check_dc():
+        _has_doc_convert_plugin = True
+        import plugins.doc_convert.admin
+except ImportError:
+    pass
+
+
+# ============================================================
+# each_context monkey-patch — 注入 plugin 状态到模板上下文
+# ============================================================
+
+_original_each_context = admin.site.__class__.each_context
+
+
+def _each_context_with_plugins(self: admin.AdminSite, request: HttpRequest) -> dict[str, Any]:
+    context = _original_each_context(self, request)
+    context["has_message_hub_plugin"] = _has_message_hub_plugin
+    context["has_court_login_plugin"] = _has_court_token_admin
+    return context
+
+
+admin.site.__class__.each_context = _each_context_with_plugins  # type: ignore[assignment]
