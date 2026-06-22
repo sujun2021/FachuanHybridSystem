@@ -547,6 +547,15 @@ def _get_urls_with_calculator() -> list[URLResolver | URLPattern]:
             name="automation_tool_favorite_toggle",
         ),
     ]
+    # doc_convert 无 plugin 时跳转肇庆中院官网
+    if not _has_doc_convert_plugin:
+
+        def _doc_convert_redirect(request: HttpRequest) -> HttpResponseRedirect:
+            return HttpResponseRedirect("https://www.gdzqfy.gov.cn")
+
+        custom_urls.append(
+            path("doc_convert/", admin.site.admin_view(_doc_convert_redirect), name="doc_convert_external_redirect"),
+        )
     return custom_urls + urls
 
 
@@ -582,6 +591,16 @@ try:
     if _check_cl():
         _has_court_token_admin = True
         import plugins.court_automation.token_admin  # noqa: F401 — 触发 @admin.register
+except ImportError:
+    pass
+
+_has_doc_convert_plugin = False
+try:
+    from plugins import has_doc_convert_plugin as _check_dc  # type: ignore[attr-defined]
+
+    if _check_dc():
+        _has_doc_convert_plugin = True
+        import plugins.doc_convert.admin  # noqa: F401 — 触发 @admin.register
 except ImportError:
     pass
 

@@ -1,5 +1,6 @@
-"""doc_convert Admin 模块。"""
+"""Stub: doc_convert admin moved to plugins/doc_convert/admin/"""
 
-from apps.doc_convert.admin.doc_convert_tool_admin import DocConvertToolAdmin
-
-__all__ = ["DocConvertToolAdmin"]
+try:
+    from plugins.doc_convert.admin import DocConvertToolAdmin  # noqa: F401
+except ImportError:
+    pass

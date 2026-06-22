@@ -3,5 +3,9 @@
 This file re-exports from the plugin for backward compatibility.
 """
 
-from plugins.court_automation.login.court_zxfw_service import *  # noqa: F401,F403
-from plugins.court_automation.login.court_zxfw_service import CourtZxfwService  # noqa: F401
+try:
+    from plugins.court_automation.login.court_zxfw_service import *  # noqa: F401,F403
+    from plugins.court_automation.login.court_zxfw_service import CourtZxfwService  # noqa: F401
+
+except ImportError:
+    pass

@@ -165,6 +165,13 @@ try:
         _TEMPLATE_DIRS.append(os.path.join(BASE_DIR, "..", "plugins", "court_automation", "templates"))
 except ImportError:
     pass
+try:
+    from plugins import has_doc_convert_plugin  # type: ignore[attr-defined]
+
+    if has_doc_convert_plugin():
+        _TEMPLATE_DIRS.append(os.path.join(BASE_DIR, "..", "plugins", "doc_convert", "templates"))
+except ImportError:
+    pass
 
 TEMPLATES = [
     {

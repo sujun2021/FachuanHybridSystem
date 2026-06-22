@@ -11,10 +11,16 @@ from typing import Any
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from plugins.court_automation.token.cache_manager import cache_manager
-from plugins.court_automation.token.concurrency_optimizer import concurrency_optimizer
-from plugins.court_automation.token.history_recorder import history_recorder
-from plugins.court_automation.token.performance_monitor import performance_monitor
+try:
+    from plugins.court_automation.token.cache_manager import cache_manager
+    from plugins.court_automation.token.concurrency_optimizer import concurrency_optimizer
+    from plugins.court_automation.token.history_recorder import history_recorder
+    from plugins.court_automation.token.performance_monitor import performance_monitor
+except ImportError:
+    cache_manager = None  # type: ignore[assignment]
+    concurrency_optimizer = None  # type: ignore[assignment]
+    history_recorder = None  # type: ignore[assignment]
+    performance_monitor = None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 
