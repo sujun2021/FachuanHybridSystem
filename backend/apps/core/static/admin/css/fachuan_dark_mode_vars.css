@@ -208,6 +208,10 @@
     border-color: var(--fc-border);
   }
 
+  html:not([data-theme="light"]) .module fieldset {
+    border-color: var(--fc-border);
+  }
+
   html:not([data-theme="light"]) .module caption,
   html:not([data-theme="light"]) .module h2 {
     background: var(--fc-bg-muted);
@@ -332,6 +336,10 @@ html[data-theme="dark"] .form-row .help {
 
 html[data-theme="dark"] .module {
   background: var(--fc-bg-card);
+  border-color: var(--fc-border);
+}
+
+html[data-theme="dark"] .module fieldset {
   border-color: var(--fc-border);
 }
 
