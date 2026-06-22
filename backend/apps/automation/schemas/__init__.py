@@ -28,6 +28,8 @@ from .document import (
     AsyncTaskSubmitOut,
     AutoToolProcessIn,
     AutoToolProcessOut,
+    DocumentProcessIn,
+    DocumentProcessOut,
     OllamaChatIn,
     OllamaChatOut,
 )
@@ -58,6 +60,8 @@ _schema_all = [
     "AutoToolProcessOut",
     "AsyncTaskSubmitOut",
     "AsyncTaskStatusOut",
+    "DocumentProcessIn",
+    "DocumentProcessOut",
     # Captcha
     "CaptchaRecognizeIn",
     "CaptchaRecognizeOut",

@@ -563,27 +563,41 @@ admin.site.index = admin.site.admin_view(_admin_index_redirect)  # type: ignore[
 
 
 # ============================================================
+# Plugin admin 注册（admin_customization.py 在 Django ready 之后导入，可安全使用）
+# ============================================================
+
+_has_message_hub_plugin = False
+try:
+    from plugins import has_message_hub_plugin as _check_mh  # type: ignore[attr-defined]
+
+    if _check_mh():
+        _has_message_hub_plugin = True
+        import plugins.message_hub.admin  # noqa: F401 — 触发 @admin.register
+except ImportError:
+    pass
+
+_has_court_token_admin = False
+try:
+    from plugins import has_court_login_plugin as _check_cl  # type: ignore[attr-defined]
+
+    if _check_cl():
+        _has_court_token_admin = True
+        import plugins.court_automation.token_admin  # noqa: F401 — 触发 @admin.register
+except ImportError:
+    pass
+
+
+# ============================================================
 # each_context monkey-patch — 注入 plugin 状态到模板上下文
 # ============================================================
 
 _original_each_context = admin.site.__class__.each_context
-_mh_admin_registered = False
 
 
 def _each_context_with_plugins(self: admin.AdminSite, request: HttpRequest) -> dict[str, Any]:
-    global _mh_admin_registered
     context = _original_each_context(self, request)
-    try:
-        from plugins import has_message_hub_plugin  # type: ignore[attr-defined]
-
-        has_plugin = has_message_hub_plugin()
-        context["has_message_hub_plugin"] = has_plugin
-        # 懒加载 admin 注册（Django 启动后首次请求时触发一次）
-        if has_plugin and not _mh_admin_registered:
-            _mh_admin_registered = True
-            import plugins.message_hub.admin  # noqa: F401
-    except ImportError:
-        context["has_message_hub_plugin"] = False
+    context["has_message_hub_plugin"] = _has_message_hub_plugin
+    context["has_court_login_plugin"] = _has_court_token_admin
     return context
 
 
