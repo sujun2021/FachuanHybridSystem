@@ -5,6 +5,20 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
+import pytest
+
+try:
+    from apps.automation.services.scraper.core.captcha_recognizer import (
+        ManualCaptchaRecognizer,
+        get_captcha_recognizer,
+        FileBasedCaptchaRecognizer,
+    )
+    _HAS_CAPTCHA = ManualCaptchaRecognizer is not None
+except ImportError:
+    _HAS_CAPTCHA = False
+
+pytestmark = pytest.mark.skipif(not _HAS_CAPTCHA, reason="captcha_recognizer plugin not installed")
+
 
 # ======================================================================
 # ManualCaptchaRecognizer
