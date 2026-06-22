@@ -156,16 +156,16 @@ class CourtSMSAdminBase(admin.ModelAdmin):  # pragma: no cover
     def status_display(self, obj: CourtSMS) -> SafeString:  # pragma: no cover
         """状态显示(带颜色)"""
         status_colors: dict[str, str] = {
-            CourtSMSStatus.PENDING: "orange",
+            CourtSMSStatus.PENDING: "var(--fc-warning-text)",
             CourtSMSStatus.PARSING: "blue",
             CourtSMSStatus.DOWNLOADING: "blue",
-            CourtSMSStatus.DOWNLOAD_FAILED: "red",
+            CourtSMSStatus.DOWNLOAD_FAILED: "var(--fc-error-text)",
             CourtSMSStatus.MATCHING: "blue",
-            CourtSMSStatus.PENDING_MANUAL: "orange",
+            CourtSMSStatus.PENDING_MANUAL: "var(--fc-warning-text)",
             CourtSMSStatus.RENAMING: "blue",
             CourtSMSStatus.NOTIFYING: "blue",
-            CourtSMSStatus.COMPLETED: "green",
-            CourtSMSStatus.FAILED: "red",
+            CourtSMSStatus.COMPLETED: "var(--fc-success-text)",
+            CourtSMSStatus.FAILED: "var(--fc-error-text)",
         }
         color = status_colors.get(obj.status, "gray")
         return format_html('<span style="color: {}; font-weight: bold;">{}</span>', color, obj.get_status_display())
@@ -196,7 +196,7 @@ class CourtSMSAdminBase(admin.ModelAdmin):  # pragma: no cover
             )
         elif obj.status == CourtSMSStatus.PENDING_MANUAL:
             change_url = reverse("admin:automation_courtsms_change", args=[obj.id])
-            return format_html('<a href="{}" style="color: orange; font-weight: bold;">手动关联</a>', change_url)
+            return format_html('<a href="{}" style="color: var(--fc-warning-text); font-weight: bold;">手动关联</a>', change_url)
         return "-"
 
     @admin.display(description=_("短信内容"))
@@ -211,8 +211,8 @@ class CourtSMSAdminBase(admin.ModelAdmin):  # pragma: no cover
     def has_download_links(self, obj: CourtSMS) -> SafeString:  # pragma: no cover
         """是否有下载链接"""
         if obj.download_links:
-            return format_html('<span style="color: green;">✓ {} 个链接</span>', len(obj.download_links))
-        return format_html('<span style="color: gray;">{}</span>', "✗ 无链接")
+            return format_html('<span style="color: var(--fc-success-text);">✓ {} 个链接</span>', len(obj.download_links))
+        return format_html('<span style="color: var(--fc-text-disabled);">{}</span>', "✗ 无链接")
 
     @admin.display(description=_("提取的案号"))
     def case_numbers_display(self, obj: CourtSMS) -> SafeString | str:  # pragma: no cover
@@ -309,10 +309,10 @@ class CourtSMSAdminBase(admin.ModelAdmin):  # pragma: no cover
 
             parts.append(
                 format_html(
-                    "<div style='margin:8px 0;padding:8px 10px;border:1px solid #e6eaf2;border-radius:6px;'>"
+                    "<div style='margin:8px 0;padding:8px 10px;border:1px solid var(--fc-border);border-radius:6px;'>"
                     "<div style='margin-bottom:6px;'>"
                     "<a href='{}' target='_blank'>{}</a>"
-                    " <span style='color:#666;'>[{}/{}]</span>"
+                    " <span style='color:var(--fc-text-muted);'>[{}/{}]</span>"
                     "</div>"
                     "<div style='margin-bottom:8px;'>"
                     "{}"
@@ -320,9 +320,9 @@ class CourtSMSAdminBase(admin.ModelAdmin):  # pragma: no cover
                     "</div>"
                     "<div data-doc-rename-wrap='1' style='display:flex;align-items:center;gap:6px;flex-wrap:wrap;'>"
                     "<input data-rename-stem='1' type='text' value='{}' class='vTextField' style='width:280px;max-width:100%;' />"
-                    "<span style='color:#666;'>{}</span>"
+                    "<span style='color:var(--fc-text-muted);'>{}</span>"
                     "<button type='button' class='button' data-rename-url='{}'>重命名</button>"
-                    "<span style='color:#999;'>仅修改文件名，不改文件格式</span>"
+                    "<span style='color:var(--fc-text-disabled);'>仅修改文件名，不改文件格式</span>"
                     "</div>"
                     "</div>",
                     open_url,
@@ -389,7 +389,7 @@ class CourtSMSAdminBase(admin.ModelAdmin):  # pragma: no cover
             fail_platforms = [k for k, v in results.items() if isinstance(v, dict) and not v.get("success")]
 
             if success_platforms:
-                parts = [mark_safe('<span style="color: green;">✓ 通知成功</span>')]
+                parts = [mark_safe('<span style="color: var(--fc-success-text);">✓ 通知成功</span>')]
                 for p in success_platforms:
                     info = results[p]
                     sent_at = info.get("sent_at", "")
@@ -401,7 +401,7 @@ class CourtSMSAdminBase(admin.ModelAdmin):  # pragma: no cover
                         parts.append(format_html("<br><small>{}</small>", p))
                 if fail_platforms:
                     parts.append(
-                        format_html('<br><small style="color: #d63384;">失败: {}</small>', ", ".join(fail_platforms))
+                        format_html('<br><small style="color: var(--fc-error-text);">失败: {}</small>', ", ".join(fail_platforms))
                     )
                 return mark_safe("".join(str(p) for p in parts))
             elif fail_platforms:
@@ -412,23 +412,23 @@ class CourtSMSAdminBase(admin.ModelAdmin):  # pragma: no cover
                         first_error = err[:30] + ("..." if len(err) > 30 else "")
                         break
                 return format_html(
-                    '<span style="color: red;">✗ 通知失败</span><br><small style="color: #d63384;">{}</small>',
+                    '<span style="color: var(--fc-error-text);">✗ 通知失败</span><br><small style="color: var(--fc-error-text);">{}</small>',
                     first_error,
                 )
 
         # 向后兼容：检查旧的 feishu_sent_at / feishu_error 字段
         if obj.feishu_sent_at:
             return format_html(
-                '<span style="color: green;">✓ 通知成功</span><br><small>{}</small>',
+                '<span style="color: var(--fc-success-text);">✓ 通知成功</span><br><small>{}</small>',
                 obj.feishu_sent_at.strftime("%m-%d %H:%M"),
             )
         elif obj.feishu_error:
             error_preview = obj.feishu_error[:30] + ("..." if len(obj.feishu_error) > 30 else "")
             return format_html(
-                '<span style="color: red;">✗ 通知失败</span><br><small style="color: #d63384;">{}</small>',
+                '<span style="color: var(--fc-error-text);">✗ 通知失败</span><br><small style="color: var(--fc-error-text);">{}</small>',
                 error_preview,
             )
-        return format_html('<span style="color: gray;">{}</span>', "- 未发送")
+        return format_html('<span style="color: var(--fc-text-disabled);">{}</span>', "- 未发送")
 
     @admin.display(description=_("通知详情"))
     def notification_details(self, obj: CourtSMS) -> str:  # pragma: no cover
