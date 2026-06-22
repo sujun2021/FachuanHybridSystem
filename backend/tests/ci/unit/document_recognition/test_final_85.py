@@ -575,17 +575,19 @@ class TestCourtDocumentRecognitionService:
         assert kt == datetime(2024, 6, 15)
 
     def test_extract_doc_info_execution(self):
-        """Note: DocumentType.EXECUTION_RULING.value is 'execution', not 'execution_ruling',
-        so _extract_doc_info returns (None, None) due to a value mismatch in the source."""
         from apps.document_recognition.services.recognition_service import (
             CourtDocumentRecognitionService,
         )
 
-        svc = CourtDocumentRecognitionService()
+        extractor = Mock()
+        extractor.extract_execution_info.return_value = {
+            "case_number": "（2024）京01执123号",
+            "preservation_deadline": datetime(2024, 7, 1),
+        }
+        svc = CourtDocumentRecognitionService(extractor=extractor)
         cn, kt = svc._extract_doc_info(DocumentType.EXECUTION_RULING, "text")
-        # The code checks doc_type.value == "execution_ruling" but enum value is "execution"
-        assert cn is None
-        assert kt is None
+        assert cn == "（2024）京01执123号"
+        assert kt == datetime(2024, 7, 1)
 
     def test_extract_doc_info_other(self):
         from apps.document_recognition.services.recognition_service import (

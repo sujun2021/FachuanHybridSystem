@@ -86,10 +86,7 @@ class TestExtractDocInfo:
             "case_number": "（2024）京01执123号",
             "preservation_deadline": datetime(2024, 7, 1),
         }
-        # Use a mock doc_type with value "execution_ruling" to match the source code check
-        mock_doc_type = MagicMock()
-        mock_doc_type.value = "execution_ruling"
-        cn, kt = svc._extract_doc_info(mock_doc_type, "text")
+        cn, kt = svc._extract_doc_info(DocumentType.EXECUTION_RULING, "text")
         assert cn == "（2024）京01执123号"
         assert kt == datetime(2024, 7, 1)
 

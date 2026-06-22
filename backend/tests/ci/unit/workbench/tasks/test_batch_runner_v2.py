@@ -196,13 +196,14 @@ class TestIncrementCounter:
         job_id = uuid4()
 
         with patch(f"{_MOD}.sync_to_async") as mock_sync:
-            # First call returns current counts, second call is the update
+            # First call: update field, second call: read values, third call: update progress
             mock_sync.side_effect = [
-                AsyncMock(return_value={"total_items": 10, "completed_items": 5, "failed_items": 2}),
-                AsyncMock(),
+                AsyncMock(return_value=None),  # update field
+                AsyncMock(return_value={"total_items": 10, "completed_items": 6, "failed_items": 2}),  # read values
+                AsyncMock(return_value=None),  # update progress
             ]
             await _increment_counter(job_id, "completed_items")
-            assert mock_sync.call_count == 2
+            assert mock_sync.call_count == 3
 
     @pytest.mark.asyncio
     async def test_no_job_returns_early(self):
@@ -211,10 +212,13 @@ class TestIncrementCounter:
         job_id = uuid4()
 
         with patch(f"{_MOD}.sync_to_async") as mock_sync:
-            mock_sync.return_value = AsyncMock(return_value=None)
+            mock_sync.side_effect = [
+                AsyncMock(return_value=None),  # update field
+                AsyncMock(return_value=None),  # read values returns None
+            ]
             await _increment_counter(job_id, "completed_items")
-            # Only the read query, no update
-            assert mock_sync.call_count == 1
+            # update + read, but no progress update since job is None
+            assert mock_sync.call_count == 2
 
     @pytest.mark.asyncio
     async def test_zero_total_items(self):
@@ -223,9 +227,13 @@ class TestIncrementCounter:
         job_id = uuid4()
 
         with patch(f"{_MOD}.sync_to_async") as mock_sync:
-            mock_sync.return_value = AsyncMock(return_value={"total_items": 0, "completed_items": 0, "failed_items": 0})
+            mock_sync.side_effect = [
+                AsyncMock(return_value=None),  # update field
+                AsyncMock(return_value={"total_items": 0, "completed_items": 0, "failed_items": 0}),  # read values
+            ]
             await _increment_counter(job_id, "completed_items")
-            assert mock_sync.call_count == 1
+            # update + read, but no progress update since total_items is 0
+            assert mock_sync.call_count == 2
 
 
 class TestAnalyzeSingleItem:

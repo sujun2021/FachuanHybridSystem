@@ -8,6 +8,12 @@ from unittest.mock import MagicMock, patch
 import pytest
 from django.core.management.base import CommandError
 
+try:
+    from plugins.court_automation.token.cache_manager import TokenCacheManager
+    _HAS_TOKEN_CACHE = True
+except ImportError:
+    _HAS_TOKEN_CACHE = False
+
 
 class TestClearTokenCacheCommand:
     def test_plan_mode_site(self) -> None:
@@ -26,6 +32,7 @@ class TestClearTokenCacheCommand:
         cmd._print_plan(site=None, accounts=[], do_blacklist=False, do_all=True)
         cmd.stdout.write.assert_called()
 
+    @pytest.mark.skipif(not _HAS_TOKEN_CACHE, reason="plugins.court_automation not installed")
     def test_all_with_site_raises(self) -> None:
         from apps.automation.management.commands.clear_token_cache import Command
 
@@ -34,6 +41,7 @@ class TestClearTokenCacheCommand:
         with pytest.raises(CommandError):
             cmd.handle(all=True, site="test", account=[], blacklist=False, execute=False)
 
+    @pytest.mark.skipif(not _HAS_TOKEN_CACHE, reason="plugins.court_automation not installed")
     def test_no_site_no_all_raises(self) -> None:
         from apps.automation.management.commands.clear_token_cache import Command
 

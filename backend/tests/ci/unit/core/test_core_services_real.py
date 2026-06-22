@@ -183,15 +183,20 @@ class TestPermissions:
 
     def test_check_resource_access_authenticated_passes(self) -> None:
         from apps.core.security.permissions import AccessContext, PermissionMixin
+        from apps.core.exceptions import PermissionDenied
 
-        # Authenticated user passes without needing resource_check
+        # Authenticated user with resource_check returning False raises PermissionDenied
         ctx = AccessContext(
             user=SimpleNamespace(is_authenticated=True),
             org_access=None,
             perm_open_access=False,
         )
         mixin = PermissionMixin()
-        mixin.check_resource_access(ctx, lambda c: False)  # should not raise
+        with pytest.raises(PermissionDenied):
+            mixin.check_resource_access(ctx, lambda c: False)
+
+        # Authenticated user with resource_check returning True passes
+        mixin.check_resource_access(ctx, lambda c: True)  # should not raise
 
 
 # ============================================================

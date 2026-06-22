@@ -166,13 +166,14 @@ class TestDjangoPermsMixin:
         self.mixin.ensure_admin(None, perm_open_access=True)  # 不抛异常
 
     def test_ensure_admin_fail(self) -> None:
-        user = SimpleNamespace(is_authenticated=True, is_superuser=False, is_staff=False)
-        # is_authenticated_user 委托到 is_authenticated，所以会通过
-        self.mixin.ensure_admin(user)
+        user = SimpleNamespace(is_authenticated=True, is_superuser=False, is_staff=False, is_admin=False)
+        with pytest.raises(ForbiddenError):
+            self.mixin.ensure_admin(user)
 
     def test_has_perm_authenticated_user(self) -> None:
         user = SimpleNamespace(is_authenticated=True, has_perm=MagicMock(return_value=False))
-        assert self.mixin.has_perm(user, "some.perm") is True  # 已登录用户视为有权限
+        # has_perm 需要 user.has_perm(perm) 为 True 或 is_superuser 为 True
+        assert self.mixin.has_perm(user, "some.perm") is False
 
     def test_has_perm_none(self) -> None:
         assert self.mixin.has_perm(None, "some.perm") is False
@@ -230,7 +231,9 @@ class TestPermissionMixin:
     def test_check_resource_access_authenticated(self) -> None:
         user = SimpleNamespace(is_authenticated=True)
         ctx = self.AccessContext(user=user, org_access=None, perm_open_access=False)
-        self.mixin.check_resource_access(ctx, lambda c: False)  # 通过
+        # resource_check 返回 False 时，即使已认证也会抛出 PermissionDenied
+        with pytest.raises(PermissionDenied):
+            self.mixin.check_resource_access(ctx, lambda c: False)
 
     def test_check_resource_access_denied(self) -> None:
         # user=None => check_authenticated raises AuthenticationError
@@ -241,8 +244,8 @@ class TestPermissionMixin:
     def test_check_resource_access_resource_check_pass(self) -> None:
         user = SimpleNamespace(is_authenticated=True)
         ctx = self.AccessContext(user=user, org_access=None, perm_open_access=False)
-        # 已认证用户通过 is_authenticated_user 检查
-        self.mixin.check_resource_access(ctx, lambda c: False)
+        # resource_check 返回 True 时，已认证用户通过
+        self.mixin.check_resource_access(ctx, lambda c: True)
 
 
 # ============================================================

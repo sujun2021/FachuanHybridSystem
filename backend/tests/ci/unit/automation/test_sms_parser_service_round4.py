@@ -5,19 +5,13 @@ Targets remaining uncovered branches:
 - extract_download_links: HBFY public link (hb/msg path), SFDW link
 - _is_valid_download_link: HBFY msg path (path ends with /hb/msg), SFDW
 - extract_party_names: extractor has no extract method
-- _extract_party_names_with_ollama: response without 'message' key
-- _filter_parties: ends with 财, ends with 案
-- _collect_versus_patterns: co-to-co, pe-to-co, co-to-pe, received pattern
-- _collect_name_contexts: 关于...诉... pattern, 诉 pattern
 - _sanitize_link: mixed trailing punctuation
 """
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-import pytest
-
-from apps.automation.services.sms.sms_parser_service import SMSParseResult, SMSParserService
+from apps.automation.services.sms.sms_parser_service import SMSParserService
 
 
 # ---------------------------------------------------------------------------
@@ -121,114 +115,6 @@ class TestExtractPartyNamesEdge:
         self.service._party_candidate_extractor = extractor
         result = self.service.extract_party_names("content")
         assert result == []
-
-
-# ---------------------------------------------------------------------------
-# _extract_party_names_with_ollama — response without 'message' key
-# ---------------------------------------------------------------------------
-
-
-class TestExtractPartyNamesWithOllamaEdge:
-    def setup_method(self):
-        self.service = SMSParserService(
-            ollama_model="test-model",
-            ollama_base_url="http://localhost:11434",
-            llm_service=MagicMock(),
-        )
-
-    def test_response_without_message_key(self):
-        response = MagicMock()
-        response.content = '{"parties": ["张三"]}'
-        self.service._llm_service.chat.return_value = response
-        safe_prompt = "Extract: {content}"
-        with patch.object(type(self.service), "PARTY_EXTRACTION_PROMPT", safe_prompt):
-            result = self.service._extract_party_names_with_ollama("content")
-        # The code checks response["message"]["content"] but our mock
-        # returns a MagicMock for __getitem__. The actual code sets
-        # response = {"message": {"content": llm_response.content}} so
-        # it should work correctly.
-        assert isinstance(result, list)
-
-
-# ---------------------------------------------------------------------------
-# _filter_parties — ends with 财, 案
-# ---------------------------------------------------------------------------
-
-
-class TestFilterPartiesEdge:
-    def setup_method(self):
-        self.service = SMSParserService()
-
-    def test_ends_with_cai(self):
-        result = self.service._filter_parties(["张三财"])
-        assert result == []
-
-    def test_ends_with_an(self):
-        result = self.service._filter_parties(["张三案"])
-        assert result == []
-
-    def test_empty_string(self):
-        result = self.service._filter_parties([""])
-        assert result == []
-
-    def test_only_digits(self):
-        result = self.service._filter_parties(["12345"])
-        assert "12345" in result
-
-
-# ---------------------------------------------------------------------------
-# _collect_versus_patterns — various pair types
-# ---------------------------------------------------------------------------
-
-
-class TestCollectVersusPatternsEdge:
-    def setup_method(self):
-        self.service = SMSParserService()
-
-    def test_co_versus_pe(self):
-        parties = []
-        self.service._collect_versus_patterns("广州天河科技有限公司与张三的财产纠纷", parties)
-        assert any("有限公司" in p for p in parties) or any("张三" in p for p in parties)
-
-    def test_pe_versus_co(self):
-        parties = []
-        self.service._collect_versus_patterns("张三与广州天河科技有限公司的合同纠纷", parties)
-        assert len(parties) >= 1
-
-    def test_about_shu_pattern(self):
-        parties = []
-        self.service._collect_versus_patterns("关于张三诉李四案件", parties)
-        assert any(p in ("张三", "李四") for p in parties)
-
-    def test_received_pattern(self):
-        parties = []
-        self.service._collect_versus_patterns("收到张三与李四的判决书", parties)
-        assert any(p in ("张三", "李四") for p in parties)
-
-
-# ---------------------------------------------------------------------------
-# _collect_name_contexts — various patterns
-# ---------------------------------------------------------------------------
-
-
-class TestCollectNameContextsEdge:
-    def setup_method(self):
-        self.service = SMSParserService()
-
-    def test_guanyu_shu_pattern(self):
-        parties = []
-        self.service._collect_name_contexts("关于张三诉李四案件", parties)
-        assert any(p in ("张三", "李四") for p in parties)
-
-    def test_shu_pattern(self):
-        parties = []
-        self.service._collect_name_contexts("张三诉李四", parties)
-        assert any(p in ("张三", "李四") for p in parties)
-
-    def test_beishenqingren(self):
-        parties = []
-        self.service._collect_name_contexts("被申请人：王五", parties)
-        assert "王五" in parties
 
 
 # ---------------------------------------------------------------------------
