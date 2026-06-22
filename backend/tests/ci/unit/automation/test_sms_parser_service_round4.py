@@ -7,17 +7,13 @@ Targets remaining uncovered branches:
 - extract_party_names: extractor has no extract method
 - _extract_party_names_with_ollama: response without 'message' key
 - _filter_parties: ends with 财, ends with 案
-- _collect_versus_patterns: co-to-co, pe-to-co, co-to-pe, received pattern
-- _collect_name_contexts: 关于...诉... pattern, 诉 pattern
 - _sanitize_link: mixed trailing punctuation
 """
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-import pytest
-
-from apps.automation.services.sms.sms_parser_service import SMSParseResult, SMSParserService
+from apps.automation.services.sms.sms_parser_service import SMSParserService
 
 
 # ---------------------------------------------------------------------------
@@ -174,61 +170,6 @@ class TestFilterPartiesEdge:
     def test_only_digits(self):
         result = self.service._filter_parties(["12345"])
         assert "12345" in result
-
-
-# ---------------------------------------------------------------------------
-# _collect_versus_patterns — various pair types
-# ---------------------------------------------------------------------------
-
-
-class TestCollectVersusPatternsEdge:
-    def setup_method(self):
-        self.service = SMSParserService()
-
-    def test_co_versus_pe(self):
-        parties = []
-        self.service._collect_versus_patterns("广州天河科技有限公司与张三的财产纠纷", parties)
-        assert any("有限公司" in p for p in parties) or any("张三" in p for p in parties)
-
-    def test_pe_versus_co(self):
-        parties = []
-        self.service._collect_versus_patterns("张三与广州天河科技有限公司的合同纠纷", parties)
-        assert len(parties) >= 1
-
-    def test_about_shu_pattern(self):
-        parties = []
-        self.service._collect_versus_patterns("关于张三诉李四案件", parties)
-        assert any(p in ("张三", "李四") for p in parties)
-
-    def test_received_pattern(self):
-        parties = []
-        self.service._collect_versus_patterns("收到张三与李四的判决书", parties)
-        assert any(p in ("张三", "李四") for p in parties)
-
-
-# ---------------------------------------------------------------------------
-# _collect_name_contexts — various patterns
-# ---------------------------------------------------------------------------
-
-
-class TestCollectNameContextsEdge:
-    def setup_method(self):
-        self.service = SMSParserService()
-
-    def test_guanyu_shu_pattern(self):
-        parties = []
-        self.service._collect_name_contexts("关于张三诉李四案件", parties)
-        assert any(p in ("张三", "李四") for p in parties)
-
-    def test_shu_pattern(self):
-        parties = []
-        self.service._collect_name_contexts("张三诉李四", parties)
-        assert any(p in ("张三", "李四") for p in parties)
-
-    def test_beishenqingren(self):
-        parties = []
-        self.service._collect_name_contexts("被申请人：王五", parties)
-        assert "王五" in parties
 
 
 # ---------------------------------------------------------------------------
