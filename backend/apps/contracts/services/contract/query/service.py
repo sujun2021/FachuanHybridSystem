@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Sum
 
 from apps.contracts.models import Contract
 from apps.core.exceptions import NotFoundError
@@ -24,16 +24,23 @@ class ContractQueryService:
         return self._access_policy
 
     def get_contract_queryset(self) -> QuerySet[Contract, Contract]:
-        return Contract.objects.prefetch_related(
-            "cases",
-            "contract_parties__client",
-            "payments__invoices",
-            "reminders",
-            "assignments__lawyer",
-            "assignments__lawyer__law_firm",
-            "supplementary_agreements__parties__client",
-            "finalized_materials",
-            "client_payment_records",
+        return (
+            Contract.objects.prefetch_related(
+                "cases",
+                "contract_parties__client",
+                "payments__invoices",
+                "reminders",
+                "assignments__lawyer",
+                "assignments__lawyer__law_firm",
+                "supplementary_agreements__parties__client",
+                "finalized_materials",
+                "client_payment_records",
+            )
+            # 用 DB 层聚合替代 ContractOut.resolve_total_received/invoiced 中的 Python 循环求和
+            .annotate(
+                _total_received=Sum("payments__amount"),
+                _total_invoiced=Sum("payments__invoiced_amount"),
+            )
         )
 
     def _apply_list_filters(
@@ -109,15 +116,24 @@ class ContractQueryService:
 
     def get_contract_with_details_model_internal(self, contract_id: int) -> Any:
         try:
-            return Contract.objects.prefetch_related(
-                "contract_parties__client",
-                "assignments__lawyer",
-                "assignments__lawyer__law_firm",
-                "cases__parties__client",
-                "cases__supervising_authorities",
-                "payments__invoices",
-                "finalized_materials",
-                "client_payment_records",
-            ).get(pk=contract_id)
+            return (
+                Contract.objects.prefetch_related(
+                    "contract_parties__client",
+                    "assignments__lawyer",
+                    "assignments__lawyer__law_firm",
+                    "cases__parties__client",
+                    "cases__supervising_authorities",
+                    "payments__invoices",
+                    "reminders",
+                    "supplementary_agreements__parties__client",
+                    "finalized_materials",
+                    "client_payment_records",
+                )
+                .annotate(
+                    _total_received=Sum("payments__amount"),
+                    _total_invoiced=Sum("payments__invoiced_amount"),
+                )
+                .get(pk=contract_id)
+            )
         except Contract.DoesNotExist:
             return None

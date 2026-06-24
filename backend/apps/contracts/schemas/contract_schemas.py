@@ -283,10 +283,30 @@ class ContractOut(ModelSchema):
 
     @staticmethod
     def resolve_reminders(obj: Contract) -> list[Any]:
-        from apps.core.interfaces import ServiceLocator
+        # 优先使用上游已预取的 reminders 数据（ContractQuerySetManager 已包含 "reminders"）
+        # 只处理直接关联到合同的提醒（case_log_id 为空），与 export_contract_reminders_internal 逻辑一致
+        reminders = [r for r in obj.reminders.all() if r.case_log_id is None]
+        # H3 修复：due_at 可能为 None，Python 3 不能比较 None 与 datetime
+        reminders.sort(key=lambda r: (r.due_at is None, r.due_at or "", r.id))
+        # 补充 reminder_type_label（_enrich_export_row 逻辑）
+        from apps.reminders.models import ReminderType
 
-        reminder_service = ServiceLocator.get_reminder_service()
-        return list(reminder_service.export_contract_reminders_internal(contract_id=obj.id))
+        type_label_map = {k: str(v) for k, v in ReminderType.choices}
+        return [
+            {
+                "id": r.id,
+                "contract_id": r.contract_id,
+                "case_id": r.case_id,
+                "case_log_id": r.case_log_id,
+                "reminder_type": r.reminder_type,
+                "content": r.content,
+                "due_at": r.due_at,
+                "metadata": r.metadata,
+                # C1 修复：reminder_type 为 None 时 fallback 应返回 "" 而非 None
+                "reminder_type_label": type_label_map.get(r.reminder_type, r.reminder_type or ""),
+            }
+            for r in reminders
+        ]
 
     @staticmethod
     def resolve_payments(obj: Contract) -> list[Any]:
@@ -298,16 +318,24 @@ class ContractOut(ModelSchema):
 
     @staticmethod
     def resolve_total_received(obj: Contract) -> float:
+        # 优先使用 queryset 层 annotate 的 _total_received（见 contract_api.py）
+        annotated = getattr(obj, "_total_received", None)
+        if annotated is not None:
+            return float(annotated or 0)
         try:
-            return float(sum(float(p.amount or 0) for p in obj.payments.all()))
+            return float(sum(p.amount or 0 for p in obj.payments.all()))
         except (TypeError, ValueError):
             logger.exception("操作失败")
             return 0.0
 
     @staticmethod
     def resolve_total_invoiced(obj: Contract) -> float:
+        # 优先使用 queryset 层 annotate 的 _total_invoiced
+        annotated = getattr(obj, "_total_invoiced", None)
+        if annotated is not None:
+            return float(annotated or 0)
         try:
-            return float(sum(float(p.invoiced_amount or 0) for p in obj.payments.all()))
+            return float(sum(p.invoiced_amount or 0 for p in obj.payments.all()))
         except (TypeError, ValueError):
             logger.exception("操作失败")
             return 0.0
