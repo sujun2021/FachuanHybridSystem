@@ -48,6 +48,12 @@ class LocalProvider:
         target = self._resolve(path)
         return target.read_bytes()
 
+    async def aread_file(self, path: str) -> bytes:
+        """异步读取文件内容"""
+        import asyncio
+        target = self._resolve(path)
+        return await asyncio.to_thread(target.read_bytes)
+
     def write_file(self, path: str, content: bytes) -> None:
         target = self._resolve(path)
         target.parent.mkdir(parents=True, exist_ok=True)
