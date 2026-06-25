@@ -34,6 +34,10 @@ async def achat_with_context(
 ) -> dict[str, str]:
     import asyncio
 
+    if conversation_service_factory is None:
+        from apps.core.services.conversation_service import ConversationService
+        conversation_service_factory = ConversationService
+
     conversation_service = await asyncio.to_thread(
         conversation_service_factory, session_id=session_id, user_id=user_id
     )

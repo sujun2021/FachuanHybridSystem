@@ -324,7 +324,7 @@ async def confirm_archive(request: HttpRequest, contract_id: int) -> Any:  # pra
     await sync_to_async(contract.save)(update_fields=["status"])
 
     # 自动结案关联案件
-    cases = await sync_to_async(list)(contract.cases.all())
+    cases: list = await sync_to_async(lambda: list(contract.cases.all()))()
     for case in cases:
         if case.status != "closed":
             case.status = "closed"
@@ -351,7 +351,7 @@ def upload_archive_item(request: HttpRequest, contract_id: int) -> Any:  # pragm
     from apps.core.services.file_upload_service import FileUploadService
 
     try:
-        FileUploadService().validate_file(uploaded_file)  # type: ignore[arg-type]
+        FileUploadService().validate_file(uploaded_file)
     except Exception as exc:
         return HttpResponse(str(exc), status=400)
 

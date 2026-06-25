@@ -316,14 +316,13 @@ def generate_draft(
         from apps.litigation_ai.services.generation.draft_service import DraftService
 
         service = DraftService()
-        result = service.generate_draft_for_agent(
-            case_id=case_id,
-            document_type=document_type,
-            litigation_goal=litigation_goal,
-            evidence_context=evidence_context,
-        )
+        # NOTE: generate_draft_for_agent is async; this sync stub is never called
+        # in practice because @tool(async_func=_generate_draft_async) routes
+        # async calls to _generate_draft_async instead.
+        # Keeping this as a placeholder for the @tool decorator signature.
+        raise NotImplementedError("Use _generate_draft_async for async execution")
 
-        return result
+        return result  # pragma: no cover
     except Exception as e:
         logger.error(
             "generate_draft 工具执行失败",
