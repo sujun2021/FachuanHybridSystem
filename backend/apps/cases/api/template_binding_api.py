@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 from urllib.parse import quote
 
@@ -51,52 +52,52 @@ def _get_unified_template_generation_service() -> Any:
 
 
 @router.get("/{case_id}/template-bindings", response=BindingsResponseSchema)
-def get_case_template_bindings(request: HttpRequest, case_id: int) -> Any:  # pragma: no cover
+async def get_case_template_bindings(request: HttpRequest, case_id: int) -> Any:  # pragma: no cover
     """
     获取案件绑定的模板列表
 
     按模板分类(case_sub_type)分组返回.
     """
     service = _get_binding_service()
-    return service.get_bindings_for_case(case_id)
+    return await asyncio.to_thread(service.get_bindings_for_case, case_id)
 
 
 @router.post("/{case_id}/template-bindings", response=TemplateBindingSchema)
-def bind_template_to_case(request: HttpRequest, case_id: int, payload: BindTemplateRequestSchema) -> Any:  # pragma: no cover
+async def bind_template_to_case(request: HttpRequest, case_id: int, payload: BindTemplateRequestSchema) -> Any:  # pragma: no cover
     """
     绑定模板到案件
 
     创建手动绑定记录(binding_source='manual_bound').
     """
     service = _get_binding_service()
-    return service.bind_template(case_id, payload.template_id)
+    return await asyncio.to_thread(service.bind_template, case_id, payload.template_id)
 
 
 @router.delete("/{case_id}/template-bindings/{binding_id}", response=SuccessResponseSchema)
-def unbind_template_from_case(request: HttpRequest, case_id: int, binding_id: int) -> dict[str, bool]:  # pragma: no cover
+async def unbind_template_from_case(request: HttpRequest, case_id: int, binding_id: int) -> dict[str, bool]:  # pragma: no cover
     """
     解绑模板
 
     删除指定的绑定记录.
     """
     service = _get_binding_service()
-    service.unbind_template(case_id, binding_id)
+    await asyncio.to_thread(service.unbind_template, case_id, binding_id)
     return {"success": True}
 
 
 @router.get("/{case_id}/available-templates", response=list[AvailableTemplateSchema])
-def get_available_templates(request: HttpRequest, case_id: int) -> Any:  # pragma: no cover
+async def get_available_templates(request: HttpRequest, case_id: int) -> Any:  # pragma: no cover
     """
     获取可绑定的模板列表
 
     返回所有活跃的案件模板,排除已绑定的模板.
     """
     service = _get_binding_service()
-    return service.get_available_templates(case_id)
+    return await asyncio.to_thread(service.get_available_templates, case_id)
 
 
 @router.post("/{case_id}/generate-template")
-def generate_template_document(  # pragma: no cover
+async def generate_template_document(  # pragma: no cover
     request: HttpRequest, case_id: int, payload: GenerateTemplateRequestSchema
 ) -> HttpResponse:
     """
@@ -113,7 +114,8 @@ def generate_template_document(  # pragma: no cover
     Requirements: 2.1, 2.2, 2.3, 2.4, 6.2, 6.3, 7.2, 7.3, 7.4
     """
     service = _get_generation_service()
-    content, filename = service.generate_document(
+    content, filename = await asyncio.to_thread(
+        service.generate_document,
         case_id=case_id,
         template_id=payload.template_id,
         client_id=payload.client_id,
@@ -154,7 +156,7 @@ def _build_file_response(content: bytes, filename: str) -> HttpResponse:
 
 
 @router.post("/{case_id}/unified-generate")
-def unified_generate_template(request: HttpRequest, case_id: int, payload: UnifiedGenerateRequest) -> HttpResponse:  # pragma: no cover
+async def unified_generate_template(request: HttpRequest, case_id: int, payload: UnifiedGenerateRequest) -> HttpResponse:  # pragma: no cover
     """
     统一模板生成 API(新端点)
 
@@ -172,7 +174,8 @@ def unified_generate_template(request: HttpRequest, case_id: int, payload: Unifi
     Requirements: 1.5
     """
     service = _get_unified_template_generation_service()
-    content, filename = service.generate_document(
+    content, filename = await asyncio.to_thread(
+        service.generate_document,
         case_id=case_id,
         template_id=payload.template_id,
         function_code=payload.function_code,

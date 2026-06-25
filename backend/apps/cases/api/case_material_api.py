@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from django.http import HttpRequest
@@ -37,10 +38,11 @@ def _get_caselog_service() -> CaseLogService:
 
 
 @router.get("/{case_id}/materials/bind-candidates", response=list[CaseMaterialBindCandidateOut])
-def list_bind_candidates(request: HttpRequest, case_id: int) -> Any:  # pragma: no cover
+async def list_bind_candidates(request: HttpRequest, case_id: int) -> Any:  # pragma: no cover
     service = _get_case_material_service()
     ctx = get_request_access_context(request)
-    return service.list_bind_candidates(
+    return await asyncio.to_thread(
+        service.list_bind_candidates,
         case_id=case_id,
         user=ctx.user,
         org_access=ctx.org_access,
@@ -50,11 +52,12 @@ def list_bind_candidates(request: HttpRequest, case_id: int) -> Any:  # pragma: 
 
 @router.post("/{case_id}/materials/bind")
 @rate_limit_from_settings("TASK", by_user=True)
-def bind_materials(request: HttpRequest, case_id: int, payload: CaseMaterialBindIn) -> dict[str, int]:  # pragma: no cover
+async def bind_materials(request: HttpRequest, case_id: int, payload: CaseMaterialBindIn) -> dict[str, int]:  # pragma: no cover
     service = _get_case_material_service()
     ctx = get_request_access_context(request)
     items: list[dict[str, Any]] = [x.model_dump() for x in payload.items]
-    saved = service.bind_materials(
+    saved = await asyncio.to_thread(
+        service.bind_materials,
         case_id=case_id,
         items=items,
         user=ctx.user,
@@ -66,10 +69,11 @@ def bind_materials(request: HttpRequest, case_id: int, payload: CaseMaterialBind
 
 @router.post("/{case_id}/materials/group-order")
 @rate_limit_from_settings("TASK", by_user=True)
-def save_group_order(request: HttpRequest, case_id: int, payload: CaseMaterialGroupOrderIn) -> dict[str, bool]:  # pragma: no cover
+async def save_group_order(request: HttpRequest, case_id: int, payload: CaseMaterialGroupOrderIn) -> dict[str, bool]:  # pragma: no cover
     service = _get_case_material_service()
     ctx = get_request_access_context(request)
-    service.save_group_order(
+    await asyncio.to_thread(
+        service.save_group_order,
         case_id=case_id,
         category=payload.category,
         ordered_type_ids=payload.ordered_type_ids,
@@ -84,25 +88,29 @@ def save_group_order(request: HttpRequest, case_id: int, payload: CaseMaterialGr
 
 @router.post("/{case_id}/materials/upload", response=CaseMaterialUploadOut)
 @rate_limit_from_settings("UPLOAD", by_user=True)
-def upload_materials(request: HttpRequest, case_id: int) -> dict[str, Any]:  # pragma: no cover
+async def upload_materials(request: HttpRequest, case_id: int) -> dict[str, Any]:  # pragma: no cover
     service = _get_caselog_service()
     ctx = get_request_access_context(request)
     files = request.FILES.getlist("files") if hasattr(request, "FILES") else []
-    log = service.create_log(  # type: ignore[call-arg, call-arg]
-        case_id=case_id,
-        content="上传材料",
-        user=ctx.user,
-        org_access=ctx.org_access,
-        perm_open_access=ctx.perm_open_access,
-    )
-    created = service.upload_attachments(
-        log_id=log.id,
-        files=files,
-        user=ctx.user,
-        org_access=ctx.org_access,
-        perm_open_access=ctx.perm_open_access,
-    )
-    return {"log_id": log.id, "attachment_ids": [x.id for x in created]}  # type: ignore[attr-defined]
+
+    def _do_upload() -> dict[str, Any]:
+        log = service.create_log(  # type: ignore[call-arg]
+            case_id=case_id,
+            content="上传材料",
+            user=ctx.user,
+            org_access=ctx.org_access,
+            perm_open_access=ctx.perm_open_access,
+        )
+        created = service.upload_attachments(
+            log_id=log.id,
+            files=files,
+            user=ctx.user,
+            org_access=ctx.org_access,
+            perm_open_access=ctx.perm_open_access,
+        )
+        return {"log_id": log.id, "attachment_ids": [x.id for x in created]}  # type: ignore[attr-defined]
+
+    return await asyncio.to_thread(_do_upload)
 
 
 @router.post(
@@ -110,13 +118,14 @@ def upload_materials(request: HttpRequest, case_id: int) -> dict[str, Any]:  # p
     response=CaseMaterialReplaceOut,
 )
 @rate_limit_from_settings("TASK", by_user=True)
-def replace_material_file(  # pragma: no cover
+async def replace_material_file(  # pragma: no cover
     request: HttpRequest, case_id: int, material_id: int, payload: CaseMaterialReplaceIn
 ) -> dict[str, Any]:
     """替换材料对应的附件文件。"""
     service = _get_case_material_service()
     ctx = get_request_access_context(request)
-    return service.replace_material_file(
+    return await asyncio.to_thread(
+        service.replace_material_file,
         case_id=case_id,
         material_id=material_id,
         new_attachment_id=payload.new_attachment_id,
@@ -131,11 +140,12 @@ def replace_material_file(  # pragma: no cover
     response=CaseMaterialGroupRenameOut,
 )
 @rate_limit_from_settings("TASK", by_user=True)
-def rename_group(request: HttpRequest, case_id: int, payload: CaseMaterialGroupRenameIn) -> dict[str, Any]:  # pragma: no cover
+async def rename_group(request: HttpRequest, case_id: int, payload: CaseMaterialGroupRenameIn) -> dict[str, Any]:  # pragma: no cover
     """重命名材料分组。"""
     service = _get_case_material_service()
     ctx = get_request_access_context(request)
-    return service.rename_group(
+    return await asyncio.to_thread(
+        service.rename_group,
         case_id=case_id,
         type_id=payload.type_id,
         new_type_name=payload.new_type_name,
@@ -151,11 +161,12 @@ def rename_group(request: HttpRequest, case_id: int, payload: CaseMaterialGroupR
     response=CaseMaterialDeleteOut,
 )
 @rate_limit_from_settings("TASK", by_user=True)
-def delete_material(request: HttpRequest, case_id: int, material_id: int) -> dict[str, Any]:  # pragma: no cover
+async def delete_material(request: HttpRequest, case_id: int, material_id: int) -> dict[str, Any]:  # pragma: no cover
     """删除材料绑定（附件文件不受影响）。"""
     service = _get_case_material_service()
     ctx = get_request_access_context(request)
-    return service.delete_material(
+    return await asyncio.to_thread(
+        service.delete_material,
         case_id=case_id,
         material_id=material_id,
         user=ctx.user,
@@ -169,11 +180,12 @@ def delete_material(request: HttpRequest, case_id: int, material_id: int) -> dic
     response=CaseMaterialDeleteAllOut,
 )
 @rate_limit_from_settings("TASK", by_user=True)
-def delete_all_materials(request: HttpRequest, case_id: int, payload: CaseMaterialDeleteAllIn) -> dict[str, Any]:  # pragma: no cover
+async def delete_all_materials(request: HttpRequest, case_id: int, payload: CaseMaterialDeleteAllIn) -> dict[str, Any]:  # pragma: no cover
     """按分类删除案件下的所有材料。"""
     service = _get_case_material_service()
     ctx = get_request_access_context(request)
-    return service.delete_all_materials(
+    return await asyncio.to_thread(
+        service.delete_all_materials,
         case_id=case_id,
         category=payload.category,
         user=ctx.user,
