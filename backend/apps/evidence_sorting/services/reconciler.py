@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import re
@@ -172,7 +173,32 @@ class ReconcilerService:
             line_items=items,
         )
 
-    def reconcile(
+    async def parse_statement_async(
+        self,
+        ocr_text: str,
+        backend: str | None = None,
+        model: str | None = None,
+    ) -> StatementInfo:  # pragma: no cover
+        """用 LLM 异步解析对账单 OCR 文本"""
+        from apps.core.llm import get_llm_service
+
+        llm = get_llm_service()
+        prompt = STATEMENT_PARSE_PROMPT.format(ocr_text=ocr_text)
+
+        try:
+            resp = await llm.achat(
+                messages=[{"role": "user", "content": prompt}],
+                backend=backend,
+                model=model,
+                temperature=0.1,
+                fallback=True,
+            )
+            return self._parse_llm_response(resp.content or "")
+        except Exception as e:
+            logger.warning("LLM 异步解析对账单失败: %s", e)
+            return StatementInfo()
+
+    async def reconcile_async(
         self,
         statements: list[dict[str, Any]],
         deliveries: list[dict[str, Any]],
@@ -312,7 +338,135 @@ class ReconcilerService:
         )
         return result
 
-    def _match_delivery(self, line_item: LineItem, delivery: DeliveryNote) -> bool:
+    async def reconcile_async(
+        self,
+        statements: list[dict[str, Any]],
+        deliveries: list[dict[str, Any]],
+        receipts: list[dict[str, Any]],
+        others: list[dict[str, Any]],
+        backend: str | None = None,
+        model: str | None = None,
+    ) -> ReconcileResult:
+        """
+        异步交叉比对（对账单 LLM 解析并发执行）
+
+        Args:
+            statements: 对账单列表
+            deliveries: 出库单列表
+            receipts: 收款凭证列表
+            others: 其他文件列表
+        """
+        result = ReconcileResult(
+            receipts=receipts,
+            others=others,
+        )
+
+        # 1. 并发用 LLM 解析每张对账单
+        parse_tasks = [
+            self.parse_statement_async(st.get("ocr_text", ""), backend=backend, model=model)
+            for st in statements
+        ]
+        parsed_results = await asyncio.gather(*parse_tasks) if parse_tasks else []
+
+        parsed_statements: list[StatementInfo] = []
+        for st, info in zip(statements, parsed_results):
+            info.filename = st.get("filename", "")
+            info.ocr_text = st.get("ocr_text", "")
+            info.image_data = st.get("image_data", "")
+            if not info.signed and st.get("signed"):
+                info.signed = True
+            parsed_statements.append(info)
+
+        # 2. 构建出库单列表
+        delivery_notes: list[DeliveryNote] = []
+        for d in deliveries:
+            delivery_notes.append(
+                DeliveryNote(
+                    filename=d.get("filename", ""),
+                    date=d.get("date"),
+                    amount=d.get("amount"),
+                    ocr_text=d.get("ocr_text", ""),
+                    image_data=d.get("image_data", ""),
+                )
+            )
+
+        # 3-6. 后续匹配逻辑与 reconcile 相同
+        month_map: dict[str, StatementInfo] = {}
+        for st in parsed_statements:
+            month_key = self._extract_month_key(st)
+            if month_key:
+                if month_key not in month_map or (st.signed and not month_map[month_key].signed):
+                    month_map[month_key] = st
+                if not st.signed:
+                    result.unsigned_statements.append(st)
+            else:
+                if not st.signed:
+                    result.unsigned_statements.append(st)
+
+        used_deliveries: set[int] = set()
+
+        for month_key, statement in sorted(month_map.items()):
+            group = MonthGroup(
+                month=month_key,
+                folder_name="",
+                statement=statement,
+            )
+
+            matched_count = 0
+            unmatched_in_statement: list[LineItem] = []
+
+            for li in statement.line_items:
+                found = False
+                for i, dn in enumerate(delivery_notes):
+                    if i in used_deliveries:
+                        continue
+                    if self._match_delivery(li, dn):
+                        dn.match_status = STATUS_MATCHED
+                        group.deliveries.append(dn)
+                        used_deliveries.add(i)
+                        matched_count += 1
+                        found = True
+                        break
+                if not found:
+                    unmatched_in_statement.append(li)
+
+            month_yyyymm = self._month_key_to_yyyymm(month_key)
+            if month_yyyymm:
+                for i, dn in enumerate(delivery_notes):
+                    if i in used_deliveries:
+                        continue
+                    if dn.date and dn.date[:6] == month_yyyymm:
+                        dn.match_status = STATUS_UNMATCHED
+                        dn.remark = "这张单未出现在对账单中"
+                        group.deliveries.append(dn)
+                        used_deliveries.add(i)
+
+            issues: list[str] = []
+            if not statement.signed:
+                issues.append(FOLDER_UNSIGNED)
+            if unmatched_in_statement:
+                if len(group.deliveries) == 0:
+                    issues.append(FOLDER_MISSING_DELIVERY)
+                else:
+                    issues.append(FOLDER_DELIVERY_NOT_ENOUGH)
+            if any(d.match_status == STATUS_UNMATCHED for d in group.deliveries):
+                if FOLDER_DELIVERY_NOT_ENOUGH not in issues and FOLDER_MISSING_DELIVERY not in issues:
+                    issues.append(FOLDER_DELIVERY_MISMATCH)
+
+            group.issues = issues
+            group.folder_name = self._build_folder_name(month_key, statement, group, issues)
+            result.month_groups.append(group)
+
+        for i, dn in enumerate(delivery_notes):
+            if i not in used_deliveries:
+                result.unmatched_deliveries.append(dn)
+
+        logger.info(
+            "比对完成(并发): %d 个月份组, %d 张未匹配出库单",
+            len(result.month_groups),
+            len(result.unmatched_deliveries),
+        )
+        return result(self, line_item: LineItem, delivery: DeliveryNote) -> bool:
         """比对一条对账单明细和一张出库单"""
         # 日期匹配
         if line_item.date and delivery.date:

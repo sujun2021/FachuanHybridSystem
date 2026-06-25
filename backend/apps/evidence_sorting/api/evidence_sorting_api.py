@@ -34,7 +34,7 @@ async def classify_images(request: HttpRequest) -> dict[str, Any]:  # pragma: no
     from apps.evidence_sorting.services.classifier import ClassifierService
 
     svc = ClassifierService()
-    result = await sync_to_async(svc.classify_images, thread_sensitive=False)(images)
+    result = await svc.classify_images_async(images)
 
     return {
         "success": True,
@@ -69,7 +69,7 @@ async def parse_statement(request: HttpRequest) -> dict[str, Any]:  # pragma: no
     from apps.evidence_sorting.services.reconciler import ReconcilerService
 
     svc = ReconcilerService()
-    info = await sync_to_async(svc.parse_statement, thread_sensitive=False)(ocr_text, backend=backend, model=model)
+    info = await svc.parse_statement_async(ocr_text, backend=backend, model=model)
 
     return {
         "success": True,
@@ -94,7 +94,7 @@ async def reconcile(request: HttpRequest) -> dict[str, Any]:  # pragma: no cover
     from apps.evidence_sorting.services.reconciler import ReconcilerService
 
     svc = ReconcilerService()
-    result = await sync_to_async(svc.reconcile, thread_sensitive=False)(
+    result = await svc.reconcile_async(
         statements=statements,
         deliveries=deliveries,
         receipts=receipts,
@@ -166,7 +166,7 @@ async def export_zip(request: HttpRequest) -> dict[str, Any]:  # pragma: no cove
     from apps.evidence_sorting.services.reconciler import ReconcilerService
 
     reconciler = ReconcilerService()
-    result = await sync_to_async(reconciler.reconcile, thread_sensitive=False)(
+    result = await reconciler.reconcile_async(
         statements=statements,
         deliveries=deliveries,
         receipts=receipts,
