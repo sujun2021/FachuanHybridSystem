@@ -265,7 +265,7 @@ def _compile_final_archive_pdf(
 
     import fitz
 
-    from apps.documents.services.infrastructure.pdf_merge_utils import convert_docx_to_pdf
+    from apps.documents.services.infrastructure.pdf_merge_utils import resolve_material_to_temp_pdf
 
     contract_name = contract.name or "未命名合同"
     today_str = date.today().strftime("%Y%m%d")
@@ -298,16 +298,13 @@ def _compile_final_archive_pdf(
             logger.warning("模板文书docx不存在，跳过: %s", docx_path.name)
             continue
 
-        try:
-            pdf_result = convert_docx_to_pdf(str(docx_path))
-            if pdf_result and Path(pdf_result).exists():
-                pdf_path = Path(pdf_result)
-                pdf_files_to_merge.append(pdf_path)
+        pdf_path, is_temp = resolve_material_to_temp_pdf(docx_path)
+        if pdf_path is not None:
+            pdf_files_to_merge.append(pdf_path)
+            if is_temp:
                 temp_pdf_files.append(pdf_path)
-            else:
-                logger.warning("docx转PDF失败: %s", docx_path.name)
-        except Exception as e:
-            logger.warning("docx转PDF异常: %s, error: %s", docx_path.name, e)
+        else:
+            logger.warning("docx转PDF失败: %s", docx_path.name)
 
     if not pdf_files_to_merge:
         for tmp in temp_pdf_files:

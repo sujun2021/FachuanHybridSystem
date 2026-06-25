@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from apps.contracts.services.archive.checklist.case_material_sync import (
     _apply_initial_order_for_synced,
+    _convert_to_pdf_if_needed,
     upload_material_to_archive_item,
 )
 
@@ -97,3 +98,82 @@ class TestResetAndResync:
 
         result = reset_and_resync_case_materials(contract)
         assert result["deleted_count"] == 0
+
+
+class TestConvertToPdfIfNeeded:
+    """_convert_to_pdf_if_needed() 的单元测试。"""
+
+    def test_pdf_passthrough(self, tmp_path):
+        """PDF 文件不处理，原样返回。"""
+        pdf = tmp_path / "contracts" / "finalized" / "1" / "abc.pdf"
+        pdf.parent.mkdir(parents=True)
+        pdf.write_bytes(b"%PDF-1.4")
+
+        with patch("django.conf.settings.MEDIA_ROOT", str(tmp_path)):
+            rel, name = _convert_to_pdf_if_needed(
+                "contracts/finalized/1/abc.pdf", "材料.pdf", 1
+            )
+        assert rel == "contracts/finalized/1/abc.pdf"
+        assert name == "材料.pdf"
+
+    def test_docx_converts_to_pdf(self, tmp_path):
+        """docx 文件转换成功后路径和文件名都更新为 .pdf。"""
+        docx = tmp_path / "contracts" / "finalized" / "1" / "abc.docx"
+        docx.parent.mkdir(parents=True)
+        docx.write_bytes(b"PK\x03\x04")
+
+        fake_pdf = tmp_path / "converted.pdf"
+        fake_pdf.write_bytes(b"%PDF-1.4")
+
+        with (
+            patch("django.conf.settings.MEDIA_ROOT", str(tmp_path)),
+            patch(
+                "apps.documents.services.infrastructure.pdf_merge_utils.resolve_material_to_temp_pdf",
+                return_value=(fake_pdf, True),
+            ),
+        ):
+            rel, name = _convert_to_pdf_if_needed(
+                "contracts/finalized/1/abc.docx", "起诉状.docx", 1
+            )
+
+        assert rel == "contracts/finalized/1/abc.pdf"
+        assert name == "起诉状.pdf"
+        # 原 docx 已被删除
+        assert not docx.exists()
+        # 新 PDF 已移到位
+        assert (tmp_path / "contracts" / "finalized" / "1" / "abc.pdf").exists()
+
+    def test_docx_failure_keeps_original(self, tmp_path):
+        """转换失败时保留原文件。"""
+        docx = tmp_path / "contracts" / "finalized" / "1" / "abc.docx"
+        docx.parent.mkdir(parents=True)
+        docx.write_bytes(b"PK\x03\x04")
+
+        with (
+            patch("django.conf.settings.MEDIA_ROOT", str(tmp_path)),
+            patch(
+                "apps.documents.services.infrastructure.pdf_merge_utils.resolve_material_to_temp_pdf",
+                return_value=(None, False),
+            ),
+        ):
+            rel, name = _convert_to_pdf_if_needed(
+                "contracts/finalized/1/abc.docx", "起诉状.docx", 1
+            )
+
+        assert rel == "contracts/finalized/1/abc.docx"
+        assert name == "起诉状.docx"
+        assert docx.exists()
+
+    def test_xlsx_noop(self, tmp_path):
+        """Excel 文件不处理。"""
+        xlsx = tmp_path / "contracts" / "finalized" / "1" / "abc.xlsx"
+        xlsx.parent.mkdir(parents=True)
+        xlsx.write_bytes(b"PK\x03\x04")
+
+        with patch("django.conf.settings.MEDIA_ROOT", str(tmp_path)):
+            rel, name = _convert_to_pdf_if_needed(
+                "contracts/finalized/1/abc.xlsx", "表格.xlsx", 1
+            )
+
+        assert rel == "contracts/finalized/1/abc.xlsx"
+        assert name == "表格.xlsx"

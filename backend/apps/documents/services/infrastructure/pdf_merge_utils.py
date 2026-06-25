@@ -189,6 +189,45 @@ def convert_docx_to_pdf(docx_path: str) -> str:  # pragma: no cover
         ) from e
 
 
+def resolve_material_to_temp_pdf(file_path: Path) -> tuple[Path | None, bool]:
+    """将归档材料文件解析为 PDF 路径。
+
+    对 doc/docx/image 文件调用 LibreOffice 或 PIL 转换为临时 PDF；
+    已是 PDF 的文件直接返回原路径。
+
+    Returns:
+        (pdf_path, is_temporary)
+        - pdf_path: PDF 文件路径，None 表示转换失败或不支持的格式
+        - is_temporary: True 表示调用方用完需自行删除临时文件
+    """
+    suffix = file_path.suffix.lower()
+
+    if suffix == ".pdf":
+        return file_path, False
+
+    if suffix in (".docx", ".doc"):
+        try:
+            pdf_path = convert_docx_to_pdf(str(file_path))
+            if pdf_path and Path(pdf_path).exists():
+                return Path(pdf_path), True
+            logger.warning("DOCX转PDF失败: %s", file_path.name)
+        except Exception as e:
+            logger.warning("DOCX转PDF异常: %s, error: %s", file_path.name, e)
+        return None, False
+
+    if suffix in (".jpg", ".jpeg", ".png"):
+        try:
+            pdf_path = convert_image_to_pdf(str(file_path))
+            if pdf_path and Path(pdf_path).exists():
+                return Path(pdf_path), True
+            logger.warning("图片转PDF失败: %s", file_path.name)
+        except Exception as e:
+            logger.warning("图片转PDF异常: %s, error: %s", file_path.name, e)
+        return None, False
+
+    return None, False
+
+
 def add_page_numbers(pdf_input: io.BytesIO, start_page: int = 1) -> bytes:  # pragma: no cover
     try:
         from io import BytesIO
