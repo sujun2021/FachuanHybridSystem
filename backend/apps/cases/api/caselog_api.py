@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any, cast
 
 from django.http import HttpRequest
@@ -23,14 +24,15 @@ def _get_caselog_service() -> CaseLogService:
 
 
 @router.get("/logs", response=list[CaseLogOut])
-def list_logs(request: HttpRequest, case_id: int | None = None) -> list[CaseLogOut]:  # pragma: no cover
+async def list_logs(request: HttpRequest, case_id: int | None = None) -> list[CaseLogOut]:  # pragma: no cover
     """获取日志列表"""
     service = _get_caselog_service()
     ctx = extract_request_context(request)
 
     return cast(
         list[CaseLogOut],
-        service.list_logs(
+        await asyncio.to_thread(
+            service.list_logs,
             case_id=case_id,
             user=ctx.user,
             org_access=ctx.org_access,
@@ -40,14 +42,15 @@ def list_logs(request: HttpRequest, case_id: int | None = None) -> list[CaseLogO
 
 
 @router.post("/logs", response=CaseLogOut)
-def create_log(request: HttpRequest, payload: CaseLogIn) -> CaseLogOut:  # pragma: no cover
+async def create_log(request: HttpRequest, payload: CaseLogIn) -> CaseLogOut:  # pragma: no cover
     """创建日志"""
     service = _get_caselog_service()
     ctx = extract_request_context(request)
 
     return cast(
         CaseLogOut,
-        service.create_log(
+        await asyncio.to_thread(
+            service.create_log,
             case_id=payload.case_id,
             content=payload.content,
             user=ctx.user,
@@ -58,14 +61,15 @@ def create_log(request: HttpRequest, payload: CaseLogIn) -> CaseLogOut:  # pragm
 
 
 @router.get("/logs/{log_id}", response=CaseLogOut)
-def get_log(request: HttpRequest, log_id: int) -> CaseLogOut:  # pragma: no cover
+async def get_log(request: HttpRequest, log_id: int) -> CaseLogOut:  # pragma: no cover
     """获取单个日志"""
     service = _get_caselog_service()
     ctx = extract_request_context(request)
 
     return cast(
         CaseLogOut,
-        service.get_log(
+        await asyncio.to_thread(
+            service.get_log,
             log_id=log_id,
             user=ctx.user,
             org_access=ctx.org_access,
@@ -75,7 +79,7 @@ def get_log(request: HttpRequest, log_id: int) -> CaseLogOut:  # pragma: no cove
 
 
 @router.put("/logs/{log_id}", response=CaseLogOut)
-def update_log(request: HttpRequest, log_id: int, payload: CaseLogUpdate) -> CaseLogOut:  # pragma: no cover
+async def update_log(request: HttpRequest, log_id: int, payload: CaseLogUpdate) -> CaseLogOut:  # pragma: no cover
     """更新日志"""
     service = _get_caselog_service()
     ctx = extract_request_context(request)
@@ -84,7 +88,8 @@ def update_log(request: HttpRequest, log_id: int, payload: CaseLogUpdate) -> Cas
 
     return cast(
         CaseLogOut,
-        service.update_log(
+        await asyncio.to_thread(
+            service.update_log,
             log_id=log_id,
             data=data,
             user=ctx.user,
@@ -95,12 +100,13 @@ def update_log(request: HttpRequest, log_id: int, payload: CaseLogUpdate) -> Cas
 
 
 @router.delete("/logs/{log_id}")
-def delete_log(request: HttpRequest, log_id: int) -> Any:  # pragma: no cover
+async def delete_log(request: HttpRequest, log_id: int) -> Any:  # pragma: no cover
     """删除日志"""
     service = _get_caselog_service()
     ctx = extract_request_context(request)
 
-    return service.delete_log(
+    return await asyncio.to_thread(
+        service.delete_log,
         log_id=log_id,
         user=ctx.user,
         org_access=ctx.org_access,
@@ -109,14 +115,15 @@ def delete_log(request: HttpRequest, log_id: int) -> Any:  # pragma: no cover
 
 
 @router.post("/logs/{log_id}/attachments")
-def upload_log_attachments(request: HttpRequest, log_id: int) -> Any:  # pragma: no cover
+async def upload_log_attachments(request: HttpRequest, log_id: int) -> Any:  # pragma: no cover
     """上传日志附件"""
     service = _get_caselog_service()
     ctx = extract_request_context(request)
 
     files = request.FILES.getlist("files") if hasattr(request, "FILES") else []
 
-    return service.upload_attachments(
+    return await asyncio.to_thread(
+        service.upload_attachments,
         log_id=log_id,
         files=files,
         user=ctx.user,

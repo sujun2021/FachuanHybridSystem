@@ -228,6 +228,70 @@ class ConversationService:  # pragma: no cover
 
         return messages
 
+    async def aadd_user_message(self, content: str, metadata: dict[str, Any] | None = None) -> ConversationHistory:  # pragma: no cover
+        """异步添加用户消息"""
+        record = await self._repository.acreate(
+            session_id=self.session_id,
+            user_id=self.user_id,
+            role="user",
+            content=content,
+            metadata=metadata or {},
+        )
+        self.memory.chat_memory.add_user_message(content)
+        return record
+
+    async def aadd_assistant_message(self, content: str, metadata: dict[str, Any] | None = None) -> ConversationHistory:  # pragma: no cover
+        """异步添加助手消息"""
+        record = await self._repository.acreate(
+            session_id=self.session_id,
+            user_id=self.user_id,
+            role="assistant",
+            content=content,
+            metadata=metadata or {},
+        )
+        self.memory.chat_memory.add_ai_message(content)
+        return record
+
+    async def aadd_system_message(self, content: str, metadata: dict[str, Any] | None = None) -> ConversationHistory:  # pragma: no cover
+        """异步添加系统消息"""
+        record = await self._repository.acreate(
+            session_id=self.session_id,
+            user_id=self.user_id,
+            role="system",
+            content=content,
+            metadata=metadata or {},
+            litigation_session_id=None,
+            step="",
+        )
+        return record
+
+    async def achat_with_context(self, user_message: str, system_prompt: str | None = None) -> str:  # pragma: no cover
+        """异步带上下文的对话"""
+        from .wiring import get_llm_service
+
+        await self.aadd_user_message(user_message)
+
+        llm_service = get_llm_service()
+
+        messages: list[dict[str, Any]] = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.extend(self.get_messages_for_llm())
+
+        response = await llm_service.achat(messages, temperature=0.7)
+
+        await self.aadd_assistant_message(
+            response.content,
+            metadata={
+                "model": response.model,
+                "backend": response.backend,
+                "tokens": response.total_tokens,
+                "duration_ms": response.duration_ms,
+            },
+        )
+
+        return str(response.content)
+
     def get_conversation_summary(self) -> str:  # pragma: no cover
         """
         获取对话摘要

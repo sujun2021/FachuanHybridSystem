@@ -11,6 +11,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
+import aiofiles
 import httpx
 
 from apps.core.exceptions import ConfigurationException, MessageSendException
@@ -131,8 +132,9 @@ class TelegramFileMixin:  # pragma: no cover
             # 解析 chat_id 和 message_thread_id
             target_chat_id, message_thread_id = self._parse_chat_id(chat_id)
 
-            with open(file_path, "rb") as file:
-                files = {"document": (file_name, file)}
+            async with aiofiles.open(file_path, "rb") as file:
+                file_data = await file.read()
+                files = {"document": (file_name, file_data)}
                 data: dict[str, Any] = {"chat_id": target_chat_id}
                 if message_thread_id:
                     data["message_thread_id"] = message_thread_id

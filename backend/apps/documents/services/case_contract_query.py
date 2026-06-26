@@ -12,6 +12,11 @@ def get_case_or_none(case_id: int) -> Any:  # pragma: no cover
     return Case.objects.filter(pk=case_id).first()
 
 
+async def aget_case_or_none(case_id: int) -> Any:  # pragma: no cover
+    """异步获取案件实例，不存在返回 None。"""
+    return await Case.objects.filter(pk=case_id).afirst()
+
+
 def get_case_contract_info(case_id: int) -> Any:  # pragma: no cover
     """获取案件绑定的合同 ID 和文件夹绑定 ID。
 
@@ -21,8 +26,22 @@ def get_case_contract_info(case_id: int) -> Any:  # pragma: no cover
     return Case.objects.filter(pk=case_id).values("contract_id", "contract__folder_binding__id").first()
 
 
+async def aget_case_contract_info(case_id: int) -> Any:  # pragma: no cover
+    """异步获取案件绑定的合同 ID 和文件夹绑定 ID。"""
+    return await Case.objects.filter(pk=case_id).values(
+        "contract_id", "contract__folder_binding__id"
+    ).afirst()
+
+
 def get_active_template_or_none(template_id: int) -> Any:  # pragma: no cover
     """获取激活的文档模板，不存在或未激活返回 None。"""
     from apps.documents.models import DocumentTemplate
 
     return DocumentTemplate.objects.filter(pk=template_id, is_active=True).first()
+
+
+async def aget_active_template_or_none(template_id: int) -> Any:  # pragma: no cover
+    """异步获取激活的文档模板，不存在或未激活返回 None。"""
+    from apps.documents.models import DocumentTemplate
+
+    return await DocumentTemplate.objects.filter(pk=template_id, is_active=True).afirst()

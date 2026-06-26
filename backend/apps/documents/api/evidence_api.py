@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from asgiref.sync import sync_to_async
 from django.http import HttpRequest
 from ninja import Router, Schema
 
@@ -43,7 +44,7 @@ class ReorderItemsResponse(Schema):
     response=ReorderItemsResponse,
     summary="重新排序证据明细",
 )
-def reorder_evidence_items(request: HttpRequest, list_id: int, data: ReorderItemsRequest) -> Any:  # pragma: no cover
+async def reorder_evidence_items(request: HttpRequest, list_id: int, data: ReorderItemsRequest) -> Any:  # pragma: no cover
     """
     重新排序证据明细
 
@@ -57,5 +58,5 @@ def reorder_evidence_items(request: HttpRequest, list_id: int, data: ReorderItem
     Requirements: 4.2, 4.3
     """
     service = _get_evidence_service()
-    service.reorder_items(list_id, data.item_ids)
+    await sync_to_async(service.reorder_items)(list_id, data.item_ids)
     return ReorderItemsResponse(success=True, message="排序成功")

@@ -32,17 +32,20 @@ async def achat_with_context(
     system_prompt: str | None = None,
     conversation_service_factory: Callable[..., Any] | None = None,
 ) -> dict[str, str]:
-    from asgiref.sync import sync_to_async
+    import asyncio
 
-    def _run() -> Any:
-        conversation_service = conversation_service_factory(session_id=session_id, user_id=user_id)  # type: ignore[misc]
-        response = conversation_service.chat_with_context(
-            user_message=message,
-            system_prompt=system_prompt,
-        )
-        return {"response": response, "session_id": conversation_service.session_id}
+    if conversation_service_factory is None:
+        from apps.core.services.conversation_service import ConversationService
+        conversation_service_factory = ConversationService
 
-    return cast(dict[str, str], await sync_to_async(_run, thread_sensitive=True)())
+    conversation_service = await asyncio.to_thread(
+        conversation_service_factory, session_id=session_id, user_id=user_id
+    )
+    response = await conversation_service.achat_with_context(
+        user_message=message,
+        system_prompt=system_prompt,
+    )
+    return {"response": response, "session_id": conversation_service.session_id}
 
 
 def _get_conversation_history_service() -> Any:

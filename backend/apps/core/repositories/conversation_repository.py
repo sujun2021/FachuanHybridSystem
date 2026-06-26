@@ -46,3 +46,27 @@ class ConversationHistoryRepository:
 
     def delete_by_session_id(self, session_id: str) -> tuple[int, dict[str, int]]:
         return ConversationHistory.objects.filter(session_id=session_id).delete()
+
+    async def acreate(
+        self,
+        *,
+        session_id: str,
+        user_id: str,
+        role: str,
+        content: str,
+        metadata: dict[str, Any],
+        litigation_session_id: int | None = None,
+        step: str = "",
+    ) -> ConversationHistory:
+        return await ConversationHistory.objects.acreate(
+            session_id=session_id,
+            user_id=user_id,
+            role=role,
+            content=content,
+            metadata=metadata,
+            litigation_session_id=litigation_session_id,
+            step=step,
+        )
+
+    async def adelete_by_session_id(self, session_id: str) -> tuple[int, dict[str, int]]:
+        return await ConversationHistory.objects.filter(session_id=session_id).adelete()

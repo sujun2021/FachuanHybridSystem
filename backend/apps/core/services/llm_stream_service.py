@@ -12,8 +12,6 @@ import time
 from collections.abc import AsyncIterator, Callable
 from typing import Any
 
-from asgiref.sync import sync_to_async
-
 from apps.core.exceptions.error_presentation import ExceptionPresenter
 
 logger = logging.getLogger(__name__)
@@ -41,10 +39,12 @@ async def build_chat_stream(
     Yields:
         SSE 事件的 bytes 数据
     """
+    import asyncio
+
     presenter = ExceptionPresenter()
 
-    conversation_service = await sync_to_async(conversation_service_factory, thread_sensitive=True)(
-        session_id=session_id, user_id=user_id
+    conversation_service = await asyncio.to_thread(
+        conversation_service_factory, session_id=session_id, user_id=user_id
     )
 
     meta_json = json.dumps(
@@ -53,19 +53,20 @@ async def build_chat_stream(
     )
     yield f"data: {meta_json}\n\n".encode()
 
-    await sync_to_async(conversation_service.add_user_message, thread_sensitive=True)(message)
+    await conversation_service.aadd_user_message(message)
 
     base_messages: list[dict[str, str]] = []
     if system_prompt:
         base_messages.append({"role": "system", "content": system_prompt})
-    history = await sync_to_async(conversation_service.get_messages_for_llm, thread_sensitive=True)()
+    # get_messages_for_llm only reads from in-memory cache, no DB call
+    history = conversation_service.get_messages_for_llm()
     base_messages.extend(history)
 
-    llm_service = await sync_to_async(llm_service_factory, thread_sensitive=True)()
+    llm_service = await asyncio.to_thread(llm_service_factory)
 
     from apps.core.services.system_config_service import SystemConfigService
 
-    debug_mode = await sync_to_async(SystemConfigService().get_value)("DEBUG_MODE", "false") in (
+    debug_mode = await SystemConfigService.aget_value("DEBUG_MODE", "false") in (
         "true",
         "1",
         "yes",
@@ -92,7 +93,7 @@ async def build_chat_stream(
 
         content = "".join(full)
         duration_ms = (time.perf_counter() - started_at) * 1000.0
-        await sync_to_async(conversation_service.add_assistant_message, thread_sensitive=True)(
+        await conversation_service.aadd_assistant_message(
             content,
             metadata={
                 "model": last_model,

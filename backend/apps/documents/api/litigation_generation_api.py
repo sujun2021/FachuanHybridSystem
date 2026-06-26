@@ -118,9 +118,9 @@ async def generate_defense(request: Any, data: DefenseRequest) -> Any:  # pragma
 
 
 @router.get("/cases/{case_id}/litigation/{litigation_type}/preview")
-def preview_litigation_context(request: Any, case_id: int, litigation_type: str) -> Any:  # pragma: no cover
+async def preview_litigation_context(request: Any, case_id: int, litigation_type: str) -> Any:  # pragma: no cover
     service = _get_litigation_generation_service()
-    context = service.get_preview_context(case_id, litigation_type)
+    context = await sync_to_async(service.get_preview_context)(case_id, litigation_type)
     return {"success": True, "data": context}
 
 

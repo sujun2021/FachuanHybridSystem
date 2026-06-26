@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import re
@@ -172,7 +173,32 @@ class ReconcilerService:
             line_items=items,
         )
 
-    def reconcile(
+    async def parse_statement_async(
+        self,
+        ocr_text: str,
+        backend: str | None = None,
+        model: str | None = None,
+    ) -> StatementInfo:  # pragma: no cover
+        """用 LLM 异步解析对账单 OCR 文本"""
+        from apps.core.llm import get_llm_service
+
+        llm = get_llm_service()
+        prompt = STATEMENT_PARSE_PROMPT.format(ocr_text=ocr_text)
+
+        try:
+            resp = await llm.achat(
+                messages=[{"role": "user", "content": prompt}],
+                backend=backend,
+                model=model,
+                temperature=0.1,
+                fallback=True,
+            )
+            return self._parse_llm_response(resp.content or "")
+        except Exception as e:
+            logger.warning("LLM 异步解析对账单失败: %s", e)
+            return StatementInfo()
+
+    async def reconcile_async(
         self,
         statements: list[dict[str, Any]],
         deliveries: list[dict[str, Any]],
@@ -182,11 +208,11 @@ class ReconcilerService:
         model: str | None = None,
     ) -> ReconcileResult:
         """
-        交叉比对
+        异步交叉比对（对账单 LLM 解析并发执行）
 
         Args:
-            statements: 对账单列表 [{filename, ocr_text, date, amount, signed, image_data}]
-            deliveries: 出库单列表 [{filename, ocr_text, date, amount, image_data}]
+            statements: 对账单列表
+            deliveries: 出库单列表
             receipts: 收款凭证列表
             others: 其他文件列表
         """
@@ -195,18 +221,18 @@ class ReconcilerService:
             others=others,
         )
 
-        # 1. 用 LLM 解析每张对账单
+        # 1. 并发用 LLM 解析每张对账单
+        parse_tasks = [
+            self.parse_statement_async(st.get("ocr_text", ""), backend=backend, model=model)
+            for st in statements
+        ]
+        parsed_results = await asyncio.gather(*parse_tasks) if parse_tasks else []
+
         parsed_statements: list[StatementInfo] = []
-        for st in statements:
-            info = self.parse_statement(
-                st.get("ocr_text", ""),
-                backend=backend,
-                model=model,
-            )
+        for st, info in zip(statements, parsed_results):
             info.filename = st.get("filename", "")
             info.ocr_text = st.get("ocr_text", "")
             info.image_data = st.get("image_data", "")
-            # 如果 LLM 没检测到签名状态，用分类阶段的结果
             if not info.signed and st.get("signed"):
                 info.signed = True
             parsed_statements.append(info)
@@ -224,23 +250,19 @@ class ReconcilerService:
                 )
             )
 
-        # 3. 按月份分组对账单
+        # 3-6. 后续匹配逻辑与 reconcile 相同
         month_map: dict[str, StatementInfo] = {}
         for st in parsed_statements:
             month_key = self._extract_month_key(st)
             if month_key:
-                # 已签名的优先
                 if month_key not in month_map or (st.signed and not month_map[month_key].signed):
                     month_map[month_key] = st
-                # 未签名的单独收集
                 if not st.signed:
                     result.unsigned_statements.append(st)
             else:
-                # 无法确定月份的对账单
                 if not st.signed:
                     result.unsigned_statements.append(st)
 
-        # 4. 按月份分组出库单并比对
         used_deliveries: set[int] = set()
 
         for month_key, statement in sorted(month_map.items()):
@@ -250,7 +272,6 @@ class ReconcilerService:
                 statement=statement,
             )
 
-            # 找到属于这个月的出库单
             matched_count = 0
             unmatched_in_statement: list[LineItem] = []
 
@@ -269,9 +290,6 @@ class ReconcilerService:
                 if not found:
                     unmatched_in_statement.append(li)
 
-            # 也把日期在这个月范围内但没匹配到明细的出库单加进来
-            month_prefix = month_key.replace("年", "").replace("月", "")
-            # 转为 YYYYMM 格式
             month_yyyymm = self._month_key_to_yyyymm(month_key)
             if month_yyyymm:
                 for i, dn in enumerate(delivery_notes):
@@ -283,7 +301,6 @@ class ReconcilerService:
                         group.deliveries.append(dn)
                         used_deliveries.add(i)
 
-            # 5. 生成文件夹名和问题标注
             issues: list[str] = []
             if not statement.signed:
                 issues.append(FOLDER_UNSIGNED)
@@ -300,13 +317,12 @@ class ReconcilerService:
             group.folder_name = self._build_folder_name(month_key, statement, group, issues)
             result.month_groups.append(group)
 
-        # 6. 未匹配的出库单
         for i, dn in enumerate(delivery_notes):
             if i not in used_deliveries:
                 result.unmatched_deliveries.append(dn)
 
         logger.info(
-            "比对完成: %d 个月份组, %d 张未匹配出库单",
+            "比对完成(并发): %d 个月份组, %d 张未匹配出库单",
             len(result.month_groups),
             len(result.unmatched_deliveries),
         )

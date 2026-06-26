@@ -82,7 +82,8 @@ async def generate_case_folder(request: HttpRequest, case_id: int) -> Any:  # pr
 
     if contract_folder_path:
         parent = Path(contract_folder_path)
-        if not parent.exists():
+        parent_exists = await asyncio.to_thread(parent.exists)
+        if not parent_exists:
             return {"success": False, "message": f"合同绑定文件夹不存在: {contract_folder_path}"}
         try:
             def _extract() -> None:

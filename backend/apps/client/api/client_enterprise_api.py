@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from asgiref.sync import sync_to_async
 from ninja import Router
 
 from apps.client.schemas import EnterpriseClientPrefillOut, EnterpriseCompanySearchOut
@@ -18,7 +19,7 @@ def _get_prefill_service() -> ClientEnterprisePrefillService:
 
 
 @router.get("/clients/enterprise/search", response=EnterpriseCompanySearchOut)
-def search_enterprise_companies(  # pragma: no cover
+async def search_enterprise_companies(  # pragma: no cover
     request: Any,
     keyword: str,
     provider: str | None = None,
@@ -26,15 +27,17 @@ def search_enterprise_companies(  # pragma: no cover
 ) -> EnterpriseCompanySearchOut:
     if limit < 1 or limit > 20:
         raise ValidationException(message="limit 必须在 1 到 20 之间", code="INVALID_LIMIT")
-    payload = _get_prefill_service().search_companies(keyword=keyword, provider=provider, limit=limit)
+    service = _get_prefill_service()
+    payload = await sync_to_async(service.search_companies)(keyword=keyword, provider=provider, limit=limit)
     return EnterpriseCompanySearchOut(**payload)
 
 
 @router.get("/clients/enterprise/prefill", response=EnterpriseClientPrefillOut)
-def get_enterprise_prefill(  # pragma: no cover
+async def get_enterprise_prefill(  # pragma: no cover
     request: Any,
     company_id: str,
     provider: str | None = None,
 ) -> EnterpriseClientPrefillOut:
-    payload = _get_prefill_service().build_prefill(company_id=company_id, provider=provider)
+    service = _get_prefill_service()
+    payload = await sync_to_async(service.build_prefill)(company_id=company_id, provider=provider)
     return EnterpriseClientPrefillOut(**payload)

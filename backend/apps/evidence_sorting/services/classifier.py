@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import logging
 import re
 from dataclasses import dataclass, field
 from importlib import import_module
 from typing import Any
+
+from asgiref.sync import sync_to_async
 
 logger = logging.getLogger("apps.evidence_sorting")
 
@@ -155,6 +158,72 @@ class ClassifierService:
 
         logger.info(
             "分类完成: %d 张图片, %d 个错误",
+            len(result.images),
+            len(result.errors),
+        )
+        return result
+
+    async def classify_images_async(self, images: list[dict[str, Any]]) -> ClassifyResult:
+        """
+        异步批量 OCR + 分类（并发处理，提升吞吐量）
+
+        Args:
+            images: [{"filename": str, "data": str(base64)}]
+
+        Returns:
+            ClassifyResult
+        """
+        result = ClassifyResult()
+        ocr_svc = self._get_ocr_service()
+        detect_fn = sync_to_async(ocr_svc.detect_orientation_with_text, thread_sensitive=False)
+
+        async def _classify_one(idx: int, img: dict[str, Any]) -> ClassifiedImage | None:
+            filename: str = img.get("filename", f"image_{idx}")
+            data: str = img.get("data", "")
+            try:
+                raw_data = data.split(",", 1)[-1] if "," in data else data
+                image_bytes = base64.b64decode(raw_data)
+
+                ocr_result = await detect_fn(image_bytes)
+                ocr_text: str = ocr_result.get("ocr_text", "")
+                rotation: int = ocr_result.get("rotation", 0)
+                confidence: float = ocr_result.get("confidence", 0.0)
+
+                category = self._classify_by_keywords(ocr_text, filename)
+                date = self._extract_date(ocr_text)
+                amount = self._extract_amount(ocr_text)
+
+                signed: bool | None = None
+                if category == TYPE_STATEMENT:
+                    signed = self._detect_signed(ocr_text)
+
+                return ClassifiedImage(
+                    filename=filename,
+                    category=category,
+                    ocr_text=ocr_text,
+                    date=date,
+                    amount=amount,
+                    signed=signed,
+                    confidence=confidence,
+                    image_data=data,
+                    rotation=rotation,
+                )
+            except Exception as e:
+                logger.warning("分类失败: %s - %s", filename, e)
+                result.errors.append(f"{filename}: {e!s}")
+                return ClassifiedImage(
+                    filename=filename,
+                    category=TYPE_OTHER,
+                    ocr_text="",
+                    image_data=data,
+                )
+
+        tasks = [_classify_one(idx, img) for idx, img in enumerate(images)]
+        classified = await asyncio.gather(*tasks)
+        result.images = [img for img in classified if img is not None]
+
+        logger.info(
+            "分类完成(并发): %d 张图片, %d 个错误",
             len(result.images),
             len(result.errors),
         )

@@ -2,6 +2,7 @@
 法院短信处理 API
 """
 
+import asyncio
 import io
 import re
 import zipfile
@@ -9,6 +10,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, cast
 
+from asgiref.sync import sync_to_async
 from django.conf import settings
 from django.http import FileResponse, Http404
 from ninja import Form, Router
@@ -40,7 +42,7 @@ def _get_court_sms_service() -> Any:
 
 
 @router.post("/court-sms", response=CourtSMSSubmitOut)
-def submit_sms(request: Any, payload: CourtSMSSubmitIn) -> CourtSMSSubmitOut:  # pragma: no cover
+async def submit_sms(request: Any, payload: CourtSMSSubmitIn) -> CourtSMSSubmitOut:  # pragma: no cover
     """
     提交法院短信
 
@@ -48,13 +50,13 @@ def submit_sms(request: Any, payload: CourtSMSSubmitIn) -> CourtSMSSubmitOut:  #
     """
     service = _get_court_sms_service()
 
-    sms = service.submit_sms(content=payload.content, received_at=payload.received_at)
+    sms = await sync_to_async(service.submit_sms)(content=payload.content, received_at=payload.received_at)
 
     return CourtSMSSubmitOut(success=True, data={"id": sms.id, "status": sms.status, "created_at": sms.created_at})
 
 
 @router.post("/court-sms/form", response=CourtSMSSubmitOut)
-def submit_sms_form(  # pragma: no cover
+async def submit_sms_form(  # pragma: no cover
     request: Any,
     content: str = Form(...),
     received_at: datetime | None = Form(None),
@@ -66,7 +68,7 @@ def submit_sms_form(  # pragma: no cover
     """
     service = _get_court_sms_service()
 
-    sms = service.submit_sms(content=content, received_at=received_at)
+    sms = await sync_to_async(service.submit_sms)(content=content, received_at=received_at)
 
     return CourtSMSSubmitOut(success=True, data={"id": sms.id, "status": sms.status, "created_at": sms.created_at})
 
@@ -77,7 +79,7 @@ def submit_sms_form(  # pragma: no cover
 
 
 @router.get("/court-sms/{sms_id}", response=CourtSMSDetailOut)
-def get_sms_detail(request: Any, sms_id: int) -> CourtSMSDetailOut:  # pragma: no cover
+async def get_sms_detail(request: Any, sms_id: int) -> CourtSMSDetailOut:  # pragma: no cover
     """
     查询短信处理详情
 
@@ -85,14 +87,14 @@ def get_sms_detail(request: Any, sms_id: int) -> CourtSMSDetailOut:  # pragma: n
     """
     service = _get_court_sms_service()
 
-    sms = service.get_sms_detail(sms_id)
+    sms = await sync_to_async(service.get_sms_detail)(sms_id)
 
     return CourtSMSDetailOut.from_model(sms)
 
 
 @router.get("/court-sms", response=list[CourtSMSListOut])
 @paginate(PageNumberPagination, page_size=20)
-def list_sms(  # pragma: no cover
+async def list_sms(  # pragma: no cover
     request: Any,
     status: str | None = None,
     sms_type: str | None = None,
@@ -107,11 +109,11 @@ def list_sms(  # pragma: no cover
     """
     service = _get_court_sms_service()
 
-    sms_list = service.list_sms(
+    sms_qs = await sync_to_async(service.list_sms)(
         status=status, sms_type=sms_type, has_case=has_case, date_from=date_from, date_to=date_to
     )
 
-    return [CourtSMSListOut.from_model(sms) for sms in sms_list]
+    return [CourtSMSListOut.from_model(sms) async for sms in sms_qs]
 
 
 # ============================================================================
@@ -120,7 +122,7 @@ def list_sms(  # pragma: no cover
 
 
 @router.post("/court-sms/{sms_id}/assign-case", response=CourtSMSAssignCaseOut)
-def assign_case(request: Any, sms_id: int, payload: CourtSMSAssignCaseIn) -> CourtSMSAssignCaseOut:  # pragma: no cover
+async def assign_case(request: Any, sms_id: int, payload: CourtSMSAssignCaseIn) -> CourtSMSAssignCaseOut:  # pragma: no cover
     """
     手动指定案件
 
@@ -128,7 +130,7 @@ def assign_case(request: Any, sms_id: int, payload: CourtSMSAssignCaseIn) -> Cou
     """
     service = _get_court_sms_service()
 
-    sms = service.assign_case(sms_id, payload.case_id)
+    sms = await sync_to_async(service.assign_case)(sms_id, payload.case_id)
 
     return CourtSMSAssignCaseOut(
         success=True,
@@ -146,7 +148,7 @@ def assign_case(request: Any, sms_id: int, payload: CourtSMSAssignCaseIn) -> Cou
 
 
 @router.post("/court-sms/{sms_id}/retry", response=CourtSMSSubmitOut)
-def retry_processing(request: Any, sms_id: int) -> CourtSMSSubmitOut:  # pragma: no cover
+async def retry_processing(request: Any, sms_id: int) -> CourtSMSSubmitOut:  # pragma: no cover
     """
     重新处理短信
 
@@ -155,7 +157,7 @@ def retry_processing(request: Any, sms_id: int) -> CourtSMSSubmitOut:  # pragma:
     """
     service = _get_court_sms_service()
 
-    sms = service.retry_processing(sms_id)
+    sms = await sync_to_async(service.retry_processing)(sms_id)
 
     return CourtSMSSubmitOut(success=True, data={"id": sms.id, "status": sms.status, "created_at": sms.created_at})
 
@@ -166,18 +168,18 @@ def retry_processing(request: Any, sms_id: int) -> CourtSMSSubmitOut:  # pragma:
 
 
 @router.delete("/court-sms/{sms_id}")
-def delete_sms(request: Any, sms_id: int) -> dict[str, bool]:  # pragma: no cover
+async def delete_sms(request: Any, sms_id: int) -> dict[str, bool]:  # pragma: no cover
     """删除单条短信"""
     service = _get_court_sms_service()
-    service.delete_sms(sms_id)
+    await sync_to_async(service.delete_sms)(sms_id)
     return {"success": True}
 
 
 @router.post("/court-sms/batch-delete", response=CourtSMSBatchDeleteOut)
-def batch_delete_sms(request: Any, payload: CourtSMSBatchDeleteIn) -> CourtSMSBatchDeleteOut:  # pragma: no cover
+async def batch_delete_sms(request: Any, payload: CourtSMSBatchDeleteIn) -> CourtSMSBatchDeleteOut:  # pragma: no cover
     """批量删除短信"""
     service = _get_court_sms_service()
-    deleted = service.batch_delete_sms(payload.ids)
+    deleted = await sync_to_async(service.batch_delete_sms)(payload.ids)
     return CourtSMSBatchDeleteOut(deleted=deleted)
 
 
@@ -187,16 +189,16 @@ def batch_delete_sms(request: Any, payload: CourtSMSBatchDeleteIn) -> CourtSMSBa
 
 
 @router.get("/court-sms/{sms_id}/documents/{ref_index}/download")
-def download_document(request: Any, sms_id: int, ref_index: int) -> FileResponse:  # pragma: no cover
+async def download_document(request: Any, sms_id: int, ref_index: int) -> FileResponse:  # pragma: no cover
     """下载单个关联文书"""
     from apps.automation.services.sms.court_sms_document_reference_service import CourtSMSDocumentReferenceService
     from apps.automation.services.sms.court_sms_repository import CourtSMSRepository
 
-    sms = CourtSMSRepository().get_by_id_or_none(sms_id=sms_id)
+    sms = await sync_to_async(CourtSMSRepository().get_by_id_or_none)(sms_id=sms_id)
     if sms is None:
         raise Http404("短信记录不存在")
 
-    references = CourtSMSDocumentReferenceService().collect(sms)
+    references = await sync_to_async(CourtSMSDocumentReferenceService().collect)(sms)
     if ref_index < 0 or ref_index >= len(references):
         raise Http404("文书索引超出范围")
 
@@ -204,20 +206,21 @@ def download_document(request: Any, sms_id: int, ref_index: int) -> FileResponse
     if not file_path.exists() or not file_path.is_file():
         raise Http404("文书文件不存在")
 
-    return FileResponse(file_path.open("rb"), as_attachment=True, filename=file_path.name)
+    file_obj = await asyncio.to_thread(file_path.open, "rb")
+    return FileResponse(file_obj, as_attachment=True, filename=file_path.name)
 
 
 @router.get("/court-sms/{sms_id}/documents/download-all")
-def download_all_documents(request: Any, sms_id: int) -> FileResponse:  # pragma: no cover
+async def download_all_documents(request: Any, sms_id: int) -> FileResponse:  # pragma: no cover
     """批量下载关联文书（ZIP）"""
     from apps.automation.services.sms.court_sms_document_reference_service import CourtSMSDocumentReferenceService
     from apps.automation.services.sms.court_sms_repository import CourtSMSRepository
 
-    sms = CourtSMSRepository().get_by_id_or_none(sms_id=sms_id)
+    sms = await sync_to_async(CourtSMSRepository().get_by_id_or_none)(sms_id=sms_id)
     if sms is None:
         raise Http404("短信记录不存在")
 
-    references = CourtSMSDocumentReferenceService().collect(sms)
+    references = await sync_to_async(CourtSMSDocumentReferenceService().collect)(sms)
     existing_files: list[Path] = []
     for ref in references:
         p = Path(ref.file_path)
@@ -227,34 +230,37 @@ def download_all_documents(request: Any, sms_id: int) -> FileResponse:  # pragma
     if not existing_files:
         raise Http404("没有可下载的文书文件")
 
-    zip_buffer = io.BytesIO()
-    name_count: dict[str, int] = {}
-    with zipfile.ZipFile(zip_buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
-        for fp in existing_files:
-            base = fp.name
-            if base in name_count:
-                name_count[base] += 1
-                arcname = f"{fp.stem}_{name_count[base]}{fp.suffix}"
-            else:
-                name_count[base] = 1
-                arcname = base
-            zf.write(fp, arcname=arcname)
+    def _build_zip() -> io.BytesIO:
+        zip_buffer = io.BytesIO()
+        name_count: dict[str, int] = {}
+        with zipfile.ZipFile(zip_buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+            for fp in existing_files:
+                base = fp.name
+                if base in name_count:
+                    name_count[base] += 1
+                    arcname = f"{fp.stem}_{name_count[base]}{fp.suffix}"
+                else:
+                    name_count[base] = 1
+                    arcname = base
+                zf.write(fp, arcname=arcname)
+        zip_buffer.seek(0)
+        return zip_buffer
 
-    zip_buffer.seek(0)
+    zip_buffer = await asyncio.to_thread(_build_zip)
     return FileResponse(zip_buffer, as_attachment=True, filename=f"courtsms_{sms_id}_documents.zip")
 
 
 @router.post("/court-sms/{sms_id}/documents/{ref_index}/rename")
-def rename_document(request: Any, sms_id: int, ref_index: int, payload: dict[str, Any]) -> dict[str, Any]:  # pragma: no cover
+async def rename_document(request: Any, sms_id: int, ref_index: int, payload: dict[str, Any]) -> dict[str, Any]:  # pragma: no cover
     """重命名单个关联文书"""
     from apps.automation.services.sms.court_sms_document_reference_service import CourtSMSDocumentReferenceService
     from apps.automation.services.sms.court_sms_repository import CourtSMSRepository
 
-    sms = CourtSMSRepository().get_by_id_or_none(sms_id=sms_id)
+    sms = await sync_to_async(CourtSMSRepository().get_by_id_or_none)(sms_id=sms_id)
     if sms is None:
         raise Http404("短信记录不存在")
 
-    references = CourtSMSDocumentReferenceService().collect(sms)
+    references = await sync_to_async(CourtSMSDocumentReferenceService().collect)(sms)
     if ref_index < 0 or ref_index >= len(references):
         return {"success": False, "error": "文书索引超出范围"}
 
@@ -280,7 +286,7 @@ def rename_document(request: Any, sms_id: int, ref_index: int, payload: dict[str
         return {"success": False, "error": f"目标文件已存在：{new_path.name}"}
 
     old_abs = str(file_path.resolve())
-    file_path.rename(new_path)
+    await asyncio.to_thread(file_path.rename, new_path)
     new_abs = str(new_path.resolve())
 
     # 同步引用
@@ -288,6 +294,6 @@ def rename_document(request: Any, sms_id: int, ref_index: int, payload: dict[str
     from apps.automation.models import CourtSMS
 
     admin_instance = CourtSMSAdmin(CourtSMS, None)  # type: ignore[arg-type]
-    admin_instance._sync_document_references(sms, old_abs, new_abs, ref.court_document_id)
+    await sync_to_async(admin_instance._sync_document_references)(sms, old_abs, new_abs, ref.court_document_id)
 
     return {"success": True, "new_name": new_path.name}

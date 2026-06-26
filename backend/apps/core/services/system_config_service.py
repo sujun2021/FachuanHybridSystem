@@ -168,6 +168,21 @@ class SystemConfigService:
         cache.set(cache_key, value, timeout=self._cache_timeout)
         return value
 
+    @classmethod
+    async def aget_value(cls, key: str, default: str = "") -> str:  # pragma: no cover
+        """异步获取配置值 — 使用 async ORM"""
+        config = await SystemConfig.objects.filter(key=key, is_active=True).afirst()
+        if config is None:
+            return default
+        value: str = config.value
+        if config.is_secret:
+            from apps.core.security.secret_codec import SecretCodec
+
+            codec = SecretCodec()
+            if codec.is_encrypted(value):
+                value = codec.decrypt(value)
+        return value
+
     def warm_cache(self, keys: Iterable[str], timeout: int | None = _DEFAULT_CACHE_TIMEOUT_SECONDS) -> dict[str, str]:  # pragma: no cover
         requested = [str(k) for k in keys if str(k)]
         if not requested:

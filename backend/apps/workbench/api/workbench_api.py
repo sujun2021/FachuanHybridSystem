@@ -38,11 +38,11 @@ router = Router(auth=JWTOrSessionAuth())
 
 
 @router.post("/sessions", response=SessionOut)
-def create_session(request: Any, payload: SessionCreateIn) -> Any:  # pragma: no cover
+async def create_session(request: Any, payload: SessionCreateIn) -> Any:  # pragma: no cover
     """创建工作台会话"""
     ctx = extract_request_context(request)
     service = ServiceLocator.get_workbench_session_service()
-    return service.create_session(
+    return await sync_to_async(service.create_session, thread_sensitive=False)(
         title=payload.title,
         llm_model=payload.llm_model,
         user=ctx.user,
@@ -52,11 +52,11 @@ def create_session(request: Any, payload: SessionCreateIn) -> Any:  # pragma: no
 
 
 @router.get("/sessions")
-def list_sessions(request: Any, page: int = 1) -> dict[str, Any]:  # pragma: no cover
+async def list_sessions(request: Any, page: int = 1) -> dict[str, Any]:  # pragma: no cover
     """获取当前用户的工作台会话列表"""
     ctx = extract_request_context(request)
     service = ServiceLocator.get_workbench_session_service()
-    return service.list_sessions(  # type: ignore[no-any-return]
+    return await sync_to_async(service.list_sessions, thread_sensitive=False)(  # type: ignore[no-any-return]
         page=page,
         user=ctx.user,
         org_access=ctx.org_access,
@@ -65,11 +65,11 @@ def list_sessions(request: Any, page: int = 1) -> dict[str, Any]:  # pragma: no 
 
 
 @router.get("/sessions/{session_id}", response=SessionOut)
-def get_session(request: Any, session_id: int) -> Any:  # pragma: no cover
+async def get_session(request: Any, session_id: int) -> Any:  # pragma: no cover
     """获取会话详情"""
     ctx = extract_request_context(request)
     service = ServiceLocator.get_workbench_session_service()
-    return service.get_session(
+    return await sync_to_async(service.get_session, thread_sensitive=False)(
         session_id,
         user=ctx.user,
         org_access=ctx.org_access,
@@ -78,11 +78,11 @@ def get_session(request: Any, session_id: int) -> Any:  # pragma: no cover
 
 
 @router.patch("/sessions/{session_id}", response=SessionOut)
-def update_session(request: Any, session_id: int, payload: SessionUpdateIn) -> Any:  # pragma: no cover
+async def update_session(request: Any, session_id: int, payload: SessionUpdateIn) -> Any:  # pragma: no cover
     """更新会话"""
     ctx = extract_request_context(request)
     service = ServiceLocator.get_workbench_session_service()
-    return service.update_session(
+    return await sync_to_async(service.update_session, thread_sensitive=False)(
         session_id,
         title=payload.title,
         llm_model=payload.llm_model,
@@ -94,11 +94,11 @@ def update_session(request: Any, session_id: int, payload: SessionUpdateIn) -> A
 
 
 @router.delete("/sessions/{session_id}")
-def delete_session(request: Any, session_id: int) -> dict[str, str]:  # pragma: no cover
+async def delete_session(request: Any, session_id: int) -> dict[str, str]:  # pragma: no cover
     """删除会话"""
     ctx = extract_request_context(request)
     service = ServiceLocator.get_workbench_session_service()
-    service.delete_session(
+    await sync_to_async(service.delete_session, thread_sensitive=False)(
         session_id,
         user=ctx.user,
         org_access=ctx.org_access,
@@ -111,7 +111,7 @@ def delete_session(request: Any, session_id: int) -> dict[str, str]:  # pragma: 
 
 
 @router.get("/sessions/{session_id}/messages")
-def list_messages(  # pragma: no cover
+async def list_messages(  # pragma: no cover
     request: Any,
     session_id: int,
     page: int = 1,
@@ -120,7 +120,7 @@ def list_messages(  # pragma: no cover
     """获取会话的消息列表"""
     ctx = extract_request_context(request)
     service = ServiceLocator.get_workbench_message_service()
-    return service.list_messages(  # type: ignore[no-any-return]
+    return await sync_to_async(service.list_messages, thread_sensitive=False)(  # type: ignore[no-any-return]
         session_id,
         page=page,
         before_id=before_id,
@@ -131,11 +131,11 @@ def list_messages(  # pragma: no cover
 
 
 @router.delete("/sessions/{session_id}/messages/from/{message_id}")
-def truncate_messages(request: Any, session_id: int, message_id: int) -> dict[str, str]:  # pragma: no cover
+async def truncate_messages(request: Any, session_id: int, message_id: int) -> dict[str, str]:  # pragma: no cover
     """删除指定消息及其之后的所有消息（用于编辑重发）"""
     ctx = extract_request_context(request)
     service = ServiceLocator.get_workbench_message_service()
-    service.truncate_messages(
+    await sync_to_async(service.truncate_messages, thread_sensitive=False)(
         session_id,
         message_id,
         user=ctx.user,
@@ -153,11 +153,11 @@ class FeedbackIn(Schema):
 
 
 @router.patch("/messages/{message_id}/feedback")
-def submit_feedback(request: Any, message_id: int, payload: FeedbackIn) -> dict[str, Any]:  # pragma: no cover
+async def submit_feedback(request: Any, message_id: int, payload: FeedbackIn) -> dict[str, Any]:  # pragma: no cover
     """提交消息反馈（好评/差评）"""
     ctx = extract_request_context(request)
     service = ServiceLocator.get_workbench_message_service()
-    service.submit_feedback(
+    await sync_to_async(service.submit_feedback, thread_sensitive=False)(
         message_id,
         rating=payload.rating,
         comment=payload.comment,
@@ -226,7 +226,7 @@ def respond_approval(request: Any, payload: ApprovalIn) -> dict[str, Any]:  # pr
 
 
 @router.post("/batch/analyze", response=BatchJobOut)
-def submit_batch_analysis(  # pragma: no cover
+async def submit_batch_analysis(  # pragma: no cover
     request: Any,
     session_id: int = Form(...),
     prompt: str = Form(...),
@@ -237,12 +237,12 @@ def submit_batch_analysis(  # pragma: no cover
     """提交批量文档分析任务"""
     ctx = extract_request_context(request)
     session_service = ServiceLocator.get_workbench_session_service()
-    session_service.get_user_session(ctx.user, session_id)
+    await sync_to_async(session_service.get_user_session, thread_sensitive=False)(ctx.user, session_id)
 
     batch_service = ServiceLocator.get_workbench_batch_service()
     batch_service.validate_files(files)
 
-    job = batch_service.create_job(
+    job = await sync_to_async(batch_service.create_job, thread_sensitive=False)(
         session_id=session_id,
         prompt=prompt,
         llm_model=llm_model,
@@ -253,14 +253,14 @@ def submit_batch_analysis(  # pragma: no cover
 
 
 @router.get("/batch/{job_id}/progress", response=BatchProgressOut)
-def get_batch_progress(request: Any, job_id: UUID) -> dict[str, Any]:  # pragma: no cover
+async def get_batch_progress(request: Any, job_id: UUID) -> dict[str, Any]:  # pragma: no cover
     """查询批量分析任务进度"""
     ctx = extract_request_context(request)
     batch_service = ServiceLocator.get_workbench_batch_service()
     session_service = ServiceLocator.get_workbench_session_service()
 
-    job, items = batch_service.get_job_progress(job_id)
-    session_service.get_user_session(ctx.user, job.session_id)
+    job, items = await sync_to_async(batch_service.get_job_progress, thread_sensitive=False)(job_id)
+    await sync_to_async(session_service.get_user_session, thread_sensitive=False)(ctx.user, job.session_id)
 
     failed_detail = [
         {"id": str(item.id), "file_name": item.file_name, "error": item.error}
@@ -275,16 +275,16 @@ def get_batch_progress(request: Any, job_id: UUID) -> dict[str, Any]:  # pragma:
 
 
 @router.post("/batch/{job_id}/cancel")
-def cancel_batch_analysis(request: Any, job_id: UUID) -> dict[str, Any]:  # pragma: no cover
+async def cancel_batch_analysis(request: Any, job_id: UUID) -> dict[str, Any]:  # pragma: no cover
     """取消批量分析任务"""
     ctx = extract_request_context(request)
     batch_service = ServiceLocator.get_workbench_batch_service()
     session_service = ServiceLocator.get_workbench_session_service()
 
-    job, _ = batch_service.get_job_progress(job_id)
-    session_service.get_user_session(ctx.user, job.session_id)
+    job, _ = await sync_to_async(batch_service.get_job_progress, thread_sensitive=False)(job_id)
+    await sync_to_async(session_service.get_user_session, thread_sensitive=False)(ctx.user, job.session_id)
 
-    job = batch_service.request_cancel(job_id)
+    job = await sync_to_async(batch_service.request_cancel, thread_sensitive=False)(job_id)
     return {
         "success": True,
         "status": job.status,
@@ -293,19 +293,17 @@ def cancel_batch_analysis(request: Any, job_id: UUID) -> dict[str, Any]:  # prag
 
 
 @router.get("/batch/{job_id}/download")
-def download_batch_summary(request: Any, job_id: UUID, relevant_only: bool = False) -> FileResponse:  # pragma: no cover
+async def download_batch_summary(request: Any, job_id: UUID, relevant_only: bool = False) -> FileResponse:  # pragma: no cover
     """下载批量分析汇总 CSV 文件"""
-    from ..tasks.parsing import parse_llm_result
-
     ctx = extract_request_context(request)
     batch_service = ServiceLocator.get_workbench_batch_service()
     session_service = ServiceLocator.get_workbench_session_service()
 
-    job = batch_service.get_job_by_id(job_id)
-    session_service.get_user_session(ctx.user, job.session_id)
+    job = await sync_to_async(batch_service.get_job_by_id, thread_sensitive=False)(job_id)
+    await sync_to_async(session_service.get_user_session, thread_sensitive=False)(ctx.user, job.session_id)
 
     if relevant_only:
-        csv_content = _generate_filtered_csv(job_id, only_relevant=True)
+        csv_content = await asyncio.to_thread(_generate_filtered_csv, job_id, only_relevant=True)
         filename = f"案例分析汇总_相关_{job_id.hex[:8]}.csv"
         return FileResponse(
             io.BytesIO(csv_content.encode("utf-8-sig")),
@@ -435,7 +433,7 @@ def _generate_filtered_zip(job_id: UUID, *, only_relevant: bool) -> bytes:
 
 
 @router.get("/batch/{job_id}/download-detail")
-def download_batch_detail_zip(
+async def download_batch_detail_zip(
     request: Any, job_id: UUID, relevant_only: bool = False
 ) -> FileResponse:  # pragma: no cover
     """下载批量分析详情 ZIP 文件"""
@@ -445,11 +443,11 @@ def download_batch_detail_zip(
     batch_service = ServiceLocator.get_workbench_batch_service()
     session_service = ServiceLocator.get_workbench_session_service()
 
-    job = batch_service.get_job_by_id(job_id)
-    session_service.get_user_session(ctx.user, job.session_id)
+    job = await sync_to_async(batch_service.get_job_by_id, thread_sensitive=False)(job_id)
+    await sync_to_async(session_service.get_user_session, thread_sensitive=False)(ctx.user, job.session_id)
 
     if relevant_only:
-        zip_content = _generate_filtered_zip(job_id, only_relevant=True)
+        zip_content = await asyncio.to_thread(_generate_filtered_zip, job_id, only_relevant=True)
         filename = f"案例分析详情_相关_{job_id.hex[:8]}.zip"
         return FileResponse(
             io.BytesIO(zip_content),
@@ -459,11 +457,12 @@ def download_batch_detail_zip(
         )
 
     if not job.detail_zip_file:
-        if not build_detail_zip_sync(job_id):
+        built = await asyncio.to_thread(build_detail_zip_sync, job_id)
+        if not built:
             from apps.core.exceptions import NotFoundError
 
             raise NotFoundError("分析详情文件不存在")
-        job.refresh_from_db()
+        await sync_to_async(job.refresh_from_db)()
 
     return FileResponse(
         job.detail_zip_file.open("rb"),
@@ -482,7 +481,7 @@ class BatchMessageItemIn(Schema):
 
 
 @router.post("/batch/{job_id}/messages")
-def save_batch_messages(
+async def save_batch_messages(
     request: Any, job_id: UUID, payload: list[BatchMessageItemIn]
 ) -> dict[str, Any]:  # pragma: no cover
     """将批量分析结果持久化为工作台消息"""
@@ -490,10 +489,10 @@ def save_batch_messages(
     batch_service = ServiceLocator.get_workbench_batch_service()
     session_service = ServiceLocator.get_workbench_session_service()
 
-    job = batch_service.get_job_by_id(job_id)
-    session_service.get_user_session(ctx.user, job.session_id)
+    job = await sync_to_async(batch_service.get_job_by_id, thread_sensitive=False)(job_id)
+    await sync_to_async(session_service.get_user_session, thread_sensitive=False)(ctx.user, job.session_id)
 
-    created_count = batch_service.save_batch_messages(
+    created_count = await sync_to_async(batch_service.save_batch_messages, thread_sensitive=False)(
         job_id,
         [{"content": item.content, "metadata": item.metadata} for item in payload],
         user=ctx.user,
@@ -579,27 +578,27 @@ async def stream_batch_progress(request: Any, job_id: UUID) -> StreamingHttpResp
 
 
 @router.post("/batch/{job_id}/retry")
-def retry_failed_items(request: Any, job_id: UUID) -> dict[str, Any]:  # pragma: no cover
+async def retry_failed_items(request: Any, job_id: UUID) -> dict[str, Any]:  # pragma: no cover
     """重试批量分析中失败的文件"""
     ctx = extract_request_context(request)
     batch_service = ServiceLocator.get_workbench_batch_service()
     session_service = ServiceLocator.get_workbench_session_service()
 
-    job, _ = batch_service.get_job_progress(job_id)
-    session_service.get_user_session(ctx.user, job.session_id)
+    job, _ = await sync_to_async(batch_service.get_job_progress, thread_sensitive=False)(job_id)
+    await sync_to_async(session_service.get_user_session, thread_sensitive=False)(ctx.user, job.session_id)
 
-    return batch_service.retry_failed(job_id)  # type: ignore[no-any-return]
+    return await sync_to_async(batch_service.retry_failed, thread_sensitive=False)(job_id)  # type: ignore[no-any-return]
 
 
 @router.get("/sessions/{session_id}/batch-jobs")
-def list_batch_jobs(request: Any, session_id: int, page: int = 1) -> dict[str, Any]:  # pragma: no cover
+async def list_batch_jobs(request: Any, session_id: int, page: int = 1) -> dict[str, Any]:  # pragma: no cover
     """获取会话的批量分析任务历史"""
     ctx = extract_request_context(request)
     session_service = ServiceLocator.get_workbench_session_service()
-    session_service.get_user_session(ctx.user, session_id)
+    await sync_to_async(session_service.get_user_session, thread_sensitive=False)(ctx.user, session_id)
 
     batch_service = ServiceLocator.get_workbench_batch_service()
-    return batch_service.list_batch_jobs(  # type: ignore[no-any-return]
+    return await sync_to_async(batch_service.list_batch_jobs, thread_sensitive=False)(  # type: ignore[no-any-return]
         session_id,
         page=page,
         user=ctx.user,

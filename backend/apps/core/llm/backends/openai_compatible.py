@@ -279,8 +279,8 @@ class OpenAICompatibleBackend:
             payload["extra_body"] = extra
 
         start_time = time.time()
+        async_client = await self._build_async_client(timeout_seconds=request_timeout)
         try:
-            async_client = await self._build_async_client(timeout_seconds=request_timeout)
             response = await async_client.chat.completions.create(**payload)
         except Exception as error:
             base_url = (
@@ -289,6 +289,8 @@ class OpenAICompatibleBackend:
                 else await LLMConfig.get_openai_compatible_base_url_async()
             )
             self._raise_mapped_error(error, request_timeout, base_url)
+        finally:
+            await async_client.close()
 
         duration_ms = (time.time() - start_time) * 1000
         usage = self._extract_usage(getattr(response, "usage", None))
@@ -371,8 +373,8 @@ class OpenAICompatibleBackend:
         if extra:
             payload["extra_body"] = extra
 
+        async_client = await self._build_async_client(timeout_seconds=request_timeout)
         try:
-            async_client = await self._build_async_client(timeout_seconds=request_timeout)
             stream = await async_client.chat.completions.create(**payload)
             async for chunk in stream:
                 choices = getattr(chunk, "choices", None) or []
@@ -392,6 +394,8 @@ class OpenAICompatibleBackend:
                 else await LLMConfig.get_openai_compatible_base_url_async()
             )
             self._raise_mapped_error(error, request_timeout, base_url)
+        finally:
+            await async_client.close()
 
     # ── 接口方法 ─────────────────────────────────────────────────────────────
 

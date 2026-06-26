@@ -1,6 +1,7 @@
 import logging
 from typing import Any
 
+from asgiref.sync import sync_to_async
 from ninja import File, Router, Schema
 from ninja.files import UploadedFile
 
@@ -35,7 +36,7 @@ def _get_id_card_merge_service() -> Any:
 
 
 @router.post("/identity-doc/recognize", response=IdentityRecognizeOut)
-def recognize_identity_doc(  # pragma: no cover
+async def recognize_identity_doc(  # pragma: no cover
     request: Any,
     file: UploadedFile = File(...),
     doc_type: str = "auto",
@@ -52,7 +53,7 @@ def recognize_identity_doc(  # pragma: no cover
         normalized_model,
         getattr(file, "name", ""),
     )
-    result = service.safe_extract(
+    result = await sync_to_async(service.safe_extract)(
         image_bytes,
         normalized_doc_type,
         model=normalized_model,

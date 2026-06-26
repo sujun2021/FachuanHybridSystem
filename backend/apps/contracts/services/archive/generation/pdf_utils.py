@@ -316,6 +316,8 @@ def compile_case_materials_pdf(
     merged_doc = fitz.open()
 
     try:
+        from apps.documents.services.infrastructure.pdf_merge_utils import resolve_material_to_temp_pdf
+
         for material in materials_to_merge:
             file_path = Path(material.file_path)
             if not file_path.is_absolute():
@@ -325,34 +327,23 @@ def compile_case_materials_pdf(
                 logger.warning("案卷材料文件不存在: %s", material.original_filename)
                 continue
 
-            suffix = file_path.suffix.lower()
+            pdf_path, is_temp = resolve_material_to_temp_pdf(file_path)
+            if pdf_path is None:
+                logger.warning("不支持的文件类型或转换失败: %s", material.original_filename)
+                continue
 
-            if suffix == ".pdf":
-                try:
-                    src_doc = fitz.open(str(file_path))
-                    merged_doc.insert_pdf(src_doc)
-                    src_doc.close()
-                except Exception as e:
-                    logger.warning("合并PDF失败: %s, error: %s", material.original_filename, e)
-            elif suffix == ".docx":
-                try:
-                    from apps.documents.services.infrastructure.pdf_merge_utils import convert_docx_to_pdf
-
-                    pdf_result = convert_docx_to_pdf(str(file_path))
-                    if pdf_result and Path(pdf_result).exists():
-                        src_doc = fitz.open(pdf_result)
-                        merged_doc.insert_pdf(src_doc)
-                        src_doc.close()
-                        try:
-                            Path(pdf_result).unlink()
-                        except OSError:
-                            pass
-                    else:
-                        logger.warning("DOCX转PDF失败: %s", material.original_filename)
-                except (OSError, ValueError) as e:
-                    logger.warning("DOCX转PDF失败: %s, error: %s", material.original_filename, e)
-            else:
-                logger.warning("不支持的文件类型: %s (%s)", suffix, material.original_filename)
+            try:
+                src_doc = fitz.open(str(pdf_path))
+                merged_doc.insert_pdf(src_doc)
+                src_doc.close()
+            except Exception as e:
+                logger.warning("合并PDF失败: %s, error: %s", material.original_filename, e)
+            finally:
+                if is_temp:
+                    try:
+                        pdf_path.unlink(missing_ok=True)
+                    except OSError:
+                        pass
 
         if len(merged_doc) == 0:
             return {"written": False, "skipped": True, "page_count": 0, "error": "没有可合并的文件"}

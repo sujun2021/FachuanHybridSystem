@@ -6,6 +6,7 @@ import mimetypes
 from pathlib import Path
 from typing import Any
 
+import aiofiles
 import httpx
 
 from apps.core.exceptions import ConfigurationException, MessageSendException
@@ -217,8 +218,9 @@ class FeishuFileMixin:  # pragma: no cover
             file_name = Path(file_path).name
             file_type = self._get_file_type(file_path)
 
-            with open(file_path, "rb") as file:
-                files = {"file": (file_name, file, self._get_mime_type(file_path))}
+            async with aiofiles.open(file_path, "rb") as file:
+                file_data = await file.read()
+                files = {"file": (file_name, file_data, self._get_mime_type(file_path))}
                 data: dict[str, str] = {"file_type": file_type, "file_name": file_name}
 
                 timeout = self.config.get("TIMEOUT", 30)

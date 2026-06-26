@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import shutil
 from pathlib import Path
 from typing import Any
 
@@ -14,6 +15,66 @@ from ..constants import ARCHIVE_CHECKLIST, ARCHIVE_SUBITEM_ORDER_RULES, CASE_MAT
 from .material_mapping import match_type_name_to_code
 
 logger = logging.getLogger("apps.contracts.archive")
+
+
+def _convert_to_pdf_if_needed(
+    rel_path: str,
+    safe_name: str,
+    contract_id: int,
+) -> tuple[str, str]:
+    """将 doc/docx/image 文件自动转为 PDF，已是 PDF 则不处理。
+
+    转换成功后原文件被删除，返回新的 (rel_path, safe_name)。
+    转换失败时保留原文件，graceful degradation。
+    """
+    from django.conf import settings as django_settings
+
+    from apps.documents.services.infrastructure.pdf_merge_utils import resolve_material_to_temp_pdf
+
+    abs_path = Path(django_settings.MEDIA_ROOT) / rel_path
+    if not abs_path.exists():
+        return rel_path, safe_name
+
+    pdf_path, is_temp = resolve_material_to_temp_pdf(abs_path)
+    if pdf_path is None or not is_temp:
+        # 已是 PDF 或转换失败，不处理
+        return rel_path, safe_name
+
+    try:
+        # 保留原目录和 UUID 文件名，只改后缀
+        new_abs = abs_path.with_suffix(".pdf")
+        shutil.move(str(pdf_path), str(new_abs))
+
+        # 删除原文件
+        try:
+            abs_path.unlink()
+        except OSError:
+            pass
+
+        new_rel = rel_path.rsplit(".", 1)[0] + ".pdf"
+        new_name = safe_name.rsplit(".", 1)[0] + ".pdf" if "." in safe_name else safe_name + ".pdf"
+
+        logger.info(
+            "归档材料已自动转PDF: %s → %s (contract_id=%s)",
+            safe_name,
+            new_name,
+            contract_id,
+        )
+        return new_rel, new_name
+
+    except Exception as e:
+        logger.warning(
+            "归档材料转PDF后保存失败: %s, error=%s (contract_id=%s)",
+            safe_name,
+            e,
+            contract_id,
+        )
+        # 清理临时文件
+        try:
+            pdf_path.unlink(missing_ok=True)
+        except OSError:
+            pass
+        return rel_path, safe_name
 
 
 def get_case_material_match_map(
@@ -331,6 +392,8 @@ def upload_material_to_archive_item(
         max_size_bytes=50 * 1024 * 1024,
     )
 
+    rel_path, safe_name = _convert_to_pdf_if_needed(rel_path, safe_name, contract.id)
+
     max_order = (
         FinalizedMaterial.objects.filter(
             contract=contract,
@@ -397,6 +460,8 @@ def _copy_case_material_to_finalized(
         max_size_bytes=50 * 1024 * 1024,
     )
 
+    rel_path, safe_name = _convert_to_pdf_if_needed(rel_path, safe_name, contract.id)
+
     material = FinalizedMaterial.objects.create(
         contract=contract,
         file_path=rel_path,
@@ -440,7 +505,7 @@ def _apply_initial_order_for_synced(synced: list[dict[str, Any]]) -> None:  # pr
         if not keywords or len(materials) <= 1:
             continue
 
-        def _sort_key(mat: FinalizedMaterial, _keywords: tuple[str, ...] = tuple(keywords)) -> tuple[int, int]:  # type: ignore[arg-type]
+        def _sort_key(mat: FinalizedMaterial, _keywords: tuple[str, ...] = tuple(keywords)) -> tuple[int, int]:
             for i, keyword in enumerate(_keywords):
                 if keyword in mat.original_filename:
                     return (0, i)

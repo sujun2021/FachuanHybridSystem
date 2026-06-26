@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
+from asgiref.sync import sync_to_async
 from django.utils import timezone
 from ninja import Router
 
@@ -20,17 +22,17 @@ router = Router(auth=JWTOrSessionAuth())
 
 @router.post("/cases/{case_id}/templates/{template_id}/download")
 @rate_limit_from_settings("EXPORT", by_user=True)
-def download_case_template(request: Any, case_id: int, template_id: int) -> Any:  # pragma: no cover
+async def download_case_template(request: Any, case_id: int, template_id: int) -> Any:  # pragma: no cover
     """渲染案件文件模板并下载"""
-    from apps.documents.services.case_contract_query import get_active_template_or_none, get_case_or_none
+    from apps.documents.services.case_contract_query import aget_active_template_or_none, aget_case_or_none
     from apps.documents.services.generation.pipeline import DocxRenderer
     from apps.documents.services.placeholders import EnhancedContextBuilder
 
-    case = get_case_or_none(case_id)
+    case = await aget_case_or_none(case_id)
     if not case:
         raise NotFoundError(message="案件不存在", code="CASE_NOT_FOUND", errors={"case_id": str(case_id)})
 
-    template = get_active_template_or_none(template_id)
+    template = await aget_active_template_or_none(template_id)
     if not template:
         raise NotFoundError(message="模板不存在", code="TEMPLATE_NOT_FOUND", errors={"template_id": str(template_id)})
 
@@ -38,8 +40,10 @@ def download_case_template(request: Any, case_id: int, template_id: int) -> Any:
     if not file_path:
         raise ValidationException(message="模板文件路径为空", code="TEMPLATE_FILE_EMPTY", errors={})
 
-    context = EnhancedContextBuilder().build_context({"case": case, "case_id": case.id})
-    content = DocxRenderer().render(file_path, context)
+    context_builder = EnhancedContextBuilder()
+    context = await asyncio.to_thread(context_builder.build_context, {"case": case, "case_id": case.id})
+    renderer = DocxRenderer()
+    content = await asyncio.to_thread(renderer.render, file_path, context)
 
     date_str = timezone.now().strftime("%Y%m%d")
     filename = f"{template.name}({case.name or '案件'})V1_{date_str}.docx"

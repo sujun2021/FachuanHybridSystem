@@ -252,6 +252,7 @@ async def get_statistics(request: HttpRequest) -> dict[str, Any]:  # pragma: no 
 @router.get("/{template_id}/preview-html")
 async def get_preview_html(request: HttpRequest, template_id: int) -> dict[str, Any]:  # pragma: no cover
     """将 docx 转为 HTML 用于预览"""
+    import asyncio
     from pathlib import Path
 
     import mammoth
@@ -262,7 +263,11 @@ async def get_preview_html(request: HttpRequest, template_id: int) -> dict[str, 
     template = await sync_to_async(get_template_or_raise)(template_id)
     abs_path = Path(settings.MEDIA_ROOT) / template.file_path
 
-    result = await sync_to_async(mammoth.convert_to_html)(abs_path.open("rb"))
+    def _convert() -> Any:
+        with abs_path.open("rb") as f:
+            return mammoth.convert_to_html(f)
+
+    result = await asyncio.to_thread(_convert)
 
     return {
         "html": result.value,

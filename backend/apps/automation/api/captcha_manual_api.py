@@ -6,6 +6,7 @@
 前端通过这些接口展示验证码图片并接收用户输入。
 """
 
+import asyncio
 import logging
 from typing import Any
 
@@ -29,7 +30,7 @@ class CaptchaAnswerOut(Schema):
 
 
 @router.get("/{task_id}/image", auth=None)
-def get_captcha_image(request: Any, task_id: int) -> HttpResponse | FileResponse:
+async def get_captcha_image(request: Any, task_id: int) -> HttpResponse | FileResponse:
     """
     获取待识别验证码图片
 
@@ -38,7 +39,7 @@ def get_captcha_image(request: Any, task_id: int) -> HttpResponse | FileResponse
     from apps.automation.models import ScraperTask, ScraperTaskStatus
 
     try:
-        task = ScraperTask.objects.get(id=task_id)
+        task = await ScraperTask.objects.aget(id=task_id)
     except ScraperTask.DoesNotExist:
         return HttpResponse("任务不存在", status=404)
 
@@ -50,13 +51,14 @@ def get_captcha_image(request: Any, task_id: int) -> HttpResponse | FileResponse
         return HttpResponse("验证码图片不存在", status=404)
 
     try:
-        return FileResponse(open(image_path, "rb"), content_type="image/png")
+        file_obj = await asyncio.to_thread(open, image_path, "rb")
+        return FileResponse(file_obj, content_type="image/png")
     except FileNotFoundError:
         return HttpResponse("验证码图片文件已丢失", status=404)
 
 
 @router.post("/{task_id}/answer", response=CaptchaAnswerOut, auth=None)
-def submit_captcha_answer(request: Any, task_id: int, payload: CaptchaAnswerIn) -> CaptchaAnswerOut:
+async def submit_captcha_answer(request: Any, task_id: int, payload: CaptchaAnswerIn) -> CaptchaAnswerOut:
     """
     提交验证码答案
 
@@ -66,7 +68,7 @@ def submit_captcha_answer(request: Any, task_id: int, payload: CaptchaAnswerIn) 
     from apps.automation.models import ScraperTask, ScraperTaskStatus
 
     try:
-        task = ScraperTask.objects.get(id=task_id)
+        task = await ScraperTask.objects.aget(id=task_id)
     except ScraperTask.DoesNotExist:
         return CaptchaAnswerOut(success=False, message="任务不存在")
 
@@ -80,7 +82,7 @@ def submit_captcha_answer(request: Any, task_id: int, payload: CaptchaAnswerIn) 
     task.captcha_answer = answer
     task.status = ScraperTaskStatus.RUNNING
     task.error_message = None
-    task.save(update_fields=["captcha_answer", "status", "error_message", "updated_at"])
+    await task.asave(update_fields=["captcha_answer", "status", "error_message", "updated_at"])
 
     logger.info("✅ 验证码答案已提交: task=%s", task_id)
     return CaptchaAnswerOut(success=True, message="验证码已提交，任务继续执行")
