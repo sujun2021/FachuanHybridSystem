@@ -311,3 +311,10 @@ FastAPI_backend/
 
 # Plugins 备份目录（与 backend/plugins 共享 gitdir，不应入库）
 backend/_plugins_backup/
+
+# 审计报告临时文件
+async-audit-*.json
+async-audit-*.md
+
+# 编译后的 gettext 文件
+*.mo
