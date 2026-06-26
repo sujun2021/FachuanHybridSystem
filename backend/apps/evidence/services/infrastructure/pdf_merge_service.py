@@ -1,144 +1,67 @@
-"""Business logic services."""
+"""PDF 合并服务 — evidence 模块。
+
+继承 core 基类，仅实现 evidence 特有的逻辑。
+"""
 
 from __future__ import annotations
 
 import contextlib
 import io
-from collections.abc import Callable
 from importlib import import_module
-from pathlib import Path
-from typing import Any, ClassVar, cast
+from typing import Any
 
-from django.core.files.base import ContentFile
 from django.utils import timezone
 
-from apps.core.exceptions import BusinessException, ValidationException
 from apps.core.services.filename_template_service import FilenameTemplateService
+from apps.core.services.pdf_merge_service import (
+    PDFMergeServiceBase,
+    PDFMergeValidator,
+    PDFMergeWorkflowBase,
+)
 from apps.evidence.models import EvidenceList
-from apps.core.exceptions.error_codes import FILE_CONVERSION_FAILED, PDF_MERGE_FAILED
+
+# 向后兼容：测试 mock 需要
+from pathlib import Path  # noqa: F401
 
 
 def _get_pdf_merge_utils_module() -> Any:
     return import_module("apps.documents.services.infrastructure.pdf_merge_utils")
 
 
-class PDFMergeValidator:
-    SUPPORTED_FORMATS: ClassVar = [".pdf", ".doc", ".docx", ".jpg", ".jpeg", ".png", ".gif", ".bmp"]
-    IMAGE_FORMATS: ClassVar = [".jpg", ".jpeg", ".png", ".gif", ".bmp"]
-    WORD_FORMATS: ClassVar = [".doc", ".docx"]
+class EvidencePDFMergeWorkflow(PDFMergeWorkflowBase):
+    """evidence 模块的 PDF 合并工作流。"""
 
-    def get_items(self, evidence_list: EvidenceList) -> Any:
-        items = evidence_list.items.filter(file__isnull=False).exclude(file="").order_by("order")
-        if not items.exists():
-            raise ValidationException(
-                message="证据清单没有任何文件",
-                code="NO_FILES_TO_MERGE",
-                errors={"evidence_list_id": int(evidence_list.pk)},
-            )
-        return items
+    def _generate_merged_filename(self, evidence_list: Any) -> str:
+        """向后兼容：原方法名带下划线前缀。"""
+        return self.generate_merged_filename(evidence_list)
 
-    def assert_supported_format(self, ext: str, file_path: str) -> None:
-        if ext not in self.SUPPORTED_FORMATS:
-            raise BusinessException(
-                message=f"不支持的文件格式: {ext}",
-                code="UNSUPPORTED_FILE_FORMAT",
-                errors={"file_path": file_path, "extension": ext},
-            )
+    def get_pdf_page_count(self, pdf_input: Any) -> int:
+        """代理到 evidence.pdf_utils，保持测试可 mock。"""
+        from apps.evidence.services.infrastructure.pdf_utils import get_pdf_page_count
 
-
-class PDFMergeWorkflow:
-    def __init__(self, validator: PDFMergeValidator | None = None) -> None:
-        self._validator = validator
-
-    @property
-    def validator(self) -> PDFMergeValidator:
-        if self._validator is None:
-            self._validator = PDFMergeValidator()
-        return self._validator
-
-    def merge_evidence_files(
-        self, evidence_list: EvidenceList, progress_callback: Callable[[int, int, str], None] | None = None
-    ) -> str:
-        items = self.validator.get_items(evidence_list)
-        try:
-            import pikepdf
-
-            merged_pdf = pikepdf.Pdf.new()
-            temp_files: list[Any] = []
-            total_files = items.count()
-            if progress_callback:
-                progress_callback(0, total_files, "开始合并")
-            self._merge_all_items(merged_pdf, items, temp_files, total_files, progress_callback)
-            output_buffer = io.BytesIO()
-            merged_pdf.save(output_buffer)
-            output_buffer.seek(0)
-            if progress_callback:
-                progress_callback(total_files, total_files, "正在添加页码")
-            pdf_with_pages = self.add_page_numbers(output_buffer, evidence_list.start_page)
-            file_name = self._generate_merged_filename(evidence_list)
-            self._save_merged_pdf(evidence_list, file_name, pdf_with_pages)
-            self._cleanup_temp_files(temp_files)
-            return evidence_list.merged_pdf.path
-        except (ValidationException, BusinessException):
-            raise
-        except Exception as e:
-            raise BusinessException(
-                message=f"PDF 合并失败: {e!s}", code=PDF_MERGE_FAILED, errors={"original_error": str(e)}
-            ) from e
-
-    def _merge_all_items(
-        self, merged_pdf: Any, items: Any, temp_files: Any, total_files: Any, progress_callback: Any
-    ) -> None:
-        import pikepdf
-
-        for index, item in enumerate(items, start=1):
-            try:
-                file_path = item.file.path
-                ext = Path(file_path).suffix.lower()
-                pdf_path = file_path if ext == ".pdf" else self.convert_to_pdf(file_path)
-                if pdf_path != file_path:
-                    temp_files.append(pdf_path)
-                with pikepdf.open(pdf_path) as pdf:
-                    merged_pdf.pages.extend(pdf.pages)
-                if progress_callback:
-                    file_label = item.file_name or Path(file_path).name
-                    progress_callback(index, total_files, f"已处理:{file_label}")
-            except Exception as e:
-                raise BusinessException(
-                    message=f"处理文件 {item.file_name} 失败: {e!s}",
-                    code=FILE_CONVERSION_FAILED,
-                    errors={"item_id": item.id, "file_name": item.file_name},
-                ) from e
-
-    def _save_merged_pdf(self, evidence_list: Any, file_name: Any, pdf_with_pages: Any) -> None:
-        if evidence_list.merged_pdf:
-            with contextlib.suppress(Exception):
-                evidence_list.merged_pdf.delete(save=False)
-        evidence_list.merged_pdf.save(file_name, ContentFile(pdf_with_pages))
-        evidence_list.total_pages = self.get_pdf_page_count(io.BytesIO(pdf_with_pages))
-        evidence_list.save(update_fields=["merged_pdf", "total_pages", "updated_at"])
+        return get_pdf_page_count(pdf_input, default=0)
 
     def _cleanup_temp_files(self, temp_files: list[Any]) -> None:  # pragma: no cover
+        """覆写以保持测试可 mock Path。"""
         for temp_file in temp_files:
             with contextlib.suppress(Exception):
                 Path(temp_file).unlink(missing_ok=True)
 
     def convert_to_pdf(self, file_path: str) -> str:  # pragma: no cover
-        ext = Path(file_path).suffix.lower()
+        ext = self._get_ext(file_path)
         self.validator.assert_supported_format(ext, file_path)
         utils = _get_pdf_merge_utils_module()
-        if ext in self.validator.IMAGE_FORMATS:
-            return utils.convert_image_to_pdf(file_path)  # type: ignore[no-any-return]
-        if ext in self.validator.WORD_FORMATS:
-            return utils.convert_docx_to_pdf(file_path)  # type: ignore[no-any-return]
+        if ext in PDFMergeValidator.IMAGE_FORMATS:
+            return utils.convert_image_to_pdf(file_path)
+        if ext in PDFMergeValidator.WORD_FORMATS:
+            return utils.convert_docx_to_pdf(file_path)
         return file_path
 
     def add_page_numbers(self, pdf_input: io.BytesIO, start_page: int = 1) -> bytes:
         utils = _get_pdf_merge_utils_module()
-        return utils.add_page_numbers(pdf_input, start_page)  # type: ignore[no-any-return]
+        return utils.add_page_numbers(pdf_input, start_page)
 
-    def _generate_merged_filename(self, evidence_list: EvidenceList) -> str:
-
+    def generate_merged_filename(self, evidence_list: EvidenceList) -> str:
         case_name = evidence_list.case.name
         date_str = timezone.now().strftime("%Y%m%d")
         list_suffix = ""
@@ -148,40 +71,26 @@ class PDFMergeWorkflow:
         elif title.startswith("补充证据清单"):
             list_suffix = title[6:]
         version = evidence_list.export_version
-        filename = (
+        return (
             FilenameTemplateService.render_generated_doc(
                 doc_type=f"证据明细{list_suffix}", case_name=case_name, version=str(version), date=date_str
             )
             + ".pdf"
         )
-        return filename
 
-    def get_pdf_page_count(self, pdf_input: Any) -> int:
-        from apps.evidence.services.infrastructure.pdf_utils import get_pdf_page_count
+    @staticmethod
+    def _get_ext(file_path: str) -> str:
+        from pathlib import Path
 
-        return get_pdf_page_count(pdf_input, default=0)
+        return Path(file_path).suffix.lower()
 
 
-class PDFMergeService:
-    def __init__(self, workflow: PDFMergeWorkflow | None = None) -> None:
-        self._workflow = workflow
+class PDFMergeService(PDFMergeServiceBase):
+    """evidence 模块的 PDF 合并服务门面。"""
 
-    @property
-    def workflow(self) -> PDFMergeWorkflow:
-        if self._workflow is None:
-            self._workflow = PDFMergeWorkflow()
-        return self._workflow
+    def _create_workflow(self) -> EvidencePDFMergeWorkflow:
+        return EvidencePDFMergeWorkflow()
 
-    def merge_evidence_files(
-        self, evidence_list: EvidenceList, progress_callback: Callable[[int, int, str], None] | None = None
-    ) -> str:
-        return self.workflow.merge_evidence_files(evidence_list, progress_callback)
 
-    def convert_to_pdf(self, file_path: str) -> str:
-        return self.workflow.convert_to_pdf(file_path)
-
-    def add_page_numbers(self, pdf_input: io.BytesIO, start_page: int = 1) -> bytes:
-        return self.workflow.add_page_numbers(pdf_input, start_page)
-
-    def get_pdf_page_count(self, pdf_input: Any) -> int:
-        return self.workflow.get_pdf_page_count(pdf_input)
+# 向后兼容：原类名
+PDFMergeWorkflow = EvidencePDFMergeWorkflow
