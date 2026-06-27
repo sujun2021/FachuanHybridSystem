@@ -64,7 +64,7 @@ async def list_sessions(request: Any, page: int = 1) -> dict[str, Any]:  # pragm
 
     @sync_to_async
     def _list() -> dict[str, Any]:
-        return service.list_sessions(
+        return service.list_sessions(  # type: ignore[no-any-return]
             page=page,
             user=ctx.user,
             org_access=ctx.org_access,
@@ -148,7 +148,7 @@ async def list_messages(  # pragma: no cover
 
     @sync_to_async
     def _list() -> dict[str, Any]:
-        return service.list_messages(
+        return service.list_messages(  # type: ignore[no-any-return]
             session_id,
             page=page,
             before_id=before_id,

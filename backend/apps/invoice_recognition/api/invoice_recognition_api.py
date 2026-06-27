@@ -38,7 +38,7 @@ async def quick_recognize(  # pragma: no cover
 
         @sync_to_async
         def _recognize() -> list[Any]:
-            return service.recognize_files(files)
+            return service.recognize_files(files)  # type: ignore[no-any-return]
 
         results = await _recognize()
     except Exception as exc:

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -128,7 +128,7 @@ def test_reconcile(mock_svc_cls, authenticated_client):
     mock_result.unmatched_deliveries = []
 
     mock_svc = MagicMock()
-    mock_svc.reconcile.return_value = mock_result
+    mock_svc.reconcile_async = AsyncMock(return_value=mock_result)
     mock_svc_cls.return_value = mock_svc
 
     resp = authenticated_client.post(
@@ -158,11 +158,11 @@ def test_reconcile(mock_svc_cls, authenticated_client):
 def test_export_zip(mock_reconciler_cls, mock_exporter_cls, authenticated_client):
     mock_result = MagicMock()
     mock_reconciler = MagicMock()
-    mock_reconciler.reconcile.return_value = mock_result
+    mock_reconciler.reconcile_async = AsyncMock(return_value=mock_result)
     mock_reconciler_cls.return_value = mock_reconciler
 
     mock_exporter = MagicMock()
-    mock_exporter.export_zip.return_value = {"success": True, "zip_url": "/tmp/export.zip"}
+    mock_exporter.export_zip.return_value = b"PKzipdata"
     mock_exporter_cls.return_value = mock_exporter
 
     resp = authenticated_client.post(

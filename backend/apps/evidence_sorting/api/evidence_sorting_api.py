@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import json
 import logging
 from typing import Any
@@ -105,18 +106,14 @@ async def reconcile(request: HttpRequest) -> dict[str, Any]:  # pragma: no cover
 
     svc = ReconcilerService()
 
-    @sync_to_async
-    def _reconcile() -> Any:
-        return svc.reconcile(
-            statements=statements,
-            deliveries=deliveries,
-            receipts=receipts,
-            others=others,
-            backend=backend,
-            model=model,
-        )
-
-    result = await _reconcile()
+    result = await svc.reconcile_async(
+        statements=statements,
+        deliveries=deliveries,
+        receipts=receipts,
+        others=others,
+        backend=backend,
+        model=model,
+    )
 
     return {
         "success": True,
@@ -182,20 +179,18 @@ async def export_zip(request: HttpRequest) -> dict[str, Any]:  # pragma: no cove
 
     reconciler = ReconcilerService()
 
-    @sync_to_async
-    def _reconcile_and_export() -> dict[str, Any]:
-        result = reconciler.reconcile(
-            statements=statements,
-            deliveries=deliveries,
-            receipts=receipts,
-            others=others,
-            backend=backend,
-            model=model,
-        )
-        exporter = ExporterService()
-        return exporter.export_zip(result)
+    result = await reconciler.reconcile_async(
+        statements=statements,
+        deliveries=deliveries,
+        receipts=receipts,
+        others=others,
+        backend=backend,
+        model=model,
+    )
 
-    return await _reconcile_and_export()
+    exporter = ExporterService()
+    zip_bytes = await sync_to_async(exporter.export_zip)(result)
+    return {"success": True, "zip_base64": base64.b64encode(zip_bytes).decode()}
 
 
 @router.get("/llm-options")
