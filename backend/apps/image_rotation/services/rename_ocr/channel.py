@@ -122,13 +122,13 @@ class RenameOCRChannel:
 
         # PIL rotate() 正值 = 逆时针（与训练时 prepare_data.py 的 rotate(angle) 一致）
         if rotation != 0:
-            img = img.rotate(rotation, expand=True)  
+            img = img.rotate(rotation, expand=True)
 
         buf = io.BytesIO()
         save_format = original_format.upper()
         if save_format in ("JPEG", "JPG"):
             if img.mode != "RGB":
-                img = img.convert("RGB")  
+                img = img.convert("RGB")
             img.save(buf, format="JPEG", quality=95)
         else:
             img.save(buf, format=save_format)
