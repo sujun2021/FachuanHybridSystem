@@ -162,7 +162,7 @@ def test_export_zip(mock_reconciler_cls, mock_exporter_cls, authenticated_client
     mock_reconciler_cls.return_value = mock_reconciler
 
     mock_exporter = MagicMock()
-    mock_exporter.export_zip.return_value = b"PKzipdata"
+    mock_exporter.export_zip.return_value = {"success": True, "zip_url": "/tmp/export.zip"}
     mock_exporter_cls.return_value = mock_exporter
 
     resp = authenticated_client.post(

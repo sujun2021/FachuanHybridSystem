@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import base64
 import json
 import logging
 from typing import Any
@@ -189,8 +188,7 @@ async def export_zip(request: HttpRequest) -> dict[str, Any]:  # pragma: no cove
     )
 
     exporter = ExporterService()
-    zip_bytes = await sync_to_async(exporter.export_zip)(result)
-    return {"success": True, "zip_base64": base64.b64encode(zip_bytes).decode()}
+    return await sync_to_async(exporter.export_zip)(result)
 
 
 @router.get("/llm-options")
