@@ -137,7 +137,7 @@ async def generate_template_document(  # pragma: no cover
 
     @sync_to_async
     def _generate() -> tuple[bytes, str]:
-        return service.generate_document(
+        return service.generate_document(  # type: ignore[no-any-return]
             case_id=case_id,
             template_id=payload.template_id,
             client_id=payload.client_id,
@@ -201,7 +201,7 @@ async def unified_generate_template(request: HttpRequest, case_id: int, payload:
 
     @sync_to_async
     def _generate() -> tuple[bytes, str]:
-        return service.generate_document(
+        return service.generate_document(  # type: ignore[no-any-return]
             case_id=case_id,
             template_id=payload.template_id,
             function_code=payload.function_code,
