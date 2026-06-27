@@ -61,7 +61,7 @@ class QuickRecognitionService:
                     )
                 )
             else:
-                final.append(result)
+                final.append(result)  # type: ignore[arg-type]
 
         logger.info("快速识别完成: 总文件数=%d", len(files))
         return final

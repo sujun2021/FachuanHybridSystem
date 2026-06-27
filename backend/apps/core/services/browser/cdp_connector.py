@@ -79,7 +79,7 @@ async def connect_cdp_browser(  # pragma: no cover
         except Exception:
             pass
         try:
-            await pw.__aexit__(None, None, None)
+            await pw.__aexit__(None, None, None)  # type: ignore[attr-defined]
         except Exception:
             pass
         # 清理自动启动的 Chrome 进程
