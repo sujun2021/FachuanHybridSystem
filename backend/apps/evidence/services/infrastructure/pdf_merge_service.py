@@ -61,7 +61,7 @@ class EvidencePDFMergeWorkflow(PDFMergeWorkflowBase):
         utils = _get_pdf_merge_utils_module()
         return utils.add_page_numbers(pdf_input, start_page)  # type: ignore[no-any-return]
 
-    def generate_merged_filename(self, evidence_list: EvidenceList  # type: ignore[override]) -> str:
+    def generate_merged_filename(self, evidence_list: EvidenceList) -> str:  # type: ignore[override]
         case_name = evidence_list.case.name
         date_str = timezone.now().strftime("%Y%m%d")
         list_suffix = ""
