@@ -8,6 +8,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any, cast
 
+from asgiref.sync import sync_to_async
 from django.http import HttpRequest
 from ninja import Router
 
@@ -29,16 +30,22 @@ async def list_logs(request: HttpRequest, case_id: int | None = None) -> list[Ca
     service = _get_caselog_service()
     ctx = extract_request_context(request)
 
-    return cast(
-        list[CaseLogOut],
-        await asyncio.to_thread(
-            service.list_logs,
+    @sync_to_async
+    def _fetch() -> list[Any]:
+        qs = service.list_logs(
             case_id=case_id,
             user=ctx.user,
             org_access=ctx.org_access,
             perm_open_access=ctx.perm_open_access,
-        ),
-    )
+        )
+        objs = list(qs)
+        # Pre-warm lazy reminder properties so Django Ninja serialization
+        # (which runs in the async event loop) won't trigger sync ORM calls.
+        for obj in objs:
+            _ = obj.reminder_entries
+        return objs
+
+    return cast(list[CaseLogOut], await _fetch())
 
 
 @router.post("/logs", response=CaseLogOut)
