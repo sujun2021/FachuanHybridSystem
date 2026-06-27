@@ -55,7 +55,7 @@ class OrientationDetectionService:
                 if rotation == 0:
                     rotated_img = img
                 else:
-                    rotated_img = img.rotate(rotation, expand=True)  # type: ignore[assignment]
+                    rotated_img = img.rotate(rotation, expand=True)
 
                 img_bytes = io.BytesIO()
                 rotated_img.save(img_bytes, format="JPEG", quality=85)
@@ -128,7 +128,7 @@ class OrientationDetectionService:
                 if rotation == 0:
                     rotated_img = img
                 else:
-                    rotated_img = img.rotate(rotation, expand=True)  # type: ignore[assignment]
+                    rotated_img = img.rotate(rotation, expand=True)
 
                 img_bytes = io.BytesIO()
                 rotated_img.save(img_bytes, format="JPEG", quality=85)

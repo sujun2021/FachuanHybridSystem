@@ -176,7 +176,7 @@ class ImageRotationJobService:
         async def _process_page(page: ImageRotationPage) -> None:
             try:
                 image_bytes = await sync_to_async(page.source_image.read)()
-                text_result = await sync_to_async(ocr_service.extract_text)(image_bytes)  # type: ignore[union-attr]
+                text_result = await sync_to_async(ocr_service.extract_text)(image_bytes)
                 page.ocr_text = text_result.text
 
                 if text_result.text.strip():
