@@ -129,7 +129,7 @@ class ContractOASyncService:
         validate_url = URLValidator()
 
         # 收集所有需要更新的对象，最后用 bulk_update 批量写入
-        contracts_to_update: list[Contract] = []
+        contracts_to_update: list[dict[str, Any]] = []
         contract_ids: list[int] = []
 
         for row in updates:
@@ -354,7 +354,7 @@ class ContractOASyncService:
                         },
                     )
             finally:
-                script.close()
+                await script.close()
 
             logger.info(
                 "contract_oa_sync_completed",
@@ -421,7 +421,7 @@ class ContractOASyncService:
             candidates = script.search_cases_by_name(contract_name=keyword, limit=effective_limit)
             filtered_candidates = self._filter_candidates_by_contract_name(
                 contract_name=contract_name,
-                candidates=candidates,
+                candidates=candidates,  # type: ignore[arg-type]
             )
             sample_case_names = [str(item.case_name) for item in candidates[:3]]
             logger.info(
