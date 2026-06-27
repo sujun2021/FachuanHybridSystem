@@ -34,7 +34,12 @@ async def classify_images(request: HttpRequest) -> dict[str, Any]:  # pragma: no
     from apps.evidence_sorting.services.classifier import ClassifierService
 
     svc = ClassifierService()
-    result = await svc.classify_images_async(images)
+
+    @sync_to_async
+    def _classify() -> Any:
+        return svc.classify_images(images)
+
+    result = await _classify()
 
     return {
         "success": True,
@@ -69,7 +74,12 @@ async def parse_statement(request: HttpRequest) -> dict[str, Any]:  # pragma: no
     from apps.evidence_sorting.services.reconciler import ReconcilerService
 
     svc = ReconcilerService()
-    info = await svc.parse_statement_async(ocr_text, backend=backend, model=model)
+
+    @sync_to_async
+    def _parse() -> Any:
+        return svc.parse_statement(ocr_text, backend=backend, model=model)
+
+    info = await _parse()
 
     return {
         "success": True,
@@ -94,6 +104,7 @@ async def reconcile(request: HttpRequest) -> dict[str, Any]:  # pragma: no cover
     from apps.evidence_sorting.services.reconciler import ReconcilerService
 
     svc = ReconcilerService()
+
     result = await svc.reconcile_async(
         statements=statements,
         deliveries=deliveries,
@@ -166,6 +177,7 @@ async def export_zip(request: HttpRequest) -> dict[str, Any]:  # pragma: no cove
     from apps.evidence_sorting.services.reconciler import ReconcilerService
 
     reconciler = ReconcilerService()
+
     result = await reconciler.reconcile_async(
         statements=statements,
         deliveries=deliveries,
@@ -176,7 +188,7 @@ async def export_zip(request: HttpRequest) -> dict[str, Any]:  # pragma: no cove
     )
 
     exporter = ExporterService()
-    return await sync_to_async(exporter.export_zip, thread_sensitive=False)(result)
+    return await sync_to_async(exporter.export_zip)(result)
 
 
 @router.get("/llm-options")
@@ -191,9 +203,9 @@ async def llm_options(request: HttpRequest) -> dict[str, Any]:  # pragma: no cov
 
     async def _check_ollama() -> dict[str, Any] | None:
         try:
-            ollama_backend = await sync_to_async(llm.get_backend, thread_sensitive=False)("ollama")
-            is_available = await sync_to_async(ollama_backend.is_available, thread_sensitive=False)()
-            default_model = await sync_to_async(ollama_backend.get_default_model, thread_sensitive=False)()
+            ollama_backend = await sync_to_async(llm.get_backend)("ollama")
+            is_available = await sync_to_async(ollama_backend.is_available)()
+            default_model = await sync_to_async(ollama_backend.get_default_model)()
             return {
                 "name": "ollama",
                 "label": "Ollama (本地)",
@@ -205,12 +217,12 @@ async def llm_options(request: HttpRequest) -> dict[str, Any]:  # pragma: no cov
 
     async def _check_openai_compatible() -> dict[str, Any] | None:
         try:
-            oc_backend = await sync_to_async(llm.get_backend, thread_sensitive=False)("openai_compatible")
+            oc_backend = await sync_to_async(llm.get_backend)("openai_compatible")
             model_svc = ModelListService()
             is_available, default_model, model_result = await asyncio.gather(
-                sync_to_async(oc_backend.is_available, thread_sensitive=False)(),
-                sync_to_async(oc_backend.get_default_model, thread_sensitive=False)(),
-                sync_to_async(model_svc.get_result, thread_sensitive=False)(),
+                sync_to_async(oc_backend.is_available)(),
+                sync_to_async(oc_backend.get_default_model)(),
+                sync_to_async(model_svc.get_result)(),
             )
             return {
                 "name": "openai_compatible",

@@ -49,7 +49,7 @@ async def list_payments(  # pragma: no cover
         user=ctx.user,
         perm_open_access=ctx.perm_open_access,
     )
-    return list(qs)
+    return await sync_to_async(list)(qs)  # type: ignore[call-arg]
 
 
 @router.post("/finance/payments", response=ContractPaymentOut)

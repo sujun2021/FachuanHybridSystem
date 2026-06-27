@@ -1,14 +1,16 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 import shutil
 from pathlib import Path
 
+from asgiref.sync import sync_to_async
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 
-from apps.automation.services.ocr.ocr_service import OCRService
 from apps.automation.services.ocr.pdf_text_extractor import PDFTextExtractor
+from apps.core.protocols import IOcrService
 
 from .invoice_parser import InvoiceParser, ParsedInvoice
 from .recognition_result import RecognitionResult
@@ -24,7 +26,7 @@ class QuickRecognitionService:
 
     def __init__(
         self,
-        ocr_service: OCRService,
+        ocr_service: IOcrService,
         pdf_extractor: PDFTextExtractor,
         parser: InvoiceParser,
     ) -> None:
@@ -41,6 +43,28 @@ class QuickRecognitionService:
 
         logger.info("快速识别完成: 总文件数=%d", len(files))
         return results
+
+    async def arecognize_files(self, files: list[UploadedFile]) -> list[RecognitionResult]:
+        """异步并发识别多个文件，每个文件的 OCR 独立执行。"""
+        tasks = [self._aprocess_single_file(file) for file in files]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        final: list[RecognitionResult] = []
+        for i, result in enumerate(results):
+            if isinstance(result, Exception):
+                logger.error("文件识别异常: %s, 文件: %s", result, files[i].name, exc_info=result)
+                final.append(
+                    RecognitionResult(
+                        filename=files[i].name or "unknown",
+                        success=False,
+                        error="识别失败，请重试",
+                    )
+                )
+            else:
+                final.append(result)  # type: ignore[arg-type]
+
+        logger.info("快速识别完成: 总文件数=%d", len(files))
+        return final
 
     def _validate_file(self, file: UploadedFile) -> None:
         name: str = file.name or ""
@@ -96,6 +120,10 @@ class QuickRecognitionService:
                 success=False,
                 error="识别失败，请重试",
             )
+
+    async def _aprocess_single_file(self, file: UploadedFile) -> RecognitionResult:
+        """异步版本的单文件处理，在线程池中运行同步逻辑。"""
+        return await sync_to_async(self._process_single_file, thread_sensitive=False)(file)
 
     def _process_pdf(self, file: UploadedFile) -> str:  # pragma: no cover
         import tempfile

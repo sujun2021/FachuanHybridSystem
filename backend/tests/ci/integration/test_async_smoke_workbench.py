@@ -10,7 +10,7 @@ import json
 import pytest
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 class TestWorkbenchAsyncSmoke:
     def test_create_and_list_sessions(self, authenticated_client):
         """Create -> List workbench sessions should work end-to-end."""

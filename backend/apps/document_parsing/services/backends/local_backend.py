@@ -24,7 +24,7 @@ class LocalBackend:
         """获取 OCR 服务（延迟加载）"""
         if self._ocr_service is None:
             try:
-                from apps.core.infrastructure import ServiceLocator  # type: ignore[attr-defined]
+                from apps.core.interfaces import ServiceLocator
 
                 self._ocr_service = ServiceLocator.get_ocr_service()
             except Exception as e:
@@ -208,10 +208,7 @@ class LocalBackend:
             # 使用 RapidOCR 提取文本
             result = ocr_service.recognize(file_path)
 
-            if result and result.get("text"):
-                text = "\n".join(result["text"])
-            else:
-                text = ""
+            text = result.strip() if result else ""
 
             return ParsedDocument(
                 text=text,

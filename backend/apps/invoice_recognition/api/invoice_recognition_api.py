@@ -35,7 +35,12 @@ async def quick_recognize(  # pragma: no cover
     service = _get_quick_recognition_service()
 
     try:
-        results = await sync_to_async(service.recognize_files, thread_sensitive=False)(files)
+
+        @sync_to_async
+        def _recognize() -> list[Any]:
+            return service.recognize_files(files)  # type: ignore[no-any-return]
+
+        results = await _recognize()
     except Exception as exc:
         logger.error("快速识别失败: %s", exc, exc_info=True)
         raise HttpError(500, "服务器内部错误")

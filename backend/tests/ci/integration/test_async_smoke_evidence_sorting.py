@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -26,9 +27,9 @@ class TestEvidenceSortingSmoke:
         mock_classify_result.errors = []
 
         mock_svc = MagicMock()
-        mock_svc.classify_images.return_value = mock_classify_result
+        mock_svc.classify_images_async = AsyncMock(return_value=mock_classify_result)
 
-        with patch("apps.evidence_sorting.api.evidence_sorting_api.ClassifierService", return_value=mock_svc):
+        with patch("apps.evidence_sorting.services.classifier.ClassifierService", return_value=mock_svc):
             resp = authenticated_client.post(
                 "/api/v1/evidence-sorting/classify",
                 data=json.dumps({"images": [{"filename": "stmt.jpg", "data": "base64data"}]}),

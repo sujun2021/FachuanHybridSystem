@@ -128,6 +128,10 @@ class ContractOASyncService:
         errors: list[dict[str, str]] = []
         validate_url = URLValidator()
 
+        # 收集所有需要更新的对象，最后用 bulk_update 批量写入
+        contracts_to_update: list[dict[str, Any]] = []
+        contract_ids: list[int] = []
+
         for row in updates:
             contract_id_raw = row.get("id", row.get("contract_id"))
             try:
@@ -146,16 +150,38 @@ class ContractOASyncService:
                     errors.append({"contract_id": str(contract_id), "message": "律所OA链接格式无效"})
                     continue
 
-            with transaction.atomic():
-                affected = Contract.objects.filter(id=contract_id).update(
-                    law_firm_oa_case_number=case_number or None,
-                    law_firm_oa_url=oa_url or None,
-                )
+            contract_ids.append(contract_id)
+            # 暂存待更新的字段值，在 bulk 查询后再赋值
+            contracts_to_update.append(
+                # 占位，稍后用真实对象替换；这里先保存元信息
+                {"_id": contract_id, "case_number": case_number or None, "oa_url": oa_url or None}
+            )
 
-            if affected == 0:
-                errors.append({"contract_id": str(contract_id), "message": "合同不存在"})
-                continue
-            updated_count += 1
+        if contracts_to_update:
+            # 批量查询所有涉及的合同
+            id_set = {item["_id"] for item in contracts_to_update}
+            contract_map = {c.id: c for c in Contract.objects.filter(id__in=id_set)}
+            found_ids: set[int] = set()
+
+            for item in contracts_to_update:
+                cid = item["_id"]
+                contract_obj = contract_map.get(cid)
+                if contract_obj is None:
+                    errors.append({"contract_id": str(cid), "message": "合同不存在"})
+                    continue
+                contract_obj.law_firm_oa_case_number = item["case_number"]
+                contract_obj.law_firm_oa_url = item["oa_url"]
+                found_ids.add(cid)
+                updated_count += 1
+
+            # 批量更新（仅更新有变更的字段）
+            if found_ids:
+                objs_to_update = [contract_map[cid] for cid in found_ids]
+                with transaction.atomic():
+                    Contract.objects.bulk_update(
+                        objs_to_update,
+                        ["law_firm_oa_case_number", "law_firm_oa_url"],
+                    )
 
         return {
             "updated_count": updated_count,
@@ -328,7 +354,7 @@ class ContractOASyncService:
                         },
                     )
             finally:
-                script.close()
+                script.close()  # type: ignore
 
             logger.info(
                 "contract_oa_sync_completed",
@@ -395,32 +421,32 @@ class ContractOASyncService:
             candidates = script.search_cases_by_name(contract_name=keyword, limit=effective_limit)
             filtered_candidates = self._filter_candidates_by_contract_name(
                 contract_name=contract_name,
-                candidates=candidates,
+                candidates=candidates,  # type: ignore
             )
-            sample_case_names = [str(item.case_name) for item in candidates[:3]]
+            sample_case_names = [str(item.case_name) for item in candidates[:3]]  # type: ignore
             logger.info(
                 "contract_oa_sync_name_search_attempt contract_id=%s keyword=%s candidate_count=%s filtered_candidate_count=%s sample_case_names=%s",
                 contract_id,
                 keyword,
-                len(candidates),
+                len(candidates),  # type: ignore
                 len(filtered_candidates),
                 sample_case_names,
             )
             if filtered_candidates:
                 return filtered_candidates[:effective_limit]
 
-            if len(candidates) >= effective_limit:
+            if len(candidates) >= effective_limit:  # type: ignore
                 expanded_candidates = script.search_cases_by_name(contract_name=keyword, limit=expanded_limit)
                 expanded_filtered_candidates = self._filter_candidates_by_contract_name(
                     contract_name=contract_name,
-                    candidates=expanded_candidates,
+                    candidates=expanded_candidates,  # type: ignore
                 )
-                expanded_sample_case_names = [str(item.case_name) for item in expanded_candidates[:3]]
+                expanded_sample_case_names = [str(item.case_name) for item in expanded_candidates[:3]]  # type: ignore
                 logger.info(
                     "contract_oa_sync_name_search_expanded_attempt contract_id=%s keyword=%s candidate_count=%s filtered_candidate_count=%s sample_case_names=%s",
                     contract_id,
                     keyword,
-                    len(expanded_candidates),
+                    len(expanded_candidates),  # type: ignore
                     len(expanded_filtered_candidates),
                     expanded_sample_case_names,
                 )

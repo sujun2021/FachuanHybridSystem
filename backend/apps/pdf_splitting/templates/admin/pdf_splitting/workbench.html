@@ -24,6 +24,16 @@
 .ps-drop-title { color: var(--fc-text-heading); font-weight: 700; line-height: 1.5; }
 .ps-selected-file { color: var(--fc-text-primary); font-size: 13px; line-height: 1.5; }
 .ps-selected-file.is-empty { color: var(--fc-text-muted); }
+.ps-file-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.ps-file-item { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; border-radius: 8px; background: var(--fc-bg-card); border: 1px solid var(--fc-border-input); font-size: 13px; }
+.ps-file-item-name { color: var(--fc-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 480px; }
+.ps-file-item-size { color: var(--fc-text-muted); font-size: 12px; margin-left: 8px; flex-shrink: 0; }
+.ps-file-item-remove { background: none; border: none; color: var(--fc-error); cursor: pointer; font-size: 16px; line-height: 1; padding: 2px 6px; border-radius: 4px; }
+.ps-file-item-remove:hover { background: var(--fc-error-subtle); }
+.ps-file-actions { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.ps-file-clear { background: none; border: none; color: var(--fc-text-muted); cursor: pointer; font-size: 12px; text-decoration: underline; }
+.ps-file-clear:hover { color: var(--fc-error); }
+.ps-batch-progress { color: var(--fc-primary); font-weight: 700; font-size: 13px; }
 .ps-static-field { width: 100%; box-sizing: border-box; border: 1px solid var(--fc-border-input); border-radius: 10px; padding: 12px 14px; font-size: 14px; background: var(--fc-bg-card); color: var(--fc-text-primary); }
 .ps-radio-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
 .ps-radio-card input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; }
@@ -72,12 +82,17 @@
             <div class="ps-field">
                 <label>{% trans "材料来源（统一入口）" %}</label>
                 <div id="sourceDropzone" class="ps-source-box">
-                    <input type="file" id="splitFile" name="file" accept=".pdf" hidden>
-                    <div class="ps-drop-title">{% trans "拖拽 PDF 到此处，或点击按钮选择文件" %}</div>
+                    <input type="file" id="splitFile" name="file" accept=".pdf" multiple hidden>
+                    <div class="ps-drop-title">{% trans "拖拽 PDF 到此处，或点击按钮选择文件（支持多选）" %}</div>
                     <button type="button" id="filePickerBtn" class="ps-file-btn">{% trans "选择文件" %}</button>
+                    <ul id="fileList" class="ps-file-list" style="display:none;"></ul>
                     <div id="selectedFile" class="ps-selected-file is-empty">{% trans "当前未选择文件" %}</div>
+                    <div id="fileActions" class="ps-file-actions" style="display:none;">
+                        <button type="button" id="fileClearBtn" class="ps-file-clear">{% trans "清空全部" %}</button>
+                        <span id="fileCount" class="ps-batch-progress"></span>
+                    </div>
                 </div>
-                <div class="ps-help">{% trans "仅支持上传 PDF（可拖拽）。上传文件最大 150MB，最多 300 页。" %}</div>
+                <div class="ps-help">{% trans "支持同时选择多个 PDF。单个文件最大 150MB，最多 300 页。" %}</div>
             </div>
 
             <div class="ps-field">
@@ -147,7 +162,7 @@
             <div class="ps-actions">
                 <button type="submit" class="ps-btn ps-btn-primary">{% trans "创建拆解任务" %}</button>
                 <a class="ps-btn ps-btn-secondary" href="/admin/pdf_splitting/pdfsplitjob/">{% trans "查看任务列表" %}</a>
-                <span id="splitLoading" class="ps-loading">{% trans "正在创建任务..." %}</span>
+                <span id="splitLoading" class="ps-loading"></span>
             </div>
         </form>
     </div>
@@ -160,11 +175,18 @@
     const dropzone = document.getElementById('sourceDropzone');
     const filePickerBtn = document.getElementById('filePickerBtn');
     const selectedFile = document.getElementById('selectedFile');
+    const fileList = document.getElementById('fileList');
+    const fileActions = document.getElementById('fileActions');
+    const fileClearBtn = document.getElementById('fileClearBtn');
+    const fileCount = document.getElementById('fileCount');
     const splitModeInputs = form.querySelectorAll('input[name="split_mode"]');
     const ocrProfileField = document.getElementById('ocrProfileField');
     const templateInput = document.getElementById('templateKey');
     const errorBox = document.getElementById('splitError');
     const loading = document.getElementById('splitLoading');
+
+    // 持久化的文件池（DataTransfer 不够可靠，用 File 数组维护）
+    let filePool = [];
 
     function getCookie(name) {
         const parts = document.cookie.split(';');
@@ -188,48 +210,100 @@
     }
 
     function isPdfFile(file) {
-        if (!file) {
-            return false;
-        }
+        if (!file) return false;
         const name = (file.name || '').toLowerCase();
         return name.endsWith('.pdf') || file.type === 'application/pdf';
     }
 
-    function setSelectedFile(file) {
-        if (!file) {
+    function formatSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function syncInputFiles() {
+        // 把 filePool 同步到 fileInput.files
+        const dt = new DataTransfer();
+        filePool.forEach(function(f) { dt.items.add(f); });
+        fileInput.files = dt.files;
+    }
+
+    function renderFileList() {
+        if (filePool.length === 0) {
+            fileList.style.display = 'none';
+            fileList.innerHTML = '';
+            fileActions.style.display = 'none';
             selectedFile.textContent = '当前未选择文件';
             selectedFile.classList.add('is-empty');
             return;
         }
-        selectedFile.textContent = '已选择：' + file.name;
+
+        selectedFile.textContent = '';
         selectedFile.classList.remove('is-empty');
+        fileActions.style.display = 'flex';
+        fileCount.textContent = '已选 ' + filePool.length + ' 个文件';
+
+        fileList.style.display = 'grid';
+        fileList.innerHTML = '';
+        filePool.forEach(function(file, index) {
+            var li = document.createElement('li');
+            li.className = 'ps-file-item';
+            li.innerHTML = '<span class="ps-file-item-name" title="' + file.name + '">' + file.name + '</span>'
+                + '<span class="ps-file-item-size">' + formatSize(file.size) + '</span>'
+                + '<button type="button" class="ps-file-item-remove" data-index="' + index + '" title="移除">&times;</button>';
+            fileList.appendChild(li);
+        });
+
+        syncInputFiles();
     }
 
-    function clearSelectedFile() {
-        fileInput.value = '';
-        setSelectedFile(null);
-    }
+    function addFiles(fileListInput) {
+        var added = 0;
+        var skipped = 0;
+        var existingNames = new Set(filePool.map(function(f) { return f.name; }));
 
-    function setFileFromDrop(file) {
-        if (!isPdfFile(file)) {
-            showError('仅支持 PDF 文件。');
-            return;
+        for (var i = 0; i < fileListInput.length; i++) {
+            var file = fileListInput[i];
+            if (!isPdfFile(file)) {
+                skipped++;
+                continue;
+            }
+            // 去重（同名文件不重复添加）
+            if (existingNames.has(file.name)) continue;
+            filePool.push(file);
+            existingNames.add(file.name);
+            added++;
         }
-        clearError();
-        const transfer = new DataTransfer();
-        transfer.items.add(file);
-        fileInput.files = transfer.files;
-        setSelectedFile(file);
+
+        if (skipped > 0) {
+            showError('已跳过 ' + skipped + ' 个非 PDF 文件。');
+        } else if (added > 0) {
+            clearError();
+        }
+
+        renderFileList();
+    }
+
+    function clearAllFiles() {
+        filePool = [];
+        fileInput.value = '';
+        renderFileList();
+    }
+
+    function removeFile(index) {
+        filePool.splice(index, 1);
+        syncInputFiles();
+        renderFileList();
     }
 
     function selectedSplitMode() {
-        const selected = form.querySelector('input[name="split_mode"]:checked');
+        var selected = form.querySelector('input[name="split_mode"]:checked');
         return selected ? selected.value : 'content_analysis';
     }
 
     function refreshModeUI() {
-        const mode = selectedSplitMode();
-        const showOcr = mode === 'content_analysis';
+        var mode = selectedSplitMode();
+        var showOcr = mode === 'content_analysis';
         ocrProfileField.classList.toggle('is-hidden', !showOcr);
     }
 
@@ -238,19 +312,22 @@
     });
 
     fileInput.addEventListener('change', function() {
-        const file = fileInput.files && fileInput.files[0];
-        if (!file) {
-            setSelectedFile(null);
-            return;
+        if (fileInput.files && fileInput.files.length > 0) {
+            addFiles(fileInput.files);
         }
-        if (!isPdfFile(file)) {
-            clearSelectedFile();
-            showError('仅支持 PDF 文件。');
-            return;
-        }
-        setSelectedFile(file);
-        clearError();
+        // 重置 input 以允许再次选同一批文件
+        fileInput.value = '';
     });
+
+    fileList.addEventListener('click', function(event) {
+        var btn = event.target.closest('.ps-file-item-remove');
+        if (btn) {
+            var idx = parseInt(btn.getAttribute('data-index'), 10);
+            removeFile(idx);
+        }
+    });
+
+    fileClearBtn.addEventListener('click', clearAllFiles);
 
     ['dragenter', 'dragover'].forEach(function(eventName) {
         dropzone.addEventListener(eventName, function(event) {
@@ -269,58 +346,113 @@
     });
 
     dropzone.addEventListener('drop', function(event) {
-        const files = event.dataTransfer && event.dataTransfer.files;
-        if (!files || files.length === 0) {
-            return;
-        }
-        setFileFromDrop(files[0]);
+        var files = event.dataTransfer && event.dataTransfer.files;
+        if (!files || files.length === 0) return;
+        addFiles(files);
     });
 
     splitModeInputs.forEach(function(input) {
         input.addEventListener('change', refreshModeUI);
     });
 
+    // 禁止拖拽到页面其他区域打开文件
+    document.addEventListener('dragover', function(e) { e.preventDefault(); });
+    document.addEventListener('drop', function(e) { e.preventDefault(); });
+
     form.addEventListener('submit', async function(event) {
         event.preventDefault();
         clearError();
 
-        const hasFile = fileInput.files && fileInput.files.length > 0;
-
-        if (!hasFile) {
-            showError('请先上传 PDF 文件。');
+        if (filePool.length === 0) {
+            showError('请先选择 PDF 文件。');
             return;
         }
 
-        loading.classList.add('is-visible');
+        var splitMode = selectedSplitMode();
+        var templateKey = templateInput.value || 'filing_materials_v1';
+        var profileInput = form.querySelector('input[name="ocr_profile"]:checked');
+        var ocrProfile = profileInput ? profileInput.value : 'balanced';
+        var csrfToken = getCookie('csrftoken');
 
-        try {
-            const formData = new FormData();
-            if (hasFile) {
-                formData.append('file', fileInput.files[0]);
-            }
-            formData.append('split_mode', selectedSplitMode());
-            formData.append('template_key', templateInput.value || 'filing_materials_v1');
-            const profileInput = form.querySelector('input[name="ocr_profile"]:checked');
-            formData.append('ocr_profile', profileInput ? profileInput.value : 'balanced');
+        var total = filePool.length;
+        var succeeded = [];
+        var failed = [];
 
-            const response = await fetch('/api/v1/pdf-splitting/jobs', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                credentials: 'same-origin'
-            });
-            const data = await response.json();
-            if (!response.ok) {
-                const message = (data && (data.detail || data.message || data.error)) || '创建任务失败';
-                throw new Error(message);
+        // 单文件：直接提交后跳转任务详情
+        if (total === 1) {
+            loading.textContent = '正在创建任务...';
+            loading.classList.add('is-visible');
+            try {
+                var fd = new FormData();
+                fd.append('file', filePool[0]);
+                fd.append('split_mode', splitMode);
+                fd.append('template_key', templateKey);
+                fd.append('ocr_profile', ocrProfile);
+                var resp = await fetch('/api/v1/pdf-splitting/jobs', {
+                    method: 'POST', body: fd,
+                    headers: { 'X-CSRFToken': csrfToken },
+                    credentials: 'same-origin'
+                });
+                var data = await resp.json();
+                if (!resp.ok) throw new Error((data && (data.detail || data.message)) || '创建任务失败');
+                window.location.href = '/admin/pdf_splitting/pdfsplitjob/' + data.job_id + '/change/';
+                return;
+            } catch (err) {
+                showError(err.message || '创建任务失败');
+            } finally {
+                loading.classList.remove('is-visible');
+                loading.textContent = '';
             }
-            window.location.href = '/admin/pdf_splitting/pdfsplitjob/' + data.job_id + '/change/';
-        } catch (error) {
-            showError(error.message || '创建任务失败');
-        } finally {
-            loading.classList.remove('is-visible');
+            return;
+        }
+
+        // 多文件：串行批量提交
+        form.querySelector('.ps-btn-primary').disabled = true;
+
+        for (var i = 0; i < total; i++) {
+            loading.textContent = '正在创建任务 (' + (i + 1) + '/' + total + ')...';
+            loading.classList.add('is-visible');
+
+            try {
+                var fd = new FormData();
+                fd.append('file', filePool[i]);
+                fd.append('split_mode', splitMode);
+                fd.append('template_key', templateKey);
+                fd.append('ocr_profile', ocrProfile);
+                var resp = await fetch('/api/v1/pdf-splitting/jobs', {
+                    method: 'POST', body: fd,
+                    headers: { 'X-CSRFToken': csrfToken },
+                    credentials: 'same-origin'
+                });
+                var data = await resp.json();
+                if (!resp.ok) {
+                    throw new Error((data && (data.detail || data.message)) || '创建失败');
+                }
+                succeeded.push({ name: filePool[i].name, job_id: data.job_id });
+            } catch (err) {
+                failed.push({ name: filePool[i].name, reason: err.message });
+            }
+        }
+
+        loading.classList.remove('is-visible');
+        loading.textContent = '';
+        form.querySelector('.ps-btn-primary').disabled = false;
+
+        if (failed.length === 0) {
+            // 全部成功
+            clearAllFiles();
+            window.location.href = '/admin/pdf_splitting/pdfsplitjob/';
+        } else if (succeeded.length > 0) {
+            // 部分失败
+            var msg = '成功 ' + succeeded.length + ' 个，失败 ' + failed.length + ' 个：\n';
+            failed.forEach(function(f) { msg += '  · ' + f.name + '：' + f.reason + '\n'; });
+            showError(msg);
+            // 移除成功的文件
+            var successNames = new Set(succeeded.map(function(s) { return s.name; }));
+            filePool = filePool.filter(function(f) { return !successNames.has(f.name); });
+            renderFileList();
+        } else {
+            showError('全部创建失败：' + failed[0].reason);
         }
     });
 

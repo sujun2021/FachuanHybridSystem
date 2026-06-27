@@ -276,6 +276,9 @@ extensions/
 # 设计稿原型（本地参考，不入库）
 prototypes/
 
+# RFC 设计文档（本地参考，不入库）
+rfcs/
+
 # Playwright 报告和测试产物
 playwright-report/
 backend/tests/e2e/state.json
@@ -311,3 +314,10 @@ FastAPI_backend/
 
 # Plugins 备份目录（与 backend/plugins 共享 gitdir，不应入库）
 backend/_plugins_backup/
+
+# 审计报告临时文件
+async-audit-*.json
+async-audit-*.md
+
+# 编译后的 gettext 文件
+*.mo
