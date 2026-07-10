@@ -392,15 +392,53 @@ class JTNAdapter(FilingAdapter, StampAdapter, ArchiveAdapter, CaseImportAdapter,
             matched_case_nos=session.result_data.get("matched_case_nos"),
         )
 
+    async def fetch_case_detail(self, case_no: str, credential: Any) -> Any | None:
+        """从 OA 获取案件详情，返回 OACaseData 或 None。"""
+        from apps.oa_filing.services.oa_scripts.jtn.case_import import JtnCaseImportScript
+
+        script = JtnCaseImportScript(
+            account=str(credential.account),
+            password=str(credential.password),
+        )
+        return await script.fetch_single_case(case_no)
+
+    def search_cases(self, case_nos: list[str], credential: Any, *, workers: int = 2, headless: bool = True) -> Any:
+        """批量搜索案件，返回 AsyncGenerator[(case_no, OACaseData | None)]。"""
+        from apps.oa_filing.services.oa_scripts.jtn.case_import import JtnCaseImportScript
+
+        script = JtnCaseImportScript(
+            account=str(credential.account),
+            password=str(credential.password),
+            headless=headless,
+        )
+        return script.search_cases(case_nos, workers=workers, playwright_fallback=True)
+
+    def build_case_detail_url(self, oa_data: Any) -> str:
+        """构建 OA 案件详情页 URL。"""
+        return f"https://ims.jtn.com/project/projectView.aspx?keyid={oa_data.keyid}&FirstModel=PROJECT&SecondModel=PROJECT002"
+
     # ==================================================================
     # ClientImportAdapter
     # ==================================================================
 
-    async def execute_client_import(self, session: Any) -> None:
+    async def execute_client_import(self, session: Any, *, headless: bool = True, limit: int | None = None) -> None:
         """执行客户导入（委托给 ClientImportService）。"""
         from apps.oa_filing.services.client_import_service import ClientImportService
 
-        ClientImportService(session).run_import()
+        ClientImportService(session).run_import(headless=headless, limit=limit)
+
+    def iter_customers(self, session: Any, *, headless: bool = True, limit: int | None = None) -> Any:
+        """返回 AsyncGenerator[OACustomerData]。"""
+        from apps.oa_filing.services.oa_scripts.jtn.client_import import JtnClientImportScript
+
+        credential = session.credential
+        script = JtnClientImportScript(
+            account=str(credential.account),
+            password=str(credential.password),
+            headless=headless,
+            progress_callback=lambda p: None,
+        )
+        return script.run(limit=limit)
 
     # ==================================================================
     # JTN 字段映射（私有）

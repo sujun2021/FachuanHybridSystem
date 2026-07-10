@@ -13,13 +13,7 @@ from django.utils import timezone
 from apps.contracts.models import Contract
 from apps.core.models.enums import CaseType
 from apps.oa_filing.models import CaseImportPhase, CaseImportSession, CaseImportStatus
-from apps.oa_filing.services.oa_scripts.jtn.case_import import (
-    JtnCaseImportScript,
-    OACaseCustomerData,
-    OACaseData,
-    OACaseInfoData,
-    OAConflictData,
-)
+from apps.oa_filing.services.oa_data_models import OACaseCustomerData, OACaseData, OACaseInfoData, OAConflictData
 
 if TYPE_CHECKING:
     from apps.client.models import Client
@@ -278,17 +272,19 @@ class CaseImportService:
                 progress_message="正在连接OA系统",
             )
 
-            # 创建Playwright脚本
-            script = JtnCaseImportScript(
-                account=self.credential.account,
-                password=self.credential.password,
-                headless=headless,
-                progress_callback=self._handle_script_progress,
+            # 通过适配器获取 OA 数据
+            from apps.oa_filing.services.oa_firm_registry import create_adapter
+
+            site_name = self.credential.site_name if self.credential else "金诚同达OA"
+            adapter = create_adapter(
+                site_name,
+                str(self.credential.account),
+                str(self.credential.password),
             )
 
             # 先批量抓取OA数据，退出Playwright上下文后再执行数据库写入，
             # 避免在Playwright运行上下文中触发Django同步ORM限制。
-            oa_results = self._fetch_oa_results(case_nos=case_nos, script=script)
+            oa_results = self._fetch_oa_results(case_nos=case_nos, adapter=adapter, headless=headless)
 
             # 批量处理案件
             total = len(case_nos)
@@ -396,9 +392,10 @@ class CaseImportService:
         self,
         *,
         case_nos: list[str],
-        script: JtnCaseImportScript,
+        adapter: Any,
+        headless: bool = True,
     ) -> list[tuple[str, OACaseData | None]]:
-        """抓取OA案件数据（一次登录 + HTTP并发查询 + Playwright兜底）。"""
+        """抓取OA案件数据（通过适配器）。"""
         import asyncio
 
         workers = self._resolve_search_workers(len(case_nos))
@@ -408,10 +405,11 @@ class CaseImportService:
                 progress_message=f"正在并发抓取OA案件信息（HTTP {workers}路，Playwright兜底）",
             )
 
-        # script.search_cases() 现在是 async generator，用 asyncio.run() 桥接
         async def _collect() -> list[tuple[str, OACaseData | None]]:
             results: list[tuple[str, OACaseData | None]] = []
-            async for case_no, oa_data in script.search_cases(case_nos, workers=workers, playwright_fallback=True):
+            async for case_no, oa_data in adapter.search_cases(
+                case_nos, self._session.credential, workers=workers, headless=headless
+            ):
                 results.append((case_no, oa_data))
             return results
 
@@ -561,8 +559,12 @@ class CaseImportService:
             )
             resolved_case_type = mapped_case_type or CaseType.CIVIL
 
-            # 构建OA详情页URL
-            oa_detail_url = f"https://ims.jtn.com/project/projectView.aspx?keyid={oa_data.keyid}&FirstModel=PROJECT&SecondModel=PROJECT002"
+            # 构建OA详情页URL（通过适配器）
+            from apps.oa_filing.services.oa_firm_registry import create_adapter as _create_adapter
+
+            _site = self.credential.site_name if self.credential else "金诚同达OA"
+            _adapter = _create_adapter(_site, str(self.credential.account), str(self.credential.password))
+            oa_detail_url = _adapter.build_case_detail_url(oa_data)
 
             # 3. 查找或创建合同（先创建Contract，因为它不依赖Case）
             existing_contract = Contract.objects.filter(law_firm_oa_case_number=oa_data.case_no).first()

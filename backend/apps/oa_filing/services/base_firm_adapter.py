@@ -61,11 +61,27 @@ class CaseImportAdapter(Protocol):
         """执行案件导入。"""
         ...
 
+    async def fetch_case_detail(self, case_no: str, credential: Any) -> Any | None:
+        """从 OA 获取案件详情，返回 OACaseData 或 None。"""
+        ...
+
+    def search_cases(self, case_nos: list[str], credential: Any, *, workers: int = 2, headless: bool = True) -> Any:
+        """批量搜索案件，返回 AsyncGenerator[(case_no, OACaseData | None)]。"""
+        ...
+
+    def build_case_detail_url(self, oa_data: Any) -> str:
+        """构建 OA 案件详情页 URL。"""
+        ...
+
 
 @runtime_checkable
 class ClientImportAdapter(Protocol):
     """客户导入适配器协议。"""
 
-    async def execute_client_import(self, session: Any) -> None:
+    async def execute_client_import(self, session: Any, *, headless: bool, limit: int | None) -> None:
         """执行客户导入。"""
+        ...
+
+    def iter_customers(self, session: Any, *, headless: bool, limit: int | None) -> Any:
+        """返回 AsyncGenerator[OACustomerData, None]，逐条 yield 客户数据。"""
         ...

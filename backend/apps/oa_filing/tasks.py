@@ -247,7 +247,7 @@ def run_batch_create_cases_task(session_id: int, cases: list[dict[str, Any]]) ->
     """
     from apps.oa_filing.models import CaseImportSession
     from apps.oa_filing.services.case_import_service import CaseImportService
-    from apps.oa_filing.services.oa_scripts.jtn.case_import import OACaseData
+    from apps.oa_filing.services.oa_data_models import OACaseData
 
     try:
         session = CaseImportSession.objects.select_related("credential", "lawyer").get(pk=session_id)

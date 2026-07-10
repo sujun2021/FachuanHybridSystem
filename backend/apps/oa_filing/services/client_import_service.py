@@ -11,7 +11,7 @@ from django.utils import timezone
 
 from apps.client.models import Client
 from apps.oa_filing.models import ClientImportPhase, ClientImportSession, ClientImportStatus
-from apps.oa_filing.services.oa_scripts.jtn.client_import import OACustomerData
+from apps.oa_filing.services.oa_data_models import OACustomerData
 
 if TYPE_CHECKING:
     from apps.organization.models import AccountCredential
@@ -48,7 +48,7 @@ class ClientImportService:
 
         import django
 
-        from apps.oa_filing.services.oa_scripts.jtn.client_import import JtnClientImportScript
+        from apps.oa_filing.services.oa_firm_registry import create_adapter
 
         logger.info("开始导入客户，session_id=%d headless=%s limit=%s", self._session.id, headless, limit)
 
@@ -68,17 +68,17 @@ class ClientImportService:
                 progress_message="正在登录OA并查找当事人列表",
             )
 
-            script = JtnClientImportScript(
-                account=self.credential.account,
-                password=self.credential.password,
-                headless=headless,
-                progress_callback=self._handle_script_progress,
+            site_name = self.credential.site_name if self.credential else "金诚同达OA"
+            adapter = create_adapter(
+                site_name,
+                str(self.credential.account),
+                str(self.credential.password),
             )
 
-            # script.run() 现在是 async generator，用 asyncio.run() 桥接
+            # adapter.iter_customers() 返回 async generator，用 asyncio.run() 桥接
             async def _collect_all() -> list[OACustomerData]:
                 collected: list[OACustomerData] = []
-                async for customer_data in script.run(limit=limit):
+                async for customer_data in adapter.iter_customers(self._session, headless=headless, limit=limit):
                     collected.append(customer_data)
                 return collected
 
