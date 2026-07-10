@@ -337,28 +337,48 @@ class JTNAdapter(FilingAdapter, StampAdapter, ArchiveAdapter, CaseImportAdapter,
             # ── 输入案件编号 ──
             if oa_case_number:
                 logger.info("输入案件编号: %s", oa_case_number)
-                case_input = page.locator(_CASE_NO_INPUT)
-                await case_input.wait_for(state="visible", timeout=10_000)
-                await case_input.fill(oa_case_number)
+                await page.evaluate(f"""() => {{
+                    const el = document.getElementById("{_CASE_NO_INPUT.lstrip("#")}");
+                    if (el) {{
+                        el.removeAttribute('readonly');
+                        el.removeAttribute('disabled');
+                        el.value = '{oa_case_number}';
+                        el.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                        el.dispatchEvent(new Event('change', {{ bubbles: true }}));
+                    }}
+                }}""")
                 await asyncio.sleep(0.5)
 
                 # ── 点击查找 ──
                 logger.info("点击查找按钮")
                 search_btn = page.locator(f"xpath={_SEARCH_BTN_XP}")
-                await search_btn.wait_for(state="visible", timeout=10_000)
-                await search_btn.click()
+                count = await search_btn.count()
+                if count > 0:
+                    await search_btn.click(timeout=10_000)
+                else:
+                    logger.warning("XPath 未找到查找按钮，跳过")
                 await asyncio.sleep(3)
 
                 # ── 点击第一个结果的"申请对外开票" ──
                 logger.info("点击申请对外开票")
-                apply_link = page.locator(f"xpath={_FIRST_APPLY_LINK_XP}")
                 try:
-                    await apply_link.wait_for(state="visible", timeout=10_000)
-                    await apply_link.first.click()
+                    apply_link = page.locator(f"xpath={_FIRST_APPLY_LINK_XP}")
+                    await apply_link.first.click(timeout=10_000)
                     await asyncio.sleep(2)
                     logger.info("已跳转到开票页面: %s", page.url)
                 except Exception:
-                    logger.warning("未找到申请对外开票按钮，请手动操作")
+                    logger.warning("XPath 未找到，尝试 JS 点击")
+                    result = await page.evaluate("""() => {
+                        const links = document.querySelectorAll('#wrap table a');
+                        for (const a of links) {
+                            if (a.textContent.includes('申请') || a.textContent.includes('开票')) {
+                                a.click(); return 'clicked: ' + a.textContent.trim();
+                            }
+                        }
+                        return 'not found';
+                    }""")
+                    logger.info("JS 点击结果: %s", result)
+                    await asyncio.sleep(2)
 
             logger.info("开票页面已打开，浏览器保持打开状态")
 
