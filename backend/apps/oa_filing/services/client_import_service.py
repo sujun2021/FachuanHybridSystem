@@ -78,7 +78,9 @@ class ClientImportService:
             # adapter.iter_customers() 返回 async generator，用 asyncio.run() 桥接
             async def _collect_all() -> list[OACustomerData]:
                 collected: list[OACustomerData] = []
-                async for customer_data in adapter.iter_customers(self._session, headless=headless, limit=limit):
+                async for customer_data in adapter.iter_customers(
+                    self._session, headless=headless, limit=limit, progress_callback=self._handle_script_progress
+                ):
                     collected.append(customer_data)
                 return collected
 

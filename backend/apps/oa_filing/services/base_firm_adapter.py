@@ -65,7 +65,15 @@ class CaseImportAdapter(Protocol):
         """从 OA 获取案件详情，返回 OACaseData 或 None。"""
         ...
 
-    def search_cases(self, case_nos: list[str], credential: Any, *, workers: int = 2, headless: bool = True) -> Any:
+    def search_cases(
+        self,
+        case_nos: list[str],
+        credential: Any,
+        *,
+        workers: int = 2,
+        headless: bool = True,
+        progress_callback: Any = None,
+    ) -> Any:
         """批量搜索案件，返回 AsyncGenerator[(case_no, OACaseData | None)]。"""
         ...
 
@@ -82,6 +90,6 @@ class ClientImportAdapter(Protocol):
         """执行客户导入。"""
         ...
 
-    def iter_customers(self, session: Any, *, headless: bool, limit: int | None) -> Any:
+    def iter_customers(self, session: Any, *, headless: bool, limit: int | None, progress_callback: Any = None) -> Any:
         """返回 AsyncGenerator[OACustomerData, None]，逐条 yield 客户数据。"""
         ...

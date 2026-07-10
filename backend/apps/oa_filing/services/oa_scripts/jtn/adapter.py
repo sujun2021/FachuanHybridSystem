@@ -402,7 +402,15 @@ class JTNAdapter(FilingAdapter, StampAdapter, ArchiveAdapter, CaseImportAdapter,
         )
         return await script.fetch_single_case(case_no)
 
-    def search_cases(self, case_nos: list[str], credential: Any, *, workers: int = 2, headless: bool = True) -> Any:
+    def search_cases(
+        self,
+        case_nos: list[str],
+        credential: Any,
+        *,
+        workers: int = 2,
+        headless: bool = True,
+        progress_callback: Any = None,
+    ) -> Any:
         """批量搜索案件，返回 AsyncGenerator[(case_no, OACaseData | None)]。"""
         from apps.oa_filing.services.oa_scripts.jtn.case_import import JtnCaseImportScript
 
@@ -410,6 +418,7 @@ class JTNAdapter(FilingAdapter, StampAdapter, ArchiveAdapter, CaseImportAdapter,
             account=str(credential.account),
             password=str(credential.password),
             headless=headless,
+            progress_callback=progress_callback,
         )
         return script.search_cases(case_nos, workers=workers, playwright_fallback=True)
 
@@ -427,7 +436,9 @@ class JTNAdapter(FilingAdapter, StampAdapter, ArchiveAdapter, CaseImportAdapter,
 
         ClientImportService(session).run_import(headless=headless, limit=limit)
 
-    def iter_customers(self, session: Any, *, headless: bool = True, limit: int | None = None) -> Any:
+    def iter_customers(
+        self, session: Any, *, headless: bool = True, limit: int | None = None, progress_callback: Any = None
+    ) -> Any:
         """返回 AsyncGenerator[OACustomerData]。"""
         from apps.oa_filing.services.oa_scripts.jtn.client_import import JtnClientImportScript
 
@@ -436,7 +447,7 @@ class JTNAdapter(FilingAdapter, StampAdapter, ArchiveAdapter, CaseImportAdapter,
             account=str(credential.account),
             password=str(credential.password),
             headless=headless,
-            progress_callback=lambda p: None,
+            progress_callback=progress_callback,
         )
         return script.run(limit=limit)
 

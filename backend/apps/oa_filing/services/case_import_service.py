@@ -408,7 +408,11 @@ class CaseImportService:
         async def _collect() -> list[tuple[str, OACaseData | None]]:
             results: list[tuple[str, OACaseData | None]] = []
             async for case_no, oa_data in adapter.search_cases(
-                case_nos, self._session.credential, workers=workers, headless=headless
+                case_nos,
+                self._session.credential,
+                workers=workers,
+                headless=headless,
+                progress_callback=self._handle_script_progress,
             ):
                 results.append((case_no, oa_data))
             return results
