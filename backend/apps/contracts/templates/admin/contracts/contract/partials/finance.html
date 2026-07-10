@@ -5,7 +5,7 @@
     <div style="display: flex; gap: 8px; margin-bottom: 16px;">
         <button type="button" class="btn btn-outline-info btn-sm" id="btn-open-invoice"
                 onclick="openInvoicePage({{ contract.pk }})">
-            🧾 {% trans "申请开票" %}
+            {% trans "申请开票" %}
         </button>
     </div>
 
@@ -220,7 +220,7 @@ function openInvoicePage(contractId) {
     })
     .catch(function(e) { alert('请求失败: ' + e.message); })
     .finally(function() {
-        if (btn) { btn.disabled = false; btn.textContent = '🧾 申请开票'; }
+        if (btn) { btn.disabled = false; btn.textContent = '申请开票'; }
     });
 }
 </script>
