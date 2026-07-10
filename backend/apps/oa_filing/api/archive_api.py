@@ -9,7 +9,14 @@ from asgiref.sync import sync_to_async
 from django.http import HttpRequest
 from ninja import Router
 
-from apps.oa_filing.schemas.archive_schemas import ArchiveApplyIn, ArchiveLookupOut, ArchiveSessionOut
+from apps.oa_filing.schemas.archive_schemas import (
+    ArchiveApplyIn,
+    ArchiveLookupOut,
+    ArchiveSessionOut,
+    OpenInvoiceIn,
+    OpenOAIn,
+    OpenStampIn,
+)
 
 logger = logging.getLogger("apps.oa_filing.api.archive")
 router = Router()
@@ -51,6 +58,7 @@ async def apply_archive(request: HttpRequest, payload: ArchiveApplyIn) -> Any:
     return await sync_to_async(service.execute_archive, thread_sensitive=False)(
         payload.file_paths,
         request.user,
+        payload.site_name,
     )
 
 
@@ -59,3 +67,40 @@ async def get_archive_session(request: HttpRequest, session_id: int) -> Any:
     """查询归档提交状态。"""
     service = _get_task_executor_service()
     return await sync_to_async(service.get_archive_session, thread_sensitive=False)(session_id)
+
+
+@router.post("/open-oa")
+async def open_oa_page(request: HttpRequest, payload: OpenOAIn) -> dict[str, Any]:
+    """打开 OA 归档页面，自动填写案件编号和小结，保持浏览器打开。"""
+    service = _get_task_executor_service()
+    await sync_to_async(service.open_oa_page, thread_sensitive=False)(
+        payload.contract_id,
+        request.user,
+        payload.description,
+        payload.site_name,
+    )
+    return {"success": True, "message": "浏览器已打开，请查看"}
+
+
+@router.post("/open-invoice")
+async def open_invoice_page(request: HttpRequest, payload: OpenInvoiceIn) -> dict[str, Any]:
+    """打开 OA 发票页面，输入案件编号并跳转到开票页面，保持浏览器打开。"""
+    service = _get_task_executor_service()
+    await sync_to_async(service.open_invoice_page, thread_sensitive=False)(
+        payload.contract_id,
+        request.user,
+        payload.site_name,
+    )
+    return {"success": True, "message": "浏览器已打开，请查看"}
+
+
+@router.post("/open-stamp")
+async def open_stamp_page(request: HttpRequest, payload: OpenStampIn) -> dict[str, Any]:
+    """打开 OA 盖章页面，登录→搜索案件→填表，保持浏览器打开。"""
+    service = _get_task_executor_service()
+    await sync_to_async(service.open_stamp_page, thread_sensitive=False)(
+        payload.case_id,
+        request.user,
+        payload.site_name,
+    )
+    return {"success": True, "message": "浏览器已打开，请查看"}

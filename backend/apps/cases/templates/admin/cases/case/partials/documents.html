@@ -236,10 +236,47 @@
                 };
             }
             </script>
+
+            <!-- 所函盖章 -->
+            <div class="action-group">
+                <h4 class="action-group-title">{% trans "OA操作" %}</h4>
+                <div class="action-item">
+                    <button type="button" class="btn btn-outline-info btn-sm" id="btn-open-stamp"
+                            onclick="openStampPage({{ case.pk }})">
+                        {% trans "申请所函盖章" %}
+                    </button>
+                </div>
+            </div>
+            <script>
+            function openStampPage(caseId) {
+                var btn = document.getElementById('btn-open-stamp');
+                if (btn) { btn.disabled = true; btn.textContent = '打开中...'; }
+                var csrf = (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || '';
+                fetch('/api/v1/oa-archive/open-stamp', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrf},
+                    body: JSON.stringify({case_id: caseId}),
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        var toast = document.createElement('div');
+                        toast.textContent = '浏览器已打开，请查看';
+                        toast.style.cssText = 'position:fixed;top:20px;right:24px;padding:12px 24px;border-radius:8px;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:9999;background:var(--fc-success-bg);color:var(--fc-success-text);';
+                        document.body.appendChild(toast);
+                        setTimeout(function() { toast.remove(); }, 3000);
+                    } else {
+                        alert('打开失败: ' + (data.detail || data.message || '未知错误'));
+                    }
+                })
+                .catch(function(e) { alert('请求失败: ' + e.message); })
+                .finally(function() {
+                    if (btn) { btn.disabled = false; btn.textContent = '申请所函盖章'; }
+                });
+            }
+            </script>
         </div>
     </div>
-
-    <!-- 模板与绑定配置卡片 -->
     <div class="info-card full-width" style="margin-top: 0;"
          x-data="caseTemplateDownloadApp({{ case.pk }})">
         <div class="card-header">

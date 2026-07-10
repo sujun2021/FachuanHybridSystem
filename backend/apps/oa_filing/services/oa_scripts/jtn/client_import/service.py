@@ -40,17 +40,7 @@ _MEDIUM_WAIT = 1.5
 _AJAX_WAIT = 2.0
 
 
-@dataclass
-class OACustomerData:
-    """OA客户数据。"""
-
-    name: str  # 客户名称
-    client_type: str  # natural=自然人 / legal=企业
-    phone: str | None = None  # 联系电话
-    address: str | None = None  # 地址
-    id_number: str | None = None  # 身份证号码（自然人）
-    legal_representative: str | None = None  # 法定代表人（企业）
-    gender: str | None = None  # 性别（自然人）
+from apps.oa_filing.services.oa_data_models import OACustomerData
 
 
 @dataclass

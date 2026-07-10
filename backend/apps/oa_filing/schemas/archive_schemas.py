@@ -9,6 +9,23 @@ from ninja import Schema
 
 class ArchiveApplyIn(Schema):
     file_paths: list[str]
+    site_name: str = "金诚同达OA"
+
+
+class OpenOAIn(Schema):
+    contract_id: int
+    description: str = "详见卷宗"
+    site_name: str = "金诚同达OA"
+
+
+class OpenInvoiceIn(Schema):
+    contract_id: int
+    site_name: str = "金诚同达OA"
+
+
+class OpenStampIn(Schema):
+    case_id: int
+    site_name: str = "金诚同达OA"
 
 
 class ArchiveLookupOut(Schema):

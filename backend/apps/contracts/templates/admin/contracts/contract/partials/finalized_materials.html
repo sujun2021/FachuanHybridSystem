@@ -80,6 +80,10 @@
             <button type="button" class="btn btn-outline-info btn-sm" onclick="learnArchiveRules({{ contract.pk }})">
                 {% trans "学习分类规则" %}
             </button>
+            <button type="button" class="btn btn-outline-info btn-sm" id="btn-open-oa"
+                    onclick="openOAPage({{ contract.pk }})">
+                🌐 {% trans "打开OA" %}
+            </button>
             {% if can_archive %}
             <button type="button" class="btn btn-warning btn-sm ac-btn-archive" onclick="confirmArchive({{ contract.pk }})">
                 {% trans "确认归档" %}
@@ -1207,6 +1211,33 @@ function archiveChecklistApp(initialCompact, checklistItems) {
             .catch(function(e) { alert('请求失败: ' + e.message); });
         })
         .catch(function(e) { alert('查询失败: ' + e.message); });
+    };
+
+    // 打开OA归档页面
+    window.openOAPage = function(contractId) {
+        var btn = document.getElementById('btn-open-oa');
+        if (btn) { btn.disabled = true; btn.textContent = '⏳ 打开中...'; }
+        fetch('/api/v1/oa-archive/open-oa', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRF() },
+            body: JSON.stringify({ contract_id: contractId }),
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                var toast = document.createElement('div');
+                toast.textContent = '✓ 浏览器已打开，请查看';
+                toast.style.cssText = 'position:fixed;top:20px;right:24px;padding:12px 24px;border-radius:8px;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:9999;background:var(--fc-success-bg);color:var(--fc-success-text);';
+                document.body.appendChild(toast);
+                setTimeout(function() { toast.remove(); }, 3000);
+            } else {
+                alert('打开失败: ' + (data.detail || data.message || '未知错误'));
+            }
+        })
+        .catch(function(e) { alert('请求失败: ' + e.message); })
+        .finally(function() {
+            if (btn) { btn.disabled = false; btn.textContent = '🌐 打开OA'; }
+        });
     };
 
     // 学习分类规则

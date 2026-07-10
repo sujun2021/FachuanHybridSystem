@@ -8,15 +8,14 @@ import pytest
 
 from apps.oa_filing.services.case_import_service import CaseImportService, CasePreviewResult
 from apps.oa_filing.services.client_import_service import ClientImportService, ImportResult
-from apps.oa_filing.services.script_executor_service import ScriptExecutorService
+from apps.oa_filing.services.oa_scripts.jtn.adapter import JTNAdapter
+
+# ── JTNAdapter mapping methods ─────────────────────────────────────────
 
 
-# ── ScriptExecutorService mapping methods ─────────────────────────────────────
-
-
-class TestScriptExecutorServiceMappings:
+class TestJTNAdapterMappings:
     def setup_method(self):
-        self.service = ScriptExecutorService()
+        self.service = JTNAdapter("test", "test")
 
     def test_map_case_category_civil(self):
         case = MagicMock(case_type="civil")
@@ -135,8 +134,11 @@ class TestScriptExecutorServiceMappings:
 
     @pytest.mark.asyncio
     async def test_dispatch_unsupported_site(self):
-        with pytest.raises(Exception):
-            await self.service._dispatch("unsupported_site", MagicMock(), 1, None)
+        from apps.oa_filing.services.exceptions import ScriptExecutionError
+        from apps.oa_filing.services.oa_firm_registry import create_adapter
+
+        with pytest.raises(ValueError, match="不支持"):
+            create_adapter("unsupported_site", "acc", "pwd")
 
 
 # ── CaseImportService mapping methods ────────────────────────────────────────
@@ -274,40 +276,48 @@ class TestClientImportService:
         svc = self._make_service()
         with patch("apps.oa_filing.services.client_import_service.ClientImportSession") as mock_model:
             mock_model.objects.filter.return_value.update.return_value = None
-            svc._handle_script_progress({
-                "event": "discovery_progress",
-                "discovered_count": 10,
-                "page": 2,
-            })
+            svc._handle_script_progress(
+                {
+                    "event": "discovery_progress",
+                    "discovered_count": 10,
+                    "page": 2,
+                }
+            )
 
     def test_handle_script_progress_discovery_completed(self):
         svc = self._make_service()
         with patch("apps.oa_filing.services.client_import_service.ClientImportSession") as mock_model:
             mock_model.objects.filter.return_value.update.return_value = None
-            svc._handle_script_progress({
-                "event": "discovery_completed",
-                "total_count": 50,
-            })
+            svc._handle_script_progress(
+                {
+                    "event": "discovery_completed",
+                    "total_count": 50,
+                }
+            )
 
     def test_handle_script_progress_import_started(self):
         svc = self._make_service()
         with patch("apps.oa_filing.services.client_import_service.ClientImportSession") as mock_model:
             mock_model.objects.filter.return_value.update.return_value = None
-            svc._handle_script_progress({
-                "event": "import_started",
-                "total_count": 50,
-            })
+            svc._handle_script_progress(
+                {
+                    "event": "import_started",
+                    "total_count": 50,
+                }
+            )
 
     def test_handle_script_progress_import_progress(self):
         svc = self._make_service()
         with patch("apps.oa_filing.services.client_import_service.ClientImportSession") as mock_model:
             mock_model.objects.filter.return_value.update.return_value = None
-            svc._handle_script_progress({
-                "event": "import_progress",
-                "index": 5,
-                "total_count": 50,
-                "name": "测试公司",
-            })
+            svc._handle_script_progress(
+                {
+                    "event": "import_progress",
+                    "index": 5,
+                    "total_count": 50,
+                    "name": "测试公司",
+                }
+            )
 
     def test_handle_script_progress_unknown_event(self):
         svc = self._make_service()

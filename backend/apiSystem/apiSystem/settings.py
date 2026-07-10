@@ -149,10 +149,13 @@ APPEND_SLASH = False
 # DEBUG 模式不缓存（模板修改需即时生效）
 if not DEBUG:
     _template_loaders: list[tuple[str, list[str]]] | None = [
-        ("django.template.loaders.cached.Loader", [
-            "django.template.loaders.filesystem.Loader",
-            "django.template.loaders.app_directories.Loader",
-        ]),
+        (
+            "django.template.loaders.cached.Loader",
+            [
+                "django.template.loaders.filesystem.Loader",
+                "django.template.loaders.app_directories.Loader",
+            ],
+        ),
     ]
 else:
     _template_loaders = None
@@ -308,7 +311,7 @@ SIMPLE_JWT = {
 
 # Session 安全配置
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 7  # 7 天
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_SAVE_EVERY_REQUEST = False
 
 # Internationalization

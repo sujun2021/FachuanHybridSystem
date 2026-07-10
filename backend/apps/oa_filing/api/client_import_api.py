@@ -24,7 +24,7 @@ def trigger_client_import(request: HttpRequest) -> Any:  # pragma: no cover
     """触发从OA导入客户。"""
     import json
 
-    from apps.oa_filing.services.import_session_service import get_jtn_credential
+    from apps.oa_filing.services.import_session_service import get_credential
 
     if not request.user.is_authenticated:
         return {"error": "未登录"}
@@ -57,11 +57,11 @@ def trigger_client_import(request: HttpRequest) -> Any:  # pragma: no cover
             headless = True
             limit = None
 
-    # 查找用户的 jtn.com 凭证
-    credential = get_jtn_credential(lawyer_id)
+    # 查找用户的 OA 凭证
+    credential = get_credential(lawyer_id, "金诚同达OA")
 
     if not credential:
-        return {"error": "未找到金诚同达OA账号凭证"}
+        return {"error": "未找到OA账号凭证"}
 
     # 创建导入会话
     from apps.oa_filing.services.import_session_service import create_client_session, get_lawyer
@@ -137,7 +137,7 @@ def batch_create_clients(request: HttpRequest, session_id: int) -> dict[str, Any
 
     logger.info("启动批量创建客户任务: session_id=%d customers=%d task_id=%s", session_id, len(customers), task_id)
 
-    return {  # type: ignore[return-value]
+    return {
         "message": "批量创建任务已启动",
         "task_id": task_id,
         "session_id": session_id,

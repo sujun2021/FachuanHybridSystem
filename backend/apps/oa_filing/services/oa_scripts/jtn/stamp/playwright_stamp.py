@@ -302,3 +302,48 @@ class PlaywrightStampMixin:  # pragma: no cover
         await save_btn.first.click()
         await asyncio.sleep(MEDIUM_WAIT)
         logger.info("盖章申请已提交")
+
+    # ------------------------------------------------------------------
+    # 打开页面并填写（不上传、不保存）
+    # ------------------------------------------------------------------
+
+    async def _open_page(self: Any, oa_case_number: str) -> tuple[Any, Any]:
+        """打开盖章页面，登录→搜索案件→填表，返回 (playwright, browser)。"""
+        from playwright.async_api import async_playwright
+
+        playwright = await async_playwright().start()
+        browser = await playwright.chromium.launch(headless=False)
+        context = await browser.new_context()
+        page = await context.new_page()
+
+        try:
+            await self._login_to_stamp(page, context)
+            await self._navigate_to_stamp_page(page)
+
+            if oa_case_number:
+                await self._search_and_select_case(page, oa_case_number)
+
+                # 填写盖章表单
+                file_type = page.locator(XPATH_FILE_TYPE)
+                await file_type.first.select_option(value=FILE_TYPE_SOUHAN)
+                await asyncio.sleep(SHORT_WAIT)
+                logger.info("文档类型: 所函")
+
+                for idx in [STAMP_TYPE_INDEX_GONGZHANG, STAMP_TYPE_INDEX_DIANZI]:
+                    label = page.locator(f'//*[@id="table_file_1"]/tbody/tr/td[2]/ul/li[{idx}]/label')
+                    await label.first.click()
+                    await asyncio.sleep(SHORT_WAIT)
+                logger.info("盖章类型: 公章, 电子公章")
+
+                copies_input = page.locator(XPATH_STAMP_COPIES)
+                await copies_input.first.fill(str(DEFAULT_STAMP_COPIES))
+                await asyncio.sleep(SHORT_WAIT)
+                logger.info("盖章份数: %d", DEFAULT_STAMP_COPIES)
+
+            logger.info("盖章表单已填写完成")
+            return playwright, browser
+
+        except Exception:
+            await browser.close()
+            await playwright.stop()
+            raise
