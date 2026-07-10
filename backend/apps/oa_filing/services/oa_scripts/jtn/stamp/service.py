@@ -19,3 +19,7 @@ class JtnStampScript(PlaywrightStampMixin):
     async def run(self, form_data: StampFormData) -> None:
         """执行盖章申请全流程。"""
         await self._run_stamp_application(form_data)
+
+    async def open_page(self, oa_case_number: str) -> tuple:
+        """打开盖章页面并填写，返回 (playwright, browser)。"""
+        return await self._open_page(oa_case_number)

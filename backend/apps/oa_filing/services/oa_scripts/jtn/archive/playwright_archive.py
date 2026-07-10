@@ -216,3 +216,41 @@ class PlaywrightArchiveMixin:  # pragma: no cover
         await save_btn.first.click()
         await asyncio.sleep(MEDIUM_WAIT)
         logger.info("归档申请已提交")
+
+    async def _click_delete_button(self: Any, page: Page) -> None:
+        """点击删除按钮（清除默认附件行）。"""
+        btn = page.locator('//*[@id="tblFiles"]/tbody/tr[3]/td[3]')
+        count = await btn.count()
+        if count == 0:
+            logger.warning("未找到删除按钮")
+            return
+        await btn.first.click()
+        await asyncio.sleep(MEDIUM_WAIT)
+        logger.info("删除按钮已点击")
+
+    async def _open_page(self: Any, oa_case_number: str, description: str = "详见卷宗") -> tuple[Any, Any]:
+        """打开归档页面，填写案件编号和小结，返回 (playwright, browser) 保持浏览器打开。"""
+        from playwright.async_api import async_playwright
+
+        playwright = await async_playwright().start()
+        browser = await playwright.chromium.launch(headless=False)
+        context = await browser.new_context()
+        page = await context.new_page()
+
+        try:
+            await self._login(page, context)
+            await self._navigate(page)
+
+            if oa_case_number:
+                await self._search_and_select_case(page, oa_case_number)
+
+            await self._fill_description(page, description)
+            await self._click_delete_button(page)
+
+            logger.info("归档页面已打开并填写完成")
+            return playwright, browser
+
+        except Exception:
+            await browser.close()
+            await playwright.stop()
+            raise
