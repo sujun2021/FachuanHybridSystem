@@ -26,7 +26,7 @@ def get_adapter_class(site_name: str) -> type:
     import importlib
 
     module = importlib.import_module(module_path)
-    return getattr(module, class_name)
+    return getattr(module, class_name)  # type: ignore[no-any-return]
 
 
 def create_adapter(site_name: str, account: str, password: str) -> Any:

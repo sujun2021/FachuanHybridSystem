@@ -267,7 +267,7 @@ class JTNAdapter(FilingAdapter, StampAdapter, ArchiveAdapter, CaseImportAdapter,
             account=str(credential.account),
             password=str(credential.password),
         )
-        return await script.fetch_single_case(case_no)
+        return await script.search_case(case_no)
 
     def search_cases(
         self,

@@ -137,7 +137,7 @@ def batch_create_clients(request: HttpRequest, session_id: int) -> dict[str, Any
 
     logger.info("启动批量创建客户任务: session_id=%d customers=%d task_id=%s", session_id, len(customers), task_id)
 
-    return {  # type: ignore[return-value]
+    return {
         "message": "批量创建任务已启动",
         "task_id": task_id,
         "session_id": session_id,
