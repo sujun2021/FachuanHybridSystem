@@ -263,3 +263,36 @@ class ScriptExecutorService:
             logger.info("开票页面已打开")
         except Exception as exc:
             logger.error("打开开票页面失败: %s", exc, exc_info=True)
+
+    # ------------------------------------------------------------------
+    # 申请所函盖章
+    # ------------------------------------------------------------------
+
+    def open_stamp_page(self, case_id: int, user: Any, site_name: str = "金诚同达OA") -> None:
+        """打开 OA 盖章页面，登录→搜索案件→填表，保持浏览器打开。"""
+        from apps.cases.models import Case
+
+        credential = self._find_credential(user, site_name)
+        if credential is None:
+            raise RuntimeError(f"未找到匹配凭证: 站点名称={site_name}")
+
+        case = Case.objects.filter(pk=case_id).first()
+        oa_case_number = ""
+        if case and case.contract:
+            oa_case_number = case.contract.law_firm_oa_case_number or ""
+
+        _executor.submit(self._run_open_stamp_in_thread, site_name, credential, oa_case_number)
+
+    def _run_open_stamp_in_thread(
+        self,
+        site_name: str,
+        credential: Any,
+        oa_case_number: str,
+    ) -> None:
+        os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
+        try:
+            adapter = create_adapter(site_name, str(credential.account), str(credential.password))
+            asyncio.run(adapter.open_stamp_page(credential, oa_case_number))
+            logger.info("盖章页面已打开")
+        except Exception as exc:
+            logger.error("打开盖章页面失败: %s", exc, exc_info=True)

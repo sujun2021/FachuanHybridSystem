@@ -23,6 +23,11 @@ class OpenInvoiceIn(Schema):
     site_name: str = "金诚同达OA"
 
 
+class OpenStampIn(Schema):
+    case_id: int
+    site_name: str = "金诚同达OA"
+
+
 class ArchiveLookupOut(Schema):
     contract_id: int
     oa_case_number: str

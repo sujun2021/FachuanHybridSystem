@@ -15,6 +15,7 @@ from apps.oa_filing.schemas.archive_schemas import (
     ArchiveSessionOut,
     OpenInvoiceIn,
     OpenOAIn,
+    OpenStampIn,
 )
 
 logger = logging.getLogger("apps.oa_filing.api.archive")
@@ -87,6 +88,18 @@ async def open_invoice_page(request: HttpRequest, payload: OpenInvoiceIn) -> dic
     service = _get_task_executor_service()
     await sync_to_async(service.open_invoice_page, thread_sensitive=False)(
         payload.contract_id,
+        request.user,
+        payload.site_name,
+    )
+    return {"success": True, "message": "浏览器已打开，请查看"}
+
+
+@router.post("/open-stamp")
+async def open_stamp_page(request: HttpRequest, payload: OpenStampIn) -> dict[str, Any]:
+    """打开 OA 盖章页面，登录→搜索案件→填表，保持浏览器打开。"""
+    service = _get_task_executor_service()
+    await sync_to_async(service.open_stamp_page, thread_sensitive=False)(
+        payload.case_id,
         request.user,
         payload.site_name,
     )

@@ -393,6 +393,140 @@ class JTNAdapter(FilingAdapter, StampAdapter, ArchiveAdapter, CaseImportAdapter,
             await playwright.stop()
             raise
 
+    async def open_stamp_page(
+        self,
+        credential: Any,
+        oa_case_number: str,
+    ) -> None:
+        """打开 OA 盖章页面，登录→搜索案件→填表（所函/公章+电子公章/3份），保持浏览器打开。"""
+        import asyncio
+
+        from playwright.async_api import async_playwright
+
+        from apps.oa_filing.services.oa_scripts.jtn.stamp.constants import _POPUP_IFRAME_KEYWORD as STAMP_POPUP_KEYWORD
+        from apps.oa_filing.services.oa_scripts.jtn.stamp.constants import AJAX_WAIT as STAMP_AJAX_WAIT
+        from apps.oa_filing.services.oa_scripts.jtn.stamp.constants import (
+            DEFAULT_STAMP_COPIES,
+            FILE_TYPE_SOUHAN,
+            IFRAME_SEARCH_FN,
+        )
+        from apps.oa_filing.services.oa_scripts.jtn.stamp.constants import MEDIUM_WAIT as STAMP_MEDIUM_WAIT
+        from apps.oa_filing.services.oa_scripts.jtn.stamp.constants import POPUP_WAIT as STAMP_POPUP_WAIT
+        from apps.oa_filing.services.oa_scripts.jtn.stamp.constants import SHORT_WAIT as STAMP_SHORT_WAIT
+        from apps.oa_filing.services.oa_scripts.jtn.stamp.constants import (
+            STAMP_PAGE_URL,
+            STAMP_TYPE_INDEX_DIANZI,
+            STAMP_TYPE_INDEX_GONGZHANG,
+            XPATH_FILE_TYPE,
+            XPATH_SEARCH_CASE_BTN,
+            XPATH_STAMP_COPIES,
+        )
+
+        playwright = await async_playwright().start()
+        browser = await playwright.chromium.launch(headless=False)
+        context = await browser.new_context()
+        page = await context.new_page()
+
+        try:
+            # ── 登录 ──
+            cached = self._auth.load_cookies()
+            if cached:
+                logger.info("使用缓存 cookies 登录盖章页面")
+                await self._auth.inject_to_context(context, cached)
+                await page.goto(STAMP_PAGE_URL, wait_until="domcontentloaded", timeout=60_000)
+                await asyncio.sleep(STAMP_MEDIUM_WAIT)
+                if "login" not in page.url.lower():
+                    logger.info("Cookies 有效，已进入盖章页面")
+                else:
+                    logger.warning("缓存 cookies 已失效，执行 SSO 扫码登录")
+                    cookies = await self._auth.sso_login()
+                    await self._auth.inject_to_context(context, cookies)
+            else:
+                logger.info("无缓存 cookies，执行 SSO 扫码登录")
+                cookies = await self._auth.sso_login()
+                await self._auth.inject_to_context(context, cookies)
+
+            # ── 导航到盖章页面 ──
+            await page.goto(STAMP_PAGE_URL, wait_until="domcontentloaded", timeout=60_000)
+            await asyncio.sleep(STAMP_MEDIUM_WAIT)
+
+            if "login" in page.url.lower():
+                logger.warning("当前在登录页，等待 SSO 扫码...")
+                await page.wait_for_url("**/ims.jtn.com/projdoc/**", timeout=180_000)
+                await asyncio.sleep(STAMP_MEDIUM_WAIT)
+
+            logger.info("已进入盖章页面: %s", page.url)
+
+            if not oa_case_number:
+                logger.warning("无案件编号，跳过自动填表")
+                _active_browser_sessions.append((playwright, browser))
+                return
+
+            # ── 搜索并选择案件 ──
+            search_btn = page.locator(XPATH_SEARCH_CASE_BTN)
+            await search_btn.first.click()
+            await asyncio.sleep(STAMP_POPUP_WAIT)
+
+            popup_frame = None
+            for frame in page.frames:
+                if STAMP_POPUP_KEYWORD in frame.url:
+                    popup_frame = frame
+                    break
+            if popup_frame is None:
+                raise RuntimeError("未找到案件搜索弹窗 iframe")
+
+            await popup_frame.evaluate(f"""() => {{
+                const el = document.getElementById("project_no");
+                el.removeAttribute("readonly");
+                el.value = "{oa_case_number}";
+            }}""")
+            await asyncio.sleep(STAMP_SHORT_WAIT)
+            await popup_frame.evaluate(IFRAME_SEARCH_FN)
+            await asyncio.sleep(STAMP_AJAX_WAIT)
+
+            radio_count = await popup_frame.locator('input[type="radio"]').count()
+            if radio_count == 0:
+                raise RuntimeError(f"未找到案件: {oa_case_number}")
+
+            await popup_frame.evaluate('document.querySelectorAll("input[type=radio]")[0].click()')
+            await asyncio.sleep(STAMP_SHORT_WAIT)
+
+            await page.evaluate("""() => {
+                const layers = document.querySelectorAll(".layui-layer");
+                for (const layer of layers) {
+                    for (const a of layer.querySelectorAll("a")) {
+                        if (a.innerText.trim() === "选择") { a.click(); return; }
+                    }
+                }
+            }""")
+            await asyncio.sleep(STAMP_POPUP_WAIT)
+            logger.info("案件已选择: %s", oa_case_number)
+
+            # ── 填写盖章表单 ──
+            file_type = page.locator(XPATH_FILE_TYPE)
+            await file_type.first.select_option(value=FILE_TYPE_SOUHAN)
+            await asyncio.sleep(STAMP_SHORT_WAIT)
+            logger.info("文档类型: 所函")
+
+            for idx in [STAMP_TYPE_INDEX_GONGZHANG, STAMP_TYPE_INDEX_DIANZI]:
+                label = page.locator(f'//*[@id="table_file_1"]/tbody/tr/td[2]/ul/li[{idx}]/label')
+                await label.first.click()
+                await asyncio.sleep(STAMP_SHORT_WAIT)
+            logger.info("盖章类型: 公章, 电子公章")
+
+            copies_input = page.locator(XPATH_STAMP_COPIES)
+            await copies_input.first.fill(str(DEFAULT_STAMP_COPIES))
+            await asyncio.sleep(STAMP_SHORT_WAIT)
+            logger.info("盖章份数: %d", DEFAULT_STAMP_COPIES)
+
+            logger.info("盖章表单已填写完成，浏览器保持打开状态")
+            _active_browser_sessions.append((playwright, browser))
+
+        except Exception:
+            await browser.close()
+            await playwright.stop()
+            raise
+
     async def _search_and_select_case(self, page: Any, case_no: str) -> None:
         """搜索案件并选择（复用 archive 的逻辑）。"""
         import asyncio
