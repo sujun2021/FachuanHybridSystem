@@ -9,7 +9,7 @@ from asgiref.sync import sync_to_async
 from django.http import HttpRequest
 from ninja import Router
 
-from apps.oa_filing.schemas.archive_schemas import ArchiveApplyIn, ArchiveLookupOut, ArchiveSessionOut
+from apps.oa_filing.schemas.archive_schemas import ArchiveApplyIn, ArchiveLookupOut, ArchiveSessionOut, OpenOAIn
 
 logger = logging.getLogger("apps.oa_filing.api.archive")
 router = Router()
@@ -59,3 +59,15 @@ async def get_archive_session(request: HttpRequest, session_id: int) -> Any:
     """查询归档提交状态。"""
     service = _get_task_executor_service()
     return await sync_to_async(service.get_archive_session, thread_sensitive=False)(session_id)
+
+
+@router.post("/open-oa")
+async def open_oa_page(request: HttpRequest, payload: OpenOAIn) -> dict[str, Any]:
+    """打开 OA 归档页面，自动填写案件编号和小结，保持浏览器打开。"""
+    service = _get_task_executor_service()
+    await sync_to_async(service.open_oa_page, thread_sensitive=False)(
+        payload.contract_id,
+        request.user,
+        payload.description,
+    )
+    return {"success": True, "message": "浏览器已打开，请查看"}

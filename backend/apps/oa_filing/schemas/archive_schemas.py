@@ -11,6 +11,11 @@ class ArchiveApplyIn(Schema):
     file_paths: list[str]
 
 
+class OpenOAIn(Schema):
+    contract_id: int
+    description: str = "详见卷宗"
+
+
 class ArchiveLookupOut(Schema):
     contract_id: int
     oa_case_number: str

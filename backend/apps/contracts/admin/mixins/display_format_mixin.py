@@ -69,7 +69,7 @@ class ContractDisplayFormatMixin:  # pragma: no cover
     @admin.display(description="律所OA链接")
     def law_firm_oa_link_display(self, obj: Any) -> Any:  # pragma: no cover
         """显示合同所属律所的 OA 登录链接（可点击）。使用预取数据避免 N+1。"""
-        from apps.oa_filing.services.script_executor_service import SUPPORTED_SITES
+        from apps.oa_filing.services.oa_firm_registry import SUPPORTED_SITES
         from apps.organization.models import AccountCredential
 
         law_firm_ids: list[int] = []

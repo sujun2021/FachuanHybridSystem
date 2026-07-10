@@ -8,7 +8,7 @@ from django.http import HttpRequest
 from ninja import Router
 
 from apps.oa_filing.schemas.filing_schemas import ExecuteFilingIn, OAConfigOut, SessionOut
-from apps.oa_filing.services.script_executor_service import SUPPORTED_SITES
+from apps.oa_filing.services.oa_firm_registry import SUPPORTED_SITES
 
 logger = logging.getLogger("apps.oa_filing.api")
 router = Router()
