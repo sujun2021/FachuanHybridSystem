@@ -18,12 +18,21 @@ def get_override(contract_id: int, template_subtype: str) -> ArchivePlaceholderO
 def save_override(
     contract_id: int, template_subtype: str, overrides: dict[str, str]
 ) -> tuple[ArchivePlaceholderOverride, bool]:
-    """保存（创建或更新）归档占位符覆盖值。"""
-    return ArchivePlaceholderOverride.objects.update_or_create(
+    """保存（创建或更新）归档占位符覆盖值。
+
+    新的覆盖值会 **合并** 到已有值中，而不是整体替换，
+    以保证多次局部编辑不会丢失之前保存的内容。
+    """
+    obj, created = ArchivePlaceholderOverride.objects.get_or_create(
         contract_id=contract_id,
         template_subtype=template_subtype,
-        defaults={"overrides": overrides},
     )
+    if not created:
+        obj.overrides = {**obj.overrides, **overrides}
+    else:
+        obj.overrides = overrides
+    obj.save(update_fields=["overrides", "updated_at"])
+    return obj, created
 
 
 def delete_override(contract_id: int, template_subtype: str) -> int:

@@ -197,19 +197,33 @@ class TestArchiveOverrideService:
         assert result is None
 
     @patch("apps.contracts.services.archive.override_service.ArchivePlaceholderOverride")
-    def test_save_override(self, mock_model):
+    def test_save_override_new(self, mock_model):
+        """新建时直接使用传入的 overrides。"""
         from apps.contracts.services.archive.override_service import save_override
 
         mock_obj = MagicMock()
-        mock_model.objects.update_or_create.return_value = (mock_obj, True)
+        mock_model.objects.get_or_create.return_value = (mock_obj, True)
         result, created = save_override(1, "subtype", {"key": "val"})
         assert result == mock_obj
         assert created is True
-        mock_model.objects.update_or_create.assert_called_once_with(
+        mock_model.objects.get_or_create.assert_called_once_with(
             contract_id=1,
             template_subtype="subtype",
-            defaults={"overrides": {"key": "val"}},
         )
+        mock_obj.save.assert_called_once_with(update_fields=["overrides", "updated_at"])
+
+    @patch("apps.contracts.services.archive.override_service.ArchivePlaceholderOverride")
+    def test_save_override_merge(self, mock_model):
+        """更新时应合并已有覆盖值，而非整体替换。"""
+        from apps.contracts.services.archive.override_service import save_override
+
+        mock_obj = MagicMock()
+        mock_obj.overrides = {"old_key": "old_val"}
+        mock_model.objects.get_or_create.return_value = (mock_obj, False)
+        result, created = save_override(1, "subtype", {"new_key": "new_val"})
+        assert created is False
+        assert mock_obj.overrides == {"old_key": "old_val", "new_key": "new_val"}
+        mock_obj.save.assert_called_once_with(update_fields=["overrides", "updated_at"])
 
     @patch("apps.contracts.services.archive.override_service.ArchivePlaceholderOverride")
     def test_delete_override(self, mock_model):
