@@ -185,21 +185,18 @@ class JtnPlaywrightBrowserMixin:  # pragma: no cover
         )
 
     async def _login(self: Any) -> None:  # pragma: no cover
-        """通过 httpx 接口登录，将 cookie 注入 Playwright context。"""
+        """通过 JtnAuthService 完成登录，将 cookie 注入 Playwright context。"""
         cached_cookies = self._http_cookies_cache or {}
         if cached_cookies:
-            logger.info("接口登录复用 HTTP cookie=%s", len(cached_cookies))
+            logger.info("登录复用已有 cookie=%s", len(cached_cookies))
             await self._inject_cookies_to_context(cached_cookies)
             return
 
-        logger.info("接口登录: %s", _LOGIN_URL)
-        raw_cookies = await self._auth.http_login()
-        self._http_cookies_cache = dict(raw_cookies)
-        await self._auth.inject_to_context(
-            self._context,
-            [{"name": k, "value": v, "domain": ".jtn.com", "path": "/"} for k, v in raw_cookies.items()],
-        )
-        logger.info("接口登录成功，cookie 已注入")
+        logger.info("调用统一登录流程（SSO 扫码）")
+        cookies = await self._auth.ensure_cookies()
+        await self._auth.inject_to_context(self._context, cookies)
+        self._http_cookies_cache = {c["name"]: c["value"] for c in cookies}
+        logger.info("登录成功，已注入 %d 个 cookie", len(cookies))
 
     # ------------------------------------------------------------------
     # SSO 统一登录
