@@ -28,6 +28,8 @@ class SecurityHeadersMiddleware:
     """按路径设置 Content-Security-Policy 响应头的中间件"""
 
     _DOCS_SUFFIXES = ("/docs", "/schema", "/redoc", "/swagger")
+    _is_async: bool
+    get_response: Callable[..., Any]
 
     def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]) -> None:
         _init_dual_mode(self, get_response)
@@ -65,6 +67,9 @@ class SecurityHeadersMiddleware:
 
 class PermissionsPolicyMiddleware:
     """设置 Permissions-Policy 响应头的中间件"""
+
+    _is_async: bool
+    get_response: Callable[..., Any]
 
     def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]) -> None:
         _init_dual_mode(self, get_response)
@@ -122,6 +127,9 @@ class ServiceLocatorScopeMiddleware:
     每个 HTTP 请求在独立的 ServiceLocator scope 中执行，
     确保请求间服务实例不互相污染（基于 ContextVar 实现）。
     """
+
+    _is_async: bool
+    get_response: Callable[..., Any]
 
     def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]) -> None:
         _init_dual_mode(self, get_response)

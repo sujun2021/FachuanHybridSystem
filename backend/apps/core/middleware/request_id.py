@@ -25,6 +25,9 @@ class RequestIdMiddleware:
     __call__ 在线程中运行，async 路径返回协程由 Django handler await。
     """
 
+    _is_async: bool
+    get_response: Callable[..., Any]
+
     def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]) -> None:
         self.get_response = get_response
         self._is_async = asyncio.iscoroutinefunction(get_response)
