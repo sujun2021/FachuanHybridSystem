@@ -9,12 +9,14 @@ ContractUpdate, ContractPaginatedOut.
 
 from __future__ import annotations
 
+from datetime import UTC
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
 from pydantic import ValidationError
 
+from apps.contracts.models import FeeMode
 from apps.contracts.schemas.contract_schemas import (
     ClientPaymentRecordOut,
     ContractAssignmentOut,
@@ -25,9 +27,6 @@ from apps.contracts.schemas.contract_schemas import (
     FinalizedMaterialOut,
     UpdateLawyersIn,
 )
-from apps.contracts.models import FeeMode
-from datetime import UTC
-
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # ContractIn validation
@@ -275,7 +274,8 @@ class TestContractOutResolvers:
 
     def test_resolve_reminders(self):
         """新版 resolve_reminders 从 prefetched reminders 读取，不再调用 ServiceLocator。"""
-        from datetime import datetime, timezone as dt_tz
+        from datetime import datetime
+        from datetime import timezone as dt_tz
 
         obj = MagicMock()
         # 构造两条提醒：一条 case_log_id=None（应保留），一条 case_log_id=1（应过滤）

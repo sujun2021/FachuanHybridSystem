@@ -8,7 +8,7 @@ Fix: Snapshot model_fields_set before assignments and restore after.
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone, UTC
+from datetime import UTC, datetime, timezone
 
 import pytest
 

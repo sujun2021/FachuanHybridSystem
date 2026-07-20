@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 try:
     from plugins.court_automation import filing
 except ImportError:
@@ -131,7 +132,7 @@ class TestGsxtReverseLogin:
             solver.solve_geetest_v4("id", "challenge")
 
     def test_set_captcha_solver(self):
-        from apps.automation.services.gsxt.gsxt_reverse_login import set_captcha_solver, CaptchaSolver
+        from apps.automation.services.gsxt.gsxt_reverse_login import CaptchaSolver, set_captcha_solver
 
         class MockSolver(CaptchaSolver):
             def solve_geetest_v4(self, captcha_id, challenge):

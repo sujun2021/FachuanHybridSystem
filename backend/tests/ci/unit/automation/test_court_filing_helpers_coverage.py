@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch, PropertyMock
 from typing import Any
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
+
 try:
     from plugins.court_automation import filing
 except ImportError:

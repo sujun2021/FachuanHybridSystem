@@ -9,6 +9,7 @@ from __future__ import annotations
 import re
 
 import pytest
+
 try:
     from plugins.court_automation import filing
 except ImportError:
@@ -16,7 +17,6 @@ except ImportError:
 
 
 from plugins.court_automation.filing.playwright_filing.party_info_handler import PartyInfoHandlerMixin
-
 
 # ============================================================
 # _normalize_client_type (static method)

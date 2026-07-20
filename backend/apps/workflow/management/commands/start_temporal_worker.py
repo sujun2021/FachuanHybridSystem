@@ -72,6 +72,7 @@ class Command(BaseCommand):
         from temporalio.worker._workflow_instance import UnsandboxedWorkflowRunner
 
         from apps.workflow.temporal.activities import (
+            _HAS_COURT_FILING,
             analyze_single_evidence,
             apply_arrangement,
             build_litigation_context,
@@ -92,7 +93,6 @@ class Command(BaseCommand):
             summarize_evidence,
             update_run_status,
         )
-        from apps.workflow.temporal.activities import _HAS_COURT_FILING
         from apps.workflow.temporal.workflows import DynamicWorkflow, SalesContractDisputeWorkflow
 
         temporal_addr = options["temporal_address"]
@@ -140,9 +140,11 @@ class Command(BaseCommand):
             workflow_runner=UnsandboxedWorkflowRunner(),
         )
 
-        self.stdout.write(self.style.SUCCESS(
-            f"Temporal Worker 启动 (task_queue={task_queue}, max_activities={options['max_activities']})"
-        ))
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Temporal Worker 启动 (task_queue={task_queue}, max_activities={options['max_activities']})"
+            )
+        )
 
         loop = asyncio.get_event_loop()
         for sig in (signal.SIGINT, signal.SIGTERM):

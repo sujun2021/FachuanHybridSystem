@@ -8,6 +8,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 try:
     from plugins.court_automation import filing
 except ImportError:
@@ -31,10 +32,7 @@ from plugins.court_automation.filing.helpers import (
     _to_valid_mobile,
     _update_session_task,
 )
-from plugins.court_automation.filing.schemas import (
-    _FILING_TYPE_CIVIL,
-    _FILING_TYPE_EXECUTION,
-)
+from plugins.court_automation.filing.schemas import _FILING_TYPE_CIVIL, _FILING_TYPE_EXECUTION
 
 
 class TestResolveCourtName:

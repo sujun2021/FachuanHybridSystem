@@ -7,6 +7,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 try:
     from plugins.court_automation import filing
 except ImportError:
@@ -14,7 +15,6 @@ except ImportError:
 
 
 from plugins.court_automation.guarantee import helpers
-
 
 # ---------------------------------------------------------------------------
 # Helpers

@@ -7,6 +7,7 @@ from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 try:
     from plugins.court_automation import filing
 except ImportError:
@@ -14,7 +15,6 @@ except ImportError:
 
 
 from apps.core.exceptions import ValidationException
-
 
 # ---------------------------------------------------------------------------
 # LLMResponse dataclass

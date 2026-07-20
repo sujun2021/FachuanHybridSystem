@@ -19,9 +19,10 @@ from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock, patch, PropertyMock, call
+from unittest.mock import MagicMock, PropertyMock, call, patch
 
 import pytest
+
 try:
     from plugins.court_automation import filing
 except ImportError:
@@ -633,7 +634,10 @@ class TestResolveInsuranceCompanyDefaults:
     @patch("plugins.court_automation.guarantee.helpers._extract_quote_company_options")
     def test_no_options(self, mock_extract):
         mock_extract.return_value = []
-        from plugins.court_automation.guarantee.schemas import _DEFAULT_INSURANCE_COMPANY, _GUARANTEE_INSURANCE_COMPANY_OPTIONS
+        from plugins.court_automation.guarantee.schemas import (
+            _DEFAULT_INSURANCE_COMPANY,
+            _GUARANTEE_INSURANCE_COMPANY_OPTIONS,
+        )
         company, options = self._fn()(quote_context=None)
         assert company == _DEFAULT_INSURANCE_COMPANY
         assert options == _GUARANTEE_INSURANCE_COMPANY_OPTIONS

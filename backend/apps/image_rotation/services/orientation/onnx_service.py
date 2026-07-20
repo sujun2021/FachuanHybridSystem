@@ -69,8 +69,7 @@ class ONNXOrientationService:
 
                 if not Path(self._model_path).exists():
                     logger.error(
-                        f"ONNX 微调模型不存在: {self._model_path}，"
-                        "请运行 ml-training/train_model.py 训练或检查网络连接"
+                        f"ONNX 微调模型不存在: {self._model_path}，请运行 ml-training/train_model.py 训练或检查网络连接"
                     )
                     return None
 
@@ -200,10 +199,7 @@ class ONNXOrientationService:
                 "method": "onnx_classifier",
                 "label": label,
                 "can_auto_rotate": can_auto_rotate,
-                "probabilities": {
-                    ORIENTATION_LABELS[i]: round(float(probabilities[0][i]), 4)
-                    for i in range(4)
-                },
+                "probabilities": {ORIENTATION_LABELS[i]: round(float(probabilities[0][i]), 4) for i in range(4)},
             }
 
         except Exception as e:

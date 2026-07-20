@@ -7,6 +7,7 @@ from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 try:
     from plugins.court_automation import filing
 except ImportError:
@@ -21,7 +22,6 @@ from apps.automation.models.scraper import ScraperTask, ScraperTaskType
 from apps.cases.models import Case, SupervisingAuthority
 from apps.contracts.models import Contract
 from apps.organization.models import AccountCredential
-
 
 # ---------------------------------------------------------------------------
 # helpers

@@ -25,9 +25,10 @@ import asyncio
 import time
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
+
 try:
     from plugins.court_automation import filing
 except ImportError:

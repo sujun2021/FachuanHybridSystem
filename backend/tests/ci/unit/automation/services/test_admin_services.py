@@ -24,7 +24,6 @@ from django.utils import timezone
 
 from apps.core.exceptions import BusinessException, ValidationException
 
-
 # ============================================================
 # token_acquisition_history_admin_service.py
 # ============================================================
@@ -135,7 +134,6 @@ class TestPreservationQuoteAdminService:
 
 
 import asyncio
-
 
 # ============================================================
 # scraping_tasks.py - _run_coroutine_sync

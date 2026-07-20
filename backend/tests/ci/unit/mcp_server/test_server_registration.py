@@ -17,7 +17,6 @@ from pathlib import Path
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Helpers – read source files without importing heavy dependencies
 # (importing mcp_server.tools transitively pulls in httpx, Django, etc.)

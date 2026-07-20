@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 try:
     from plugins.court_automation import filing
 except ImportError:
@@ -15,7 +16,6 @@ except ImportError:
 from django.utils import timezone
 
 from apps.automation.models import InsuranceQuote, PreservationQuote, QuoteItemStatus, QuoteStatus
-
 
 # ── PreservationQuoteService ──────────────────────────────────────
 
