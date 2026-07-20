@@ -10,7 +10,6 @@ import re
 from typing import TYPE_CHECKING, Any
 
 from apps.core.interfaces import ServiceLocator
-from apps.core.llm.config import LLMConfig
 from apps.core.llm.exceptions import LLMError
 
 if TYPE_CHECKING:
@@ -164,28 +163,25 @@ class CaseNumberExtractorService:
 
         try:
             prompt = self._build_extract_prompt(content)
-            logger.info("开始调用 Ollama 提取案号")
-            model = LLMConfig.get_ollama_model()
+            logger.info("开始调用 LLM 提取案号")
             llm_response = self.llm_service.chat(
                 messages=[{"role": "user", "content": prompt}],
-                backend="ollama",
-                model=model,
-                fallback=False,
+                fallback=True,
             )
             content_text = (llm_response.content or "").strip()
             if not content_text:
-                logger.warning("Ollama 返回空响应")
+                logger.warning("LLM 返回空响应")
                 return []
 
-            logger.info(f"Ollama 案号提取响应: {content_text}")
+            logger.info(f"LLM 案号提取响应: {content_text}")
 
             return self._parse_ollama_response(content_text)
 
         except LLMError as e:
-            logger.warning(f"Ollama 服务不可用，使用正则降级方案: {e!s}")
+            logger.warning(f"LLM 服务不可用，使用正则降级方案: {e!s}")
             return self._extract_fallback(content)
         except Exception as e:
-            logger.warning(f"使用 Ollama 提取案号失败，使用正则降级方案: {e!s}")
+            logger.warning(f"使用 LLM 提取案号失败，使用正则降级方案: {e!s}")
             return self._extract_fallback(content)
 
     def _build_extract_prompt(self, content: str) -> str:
