@@ -278,7 +278,7 @@ async def generate_complaint(case_id: int, feedback: str | None = None) -> dict:
         return service.generate_complaint(case_data)
 
     result = await asyncio.to_thread(_generate)
-    return {"result": result}  # type: ignore[return-value]
+    return {"result": result}
 
 
 @activity.defn

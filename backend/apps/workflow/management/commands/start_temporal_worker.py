@@ -11,6 +11,7 @@ import asyncio
 import contextlib
 import logging
 import signal
+from collections.abc import Callable, Sequence
 from typing import Any
 
 from django.core.management.base import BaseCommand
@@ -102,7 +103,7 @@ class Command(BaseCommand):
         self.stdout.write(f"已连接 Temporal Server: {temporal_addr}")
 
         # 使用 UnsandboxedWorkflowRunner 避免 Django 模块导入被 sandbox 拦截
-        activities_list = [
+        activities_list: list[Callable[..., Any]] = [
             record_step,
             update_run_status,
             collect_case_facts,
