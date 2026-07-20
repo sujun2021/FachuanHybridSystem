@@ -204,7 +204,7 @@ run: migrate ## 启动开发服务器 (默认端口 8002, 使用 uvicorn, 可通
 	cd apiSystem && ../$(UVICORN) apiSystem.asgi:application --host 0.0.0.0 --port $(PORT)
 
 run-dev: migrate ## 启动开发服务器 (热重载稳定模式：默认启用 polling，避免与 qcluster 并行时卡住)
-	cd apiSystem && WATCHFILES_FORCE_POLLING=$(RUN_DEV_FORCE_POLLING) WATCHFILES_POLL_DELAY_MS=$(RUN_DEV_POLL_DELAY_MS) ../$(UVICORN) apiSystem.asgi:application --host 0.0.0.0 --port $(PORT) --reload --reload-delay 0.5 --reload-dir ../apps --reload-dir . --reload-include '*.html'
+	cd apiSystem && WATCHFILES_FORCE_POLLING=$(RUN_DEV_FORCE_POLLING) WATCHFILES_POLL_DELAY_MS=$(RUN_DEV_POLL_DELAY_MS) ../$(UVICORN) apiSystem.asgi:application --host 0.0.0.0 --port $(PORT) --reload --reload-delay 0.5 --reload-dir ../apps --reload-dir ../plugins --reload-dir . --reload-include '*.html'
 
 run-port: migrate ## 启动开发服务器 (自定义端口, 使用 PORT=8001)
 	cd apiSystem && ../$(UVICORN) apiSystem.asgi:application --host 0.0.0.0 --port $(PORT)
