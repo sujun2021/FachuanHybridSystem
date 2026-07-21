@@ -38,7 +38,7 @@ except ImportError:
 # ============================================================
 
 # 安全的默认密钥（仅用于开发环境）
-_DEV_SECRET_KEY = "django-insecure-dev-only-do-not-use-in-production"
+_DEV_SECRET_KEY = "django-insecure-dev-only-do-not-use-in-production"  # pragma: allowlist secret
 
 _security = resolve_security_config(
     dev_secret_key=_DEV_SECRET_KEY,
@@ -173,6 +173,13 @@ try:
 
     if has_doc_convert_plugin():
         _TEMPLATE_DIRS.append(os.path.join(BASE_DIR, "..", "plugins", "doc_convert", "templates"))
+except ImportError:
+    pass
+try:
+    from plugins import has_message_hub_plugin as _has_mh_tpl  # type: ignore[attr-defined]
+
+    if _has_mh_tpl():
+        _TEMPLATE_DIRS.append(os.path.join(BASE_DIR, "..", "plugins", "message_hub", "templates"))
 except ImportError:
     pass
 

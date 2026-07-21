@@ -10,7 +10,6 @@ import re
 from typing import TYPE_CHECKING, Any
 
 from apps.core.interfaces import ServiceLocator
-from apps.core.llm.config import LLMConfig
 from apps.core.llm.exceptions import LLMError
 
 if TYPE_CHECKING:
@@ -164,29 +163,26 @@ class CaseNumberExtractorService:
 
         try:
             prompt = self._build_extract_prompt(content)
-            logger.info("开始调用 Ollama 提取案号")
-            model = LLMConfig.get_ollama_model()
+            logger.info("开始调用 LLM 提取案号")
             llm_response = self.llm_service.chat(
                 messages=[{"role": "user", "content": prompt}],
-                backend="ollama",
-                model=model,
-                fallback=False,
+                fallback=True,
             )
             content_text = (llm_response.content or "").strip()
             if not content_text:
-                logger.warning("Ollama 返回空响应")
+                logger.warning("LLM 返回空响应")
                 return []
 
-            logger.info(f"Ollama 案号提取响应: {content_text}")
+            logger.info(f"LLM 案号提取响应: {content_text}")
 
             return self._parse_ollama_response(content_text)
 
         except LLMError as e:
-            logger.error(f"Ollama 服务不可用: {e!s}")
-            return []
+            logger.warning(f"LLM 服务不可用，使用正则降级方案: {e!s}")
+            return self._extract_fallback(content)
         except Exception as e:
-            logger.error(f"使用 Ollama 提取案号失败: {e!s}")
-            return []
+            logger.warning(f"使用 LLM 提取案号失败，使用正则降级方案: {e!s}")
+            return self._extract_fallback(content)
 
     def _build_extract_prompt(self, content: str) -> str:
         """构建案号提取提示词"""
@@ -409,8 +405,12 @@ class CaseNumberExtractorService:
     def _regex_extract_numbers(self, text: str) -> list[str]:
         """使用正则从文本中提取候选案号"""
         patterns = [
+            # 匹配全角括号（2026）粤0606民初7856号
+            r"[（](\d{4})[）]([^）]*?\w+\d+[^0-9]*?\d+号)",
+            # 匹配半角括号 (2026)粤0606民初7856号
             r"\((\d{4})\)([^)]*?\w+\d+[^0-9]*?\d+号)",
-            r"([^()\s]*?[0-9]+[^0-9]*?[0-9]+号)",
+            # 匹配无括号的案号 粤0606民初7856号
+            r"([^（）()\s]*?[0-9]+[^0-9]*?[0-9]+号)",
             r"(\w*\d+\w*\d+号)",
         ]
         found: list[str] = []
@@ -418,7 +418,7 @@ class CaseNumberExtractorService:
             try:
                 for match in re.findall(pattern, text):
                     if isinstance(match, tuple):
-                        case_number = f"({match[0]}){match[1]}" if len(match) == 2 else match[0]
+                        case_number = f"（{match[0]}）{match[1]}" if len(match) == 2 else match[0]
                     else:
                         case_number = match
                     if case_number and case_number.strip():

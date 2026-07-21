@@ -125,13 +125,18 @@ class SMSDocumentMixin:
             sms.status = CourtSMSStatus.RENAMING
             sms.save()
 
-            if not sms.scraper_task:
-                logger.info(f"短信 {sms.id} 无下载任务，跳过重命名")
+            # 获取文书路径：优先从 scraper_task，否则从 document_file_paths
+            if sms.scraper_task:
+                document_paths = self.document_attachment.get_paths_for_renaming(sms)
+            elif isinstance(sms.document_file_paths, list) and sms.document_file_paths:
+                document_paths = [p for p in sms.document_file_paths if p and Path(p).exists()]
+                logger.info(f"短信 {sms.id} 无下载任务，使用 document_file_paths: {len(document_paths)} 个文件")
+            else:
+                logger.info(f"短信 {sms.id} 无下载任务且无文书文件，跳过重命名")
                 sms.status = CourtSMSStatus.NOTIFYING
                 sms.save()
                 return sms
 
-            document_paths = self.document_attachment.get_paths_for_renaming(sms)
             if not document_paths:
                 logger.info(f"短信 {sms.id} 无可重命名的文书，跳过重命名")
                 sms.status = CourtSMSStatus.NOTIFYING
@@ -140,6 +145,7 @@ class SMSDocumentMixin:
 
             logger.info(f"短信 {sms.id} 找到 {len(document_paths)} 个文书待重命名")
             renamed_paths = self.document_attachment.rename_documents(sms, document_paths)
+            logger.info(f"短信 {sms.id} 重命名结果: {len(renamed_paths)} 个文件")
 
             self._save_renamed_paths(sms, renamed_paths)
             self._attach_to_case_log(sms, renamed_paths)
@@ -220,12 +226,19 @@ class SMSDocumentMixin:
 
     def _archive_to_case_folder(self, sms: CourtSMS, renamed_paths: list[str]) -> None:
         """将短信和文书归档到案件绑定目录（非阻塞）"""
-        if not sms.case_id or not renamed_paths:
+        logger.info(f"短信 {sms.id} 归档检查: case_id={sms.case_id}, renamed_paths={len(renamed_paths)} 个")
+        if not sms.case_id:
+            logger.info(f"短信 {sms.id} 未关联案件，跳过归档")
+            return
+        if not renamed_paths:
+            logger.info(f"短信 {sms.id} 无文书文件，跳过归档")
             return
         try:
             archived = self.case_folder_archive.archive_sms_documents(sms, renamed_paths)
             if archived:
                 logger.info(f"短信 {sms.id} 已归档到案件绑定目录")
+            else:
+                logger.warning(f"短信 {sms.id} 归档返回 False，可能未找到案件绑定目录")
         except Exception as e:
             logger.warning(f"短信 {sms.id} 归档到案件绑定目录失败，不影响主流程: {e!s}")
 
